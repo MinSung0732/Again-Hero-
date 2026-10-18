@@ -1,3 +1,8 @@
+## 2026-10-18 — 하드코딩 정리9차: 사망 반응 바인딩
+
+- MonsterCatalog.death_reactions에 밴시 카운터/정예화 설정·유령 callback·슬라임 확률/반경 선언. 사망 owner ID 분기3곳 제거·무효 입력 기본ID도 Catalog 참조. 보상 전/환급 후 호출 순서·현재 확률 판독/난수·카운터 초기화·증강 제외·분열 gate 유지. 유령 대상 탐색/실제 보상/AI/풀 변경 없음.
+- Godot 전체 사망 owner963+8차 회귀3948=4911검사 PASS. 나머지 Battle236함수/owner 외곽 동일·밸런스 감사0·정적 통과. 실제 전투/보상 수령·유령 대상 선택·물리/풀·실기/FPS 미검증. docs/DEATH_REACTION_POLICY_PHASE9_20261018.md. main 병합 없음.
+
 ## 2026-10-18 — 하드코딩 정리8차: 증식·추가 소환
 
 - MonsterCatalog.secondary_spawns에 슬라임/폭탄쥐 사망 및 슬라임/박쥐 추가 소환 규칙4개 선언. Battle ID 분기4곳 제거·공용 생성기 연결. 기존 자폭 제외/분열 허용 단계·count/확률/난수/좌표·자식별 modifier·비용0/split/mission 의미 유지. 사망 보상/환급/기본 소환·AI/풀 변경 없음.

@@ -3,7 +3,7 @@ Catalog dependencies are actual data; scene preloads are null in this fixture.
 """
 from pathlib import Path
 import argparse,re,subprocess,shutil
-p=argparse.ArgumentParser();p.add_argument('destination',type=Path);p.add_argument('--baseline',required=True);a=p.parse_args()
+p=argparse.ArgumentParser();p.add_argument('destination',type=Path);p.add_argument('--baseline',required=True);p.add_argument('--allow-changed-method',action='append',default=[],help='Explicitly audited later-phase changes');a=p.parse_args()
 repo=Path(__file__).resolve().parents[1];out=a.destination.resolve()
 if out==repo or repo in out.parents:raise SystemExit('Use directory outside repository')
 out.mkdir(parents=True,exist_ok=True)
@@ -22,7 +22,7 @@ s=old('src/data/monster_catalog.gd').replace('class_name MonsterCatalog','')
 (out/'catalog_before.gd').write_text(re.sub(r'preload\("res://[^"\n]+\.tscn"\)','null',s))
 before=old('src/battle/battle.gd');after=(repo/'src/battle/battle.gd').read_text();count=0
 for name in re.findall(r'^func (\w+)\(',before,re.M):
- if name not in {'_process_special_death_spawn','_spawn_extra_normal_summon_monsters'}:
+ if name not in {'_process_special_death_spawn','_spawn_extra_normal_summon_monsters'} and name not in a.allow_changed_method:
   assert method(before,name)==method(after,name),name+' unexpectedly changed';count+=1
 print('Untouched Battle methods identical:',count,'; death reward owner and primary spawn unchanged')
 header='''extends Node

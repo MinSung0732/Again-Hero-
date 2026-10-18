@@ -6,6 +6,8 @@ const BALANCE := preload("res://src/data/monster_balance_catalog.gd")
 static var balanced_stats_cache: Dictionary = {}
 const EMPTY_RUNTIME_SCALING := {}
 const EMPTY_SECONDARY_SPAWN := {}
+const EMPTY_DEATH_REACTIONS := {}
+const DEFAULT_DEATH_MONSTER_ID := "slime"
 const EMPTY_SECONDARY_SPAWN_LIST := []
 const EMPTY_GIANT_SCALING := {}
 const EMPTY_PROPERTY_MULTIPLIERS := {}
@@ -418,6 +420,12 @@ const MONSTERS := {
 		"scene": preload("res://src/monsters/Dullahan.tscn"),
 	},
 	"banshee": {
+		"death_reactions": {"counter_elite": {
+			"augment_id": &"banshee_death_possession", "counter_property": &"banshee_deaths_toward_elite",
+			"threshold_key": &"deaths_required", "threshold_default": 30,
+			"spawn_modifiers": {"exclude_all_augments": true},
+			"elite_modifiers": {"type": "elite", "name": "엘리트 밴시"},
+		}},
 		"id": "banshee", "name": "밴시", "role": "controller",
 		"family": "banshee", "species": "undead", "grade": "advanced", "rarity": "uncommon",
 		"attack_type": "melee", "base_cost": 6.5, "summon_exp": 6.5,
@@ -452,6 +460,7 @@ const MONSTERS := {
 	},
 	"slime": {
 		"id": "slime",
+		"death_reactions": {"legacy_split": {"chance_property": &"slime_split_chance", "radius": 42.0}},
 		"secondary_spawns": {
 			"on_death": {
 				"augment_id": &"slime_residual_mucus", "count_key": &"count", "count_default": 0, "count_minimum": 0,
@@ -1024,6 +1033,7 @@ const MONSTERS := {
 	},
 	"ghost": {
 		"id": "ghost",
+		"death_reactions": {"pre_reward_method": &"_apply_ghost_death_empower"},
 		"giant_scaling": {"basic_attack": true, "ranged_attack": true},
 		"name": "유령",
 		"role": "controller",
@@ -1458,3 +1468,8 @@ static func get_secondary_spawn_rule(monster_id: String, event: StringName) -> D
 		return EMPTY_SECONDARY_SPAWN
 	var rules: Dictionary = MONSTERS[monster_id].get("secondary_spawns", EMPTY_SECONDARY_SPAWN)
 	return rules.get(event, EMPTY_SECONDARY_SPAWN)
+
+static func get_death_reaction_profile(monster_id: String) -> Dictionary:
+	if not MONSTERS.has(monster_id):
+		return EMPTY_DEATH_REACTIONS
+	return MONSTERS[monster_id].get("death_reactions", EMPTY_DEATH_REACTIONS)

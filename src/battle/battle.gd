@@ -3143,7 +3143,7 @@ func _on_monster_died(monster: Node) -> void:
 			transcendent_actor.on_ally_death((monster as Node2D).global_position)
 
 	var drop_position := Vector2.ZERO
-	var monster_type := "slime"
+	var monster_type := MONSTER_CATALOG.DEFAULT_DEATH_MONSTER_ID
 	var is_split_child := false
 	var allow_special_death_split := false
 	var death_type := "normal"
@@ -3177,17 +3177,8 @@ func _on_monster_died(monster: Node) -> void:
 	if rewardless_death:
 		reward = 0
 
-	if monster_type == "banshee" and is_instance_valid(monster) and not bool(monster.get_meta("exclude_all_augments", false)):
-		var config: Dictionary = _get_special_augment_config("banshee").get("banshee_death_possession", {})
-		if not config.is_empty():
-			banshee_deaths_toward_elite += 1
-			if banshee_deaths_toward_elite >= int(config.get("deaths_required", 30)):
-				banshee_deaths_toward_elite = 0
-				var elite = _spawn_monster("banshee", drop_position, 0.0, false, {"exclude_all_augments": true})
-				if is_instance_valid(elite):
-					_apply_special_monster_modifiers(elite, "banshee", {"type": "elite", "name": "엘리트 밴시"})
-	if monster_type == "ghost" and is_instance_valid(monster):
-		_apply_ghost_death_empower(monster)
+	var death_profile := MONSTER_CATALOG.get_death_reaction_profile(monster_type)
+	_apply_pre_reward_death_reactions(monster, monster_type, drop_position, death_profile)
 
 	if reward > 0:
 		if transcendent_drop.is_empty():
@@ -3237,19 +3228,7 @@ func _on_monster_died(monster: Node) -> void:
 		)
 		command_changed.emit(command_power, max_command)
 
-	if (
-		monster_type == "slime"
-		and not is_split_child
-		and slime_split_chance > 0.0
-		and randf() <= slime_split_chance
-	):
-		var offset := Vector2.from_angle(randf_range(0.0, TAU)) * 42.0
-		_spawn_monster(
-			"slime",
-			_clamp_manual_spawn_position(drop_position + offset),
-			0.0,
-			true
-		)
+	_try_spawn_legacy_death_child(monster_type, drop_position, is_split_child, death_profile)
 
 	_process_special_death_spawn(
 		monster_type,
@@ -3265,6 +3244,42 @@ func _on_monster_died(monster: Node) -> void:
 
 	monsters_alive = maxi(monsters_alive - 1, 0)
 	_emit_stats()
+
+func _apply_pre_reward_death_reactions(
+	monster: Node, monster_type: String, drop_position: Vector2, profile: Dictionary
+) -> void:
+	if not is_instance_valid(monster):
+		return
+	var rule: Dictionary = profile.get("counter_elite", MONSTER_CATALOG.EMPTY_DEATH_REACTIONS)
+	if not rule.is_empty() and not bool(monster.get_meta("exclude_all_augments", false)):
+		var config: Dictionary = _get_special_augment_config(monster_type).get(
+			rule["augment_id"], MONSTER_CATALOG.EMPTY_DEATH_REACTIONS
+		)
+		if not config.is_empty():
+			var counter: StringName = rule["counter_property"]
+			var count := int(get(counter)) + 1
+			set(counter, count)
+			if count >= int(config.get(rule["threshold_key"], rule["threshold_default"])):
+				set(counter, 0)
+				var elite = _spawn_monster(monster_type, drop_position, 0.0, false, rule["spawn_modifiers"].duplicate())
+				if is_instance_valid(elite):
+					_apply_special_monster_modifiers(elite, monster_type, rule["elite_modifiers"].duplicate())
+	var callback: StringName = profile.get("pre_reward_method", &"")
+	if not callback.is_empty() and is_instance_valid(monster):
+		call(callback, monster)
+
+
+func _try_spawn_legacy_death_child(
+	monster_type: String, drop_position: Vector2, is_split_child: bool, profile: Dictionary
+) -> void:
+	var rule: Dictionary = profile.get("legacy_split", MONSTER_CATALOG.EMPTY_DEATH_REACTIONS)
+	if rule.is_empty() or is_split_child:
+		return
+	var chance := float(get(rule["chance_property"]))
+	if chance > 0.0 and randf() <= chance:
+		var offset := Vector2.from_angle(randf_range(0.0, TAU)) * float(rule["radius"])
+		_spawn_monster(monster_type, _clamp_manual_spawn_position(drop_position + offset), 0.0, true)
+
 
 func _process_special_death_spawn(
 	monster_type: String,

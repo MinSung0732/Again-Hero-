@@ -75,6 +75,7 @@ func _initialize():
  for id in CATALOG.MONSTERS:
   var data:Dictionary=CATALOG.MONSTERS[id].duplicate(true)
   data.erase("secondary_spawns")
+  if not OLD_CATALOG.MONSTERS[id].has("death_reactions"):data.erase("death_reactions")
   check(data==OLD_CATALOG.MONSTERS[id],"unchanged authoring "+id)
   for event in [&"on_death",&"on_normal_summon"]:
    check(is_same(CATALOG.get_secondary_spawn_rule(id,event),CATALOG.get_secondary_spawn_rule(id,event)),"shared immutable rule")
