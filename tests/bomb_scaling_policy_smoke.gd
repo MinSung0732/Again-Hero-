@@ -54,6 +54,7 @@ func _initialize():
  for id in CATALOG.MONSTERS:
   var data:Dictionary=CATALOG.MONSTERS[id].duplicate(true)
   if id=="bomb_rat":data.erase("giant_scaling")
+  if not OLD_CATALOG.MONSTERS[id].has("secondary_spawns"):data.erase("secondary_spawns")
   check(data==OLD_CATALOG.MONSTERS[id],"unchanged authoring "+id)
  var ids:Array=CATALOG.MONSTERS.keys();ids.append("unknown")
  for id in ids:

@@ -3273,54 +3273,12 @@ func _process_special_death_spawn(
 	allow_special_death_split: bool,
 	death_type: String
 ) -> void:
-	var can_split := not is_split_child or allow_special_death_split
-
-	if monster_type == "slime" and can_split:
-		var slime_config: Dictionary = _get_special_augment_config(
-			"slime"
-		).get("slime_residual_mucus", {})
-		var count := maxi(int(slime_config.get("count", 0)), 0)
-		for index in range(count):
-			var angle := TAU * float(index + 1) / float(count + 1)
-			var offset := Vector2.from_angle(angle) * 34.0
-			_spawn_monster(
-				"slime",
-				_clamp_manual_spawn_position(drop_position + offset),
-				0.0,
-				true,
-				{
-					"hp_multiplier": float(
-						slime_config.get("hp_multiplier", 0.50)
-					),
-					"damage_multiplier": float(
-						slime_config.get("damage_multiplier", 0.50)
-					),
-				}
-			)
-
-	if (
-		monster_type == "bomb_rat"
-		and can_split
-		and death_type != "self_destruct"
-	):
-		var rat_config: Dictionary = _get_special_augment_config(
-			"bomb_rat"
-		).get("bomb_rat_litter", {})
-		var rat_count := maxi(int(rat_config.get("count", 0)), 0)
-		for index in range(rat_count):
-			var angle := TAU * float(index + 1) / float(rat_count + 1)
-			var offset := Vector2.from_angle(angle) * 38.0
-			_spawn_monster(
-				"bomb_rat",
-				_clamp_manual_spawn_position(drop_position + offset),
-				0.0,
-				true,
-				{
-					"hp_multiplier": float(
-						rat_config.get("hp_multiplier", 0.50)
-					),
-				}
-			)
+	if is_split_child and not allow_special_death_split:
+		return
+	var rule := MONSTER_CATALOG.get_secondary_spawn_rule(monster_type, &"on_death")
+	if death_type in rule.get("excluded_death_types", MONSTER_CATALOG.EMPTY_SECONDARY_SPAWN_LIST):
+		return
+	_spawn_secondary_monsters(monster_type, drop_position, rule)
 
 func _chest_kill_requirement() -> int:
 	return HERO_SURVIVAL.CHEST_KILLS if hero_player_mode else CHEST_KILLS_REQUIRED
@@ -5282,55 +5240,50 @@ func _spawn_extra_normal_summon_monsters(
 	monster_type: String,
 	spawn_position: Vector2
 ) -> void:
-	if monster_type == "slime":
-		var slime_config: Dictionary = _get_special_augment_config(
-			"slime"
-		).get("slime_cell_division", {})
-		var slime_extra_count := maxi(
-			int(slime_config.get("extra_count", 0)),
-			0
-		)
-		for index in range(slime_extra_count):
-			var angle := (
-				TAU * float(index + 1) / float(slime_extra_count + 1)
-			)
-			var offset := Vector2.from_angle(angle) * 36.0
-			var extra_slime = _spawn_monster(
-				"slime",
-				_clamp_manual_spawn_position(spawn_position + offset),
-				0.0,
-				true,
-				{"mission_summon": true}
-			)
-			if is_instance_valid(extra_slime):
-				extra_slime.set_meta("allow_special_death_split", true)
-		return
+	_spawn_secondary_monsters(
+		monster_type, spawn_position,
+		MONSTER_CATALOG.get_secondary_spawn_rule(monster_type, &"on_normal_summon")
+	)
 
-	if monster_type != "bat":
+
+func _spawn_secondary_monsters(monster_type: String, spawn_position: Vector2, rule: Dictionary) -> void:
+	if rule.is_empty():
 		return
-	var bat_config: Dictionary = _get_special_augment_config("bat").get(
-		"bat_echo_summon",
-		{}
+	var config: Dictionary = _get_special_augment_config(monster_type).get(
+		rule["augment_id"], MONSTER_CATALOG.EMPTY_SECONDARY_SPAWN
 	)
-	if bat_config.is_empty():
+	if bool(rule.get("requires_config", false)) and config.is_empty():
 		return
-	var chance := clampf(float(bat_config.get("chance", 0.15)), 0.0, 1.0)
-	if randf() > chance:
-		return
-	var min_count := maxi(int(bat_config.get("min_extra_count", 1)), 1)
-	var max_count := maxi(
-		int(bat_config.get("max_extra_count", 3)),
-		min_count
-	)
-	var bat_extra_count := randi_range(min_count, max_count)
-	for _index in range(bat_extra_count):
-		_spawn_monster(
-			"bat",
-			_clamp_manual_spawn_position(spawn_position),
-			0.0,
-			true,
-			{"mission_summon": true}
-		)
+	if rule.has("chance_key"):
+		var chance := clampf(float(config.get(rule["chance_key"], rule["chance_default"])), 0.0, 1.0)
+		if randf() > chance:
+			return
+
+	var count: int
+	if rule.has("min_count_key"):
+		var min_count := maxi(int(config.get(rule["min_count_key"], rule["min_count_default"])), int(rule["count_minimum"]))
+		var max_count := maxi(int(config.get(rule["max_count_key"], rule["max_count_default"])), min_count)
+		count = randi_range(min_count, max_count)
+	else:
+		count = maxi(int(config.get(rule["count_key"], rule["count_default"])), int(rule["count_minimum"]))
+	var radius := float(rule["radius"])
+	var fixed_modifiers: Dictionary = rule.get("fixed_modifiers", MONSTER_CATALOG.EMPTY_SECONDARY_SPAWN)
+	var modifier_defaults: Dictionary = rule.get("modifier_defaults", MONSTER_CATALOG.EMPTY_SECONDARY_SPAWN)
+	var child_metadata: Dictionary = rule.get("child_metadata", MONSTER_CATALOG.EMPTY_SECONDARY_SPAWN)
+	for index in range(count):
+		var point := spawn_position
+		if radius > 0.0:
+			var angle := TAU * float(index + 1) / float(count + 1)
+			point += Vector2.from_angle(angle) * radius
+		point = _clamp_manual_spawn_position(point)
+		# Each attempt owns its modifiers, as in the original spawn paths.
+		var modifiers := fixed_modifiers.duplicate()
+		for stat in modifier_defaults:
+			modifiers[stat] = float(config.get(stat, modifier_defaults[stat]))
+		var child = _spawn_monster(monster_type, point, 0.0, true, modifiers)
+		if not child_metadata.is_empty() and is_instance_valid(child):
+			for key in child_metadata:
+				child.set_meta(key, child_metadata[key])
 
 func combat_time_msec() -> int:
 	if not hero_player_mode:

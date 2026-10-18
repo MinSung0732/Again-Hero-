@@ -1,3 +1,8 @@
+## 2026-10-18 — 하드코딩 정리8차: 증식·추가 소환
+
+- MonsterCatalog.secondary_spawns에 슬라임/폭탄쥐 사망 및 슬라임/박쥐 추가 소환 규칙4개 선언. Battle ID 분기4곳 제거·공용 생성기 연결. 기존 자폭 제외/분열 허용 단계·count/확률/난수/좌표·자식별 modifier·비용0/split/mission 의미 유지. 사망 보상/환급/기본 소환·AI/풀 변경 없음.
+- Godot 신규3948+7차 회귀2961=6909검사 PASS. 연쇄 차단·실패/콜백 변경·RNG 순서 확인, 나머지 Battle234함수 동일·밸런스 감사0·정적 통과. 실제actor/전체전투·개체제한/XP지급·물리/풀·실기/FPS 미검증. docs/SECONDARY_SPAWN_POLICY_PHASE8_20261018.md. main 병합 없음.
+
 ## 2026-10-18 — 하드코딩 정리7차: 자폭형 소환·거대화 배율
 
 - 폭탄쥐 giant_scaling.property_rules에6개 property의 순서/역수·반올림/최소값 선언. 신규 소환 도화선·폭발 피해는 기존 runtime_scaling 바인딩 재사용. ID 분기3곳 제거, raw/배율/XP·분열 자식 처리 시점 유지. 사망/실제보상 지급·AI/수치/풀 변경 없음.

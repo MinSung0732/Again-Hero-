@@ -5,6 +5,8 @@ const FRONTIER := preload("res://src/data/frontier_monster_catalog.gd")
 const BALANCE := preload("res://src/data/monster_balance_catalog.gd")
 static var balanced_stats_cache: Dictionary = {}
 const EMPTY_RUNTIME_SCALING := {}
+const EMPTY_SECONDARY_SPAWN := {}
+const EMPTY_SECONDARY_SPAWN_LIST := []
 const EMPTY_GIANT_SCALING := {}
 const EMPTY_PROPERTY_MULTIPLIERS := {}
 const EMPTY_GIANT_STAT_PROPERTIES := []
@@ -450,6 +452,17 @@ const MONSTERS := {
 	},
 	"slime": {
 		"id": "slime",
+		"secondary_spawns": {
+			"on_death": {
+				"augment_id": &"slime_residual_mucus", "count_key": &"count", "count_default": 0, "count_minimum": 0,
+				"radius": 34.0, "modifier_defaults": {"hp_multiplier": 0.50, "damage_multiplier": 0.50},
+			},
+			"on_normal_summon": {
+				"augment_id": &"slime_cell_division", "count_key": &"extra_count", "count_default": 0, "count_minimum": 0,
+				"radius": 36.0, "fixed_modifiers": {"mission_summon": true},
+				"child_metadata": {"allow_special_death_split": true},
+			},
+		},
 		"giant_scaling": {"basic_attack": true},
 		"name": "슬라임",
 		"role": "swarm",
@@ -818,6 +831,15 @@ const MONSTERS := {
 	},
 	"bat": {
 		"id": "bat",
+		"secondary_spawns": {
+			"on_normal_summon": {
+				"augment_id": &"bat_echo_summon", "requires_config": true,
+				"chance_key": &"chance", "chance_default": 0.15,
+				"min_count_key": &"min_extra_count", "min_count_default": 1, "count_minimum": 1,
+				"max_count_key": &"max_extra_count", "max_count_default": 3,
+				"radius": 0.0, "fixed_modifiers": {"mission_summon": true},
+			},
+		},
 		"giant_scaling": {"basic_attack": true},
 		"name": "박쥐",
 		"role": "swarm",
@@ -1058,6 +1080,13 @@ const MONSTERS := {
 	},
 	"bomb_rat": {
 		"id": "bomb_rat",
+		"secondary_spawns": {
+			"on_death": {
+				"augment_id": &"bomb_rat_litter", "count_key": &"count", "count_default": 0, "count_minimum": 0,
+				"radius": 38.0, "modifier_defaults": {"hp_multiplier": 0.50},
+				"excluded_death_types": [&"self_destruct"],
+			},
+		},
 		"giant_scaling": {"property_rules": [
 			{"property": &"self_destruct_range"},
 			{"property": &"self_destruct_fuse", "inverse": true, "minimum": 0.10},
@@ -1422,3 +1451,10 @@ static func get_giant_scaling_profile(monster_id: String) -> Dictionary:
 	if not MONSTERS.has(monster_id):
 		return EMPTY_GIANT_SCALING
 	return MONSTERS[monster_id].get("giant_scaling", EMPTY_GIANT_SCALING)
+
+# Immutable event rules. Augment selection/config values remain live Battle data.
+static func get_secondary_spawn_rule(monster_id: String, event: StringName) -> Dictionary:
+	if not MONSTERS.has(monster_id):
+		return EMPTY_SECONDARY_SPAWN
+	var rules: Dictionary = MONSTERS[monster_id].get("secondary_spawns", EMPTY_SECONDARY_SPAWN)
+	return rules.get(event, EMPTY_SECONDARY_SPAWN)

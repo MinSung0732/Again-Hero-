@@ -3,7 +3,7 @@ Scene references are null; only outer Battle services are adapters.
 """
 from pathlib import Path
 import argparse,re,subprocess,shutil
-p=argparse.ArgumentParser();p.add_argument('destination',type=Path);p.add_argument('--baseline',required=True);a=p.parse_args()
+p=argparse.ArgumentParser();p.add_argument('destination',type=Path);p.add_argument('--baseline',required=True);p.add_argument('--allow-changed-method',action='append',default=[],help='Explicitly audited later-phase changes');a=p.parse_args()
 repo=Path(__file__).resolve().parents[1];out=a.destination.resolve()
 if out==repo or repo in out.parents:raise SystemExit('Use directory outside repo')
 out.mkdir(parents=True,exist_ok=True)
@@ -23,7 +23,7 @@ s=old('src/data/monster_catalog.gd').replace('class_name MonsterCatalog','')
 before=old('src/battle/battle.gd');after=(repo/'src/battle/battle.gd').read_text()
 count=0
 for name in re.findall(r'^func (\w+)\(',before,re.M):
- if name not in {'_spawn_monster','_apply_giant_monster_base_stats'}:
+ if name not in {'_spawn_monster','_apply_giant_monster_base_stats'} and name not in a.allow_changed_method:
   assert method(before,name)==method(after,name),name+' unexpectedly changed';count+=1
 def normalize_spawn(text,legacy):
  s=method(text,'_spawn_monster')
