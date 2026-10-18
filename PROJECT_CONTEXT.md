@@ -1,3 +1,9 @@
+## 2026-10-18 — 하드코딩 정리16차: 상태 표시·애니메이션 연결
+
+- hero_presentation_catalog에 상태바 위치/색/크기·칸형/비율형 자원 바인딩, 애니메이션 우선순위·프레임 후크 선언. 직접 archetype 비교9곳 제거. 재장전/소환 getter 순서·용사 identity override·HP/쉴드 의미와 보호/재생/anchor 로직 유지. 매프레임 컬렉션 생성/그룹 조회 추가 없음.
+- Godot 격리15682검사·import/정적 PASS. draw/getter/anchor/시계 일부 어댑터이며 실제PNG/GPU/전체전투/실기/FPS 미검증. 나머지 Hero655함수/Main/Battle·기존 Catalog 동일. null draw CPU 계산 중앙값1.9808→4.0767µs/표시(+2.0959µs), FPS 개선 주장 없음.
+- 같은 좁은 조사 패턴 후보120→111(고유기술 포함). docs/HERO_STATUS_POLICY_PHASE16_20261018.md 및 위치 JSON. main 병합 없음.
+
 ## 2026-10-18 — 하드코딩 정리15차: 견습마도사 쉴드·채널 효과
 
 - hero_presentation_catalog에 효과 경로/프레임/FPS/loop·대상/초기화 순서·고정 canvas/실제 texture extent 배율·경고 정책 선언. 직접 ID 비교2곳/상수7개 이동, 공통 setup으로 기존 reset/신호/누락 순서 보존. 전투/AI/수치/앵커/아트 불변, 매프레임 작업 추가 없음.

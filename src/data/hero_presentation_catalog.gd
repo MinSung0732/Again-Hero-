@@ -559,3 +559,78 @@ const SCALED_EFFECT_PROFILES := {
 
 static func get_scaled_effect_profile(event: StringName) -> Dictionary:
 	return SCALED_EFFECT_PROFILES.get(event, EMPTY_PROFILE)
+
+
+const ANIMATION_PRIORITIES := {
+	&"death": 100, &"hit": 80, &"dash_start": 70, &"dash_finish": 70,
+	&"attack": 60, &"run": 20, &"move": 20, &"idle": 10,
+}
+const DEFAULT_ANIMATION_PRIORITY := 40
+const FRAME_CHANGE_METHODS := {"cleric_purifier": [&"_apply_stage9_sprite_anchor"]}
+
+static func animation_priority(animation: StringName) -> int:
+	return int(ANIMATION_PRIORITIES.get(animation, DEFAULT_ANIMATION_PRIORITY))
+
+static func get_frame_change_methods(archetype: String) -> Array:
+	return FRAME_CHANGE_METHODS.get(archetype, EMPTY_METHODS)
+
+# x offset, resource Y, HP Y, shield Y. Player identity overrides the three Y
+# coordinates at draw time; no cached layout can become stale on a mode change.
+const DEFAULT_STATUS_LAYOUT := Vector4(0.0, -79.0, -64.0, -49.0)
+const STATUS_LAYOUTS := {
+	"summoner_gatekeeper": Vector4(0.0, -128.0, -113.0, -98.0),
+	"cleric_purifier": Vector4(0.0, -100.0, -85.0, -70.0),
+	"grand_sage_astra": Vector4(0.0, -79.0, -64.0, -94.0),
+}
+const STATUS_BAR_WIDTH := 92.0
+const STATUS_CELL_GAP := 2.0
+const STATUS_RESOURCE_HEIGHT := 8.0
+const STATUS_HP_HEIGHT := 10.0
+const STATUS_SHIELD_HEIGHT := 8.0
+const STATUS_CONTROL_GAUGE_OFFSET := 24.0
+const STATUS_BACKGROUND_COLOR := Color(0.12, 0.12, 0.14)
+const STATUS_HP_COLOR := Color(0.95, 0.38, 0.32)
+const STATUS_SHIELD_BACKGROUND_COLOR := Color(0.10, 0.12, 0.18)
+const STATUS_SHIELD_COLOR := Color(0.20, 0.65, 1.0)
+const DEFAULT_STATUS_RESOURCE := {
+	"kind": &"ratio", "value_property": &"ultimate_charge",
+	"config_property": &"ultimate_config", "max_key": &"charge_max",
+	"default_max": 100.0, "minimum_max": 1.0,
+	"use_x_offset": false, "color": Color(1.0, 0.77, 0.16),
+}
+const STATUS_RESOURCES := {
+	"pistol_gunner": {
+		"kind": &"cells", "capacity_property": &"gunner_magazine_size",
+		"count_property": &"gunner_ammo", "reload_property": &"gunner_reloading",
+		"timer_property": &"gunner_reload_timer", "config_property": &"gunner_config",
+		"duration_key": &"reload_seconds", "default_duration": 2.4, "minimum_duration": 0.1,
+		"color": Color(1.0, 0.77, 0.16),
+	},
+	"summoner_gatekeeper": {
+		"kind": &"cells", "capacity_method": &"_get_summoner_slot_capacity",
+		"count_method": &"_get_active_summon_count", "color": Color(0.55, 0.40, 0.95),
+	},
+	"alchemist_chemical": {
+		"kind": &"ratio", "value_property": &"alchemist_gas",
+		"max_property": &"alchemist_gas_max", "minimum_max": 1.0,
+		"use_x_offset": false, "color": Color(0.68, 0.28, 0.92),
+	},
+	"cleric_purifier": {
+		"kind": &"ratio", "value_property": &"ultimate_charge",
+		"config_property": &"purifier_gauge_config", "max_key": &"charge_max",
+		"default_max": 100.0, "minimum_max": 1.0,
+		"use_x_offset": true, "color": Color(1.0, 0.77, 0.16),
+	},
+	"berserker_madness": {
+		"kind": &"ratio", "value_property": &"ultimate_charge",
+		"config_property": &"berserker_config", "max_key": &"gauge_max",
+		"default_max": 100.0, "minimum_max": 1.0,
+		"use_x_offset": false, "color": Color(1.0, 0.30, 0.08),
+	},
+}
+
+static func get_status_layout(archetype: String) -> Vector4:
+	return STATUS_LAYOUTS.get(archetype, DEFAULT_STATUS_LAYOUT)
+
+static func get_status_resource(archetype: String) -> Dictionary:
+	return STATUS_RESOURCES.get(archetype, DEFAULT_STATUS_RESOURCE)

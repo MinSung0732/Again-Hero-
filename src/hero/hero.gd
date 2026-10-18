@@ -7060,22 +7060,7 @@ func _load_stage1_texture(path: String) -> Texture2D:
 	return null
 
 func _hero_animation_priority(animation_name: StringName) -> int:
-	match animation_name:
-		&"death":
-			return 100
-		&"hit":
-			return 80
-		&"dash_start", &"dash_finish":
-			return 70
-		&"attack":
-			return 60
-		&"run", &"move":
-			return 20
-		&"idle":
-			return 10
-		_:
-			return 40
-
+	return HERO_PRESENTATION.animation_priority(animation_name)
 
 func _is_current_hero_animation_protected(requested_animation: StringName) -> bool:
 	if not hero_sprite.visible or hero_sprite.sprite_frames == null:
@@ -7289,9 +7274,8 @@ func _build_stage9_frame_anchor_cache() -> void:
 
 
 func _on_hero_sprite_frame_or_animation_changed() -> void:
-	if hero_archetype == "cleric_purifier":
-		_apply_stage9_sprite_anchor()
-
+	for method in HERO_PRESENTATION.get_frame_change_methods(hero_archetype):
+		call(method)
 
 func _apply_stage9_sprite_anchor() -> void:
 	if hero_archetype != "cleric_purifier" or not is_instance_valid(hero_sprite):
@@ -20649,135 +20633,25 @@ func _draw() -> void:
 func _draw_combat_status_overlay() -> void:
 	if is_dying:
 		return
-	var bar_width := 92.0
-	var bar_x_offset := 0.0
-	var resource_bar_y := -79.0
-	var hp_bar_y := -64.0
-	var shield_bar_y := -49.0
-	if hero_archetype == "summoner_gatekeeper":
-		# Stage 8 uses a feet/root anchor. Its body is taller above the node,
-		# so the shared -64 HP bar crosses the torso. Lift both summon slots
-		# and HP bar together while keeping their original 15px spacing.
-		resource_bar_y = -128.0
-		hp_bar_y = -113.0
-		shield_bar_y = -98.0
-	elif hero_archetype == "cleric_purifier":
-		# Stage 9's hood/head reaches into the shared bar area even after the
-		# sprite anchor correction. Keep the hero root and sprite position as-is
-		# and lift only the UI bars, preserving their 15px vertical spacing.
-		# Keep the bars centered on the gameplay root. The purifier sprite itself
-		# carries the Stage 9-specific horizontal visual compensation.
-		bar_x_offset = 0.0
-		resource_bar_y = -100.0
-		hp_bar_y = -85.0
-		shield_bar_y = -70.0
-	elif hero_archetype == "grand_sage_astra":
-		# Astra can gain a temporary post-phase shield. Put that bar above the
-		# yellow gauge and HP bar so it never crosses the Stage 10 sprite.
-		shield_bar_y = -94.0
+	var bar_width := HERO_PRESENTATION.STATUS_BAR_WIDTH
+	var layout := HERO_PRESENTATION.get_status_layout(hero_archetype)
+	var bar_x_offset := layout.x
+	var resource_bar_y := layout.y
+	var hp_bar_y := layout.z
+	var shield_bar_y := layout.w
 	if player_controlled and player_weapons != null and player_weapons.identity != null:
 		resource_bar_y = player_weapons.identity.status_resource_y
 		hp_bar_y = player_weapons.identity.status_hp_y
 		shield_bar_y = player_weapons.identity.status_shield_y
 	var bar_left_x := -bar_width / 2.0 + bar_x_offset
 	if player_controlled:
-		player_control_gauge.draw_on(status_overlay,self,minf(resource_bar_y,minf(hp_bar_y,shield_bar_y))-24.0,bar_width)
-	if hero_archetype == "pistol_gunner":
-		var gap := 2.0
-		var cell_width := (bar_width - gap * float(gunner_magazine_size - 1)) / float(gunner_magazine_size)
-		var displayed_cells := gunner_ammo
-		if gunner_reloading:
-			var reload_duration := maxf(float(gunner_config.get("reload_seconds", 2.4)), 0.1)
-			var reload_progress := clampf(1.0 - gunner_reload_timer / reload_duration, 0.0, 1.0)
-			displayed_cells = clampi(int(floor(reload_progress * float(gunner_magazine_size))), 0, gunner_magazine_size)
-		for index in range(gunner_magazine_size):
-			var x := -bar_width / 2.0 + float(index) * (cell_width + gap)
-			status_overlay.draw_rect(Rect2(x, resource_bar_y, cell_width, 8.0), Color(0.12, 0.12, 0.14), true)
-			if index < displayed_cells:
-				status_overlay.draw_rect(Rect2(x, resource_bar_y, cell_width, 8.0), Color(1.0, 0.77, 0.16), true)
-	elif hero_archetype == "summoner_gatekeeper":
-		var slot_count := _get_summoner_slot_capacity()
-		var active_summons := _get_active_summon_count()
-		var gap := 2.0
-		var cell_width := (
-			bar_width - gap * float(slot_count - 1)
-		) / float(slot_count)
-		for index in range(slot_count):
-			var x := -bar_width / 2.0 + float(index) * (cell_width + gap)
-			status_overlay.draw_rect(
-				Rect2(x, resource_bar_y, cell_width, 8.0),
-				Color(0.12, 0.12, 0.14),
-				true
-			)
-			if index < active_summons:
-				status_overlay.draw_rect(
-					Rect2(x, resource_bar_y, cell_width, 8.0),
-					Color(0.55, 0.40, 0.95),
-					true
-				)
-	elif hero_archetype == "alchemist_chemical":
-		var gas_ratio := clampf(alchemist_gas / maxf(alchemist_gas_max, 1.0), 0.0, 1.0)
-		status_overlay.draw_rect(Rect2(-bar_width / 2.0, resource_bar_y, bar_width, 8.0), Color(0.12, 0.12, 0.14), true)
-		status_overlay.draw_rect(
-			Rect2(-bar_width / 2.0, resource_bar_y, bar_width * gas_ratio, 8.0),
-			Color(0.68, 0.28, 0.92),
-			true
-		)
-	elif hero_archetype == "cleric_purifier":
-		var purifier_max := maxf(
-			float(purifier_gauge_config.get("charge_max", 100.0)),
-			1.0
-		)
-		var purifier_ratio := clampf(
-			ultimate_charge / purifier_max,
-			0.0,
-			1.0
-		)
-		status_overlay.draw_rect(
-			Rect2(bar_left_x, resource_bar_y, bar_width, 8.0),
-			Color(0.12, 0.12, 0.14),
-			true
-		)
-		status_overlay.draw_rect(
-			Rect2(bar_left_x, resource_bar_y, bar_width * purifier_ratio, 8.0),
-			Color(1.0, 0.77, 0.16),
-			true
-		)
-	elif hero_archetype == "berserker_madness":
-		var madness_max: float = maxf(
-			float(berserker_config.get("gauge_max", 100.0)),
-			1.0
-		)
-		var madness_ratio: float = clampf(
-			ultimate_charge / madness_max,
-			0.0,
-			1.0
-		)
-		status_overlay.draw_rect(
-			Rect2(-bar_width / 2.0, resource_bar_y, bar_width, 8.0),
-			Color(0.12, 0.12, 0.14),
-			true
-		)
-		status_overlay.draw_rect(
-			Rect2(
-				-bar_width / 2.0,
-				resource_bar_y,
-				bar_width * madness_ratio,
-				8.0
-			),
-			Color(1.0, 0.30, 0.08),
-			true
-		)
-	else:
-		var ultimate_max := maxf(float(ultimate_config.get("charge_max", 100.0)), 1.0)
-		var ultimate_ratio := clampf(ultimate_charge / ultimate_max, 0.0, 1.0)
-		status_overlay.draw_rect(Rect2(-bar_width / 2.0, resource_bar_y, bar_width, 8.0), Color(0.12, 0.12, 0.14), true)
-		status_overlay.draw_rect(Rect2(-bar_width / 2.0, resource_bar_y, bar_width * ultimate_ratio, 8.0), Color(1.0, 0.77, 0.16), true)
+		player_control_gauge.draw_on(status_overlay, self, minf(resource_bar_y, minf(hp_bar_y, shield_bar_y)) - HERO_PRESENTATION.STATUS_CONTROL_GAUGE_OFFSET, bar_width)
+	_draw_status_resource_bar(HERO_PRESENTATION.get_status_resource(hero_archetype), resource_bar_y, bar_width, bar_left_x)
 
 	var hp_ratio := float(current_hp) / float(maxi(max_hp, 1))
 	status_overlay.draw_rect(
-		Rect2(bar_left_x, hp_bar_y, bar_width, 10.0),
-		Color(0.12, 0.12, 0.14),
+		Rect2(bar_left_x, hp_bar_y, bar_width, HERO_PRESENTATION.STATUS_HP_HEIGHT),
+		HERO_PRESENTATION.STATUS_BACKGROUND_COLOR,
 		true
 	)
 	status_overlay.draw_rect(
@@ -20785,9 +20659,9 @@ func _draw_combat_status_overlay() -> void:
 			bar_left_x,
 			hp_bar_y,
 			bar_width * hp_ratio,
-			10.0
+			HERO_PRESENTATION.STATUS_HP_HEIGHT
 		),
-		Color(0.95, 0.38, 0.32),
+		HERO_PRESENTATION.STATUS_HP_COLOR,
 		true
 	)
 
@@ -20798,8 +20672,8 @@ func _draw_combat_status_overlay() -> void:
 			1.0
 		)
 		status_overlay.draw_rect(
-			Rect2(bar_left_x, shield_bar_y, bar_width, 8.0),
-			Color(0.10, 0.12, 0.18),
+			Rect2(bar_left_x, shield_bar_y, bar_width, HERO_PRESENTATION.STATUS_SHIELD_HEIGHT),
+			HERO_PRESENTATION.STATUS_SHIELD_BACKGROUND_COLOR,
 			true
 		)
 		status_overlay.draw_rect(
@@ -20807,13 +20681,14 @@ func _draw_combat_status_overlay() -> void:
 				bar_left_x,
 				shield_bar_y,
 				bar_width * shield_ratio,
-				8.0
+				HERO_PRESENTATION.STATUS_SHIELD_HEIGHT
 			),
-			Color(0.20, 0.65, 1.0),
+			HERO_PRESENTATION.STATUS_SHIELD_COLOR,
 			true
 		)
 
 # Stronger paralysis replaces weaker; weaker applications cannot prolong it.
+
 func apply_paralysis_with_result(ratio: float, duration: float, receipt) -> bool:
 	if receipt == null:
 		apply_paralysis(ratio, duration)
@@ -21006,3 +20881,43 @@ func _configure_scaled_effect_profile(profile: Dictionary) -> void:
 func _reset_scaled_effect_visual(target: AnimatedSprite2D, properties: Dictionary) -> void:
 	for property in properties:
 		target.set(property, properties[property])
+
+
+func _draw_status_resource_bar(rule: Dictionary, bar_y: float, bar_width: float, bar_left_x: float) -> void:
+	var height := HERO_PRESENTATION.STATUS_RESOURCE_HEIGHT
+	if rule["kind"] == &"cells":
+		var capacity: int
+		if rule.has("capacity_method"):
+			capacity = int(call(rule["capacity_method"]))
+		else:
+			capacity = int(get(rule["capacity_property"]))
+		var displayed_cells := _get_status_displayed_cells(rule, capacity)
+		var gap := HERO_PRESENTATION.STATUS_CELL_GAP
+		var cell_width := (bar_width - gap * float(capacity - 1)) / float(capacity)
+		for index in range(capacity):
+			var x := -bar_width / 2.0 + float(index) * (cell_width + gap)
+			status_overlay.draw_rect(Rect2(x, bar_y, cell_width, height), HERO_PRESENTATION.STATUS_BACKGROUND_COLOR, true)
+			if index < displayed_cells:
+				status_overlay.draw_rect(Rect2(x, bar_y, cell_width, height), rule["color"], true)
+		return
+	var maximum: float
+	if rule.has("max_property"):
+		maximum = maxf(float(get(rule["max_property"])), float(rule["minimum_max"]))
+	else:
+		var config: Dictionary = get(rule["config_property"])
+		maximum = maxf(float(config.get(rule["max_key"], rule["default_max"])), float(rule["minimum_max"]))
+	var ratio := clampf(float(get(rule["value_property"])) / maximum, 0.0, 1.0)
+	var x := bar_left_x if bool(rule["use_x_offset"]) else -bar_width / 2.0
+	status_overlay.draw_rect(Rect2(x, bar_y, bar_width, height), HERO_PRESENTATION.STATUS_BACKGROUND_COLOR, true)
+	status_overlay.draw_rect(Rect2(x, bar_y, bar_width * ratio, height), rule["color"], true)
+
+
+func _get_status_displayed_cells(rule: Dictionary, capacity: int) -> int:
+	if rule.has("reload_property") and bool(get(rule["reload_property"])):
+		var config: Dictionary = get(rule["config_property"])
+		var duration := maxf(float(config.get(rule["duration_key"], rule["default_duration"])), float(rule["minimum_duration"]))
+		var progress := clampf(1.0 - float(get(rule["timer_property"])) / duration, 0.0, 1.0)
+		return clampi(int(floor(progress * float(capacity))), 0, capacity)
+	if rule.has("count_method"):
+		return int(call(rule["count_method"]))
+	return int(get(rule["count_property"]))
