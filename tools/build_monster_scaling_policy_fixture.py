@@ -3,7 +3,7 @@ Scene preloads are null in this fixture. This is not a full Battle/AI test.
 """
 from pathlib import Path
 import argparse, re, shutil, subprocess
-p=argparse.ArgumentParser();p.add_argument('destination',type=Path);p.add_argument('--baseline',required=True);a=p.parse_args()
+p=argparse.ArgumentParser();p.add_argument('destination',type=Path);p.add_argument('--baseline',required=True);p.add_argument('--allow-changed-method',action='append',default=[],help='Explicitly audited changes outside this historical phase');a=p.parse_args()
 repo=Path(__file__).resolve().parents[1];out=a.destination.resolve()
 if out==repo or repo in out.parents: raise SystemExit('Use a directory outside repository')
 out.mkdir(parents=True,exist_ok=True)
@@ -24,6 +24,7 @@ while queue:
 old_battle=baseline('src/battle/battle.gd')
 new_battle=(repo/'src/battle/battle.gd').read_text()
 changed={'get_monster_run_detail','_spawn_monster','_apply_special_monster_modifiers','_apply_normal_augments_to_existing_monster'}
+changed.update(a.allow_changed_method)
 unchanged=0
 for name in re.findall(r'^func (\w+)\(',old_battle,re.M):
  if name not in changed:

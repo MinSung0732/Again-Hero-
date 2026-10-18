@@ -1,3 +1,8 @@
+## 2026-10-18 — 하드코딩 정리5차: 정예 소환 정책
+
+- MonsterCatalog elite_spawn에 코볼트 소환 위치·해골 생존 등록 후크 및 공통 기본값을 선언. Battle의 ID 분기2곳 제거, 좌표 계산기 일반화. 기존 clamp/난수·용사모드 대체/허용·정예 등록/해제/부활 알림·전투/AI/수치 유지.
+- Godot 신규10571+4차 회귀1464=12035검사 PASS. 나머지 Battle229함수 동일·밸런스 감사0·정적 통과. raw 누락 기존 진단 동일. 전체Battle/실제AI·부활/합체/풀·실기/FPS 미검증. docs/ELITE_SPAWN_POLICY_PHASE5_20261018.md. main 병합 없음.
+
 ## 2026-10-18 — stage10-astra 작업 main 통합
 
 - 2021ed4까지의 작업을 main에 squash 통합. 사용자 확인에 따라 Stage1 이미지·효과음도 feature/stage10-astra 최신본을 채택하고 main의 과거 V4 되돌리기는 재적용하지 않음. 통합 후 작업 브랜치를 동일 트리로 동기화.

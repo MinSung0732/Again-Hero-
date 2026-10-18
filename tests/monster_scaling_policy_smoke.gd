@@ -40,6 +40,7 @@ func _initialize():
  for id in CATALOG.MONSTERS:
   var data:Dictionary=CATALOG.MONSTERS[id].duplicate(true)
   data.erase("runtime_scaling")
+  if not OLD_CATALOG.MONSTERS[id].has("elite_spawn"):data.erase("elite_spawn")
   check(data==OLD_CATALOG.MONSTERS[id],"unchanged catalog "+id)
   var profile:Dictionary=CATALOG.get_runtime_scaling_profile(id)
   check(profile.is_empty() if id not in ["orc","bomb_rat"] else not profile.is_empty(),"opt in "+id)

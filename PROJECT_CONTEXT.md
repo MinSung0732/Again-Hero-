@@ -1,3 +1,8 @@
+## 2026-10-18 — 하드코딩 정리5차: 정예 소환 정책
+
+- MonsterCatalog elite_spawn에 코볼트 소환 위치·해골 생존 등록 후크 및 공통 기본값을 선언. Battle의 ID 분기2곳 제거, 좌표 계산기 일반화. 기존 clamp/난수·용사모드 대체/허용·정예 등록/해제/부활 알림·전투/AI/수치 유지.
+- Godot 신규10571+4차 회귀1464=12035검사 PASS. 나머지 Battle229함수 동일·밸런스 감사0·정적 통과. raw 누락 기존 진단 동일. 전체Battle/실제AI·부활/합체/풀·실기/FPS 미검증. docs/ELITE_SPAWN_POLICY_PHASE5_20261018.md. main 병합 없음.
+
 ## 2026-10-18 — 단계별 하드코딩 정리4차 후속: 몬스터 배율
 
 - 몬스터 runtime_scaling은 MonsterCatalog 소유의 공유 metadata. Battle은 HP upgrade property와 fuse/explosion property를 읽어 처리하며 특정 ID 판별을 반복하지 않음. 기존 증강 상태 이름/수치·소환/정예/강화 순서 유지.

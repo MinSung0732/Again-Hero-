@@ -66,7 +66,7 @@ var spatial_queries := 0
 var battle_entity_registry = Registry.new()
 class Registry extends RefCounted:
  func retire_instance(_id: int) -> void: pass
-func _get_farthest_kobolt_attack_spawn_position(_id: String) -> Vector2: return Vector2.ZERO
+func _get_farthest_attack_range_spawn_position(_id: String) -> Vector2: return Vector2.ZERO
 func _get_stage_event_spawn_position(_distance: float) -> Vector2: return Vector2.ZERO
 func _spawn_monster(id: String, _point: Vector2, _cost: float, _split: bool, modifiers: Dictionary = {}):
  captured_spawn = modifiers
@@ -94,7 +94,7 @@ func _ensure_monster_spatial_grid() -> void:
 func _spatial_cell_for_position(point: Vector2) -> Vector2i:
  return Vector2i(floori(point.x/256.0),floori(point.y/256.0))
 '''
- for name in ["spawn_special_monster","_apply_demon_level_scaling_to_monster","refresh_monster_runtime_stats","get_goblin_formation_damage_multiplier","fill_monsters_near","_get_applicable_special_augment_config","_apply_special_augments_to_monster","_get_special_stat_multiplier","_monster_population_limit_reached","_get_active_monsters_snapshot","_unregister_monster","_consume_monster_for_fusion","_refresh_monsters_for_selected_augment"]:
+ for name in ["spawn_special_monster","_get_special_monster_spawn_position","_apply_demon_level_scaling_to_monster","refresh_monster_runtime_stats","get_goblin_formation_damage_multiplier","fill_monsters_near","_get_applicable_special_augment_config","_apply_special_augments_to_monster","_get_special_stat_multiplier","_monster_population_limit_reached","_get_active_monsters_snapshot","_unregister_monster","_consume_monster_for_fusion","_refresh_monsters_for_selected_augment"]:
   var body := function_source(source,name)
   check(not body.is_empty(),"Battle function present: "+name)
   script.source_code += "\n"+body.replace("\t"," ")+"\n"

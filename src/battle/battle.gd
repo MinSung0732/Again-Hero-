@@ -4443,13 +4443,7 @@ func spawn_special_monster(
 	if not bool(MONSTER_CATALOG.MONSTERS[monster_id].get("can_be_elite", true)):
 		return false
 
-	var spawn_position := (
-		_get_farthest_kobolt_attack_spawn_position(monster_id)
-		if monster_id == "kobolt"
-		else _get_stage_event_spawn_position(
-			float(special_data.get("spawn_distance", 720.0))
-		)
-	)
+	var spawn_position := _get_special_monster_spawn_position(monster_id, special_data)
 	var monster = _spawn_monster(
 		monster_id,
 		spawn_position,
@@ -4623,8 +4617,12 @@ func _apply_special_monster_modifiers(
 	monster.set_meta("stage_event_name", special_name)
 	monster.set_meta("visual_variant", "elite")
 	_apply_elite_monster_visual(monster, monster_id)
-	if monster_id == "skeleton":
-		set_elite_skeleton_alive(monster, true)
+	var elite_spawn_profile := MONSTER_CATALOG.get_elite_spawn_profile(monster_id)
+	var alive_registration: StringName = elite_spawn_profile.get(
+		"alive_registration_method", MONSTER_CATALOG.DEFAULT_ELITE_SPAWN.alive_registration_method
+	)
+	if not alive_registration.is_empty():
+		call(alive_registration, monster, true)
 	var elite_skills := MONSTER_CATALOG.get_elite_skills(monster_id)
 	monster.set_meta("elite_skill_count", elite_skills.size())
 	if not elite_skills.is_empty():
@@ -4682,8 +4680,20 @@ func _emit_stage_event_announcement(
 		message
 	)
 
+func _get_special_monster_spawn_position(monster_id: String, special_data: Dictionary) -> Vector2:
+	var profile := MONSTER_CATALOG.get_elite_spawn_profile(monster_id)
+	var position_policy := int(profile.get(
+		"position_policy", MONSTER_CATALOG.DEFAULT_ELITE_SPAWN.position_policy
+	))
+	if position_policy == MONSTER_CATALOG.EliteSpawnPosition.FARTHEST_ATTACK_RANGE:
+		return _get_farthest_attack_range_spawn_position(monster_id)
+	return _get_stage_event_spawn_position(float(special_data.get(
+		"spawn_distance", profile.get("spawn_distance", MONSTER_CATALOG.DEFAULT_ELITE_SPAWN_DISTANCE)
+	)))
+
+
 func _get_stage_event_spawn_position(
-	spawn_distance: float = 720.0
+	spawn_distance: float = MONSTER_CATALOG.DEFAULT_ELITE_SPAWN_DISTANCE
 ) -> Vector2:
 	if not is_instance_valid(hero):
 		return current_map_size * 0.5
@@ -4717,7 +4727,7 @@ func _get_farthest_stage_event_spawn_position() -> Vector2:
 	return farthest
 
 
-func _get_farthest_kobolt_attack_spawn_position(
+func _get_farthest_attack_range_spawn_position(
 	monster_id: String
 ) -> Vector2:
 	if not is_instance_valid(hero):
@@ -4734,7 +4744,7 @@ func _get_farthest_kobolt_attack_spawn_position(
 		return _clamp_manual_spawn_position(hero.position)
 
 	# Keep a one-pixel safety margin so floating-point rounding cannot place
-	# the stationary kobolt just outside its own attack check.
+	# the stationary actor just outside its own attack check.
 	var spawn_distance := minf(maxf(attack_range - 1.0, 1.0), offset.length())
 	return _clamp_manual_spawn_position(
 		hero.position + offset.normalized() * spawn_distance

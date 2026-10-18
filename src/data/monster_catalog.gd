@@ -6,6 +6,14 @@ const BALANCE := preload("res://src/data/monster_balance_catalog.gd")
 static var balanced_stats_cache: Dictionary = {}
 const EMPTY_RUNTIME_SCALING := {}
 
+enum EliteSpawnPosition { EVENT_RING, FARTHEST_ATTACK_RANGE }
+const DEFAULT_ELITE_SPAWN_DISTANCE := 720.0
+const DEFAULT_ELITE_SPAWN := {
+	"position_policy": EliteSpawnPosition.EVENT_RING,
+	"spawn_distance": DEFAULT_ELITE_SPAWN_DISTANCE,
+	"alive_registration_method": &"",
+}
+
 const ORDER := [
 	"iron_beetle",
 	"lantern_wisp",
@@ -614,6 +622,7 @@ const MONSTERS := {
 	},
 	"skeleton": {
 		"id": "skeleton",
+		"elite_spawn": {"alive_registration_method": &"set_elite_skeleton_alive"},
 		"name": "해골 전사",
 		"role": "tank",
 		"species": "undead",
@@ -742,6 +751,7 @@ const MONSTERS := {
 	},
 	"kobolt": {
 		"id": "kobolt",
+		"elite_spawn": {"position_policy": EliteSpawnPosition.FARTHEST_ATTACK_RANGE},
 		"name": "코볼트",
 		"role": "ranged",
 		"species": "beast",
@@ -1378,3 +1388,9 @@ static func get_runtime_scaling_profile(monster_id: String) -> Dictionary:
 	if not MONSTERS.has(monster_id):
 		return EMPTY_RUNTIME_SCALING
 	return MONSTERS[monster_id].get("runtime_scaling", EMPTY_RUNTIME_SCALING)
+
+# Shared immutable overrides; missing fields use DEFAULT_ELITE_SPAWN.
+static func get_elite_spawn_profile(monster_id: String) -> Dictionary:
+	if not MONSTERS.has(monster_id):
+		return DEFAULT_ELITE_SPAWN
+	return MONSTERS[monster_id].get("elite_spawn", DEFAULT_ELITE_SPAWN)
