@@ -1,4 +1,5 @@
 extends Area2D
+const COMBAT_DELAY := preload("res://src/systems/combat_delay.gd")
 
 const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
 
@@ -141,7 +142,7 @@ func _explode() -> void:
 func _apply_slow(body: Node) -> void:
 	if not _is_valid_monster(body):
 		return
-	var now_msec := Time.get_ticks_msec()
+	var now_msec := COMBAT_DELAY.now_msec(self)
 	var until_msec := now_msec + int(round(slow_duration * 1000.0))
 	var current_until := int(body.get_meta("sage_radiance_slow_until", 0))
 	body.set_meta("sage_radiance_slow_until", maxi(current_until, until_msec))

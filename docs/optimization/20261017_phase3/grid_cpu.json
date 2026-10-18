@@ -1,0 +1,162 @@
+{
+	"cpu_only": true,
+	"engine": "4.5.1-stable (official)",
+	"rows": [
+		{
+			"actors": 48,
+			"after_median_ms": 4.997,
+			"after_samples_ms": [
+				4.863,
+				4.943,
+				4.985,
+				4.997,
+				5.068,
+				5.361,
+				6.449
+			],
+			"before_median_ms": 8.201,
+			"before_samples_ms": [
+				7.943,
+				8.031,
+				8.171,
+				8.201,
+				8.551,
+				8.653,
+				9.097
+			],
+			"dense": false,
+			"queries_per_trial": 576,
+			"runs": 7
+		},
+		{
+			"actors": 120,
+			"after_median_ms": 17.115,
+			"after_samples_ms": [
+				15.929,
+				16.375,
+				16.49,
+				17.115,
+				17.26,
+				17.943,
+				18.538
+			],
+			"before_median_ms": 30.363,
+			"before_samples_ms": [
+				28.421,
+				29.802,
+				29.922,
+				30.363,
+				30.842,
+				34.427,
+				34.707
+			],
+			"dense": false,
+			"queries_per_trial": 1440,
+			"runs": 7
+		},
+		{
+			"actors": 208,
+			"after_median_ms": 30.042,
+			"after_samples_ms": [
+				28.267,
+				29.501,
+				30.038,
+				30.042,
+				30.278,
+				31.042,
+				32.161
+			],
+			"before_median_ms": 55.8,
+			"before_samples_ms": [
+				52.267,
+				52.813,
+				55.066,
+				55.8,
+				58.365,
+				58.746,
+				59.179
+			],
+			"dense": false,
+			"queries_per_trial": 2496,
+			"runs": 7
+		},
+		{
+			"actors": 48,
+			"after_median_ms": 20.621,
+			"after_samples_ms": [
+				18.839,
+				19.459,
+				20.223,
+				20.621,
+				20.849,
+				22.196,
+				23.045
+			],
+			"before_median_ms": 31.558,
+			"before_samples_ms": [
+				29.272,
+				30.078,
+				31.335,
+				31.558,
+				33.68,
+				34.121,
+				34.843
+			],
+			"dense": true,
+			"queries_per_trial": 576,
+			"runs": 7
+		},
+		{
+			"actors": 120,
+			"after_median_ms": 86.631,
+			"after_samples_ms": [
+				81.651,
+				85.259,
+				85.641,
+				86.631,
+				89.812,
+				91.076,
+				102.546
+			],
+			"before_median_ms": 126.326,
+			"before_samples_ms": [
+				123.836,
+				124.419,
+				125.926,
+				126.326,
+				130.871,
+				134.523,
+				134.768
+			],
+			"dense": true,
+			"queries_per_trial": 1440,
+			"runs": 7
+		},
+		{
+			"actors": 208,
+			"after_median_ms": 216.586,
+			"after_samples_ms": [
+				195.764,
+				210.518,
+				213.559,
+				216.586,
+				219.78,
+				221.762,
+				227.005
+			],
+			"before_median_ms": 349.395,
+			"before_samples_ms": [
+				343.612,
+				343.646,
+				345.098,
+				349.395,
+				354.34,
+				354.983,
+				358.473
+			],
+			"dense": true,
+			"queries_per_trial": 2496,
+			"runs": 7
+		}
+	]
+}

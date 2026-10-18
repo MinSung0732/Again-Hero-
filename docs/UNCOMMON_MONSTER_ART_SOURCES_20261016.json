@@ -1,0 +1,90 @@
+[
+  {
+    "id": "iron_beetle",
+    "name": "철갑장수풍뎅이",
+    "design": "a squat blue-black rhinoceros beetle with six short articulated legs, one broad ivory horn curving forward, overlapping dark steel wing plates with bronze rivets, two amber eyes. Entirely beetle anatomy, no humanoid arms, no clothes, no shield held. Attack: low horn shove; torso stays same size.",
+    "height": 32,
+    "rarity": "uncommon",
+    "source": "assets/art/monsters/iron_beetle/iron_beetle_source.png",
+    "form": "normal",
+    "prompt": "Use case: stylized-concept. Asset: production pixel-art monster animation sheet for Godot Again Hero. Reference image ONLY for pixel density, dark outlines, 3-tone shading and sprite animation layout, NOT the crab identity. Create ONE new monster NORMAL form sheet, transparent background with actual alpha, absolutely no background glow, floor, shadow, text, labels or grid lines. A regular 6-column 5-row invisible grid, recommended canvas1536x1280. All sprites face RIGHT in 3/4 side view, exactly same size anatomy palette throughout, approx2-head SD proportions. Crisp colored pixel clusters, no soft painting or antialias. Each body occupies about45% cell height with huge transparent gutter, common centerX and footY82% cell. EXACT layout: row1 cols1-4 IDLE4 distinct subtle breathing frames, cols5-6EMPTY; row2all6 MOVE in-place alternating gait6 frames; row3all6 ATTACK6 distinct anticipation,windup,peak attack right,followthrough,recoil,return; row4cols1-3 HIT3 recoil/recovery,remainingEMPTY; row5cols1-4 DEATH4 standing→collapse→flat corpse,remainingEMPTY. Total23 isolated sprites. Do not duplicate poses, do not cut limbs/effects, do not let sprites touch other cells. Restrain attack effects to local body-sized area. Character design: a squat blue-black rhinoceros beetle with six short articulated legs, one broad ivory horn curving forward, overlapping dark steel wing plates with bronze rivets, two amber eyes. Entirely beetle anatomy, no humanoid arms, no clothes, no shield held. Attack: low horn shove; torso stays same size."
+  },
+  {
+    "id": "iron_beetle",
+    "name": "철갑장수풍뎅이",
+    "design": "a squat blue-black rhinoceros beetle with six short articulated legs, one broad ivory horn curving forward, overlapping dark steel wing plates with bronze rivets, two amber eyes. Entirely beetle anatomy, no humanoid arms, no clothes, no shield held. Attack: low horn shove; torso stays same size. Elite armored/spirit variant; see exact prompt.",
+    "height": 32,
+    "rarity": "uncommon",
+    "source": "assets/art/elitemonster/iron_beetle/iron_beetle_elite_source.png",
+    "form": "elite",
+    "prompt": "Use case: identity-preserve. Edit this monster animation sheet into its ELITE variant for Godot. Preserve the exact6column5row layout,23sprite count, idle4/move6/attack6/hit3/death4, transparent empty cells, same beetle anatomy, all poses and body size. Change only its shell into burnished iron-gray layered armor with copper edge bands, a larger bifurcated ivory horn with bronze base, two small amber crystals on carapace. Distinguishable armored elite, same original character. Crisp pixel-art shading, no new background, no glow outside sprites, no shadows,text,gridlines. Actual transparent alpha background. Keep every sprite fully isolated and uncut."
+  },
+  {
+    "id": "lantern_wisp",
+    "name": "등불도깨비",
+    "design": "a small haunted round bronze hanging lantern spirit, single mischievous eye visible within orange flame, curled iron handle, three little bronze tassels below, levitating, no human body. Muted bronze and warm amber palette. Attack: compact orange fire puff towards RIGHT. Walk animation is rhythmic floating bob, feet baseline represented by bottom tassels.",
+    "height": 30,
+    "rarity": "uncommon",
+    "source": "assets/art/monsters/lantern_wisp/lantern_wisp_source.png",
+    "form": "normal",
+    "prompt": "Use case: stylized-concept. Asset: production pixel-art monster animation sheet for Godot Again Hero. Reference image ONLY for pixel density, dark outlines, 3-tone shading and sprite animation layout, NOT the crab identity. Create ONE new monster NORMAL form sheet, transparent background with actual alpha, absolutely no background glow, floor, shadow, text, labels or grid lines. A regular 6-column 5-row invisible grid, recommended canvas1536x1280. All sprites face RIGHT in 3/4 side view, exactly same size anatomy palette throughout, approx2-head SD proportions. Crisp colored pixel clusters, no soft painting or antialias. Each body occupies about45% cell height with huge transparent gutter, common centerX and footY82% cell. EXACT layout: row1 cols1-4 IDLE4 distinct subtle breathing frames, cols5-6EMPTY; row2all6 MOVE in-place alternating gait6 frames; row3all6 ATTACK6 distinct anticipation,windup,peak attack right,followthrough,recoil,return; row4cols1-3 HIT3 recoil/recovery,remainingEMPTY; row5cols1-4 DEATH4 standing→collapse→flat corpse,remainingEMPTY. Total23 isolated sprites. Do not duplicate poses, do not cut limbs/effects, do not let sprites touch other cells. Restrain attack effects to local body-sized area. Character design: a small haunted round bronze hanging lantern spirit, single mischievous eye visible within orange flame, curled iron handle, three little bronze tassels below, levitating, no human body. Muted bronze and warm amber palette. Attack: compact orange fire puff towards RIGHT. Walk animation is rhythmic floating bob, feet baseline represented by bottom tassels."
+  },
+  {
+    "id": "lantern_wisp",
+    "name": "등불도깨비",
+    "design": "a small haunted round bronze hanging lantern spirit, single mischievous eye visible within orange flame, curled iron handle, three little bronze tassels below, levitating, no human body. Muted bronze and warm amber palette. Attack: compact orange fire puff towards RIGHT. Walk animation is rhythmic floating bob, feet baseline represented by bottom tassels. Elite armored/spirit variant; see exact prompt.",
+    "height": 30,
+    "rarity": "uncommon",
+    "source": "assets/art/elitemonster/lantern_wisp/lantern_wisp_elite_source.png",
+    "form": "elite",
+    "prompt": "Use case: identity-preserve. Turn this exact lantern spirit animation spritesheet into its ELITE variant. Preserve all23distinct poses and6column5rowlayout (idle4, move6, attack6, hit3, death4; unused cells completely transparent), same body size and lantern construction. Only upgrade bronze casing to dark obsidian iron with gold filigree edge bands and a small gold crest, change orange flame to pale turquoise ghostfire and single eye to violet. Keep3bronze tassels and curled handle. No background aura or glow fog, no shadows or floor, no text or grid. Crisp pixel-art3tone shading, true transparent alpha, sprites fully isolated with generous gutter. Attack frames still emit compact rightward fire puff, death frames extinguish and topple."
+  },
+  {
+    "id": "blade_mantis",
+    "name": "쌍낫사마귀",
+    "design": "a stylized upright emerald praying mantis, triangular head with two narrow yellow eyes, two scythe-shaped forearms, four small walking legs, short segmented abdomen, plum joints. Insect anatomy, no humanoid clothing or sword. Attack: restrained alternate forearm slash right, not a giant energy arc.",
+    "height": 34,
+    "rarity": "uncommon",
+    "source": "assets/art/monsters/blade_mantis/blade_mantis_source.png",
+    "form": "normal",
+    "prompt": "Use case: stylized-concept. Asset: production pixel-art monster animation sheet for Godot Again Hero. Reference image ONLY for pixel density, dark outlines, 3-tone shading and sprite animation layout, NOT the crab identity. Create ONE new monster NORMAL form sheet, transparent background with actual alpha, absolutely no background glow, floor, shadow, text, labels or grid lines. A regular 6-column 5-row invisible grid, recommended canvas1536x1280. All sprites face RIGHT in 3/4 side view, exactly same size anatomy palette throughout, approx2-head SD proportions. Crisp colored pixel clusters, no soft painting or antialias. Each body occupies about45% cell height with huge transparent gutter, common centerX and footY82% cell. EXACT layout: row1 cols1-4 IDLE4 distinct subtle breathing frames, cols5-6EMPTY; row2all6 MOVE in-place alternating gait6 frames; row3all6 ATTACK6 distinct anticipation,windup,peak attack right,followthrough,recoil,return; row4cols1-3 HIT3 recoil/recovery,remainingEMPTY; row5cols1-4 DEATH4 standing→collapse→flat corpse,remainingEMPTY. Total23 isolated sprites. Do not duplicate poses, do not cut limbs/effects, do not let sprites touch other cells. Restrain attack effects to local body-sized area. Character design: a stylized upright emerald praying mantis, triangular head with two narrow yellow eyes, two scythe-shaped forearms, four small walking legs, short segmented abdomen, plum joints. Insect anatomy, no humanoid clothing or sword. Attack: restrained alternate forearm slash right, not a giant energy arc."
+  },
+  {
+    "id": "blade_mantis",
+    "name": "쌍낫사마귀",
+    "design": "a stylized upright emerald praying mantis, triangular head with two narrow yellow eyes, two scythe-shaped forearms, four small walking legs, short segmented abdomen, plum joints. Insect anatomy, no humanoid clothing or sword. Attack: restrained alternate forearm slash right, not a giant energy arc. Elite violet/gold variant; see exact prompt.",
+    "height": 34,
+    "rarity": "uncommon",
+    "source": "assets/art/elitemonster/blade_mantis/blade_mantis_elite_source.png",
+    "form": "elite",
+    "prompt": "Use case: identity-preserve. Edit this same praying mantis animation sheet into its ELITE form. Keep exact23poses6column5row grid, same body size, same triangular face, six insect limbs and abdomen silhouette. Upgrade emerald shell to dark violet segmented armor with teal edge accents, scythe forearms to amber gold blades with ivory sharp edge, eyes pale lime. Two small golden shoulder thorns, no new arms/weapons/clothes. All idle4/move6/attack6/hit3/death4 sprites must remain isolated and uncut with large empty gutters, unused cells transparent. Actual transparent alpha, no shadows/background glow fog/text/grid. Crisp low-resolution pixel clusters with dark colored outlines, no smooth painting.",
+    "regions": {
+      "attack_03": [
+        508,
+        414,
+        826,
+        624
+      ]
+    }
+  },
+  {
+    "id": "moss_deer",
+    "name": "이끼뿔사슴",
+    "design": "a compact magical quadruped fawn with warm brown fur, cream muzzle and belly, two small branching antlers wrapped with moss and tiny mint leaves, four visible slender legs, round dark eyes and short tail. No humanoid stance or staff. Attack: head dip then a tiny green seed puff released between antlers to RIGHT.",
+    "height": 34,
+    "rarity": "uncommon",
+    "source": "assets/art/monsters/moss_deer/moss_deer_source.png",
+    "form": "normal",
+    "prompt": "Use case: stylized-concept. Asset: production pixel-art monster animation sheet for Godot Again Hero. Reference image ONLY for pixel density, dark outlines, 3-tone shading and sprite animation layout, NOT the crab identity. Create ONE new monster NORMAL form sheet, transparent background with actual alpha, absolutely no background glow, floor, shadow, text, labels or grid lines. A regular 6-column 5-row invisible grid, recommended canvas1536x1280. All sprites face RIGHT in 3/4 side view, exactly same size anatomy palette throughout, approx2-head SD proportions. Crisp colored pixel clusters, no soft painting or antialias. Each body occupies about45% cell height with huge transparent gutter, common centerX and footY82% cell. EXACT layout: row1 cols1-4 IDLE4 distinct subtle breathing frames, cols5-6EMPTY; row2all6 MOVE in-place alternating gait6 frames; row3all6 ATTACK6 distinct anticipation,windup,peak attack right,followthrough,recoil,return; row4cols1-3 HIT3 recoil/recovery,remainingEMPTY; row5cols1-4 DEATH4 standing→collapse→flat corpse,remainingEMPTY. Total23 isolated sprites. Do not duplicate poses, do not cut limbs/effects, do not let sprites touch other cells. Restrain attack effects to local body-sized area. Character design: a compact magical quadruped fawn with warm brown fur, cream muzzle and belly, two small branching antlers wrapped with moss and tiny mint leaves, four visible slender legs, round dark eyes and short tail. No humanoid stance or staff. Attack: head dip then a tiny green seed puff released between antlers to RIGHT."
+  },
+  {
+    "id": "moss_deer",
+    "name": "이끼뿔사슴",
+    "design": "a compact magical quadruped fawn with warm brown fur, cream muzzle and belly, two small branching antlers wrapped with moss and tiny mint leaves, four visible slender legs, round dark eyes and short tail. No humanoid stance or staff. Attack: head dip then a tiny green seed puff released between antlers to RIGHT. Elite armored/spirit variant; see exact prompt.",
+    "height": 34,
+    "rarity": "uncommon",
+    "source": "assets/art/elitemonster/moss_deer/moss_deer_elite_source.png",
+    "form": "elite",
+    "prompt": "Use case: identity-preserve. Make the ELITE variant of this same magical quadruped moss fawn animation sheet. Preserve all23poses, body proportions, four legs,6column5row layout and transparent unused cells: idle4/move6/attack6/hit3/death4. Upgrade fur from brown to pale cream with moss-green markings, antlers to slightly larger branching jade crystals with small gold leaf buds. Same character, no humanoid stance, no staff or clothes. Attack stays small rightward green seed puff. Crisp pixel clusters,3-tone shading, dark colored outlines. Actual transparent alpha background, no backdrop/glow fog/shadows/text/grid. Wide empty gutters, no clipped antlers/effects."
+  }
+]

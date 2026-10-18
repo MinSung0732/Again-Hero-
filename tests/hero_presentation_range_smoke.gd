@@ -180,8 +180,8 @@ func actual_ui() -> void:
 	scene.overlay.hide(); scene._refresh_hud()
 	await process_frame
 	check(scene.hp.has_theme_stylebox_override("fill") and scene.xp.has_theme_stylebox_override("fill"),"HP/EXP fills styled")
-	check(scene.get_node("HeroHUD").find_child("AgainHeroLogo",true,false).texture != null,"shared actual logo")
-	check(scene.get_node("HeroHUD").get_rect().end.y <= 330,"HUD does not cover battlefield")
+	check(scene.get_node("HeroHUD").find_child("HeroPortrait",true,false).texture != null,"actual selected hero portrait")
+	check(scene.get_node("HeroHUD").get_rect().end.y <= scene.get_node("BattleView").offset_top,"HUD does not cover battlefield")
 	await capture("hero-hud-revised")
 	var runtime = scene.battle.hero.player_weapons
 	for id in DATA.weapon_pool().slice(1,3): runtime.add(String(id))

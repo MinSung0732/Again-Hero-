@@ -1,6 +1,22 @@
 extends Node2D
 
+const PERFORMANCE_PROBE := preload("res://src/systems/combat_performance_probe.gd")
+const CANDIDATE_CACHE := preload("res://src/systems/spatial_candidate_cache.gd")
+var combat_profile = PERFORMANCE_PROBE.new()
+# Set before _ready by non-rendered authoritative rooms; gameplay is unchanged.
+var combat_popup_visuals_enabled := true
+var monster_candidate_cache = CANDIDATE_CACHE.new()
+@export var combat_profiling_enabled := false:
+	set(value):
+		combat_profiling_enabled = value
+		if value: combat_profile.start()
+		else: combat_profile.stop()
+
+const PICKUP_PLACEMENT := preload("res://src/systems/pickup_placement.gd")
 const BATTLE_SESSION := preload("res://src/data/battle_session_catalog.gd")
+const CONTROL_SPAWNS := preload("res://src/hero_mode/hero_control_spawn_budget.gd")
+var hero_control_spawns = CONTROL_SPAWNS.new()
+var hero_control_roster: Array = []
 const HERO_SURVIVAL := preload("res://src/data/hero_mode_catalog.gd")
 const BATTLE_COMMAND := preload("res://src/systems/battle_command.gd")
 const BATTLE_COMMAND_ROUTER := preload("res://src/systems/battle_command_router.gd")
@@ -149,6 +165,8 @@ var current_stage_data: Dictionary = {}
 var current_hero_profile: Dictionary = {}
 var current_map_size: Vector2 = DEFAULT_MAP_SIZE
 var run_time_limit_seconds: float = 0.0
+var hero_final_boss_spawned := false
+var _hero_boss_spawn_pending := false
 var run_time_emit_timer: float = 0.0
 var manual_spawn_warning_timer: float = 0.0
 var run_metrics = RUN_METRICS.new()
@@ -215,6 +233,8 @@ var battle_over: bool = false
 signal hero_chest_opened
 var campaign_difficulty := "easy"
 var hero_player_mode := false
+var online_match_mode := false
+var online_match_rules: Dictionary = {}
 var hero_player_stage := "stage_1"
 var hero_player_hero_id := "ranged_rookie"
 var external_pause: bool = false
@@ -248,6 +268,8 @@ var stage_reinforcement_interval: float = 0.12
 var stage_reinforcement_batch_size: int = 2
 var hero_kills_toward_heal_item: int = 0
 var hero_kills_toward_chest: int = 0
+var hero_chests_spawned := 0
+var hero_elite_kills_toward_chest := 0
 var hero_kills_toward_magnet: int = 0
 
 var summon_cost_multiplier: float = 1.0
@@ -283,7 +305,7 @@ var loadout_restriction_enabled: bool = false
 
 # First instances build monster SpriteFrames/status-effect caches synchronously.
 # Warm them once, spread across frames, before the first real mass summon.
-static var _monster_spawn_resources_warmed: bool = false
+var _monster_spawn_resources_warmed: bool = false
 var _monster_spawn_warmup_running: bool = false
 
 func _register_heal_item(item: Node) -> void:
@@ -356,6 +378,7 @@ func _spatial_cell_for_position(world_position: Vector2) -> Vector2i:
 
 
 func _rebuild_monster_spatial_grid() -> void:
+	var profile_start: int = Time.get_ticks_usec() if combat_profile.enabled else 0
 	# Keep cell Arrays alive and only clear buckets used by the previous
 	# physics frame. This avoids rebuilding Dictionary/Array storage every
 	# frame when large monster waves are active.
@@ -402,6 +425,7 @@ func _rebuild_monster_spatial_grid() -> void:
 
 	monster_spatial_grid_physics_frame = Engine.get_physics_frames()
 	monster_spatial_snapshot_revision += 1
+	if combat_profile.enabled: combat_profile.record(PERFORMANCE_PROBE.Scope.GRID,profile_start)
 
 
 func _ensure_monster_spatial_grid() -> void:
@@ -415,9 +439,12 @@ func invalidate_monster_spatial_snapshot() -> void:
 
 
 func get_monster_separation_bias(owner: Node2D, radius: float) -> Vector2:
+	var profile_start := Time.get_ticks_usec() if combat_profile.enabled else 0
 	_ensure_monster_spatial_grid()
 	monster_local_grid.ensure(active_monsters, monster_spatial_snapshot_revision)
-	return monster_local_grid.separation_bias(owner, radius)
+	var result := monster_local_grid.separation_bias(owner, radius)
+	if combat_profile.enabled: combat_profile.record(PERFORMANCE_PROBE.Scope.SEPARATION,profile_start)
+	return result
 
 
 func count_monster_group_near(origin: Vector2, radius: float, group: StringName, excluded: Node, stop_after: int) -> int:
@@ -455,6 +482,7 @@ func fill_monsters_near(
 	radius: float,
 	result: Array
 ) -> void:
+	var profile_start: int = Time.get_ticks_usec() if combat_profile.enabled else 0
 	result.clear()
 	_ensure_monster_spatial_grid()
 
@@ -471,16 +499,8 @@ func fill_monsters_near(
 	min_cell -= Vector2i.ONE
 	max_cell += Vector2i.ONE
 
-	for cell_x in range(min_cell.x, max_cell.x + 1):
-		for cell_y in range(min_cell.y, max_cell.y + 1):
-			var cell := Vector2i(cell_x, cell_y)
-			var bucket = monster_spatial_grid.get(cell, null)
-			if typeof(bucket) != TYPE_ARRAY:
-				continue
-			for node in bucket:
-				if is_instance_valid(node) and not node.is_queued_for_deletion():
-					result.append(node)
-
+	monster_candidate_cache.fill(monster_spatial_grid,min_cell,max_cell,monster_spatial_snapshot_revision,result)
+	if combat_profile.enabled: combat_profile.record(PERFORMANCE_PROBE.Scope.QUERY,profile_start)
 
 func query_monsters_near(origin: Vector2, radius: float) -> Array:
 	var result: Array = []
@@ -624,6 +644,7 @@ func get_nearest_monster_target(
 
 
 func fill_monsters_in_rect(world_rect: Rect2, result: Array) -> void:
+	var profile_start: int = Time.get_ticks_usec() if combat_profile.enabled else 0
 	result.clear()
 	_ensure_monster_spatial_grid()
 
@@ -632,16 +653,8 @@ func fill_monsters_in_rect(world_rect: Rect2, result: Array) -> void:
 	min_cell -= Vector2i.ONE
 	max_cell += Vector2i.ONE
 
-	for cell_x in range(min_cell.x, max_cell.x + 1):
-		for cell_y in range(min_cell.y, max_cell.y + 1):
-			var cell := Vector2i(cell_x, cell_y)
-			var bucket = monster_spatial_grid.get(cell, null)
-			if typeof(bucket) != TYPE_ARRAY:
-				continue
-			for node in bucket:
-				if is_instance_valid(node) and not node.is_queued_for_deletion():
-					result.append(node)
-
+	monster_candidate_cache.fill(monster_spatial_grid,min_cell,max_cell,monster_spatial_snapshot_revision,result)
+	if combat_profile.enabled: combat_profile.record(PERFORMANCE_PROBE.Scope.QUERY,profile_start)
 
 func query_monsters_in_rect(world_rect: Rect2) -> Array:
 	var result: Array = []
@@ -651,7 +664,8 @@ func query_monsters_in_rect(world_rect: Rect2) -> Array:
 
 func _ready() -> void:
 	var test_mode := get_node_or_null("/root/LocalTestMode")
-	practice_mode = test_mode != null and test_mode.consume_practice_request()
+	practice_mode = not online_match_mode and test_mode != null and test_mode.consume_practice_request()
+	if online_match_mode: _mission_service = null
 	queue_redraw()
 	elite_monster_skill_runtime.setup(self)
 	scorpion_swamp_runtime.setup(self)
@@ -659,10 +673,19 @@ func _ready() -> void:
 	goblin_formation_runtime.setup(self,MONSTER_CATALOG.MONSTERS)
 	anubis_army_runtime.setup(MONSTER_CATALOG.MONSTERS)
 	lizard_tail_runtime.setup(self)
-	_cache_demon_ultimate_runtime_data()
+	if not online_match_mode: _cache_demon_ultimate_runtime_data()
 	_start_battle()
 
 func _process(delta: float) -> void:
+	if not combat_profile.enabled:
+		_process_battle(delta)
+		return
+	var started := Time.get_ticks_usec()
+	_process_battle(delta)
+	combat_profile.record(PERFORMANCE_PROBE.Scope.BATTLE,started)
+	combat_profile.frame(delta)
+
+func _process_battle(delta: float) -> void:
 	if manual_spawn_warning_timer > 0.0:
 		manual_spawn_warning_timer = maxf(
 			manual_spawn_warning_timer - delta,
@@ -730,7 +753,7 @@ func _process(delta: float) -> void:
 
 		if not practice_mode and run_metrics.is_time_up():
 			_on_run_time_up()
-			return
+			if not hero_player_mode: return
 
 	if (
 		not flow_pause_manager.is_paused(
@@ -800,6 +823,11 @@ func _cache_demon_ultimate_runtime_data() -> void:
 
 
 func _start_battle() -> void:
+	monster_candidate_cache.reset()
+	if _hero_subtree_paused: process_mode = _hero_subtree_previous_mode
+	_hero_subtree_paused = false
+	_hero_paused_total_msec = 0
+	_hero_pause_started_msec = 0
 	battle_command_router.begin_session(_execute_battle_command)
 	battle_entity_registry.begin_session(battle_command_router.get_session_id())
 	demon_augment_revision += 1
@@ -814,6 +842,8 @@ func _start_battle() -> void:
 	transcendence.configure(registered_id, TRANSCENDENCE_DATA.get_rules(registered_id) if bool(MONSTER_CATALOG.MONSTERS.get(registered_id, {}).get("combat_enabled", true)) else {})
 	transcendence_changed.emit(registered_id, false, false)
 	battle_over = false
+	hero_final_boss_spawned = false
+	_hero_boss_spawn_pending = false
 	_run_reward_granted = false
 	_run_reward_save_failed = false
 	elite_monster_skill_runtime.reset()
@@ -833,6 +863,8 @@ func _start_battle() -> void:
 			valid_orb_pool.append(pooled_orb)
 	exp_orb_pool = valid_orb_pool
 	active_monsters.clear()
+	hero_control_spawns.reset()
+	hero_control_roster.clear()
 	monster_query_registration_order = 0
 	monster_population_counts.clear()
 	monster_population_ids.clear()
@@ -883,6 +915,8 @@ func _start_battle() -> void:
 	stage_reinforcement_batch_size = 2
 	hero_kills_toward_heal_item = 0
 	hero_kills_toward_chest = 0
+	hero_chests_spawned = 0
+	hero_elite_kills_toward_chest = 0
 	hero_kills_toward_magnet = 0
 
 	summon_cost_multiplier = 1.0
@@ -914,7 +948,7 @@ func _start_battle() -> void:
 
 	if not hero_player_mode: _apply_permanent_research()
 
-	var progress_state: Dictionary = STAGE_PROGRESS.load_state()
+	var progress_state: Dictionary = {} if online_match_mode else STAGE_PROGRESS.load_state()
 	current_stage_id = "stage_1" if practice_mode else String(progress_state.get("current_stage_id", "stage_1"))
 	if hero_player_mode: current_stage_id = hero_player_stage
 	current_stage_data = STAGE_CATALOG.get_stage(current_stage_id)
@@ -922,7 +956,7 @@ func _start_battle() -> void:
 	if current_stage_data.is_empty():
 		current_stage_id = "stage_1"
 		current_stage_data = STAGE_CATALOG.get_stage(current_stage_id)
-		STAGE_PROGRESS.set_current_stage(current_stage_id)
+		if not online_match_mode: STAGE_PROGRESS.set_current_stage(current_stage_id)
 
 	if not practice_mode and not tutorial_mode:
 		command_power = clampf(float(current_stage_data.get("opening_command",START_COMMAND)),0.0,max_command)
@@ -932,6 +966,7 @@ func _start_battle() -> void:
 	)
 	# Stages 1~10 share the Demon Castle map, progressively destroyed per stage.
 	# Keep actor/prop depth rules consistent across the whole castle arc.
+	if hero_player_mode: hero_control_roster = HERO_SURVIVAL.roster_for(int(current_stage_data.get("number",1)),campaign_difficulty)
 	y_sort_enabled = _uses_castle_battlefield(current_stage_id)
 	var castle_battlefield := get_node_or_null("Stage1Battlefield")
 	if (
@@ -968,7 +1003,8 @@ func _start_battle() -> void:
 	if hero_player_mode:
 		current_hero_profile = preload("res://src/data/hero_weapon_catalog.gd").profile_for_survival(current_hero_profile)
 		current_hero_profile["display_name"] = String(preload("res://src/data/hero_character_catalog.gd").get_character(hero_player_hero_id).get("name","용사"))
-		preload("res://src/systems/hero_mode_store.gd").apply_growth(hero_player_hero_id,current_hero_profile)
+		if not online_match_mode: preload("res://src/systems/hero_mode_store.gd").apply_growth(hero_player_hero_id,current_hero_profile)
+		if not online_match_mode: current_hero_profile["survival_learning"] = HERO_SURVIVAL.pacing_value("learning",int(current_stage_data.get("number",1)),campaign_difficulty)
 
 	if practice_mode:
 		current_hero_profile = HERO_PROFILES.get_profile("ranged_rookie").duplicate(true)
@@ -988,7 +1024,7 @@ func _start_battle() -> void:
 	hero.position = current_map_size * 0.5
 	if hero_player_mode:
 		hero.set("player_weapons",preload("res://src/hero_mode/hero_weapon_runtime.gd").new())
-		hero.player_weapons.install(hero)
+		hero.player_weapons.install(hero,0 if online_match_mode else preload("res://src/systems/hero_mode_store.gd").augment_reroll_bonus(),current_hero_profile.get("hero_research_bonuses",{}))
 	# add_child() runs Hero._ready(), which reapplies the profile visual and
 	# restores HeroSprite.z_index. Normalize Demon Castle depth only after _ready()
 	# so the hero participates in Battle's Y-sort just like monsters/props.
@@ -1035,13 +1071,26 @@ func prepare_spawn_resources() -> void:
 		await get_tree().process_frame
 
 
+func spawn_warmup_ids() -> Array:
+	if online_match_mode: return []
+	if hero_player_mode:
+		return HERO_SURVIVAL.entry_monster_ids(int(current_stage_data.get("number",1)),campaign_difficulty)
+	var ids: Array = allowed_monster_ids.duplicate()
+	var registered := String(transcendence.monster_id)
+	if not registered.is_empty() and registered not in ids: ids.append(registered)
+	return ids
+
+
 func _warm_monster_spawn_resources() -> void:
+	if online_match_mode:
+		_monster_spawn_resources_warmed = true
+		return # Dedicated rooms do not warm unused solo presentation actors.
 	if _monster_spawn_resources_warmed or _monster_spawn_warmup_running:
 		return
 	_monster_spawn_warmup_running = true
 	var slice_start := Time.get_ticks_usec()
 
-	for raw_id in MONSTER_CATALOG.ORDER:
+	for raw_id in spawn_warmup_ids():
 		if not is_inside_tree() or battle_over:
 			_monster_spawn_warmup_running = false
 			return
@@ -1062,7 +1111,7 @@ func _warm_monster_spawn_resources() -> void:
 		warmup.position = Vector2(-10000.0, -10000.0)
 		add_child(warmup)
 
-		# Keep every normal/elite cache ready before combat, yielding by work
+		# Keep this encounter's normal/elite cache ready, yielding by work
 		# budget instead of paying two display frames for each monster type.
 		if Time.get_ticks_usec() - slice_start >= PresentationWarmup.MAIN_THREAD_BUDGET_US:
 			await get_tree().process_frame
@@ -1684,8 +1733,7 @@ func get_monster_run_detail(monster_id: String) -> Dictionary:
 			* monster_hp_multiplier
 			* _get_monster_augment_multiplier(monster_id, "hp")
 		)
-		if monster_id == "orc":
-			hp_value *= orc_hp_multiplier
+		hp_value *= _get_monster_hp_upgrade_multiplier(monster_id)
 		detail["max_hp"] = maxi(
 			1,
 			int(round(
@@ -2137,6 +2185,11 @@ func promote_monster_to_giant(
 	return true
 
 
+func hero_spawn_candidate(id: String,roster: Array,elite: bool = false) -> String:
+	if not hero_player_mode: return id
+	return hero_control_spawns.choose(id,roster,elite,int(current_stage_data.get("number",1)),float(run_metrics.elapsed_seconds),active_monsters.size())
+
+
 func _spawn_monster(
 	monster_type: String,
 	spawn_position: Vector2,
@@ -2144,7 +2197,12 @@ func _spawn_monster(
 	split_child: bool = false,
 	spawn_modifiers: Dictionary = {}
 ):
-	if bool(spawn_modifiers.get("counts_population", false)) and is_population_full():
+	var reserved_boss := _is_reserved_hero_boss_request(monster_type,spawn_modifiers)
+	if online_match_mode and (active_monsters.size() >= get_population_limit() or monster_type not in online_match_rules.get("roster",[])): return null
+	if hero_player_mode and run_metrics.elapsed_seconds >= HERO_SURVIVAL.DURATION and not reserved_boss: return null
+	if hero_player_mode and (active_monsters.size() >= HERO_SURVIVAL.monster_limit(int(current_stage_data.get("number",1)))+(1 if reserved_boss else 0) or not HERO_SURVIVAL.monster_allowed(monster_type,int(current_stage_data.get("number",1)),campaign_difficulty)): return null
+	if hero_player_mode and not reserved_boss and not hero_control_spawns.allows(monster_type,bool(spawn_modifiers.get("elite_variant",false)),int(current_stage_data.get("number",1)),float(run_metrics.elapsed_seconds),active_monsters.size()): return null
+	if not reserved_boss and bool(spawn_modifiers.get("counts_population", false)) and is_population_full():
 		return null
 	if not bool(MONSTER_CATALOG.MONSTERS.get(monster_type, {}).get("combat_enabled", true)):
 		return null
@@ -2156,9 +2214,9 @@ func _spawn_monster(
 		push_warning("Unknown monster id: %s" % monster_type)
 		return null
 
-	if _monster_population_limit_reached(monster_type, bool(spawn_modifiers.get("elite_variant", false))):
+	if not reserved_boss and _monster_population_limit_reached(monster_type, bool(spawn_modifiers.get("elite_variant", false))):
 		return null
-	if bool(MONSTER_CATALOG.MONSTERS[monster_type].get("spawn_at_max_range", false)) and is_instance_valid(hero):
+	if bool(MONSTER_CATALOG.MONSTERS[monster_type].get("spawn_at_max_range", false)) and is_instance_valid(hero) and not bool(spawn_modifiers.get("hero_encounter_position_locked",false)):
 		spawn_position = get_stationary_spawn_position(monster_type, hero.global_position, spawn_position)
 	# Never instantiate a monster inside the solid upper castle wall. This is
 	# also the catch-all for queued ultimates/reinforcements that precomputed
@@ -2353,8 +2411,7 @@ func _spawn_monster(
 			* monster_hp_multiplier
 			* _get_monster_augment_multiplier(monster_type, "hp")
 		)
-		if monster_type == "orc":
-			level_base_hp *= orc_hp_multiplier
+		level_base_hp *= _get_monster_hp_upgrade_multiplier(monster_type)
 		level_base_hp *= maxf(
 			float(spawn_modifiers.get("hp_multiplier", 1.0)),
 			0.01
@@ -2474,6 +2531,7 @@ func _spawn_monster(
 	var monster_instance_id := monster.get_instance_id()
 	monster_summon_costs[monster_instance_id] = summon_cost
 	active_monsters[monster_instance_id] = monster
+	if hero_player_mode: hero_control_spawns.register(monster_instance_id,monster_type,bool(spawn_modifiers.get("elite_variant",false)),int(current_stage_data.get("number",1)),float(run_metrics.elapsed_seconds))
 	_activate_battle_entity(monster)
 	monster.set_meta("query_registration_order", monster_query_registration_order)
 	monster_query_registration_order += 1
@@ -2516,12 +2574,15 @@ func get_population_count() -> int:
 	return direct_population_ids.size()
 
 func get_population_limit() -> int:
+	if online_match_mode: return int(online_match_rules.get("population",48))
+	if hero_player_mode: return HERO_SURVIVAL.monster_limit(int(current_stage_data.get("number",1)))
 	return maxi(floori(max_command), 0)
 
 func is_population_full() -> bool:
 	return get_population_count() >= get_population_limit()
 
 func _unregister_monster(instance_id: int) -> void:
+	hero_control_spawns.retire(instance_id)
 	anubis_army_runtime.retire(instance_id)
 	battle_entity_registry.retire_instance(instance_id)
 	if direct_population_ids.erase(instance_id):
@@ -2799,9 +2860,13 @@ func _ensure_monster_ground_shadow(
 	monster.add_child(shadow)
 
 
+func _hero_survival_multiplier(stat: String,elapsed: float) -> float:
+	if online_match_mode: return HERO_SURVIVAL.monster_multiplier(stat,elapsed)
+	return HERO_SURVIVAL.monster_multiplier_for_stage(stat,elapsed,int(current_stage_data.get("number",1)),campaign_difficulty)
+
 func _get_demon_level_monster_hp_multiplier(spawn_seconds: float = -1.0) -> float:
 	if hero_player_mode:
-		return HERO_SURVIVAL.monster_multiplier("hp",run_metrics.elapsed_seconds if spawn_seconds < 0.0 else spawn_seconds)
+		return _hero_survival_multiplier("hp",run_metrics.elapsed_seconds if spawn_seconds < 0.0 else spawn_seconds)*(1.25 if campaign_difficulty == "hard" else 1.0)
 	var growth_steps := maxi(demon_level - 1, 0)
 	return minf(
 		pow(DEMON_LEVEL_MONSTER_HP_GROWTH, float(growth_steps)),
@@ -2810,7 +2875,7 @@ func _get_demon_level_monster_hp_multiplier(spawn_seconds: float = -1.0) -> floa
 
 func _get_demon_level_monster_damage_multiplier(spawn_seconds: float = -1.0) -> float:
 	if hero_player_mode:
-		return HERO_SURVIVAL.monster_multiplier("damage",run_metrics.elapsed_seconds if spawn_seconds < 0.0 else spawn_seconds)
+		return _hero_survival_multiplier("damage",run_metrics.elapsed_seconds if spawn_seconds < 0.0 else spawn_seconds)*(1.15 if campaign_difficulty == "hard" else 1.0)
 	var growth_steps := maxi(demon_level - 1, 0)
 	return minf(
 		pow(DEMON_LEVEL_MONSTER_DAMAGE_GROWTH, float(growth_steps)),
@@ -2827,7 +2892,7 @@ func _get_demon_level_monster_exp_multiplier() -> float:
 
 func _get_demon_level_monster_speed_multiplier(spawn_seconds: float = -1.0) -> float:
 	if hero_player_mode:
-		return HERO_SURVIVAL.monster_multiplier("speed",run_metrics.elapsed_seconds if spawn_seconds < 0.0 else spawn_seconds)
+		return _hero_survival_multiplier("speed",run_metrics.elapsed_seconds if spawn_seconds < 0.0 else spawn_seconds)*(1.05 if campaign_difficulty == "hard" else 1.0)
 	var growth_steps := maxi(demon_level - 1, 0)
 	return minf(
 		pow(DEMON_LEVEL_MONSTER_SPEED_GROWTH, float(growth_steps)),
@@ -3104,8 +3169,11 @@ func _transcendence_metric_count(metric: String) -> int:
 	return raw_allied_summons
 
 func _on_monster_died(monster: Node) -> void:
+	if hero_player_mode and is_instance_valid(monster) and bool(monster.get_meta("hero_final_boss",false)):
+		_finish_hero_boss_victory.call_deferred()
 	if hero_player_mode and not battle_over and is_instance_valid(monster) and String(monster.get_meta("stage_event_type","")) in ["elite","giant"]:
-		_spawn_chest_for_session.call_deferred(battle_command_router.get_session_id())
+		hero_elite_kills_toward_chest = mini(hero_elite_kills_toward_chest+1,HERO_SURVIVAL.CHEST_ELITE_KILLS)
+		if _hero_chest_eligible("elite"): _spawn_chest_for_session.call_deferred(battle_command_router.get_session_id(),"elite")
 	if battle_over:
 		return
 	if is_instance_valid(monster) and TRANSCENDENCE_DATA.is_transcendent(String(monster.get("monster_type"))):
@@ -3196,7 +3264,7 @@ func _on_monster_died(monster: Node) -> void:
 		_try_spawn_heal_item_from_kills()
 		hero_kills_toward_chest = mini(
 			hero_kills_toward_chest + 1,
-			CHEST_KILLS_REQUIRED
+			_chest_kill_requirement()
 		)
 		_try_spawn_chest_from_kills()
 		hero_kills_toward_magnet = mini(
@@ -3303,22 +3371,37 @@ func _process_special_death_spawn(
 				}
 			)
 
+func _chest_kill_requirement() -> int:
+	return HERO_SURVIVAL.CHEST_KILLS if hero_player_mode else CHEST_KILLS_REQUIRED
+
+func _hero_chest_eligible(source: String) -> bool:
+	if online_match_mode: return false
+	if source != "kills" and source != "elite": return false
+	if hero_chests_spawned == 0: return source == "elite"
+	return hero_elite_kills_toward_chest >= HERO_SURVIVAL.CHEST_ELITE_KILLS if source == "elite" else hero_kills_toward_chest >= HERO_SURVIVAL.CHEST_KILLS
+
 func _try_spawn_chest_from_kills() -> void:
-	if hero_kills_toward_chest < CHEST_KILLS_REQUIRED:
+	if hero_player_mode and not _hero_chest_eligible("kills"): return
+	if hero_kills_toward_chest < _chest_kill_requirement():
 		return
 	if _active_registry_size(active_treasure_chests) >= MAX_ACTIVE_CHESTS:
 		return
 
-	hero_kills_toward_chest = 0
+	if not hero_player_mode: hero_kills_toward_chest = 0
 	_spawn_chest_for_session.call_deferred(battle_command_router.get_session_id())
 
-func _spawn_chest_for_session(session: int) -> void:
+func _spawn_chest_for_session(session: int, source: String = "kills") -> void:
 	if battle_over or session != battle_command_router.get_session_id(): return
-	_spawn_random_treasure_chest()
+	if hero_player_mode and not _hero_chest_eligible(source): return
+	if not _spawn_random_treasure_chest(): return
+	if hero_player_mode:
+		hero_chests_spawned += 1
+		if source == "elite": hero_elite_kills_toward_chest = 0
+		else: hero_kills_toward_chest = 0
 
-func _spawn_random_treasure_chest() -> void:
+func _spawn_random_treasure_chest() -> bool:
 	if _active_registry_size(active_treasure_chests) >= MAX_ACTIVE_CHESTS:
-		return
+		return false
 	var margin := 180.0
 	var spawn_position := Vector2(
 		randf_range(margin, maxf(current_map_size.x - margin, margin)),
@@ -3327,14 +3410,16 @@ func _spawn_random_treasure_chest() -> void:
 	if hero_player_mode and is_instance_valid(hero):
 		spawn_position = _clamp_manual_spawn_position(hero.global_position+Vector2.from_angle(randf()*TAU)*260.0)
 	var chest := TREASURE_CHEST_SCENE.instantiate() as Node2D
+	if chest == null: return false
 	add_child(chest)
-	chest.global_position = spawn_position
+	chest.position = PICKUP_PLACEMENT.clamp_local(self,to_local(spawn_position))
 	_register_treasure_chest(chest)
 	if chest.has_signal("destroyed"):
 		chest.connect(
 			"destroyed",
 			Callable(self, "_on_treasure_chest_destroyed").bind(chest)
 		)
+	return true
 
 
 func _on_treasure_chest_destroyed(
@@ -3396,6 +3481,7 @@ func _spawn_random_magnet_item() -> void:
 		randf_range(min_x, max_x),
 		randf_range(min_y, max_y)
 	)
+	PICKUP_PLACEMENT.ensure_reachable(item)
 	_register_magnet_item(item)
 
 
@@ -3414,6 +3500,7 @@ func activate_exp_magnet(duration: float = EXP_MAGNET_DURATION) -> void:
 		0.0
 	)
 	for node in get_tree().get_nodes_in_group("exp_orbs"):
+		if online_match_mode and is_instance_valid(node) and node.get_viewport() != get_viewport(): continue
 		if (
 			not is_instance_valid(node)
 			or node.is_queued_for_deletion()
@@ -3464,7 +3551,7 @@ func _spawn_random_heal_item() -> void:
 
 	var item := HEAL_ITEM_SCENE.instantiate() as Node2D
 	add_child(item)
-	item.global_position = spawn_position
+	item.position = PICKUP_PLACEMENT.clamp_local(self,to_local(spawn_position))
 	_register_heal_item(item)
 
 func _warm_transcendent_exp_drop() -> void:
@@ -3513,7 +3600,7 @@ func _spawn_exp_orb(
 		orb = EXP_ORB_SCENE.instantiate() as Node2D
 		add_child(orb)
 
-	orb.global_position = drop_position
+	orb.position = PICKUP_PLACEMENT.clamp_local(self,to_local(drop_position))
 	orb.call("setup", exp_value, initial_velocity, pickup_delay)
 	var magnet_remaining := _remaining_exp_magnet_seconds()
 	if (
@@ -4348,7 +4435,11 @@ func spawn_special_monster(
 		return false
 	if not MONSTER_CATALOG.MONSTERS.has(monster_id):
 		return false
+	if hero_player_mode and not HERO_SURVIVAL.monster_allowed(monster_id,int(current_stage_data.get("number",1)),campaign_difficulty): return false
 
+	if hero_player_mode:
+		monster_id = hero_spawn_candidate(monster_id,hero_control_roster,true)
+		if monster_id.is_empty(): return false
 	if not bool(MONSTER_CATALOG.MONSTERS[monster_id].get("can_be_elite", true)):
 		return false
 
@@ -4388,6 +4479,7 @@ func _apply_special_monster_modifiers(
 	if not bool(MONSTER_CATALOG.MONSTERS.get(monster_id, {}).get("can_be_elite", true)):
 		return
 
+	if hero_player_mode: hero_control_spawns.register(monster.get_instance_id(),monster_id,true,int(current_stage_data.get("number",1)),float(run_metrics.elapsed_seconds))
 	monster.set_meta("visual_variant", "elite")
 	# Direct conversions must discard excluded effects before recalculating stats.
 	# Event spawns already have filtered configs; retain their running timers.
@@ -4435,7 +4527,7 @@ func _apply_special_monster_modifiers(
 	var base_damage_meta = monster.get_meta(
 		"demon_level_base_attack_damage",
 		null
-	)
+	) if monster.has_meta("demon_level_base_attack_damage") else null
 	if base_damage_meta != null:
 		monster.set_meta(
 			"demon_level_base_attack_damage",
@@ -4463,11 +4555,13 @@ func _apply_special_monster_modifiers(
 			)
 		)
 
-	if monster_id == "bomb_rat":
-		var fuse_value = monster.get("self_destruct_fuse")
+	var scaling_profile := MONSTER_CATALOG.get_runtime_scaling_profile(monster_id)
+	var fuse_property: StringName = scaling_profile.get("fuse_property", &"")
+	if not fuse_property.is_empty():
+		var fuse_value = monster.get(fuse_property)
 		if fuse_value != null:
 			monster.set(
-				"self_destruct_fuse",
+				fuse_property,
 				maxf(
 					0.10,
 					float(fuse_value)
@@ -4498,11 +4592,12 @@ func _apply_special_monster_modifiers(
 			)
 		)
 
-	if monster_id == "bomb_rat":
-		var explosion_damage_value = monster.get("explosion_damage")
+	var explosion_property: StringName = scaling_profile.get("explosion_property", &"")
+	if not explosion_property.is_empty():
+		var explosion_damage_value = monster.get(explosion_property)
 		if explosion_damage_value != null:
 			monster.set(
-				"explosion_damage",
+				explosion_property,
 				maxi(
 					1,
 					int(round(
@@ -5059,6 +5154,12 @@ func _refresh_alive_monsters_for_augments(affected_ids: Array[String] = []) -> v
 		_apply_special_augments_to_monster(node, monster_id)
 
 
+func _get_monster_hp_upgrade_multiplier(monster_id: String) -> float:
+	var profile := MONSTER_CATALOG.get_runtime_scaling_profile(monster_id)
+	var property: StringName = profile.get("hp_upgrade_property", &"")
+	return float(get(property)) if not property.is_empty() else 1.0
+
+
 func _get_augment_refresh_profile(monster_id: String) -> Dictionary:
 	return {
 		"rarity": MONSTER_CATALOG.get_rarity_combat_profile(monster_id),
@@ -5133,8 +5234,7 @@ func _apply_normal_augments_to_existing_monster(
 			* _get_monster_augment_multiplier(monster_id, "hp")
 			* float(runtime_variant.get("hp", 1.0))
 		)
-		if monster_id == "orc":
-			base_hp *= orc_hp_multiplier
+		base_hp *= _get_monster_hp_upgrade_multiplier(monster_id)
 		monster.set_meta(
 			"demon_level_base_max_hp",
 			maxf(base_hp, 1.0)
@@ -5157,14 +5257,16 @@ func _apply_normal_augments_to_existing_monster(
 			)
 		)
 
-	if monster_id == "bomb_rat":
+	var scaling_profile := MONSTER_CATALOG.get_runtime_scaling_profile(monster_id)
+	var fuse_property: StringName = scaling_profile.get("fuse_property", &"")
+	if not fuse_property.is_empty():
 		var raw_fuse = monster.get_meta(
-			"augment_raw_self_destruct_fuse",
+			"augment_raw_%s" % fuse_property,
 			null
 		)
 		if raw_fuse != null:
 			monster.set(
-				"self_destruct_fuse",
+				fuse_property,
 				maxf(
 					0.10,
 					float(raw_fuse)
@@ -5176,14 +5278,16 @@ func _apply_normal_augments_to_existing_monster(
 					)
 				)
 			)
+	var explosion_property: StringName = scaling_profile.get("explosion_property", &"")
+	if not explosion_property.is_empty():
 		var raw_explosion = monster.get_meta(
-			"augment_raw_explosion_damage",
+			"augment_raw_%s" % explosion_property,
 			null
 		)
 		if raw_explosion != null:
-			var survival_damage := HERO_SURVIVAL.monster_multiplier("damage",float(monster.get_meta("hero_survival_spawn_seconds",0.0))) if hero_player_mode else 1.0
+			var survival_damage := _hero_survival_multiplier("damage",float(monster.get_meta("hero_survival_spawn_seconds",0.0))) if hero_player_mode else 1.0
 			monster.set(
-				"explosion_damage",
+				explosion_property,
 				maxi(
 					1,
 					int(round(
@@ -5258,6 +5362,16 @@ func _spawn_extra_normal_summon_monsters(
 			{"mission_summon": true}
 		)
 
+func combat_time_msec() -> int:
+	if not hero_player_mode:
+		var now := _network_pause_started_msec if _network_paused else Time.get_ticks_msec()
+		return now - _network_paused_total_msec
+	var now := _hero_pause_started_msec if _hero_subtree_paused else Time.get_ticks_msec()
+	return now-_hero_paused_total_msec
+
+func uses_hero_subtree_pause() -> bool:
+	return hero_player_mode
+
 func is_combat_simulation_paused() -> bool:
 	return (
 		battle_over
@@ -5267,6 +5381,11 @@ func is_combat_simulation_paused() -> bool:
 	)
 
 
+var _hero_pause_started_msec := 0
+var _hero_paused_total_msec := 0
+var _hero_subtree_paused := false
+var _hero_subtree_previous_mode: ProcessMode = Node.PROCESS_MODE_INHERIT
+
 func _sync_combat_pause_state() -> void:
 	var should_enable := (
 		not battle_over
@@ -5274,6 +5393,20 @@ func _sync_combat_pause_state() -> void:
 			FLOW_PAUSE_MANAGER.DOMAIN_COMBAT
 		)
 	)
+	if hero_player_mode:
+		# Pause the owned simulation, including animations, timers, tweens and
+		# actors activated during the modal. Do not overwrite pooled actor flags.
+		var modal_paused := not should_enable and not battle_over
+		if modal_paused and not _hero_subtree_paused:
+			_hero_subtree_previous_mode = process_mode
+			_hero_pause_started_msec = Time.get_ticks_msec()
+			_hero_subtree_paused = true
+			process_mode = Node.PROCESS_MODE_DISABLED
+		elif not modal_paused and _hero_subtree_paused:
+			_hero_paused_total_msec += Time.get_ticks_msec()-_hero_pause_started_msec
+			process_mode = _hero_subtree_previous_mode
+			_hero_subtree_paused = false
+		if not battle_over: return
 	_set_combat_physics_enabled(should_enable)
 
 func _set_combat_physics_enabled(enabled: bool) -> void:
@@ -5298,7 +5431,7 @@ func _set_combat_physics_enabled(enabled: bool) -> void:
 		"hero_summon_projectiles",
 	]:
 		for node in get_tree().get_nodes_in_group(group_name):
-			if is_instance_valid(node):
+			if is_instance_valid(node) and (not online_match_mode or node.get_viewport() == get_viewport()):
 				node.set_physics_process(enabled)
 
 	for summon_id in active_hero_summons:
@@ -5392,6 +5525,9 @@ func get_debug_balance_summary() -> String:
 func _on_hero_died() -> void:
 	if is_instance_valid(hero):
 		battle_entity_registry.retire_instance(hero.get_instance_id())
+	if online_match_mode:
+		if not battle_over: _finish_battle("마왕 승리 · 용사 처치",true)
+		return
 	if practice_mode or tutorial_mode:
 		return
 	if battle_over:
@@ -5427,7 +5563,7 @@ func _on_hero_died() -> void:
 		stage_name,
 		hero_name,
 	]
-	if campaign_difficulty == "hard": result_text += "\n어려움 클리어 · 플레이 용사 해금" if bool(clear_result.get("success",false)) else "\n어려움 클리어 저장 실패 · 용사 미해금"
+	if campaign_difficulty == "hard": result_text += "\n어려움 클리어 완료" if bool(clear_result.get("success",false)) else "\n어려움 클리어 저장 실패"
 	var granted_reward: int = int(clear_result.get("reward", 0))
 	if granted_reward > 0:
 		result_text += "\n최초 클리어 보상 · 연구 포인트 +%d" % granted_reward
@@ -5449,12 +5585,15 @@ func _on_hero_died() -> void:
 	_finish_battle(result_text, true)
 
 func _on_run_time_up() -> void:
+	if online_match_mode:
+		if not battle_over: _finish_battle("용사 승리 · 제한시간 생존",false)
+		return
 	if practice_mode or tutorial_mode:
 		return
 	if battle_over:
 		return
 	if hero_player_mode:
-		_finish_battle("용사 승리 · AI 마왕의 15분 공세를 버텨냈습니다!",true)
+		pass # The hero director spawns a final boss; time alone never clears.
 		return
 
 	var hero_name := String(current_hero_profile.get("display_name", "용사"))
@@ -5477,6 +5616,7 @@ func finish_abandoned_run() -> bool:
 	return true
 
 func _grant_run_research_reward(apply_clear_multiplier: bool) -> String:
+	if online_match_mode: return ""
 	_run_reward_save_failed = false
 	if _run_reward_granted:
 		return ""
@@ -5907,6 +6047,23 @@ func get_snapshot() -> Dictionary:
 		"battle_over": battle_over,
 	}
 
+var _network_pause_started_msec := 0
+var _network_paused_total_msec := 0
+var _network_paused := false
+
+func set_network_pause(paused: bool) -> void:
+	if paused and not _network_paused:
+		_network_pause_started_msec = Time.get_ticks_msec()
+	elif not paused and _network_paused:
+		_network_paused_total_msec += Time.get_ticks_msec() - _network_pause_started_msec
+	_network_paused = paused
+	if paused:
+		flow_pause_manager.request_pause("cloud_connection", FULL_MODAL_PAUSE_DOMAINS)
+	else:
+		flow_pause_manager.release_pause("cloud_connection")
+	_sync_combat_pause_state()
+
+
 func set_external_pause(paused: bool) -> void:
 	external_pause = paused
 
@@ -6072,7 +6229,7 @@ func _apply_augment_free_base_stats(monster: Node, monster_id: String) -> void:
 			if stat != "exp_reward" and monster.get(stat) != null:
 				var value = base_stats[stat]
 				if hero_player_mode and HERO_SURVIVAL.MONSTER_SCALE_FIELDS.has(stat):
-					value = float(value)*HERO_SURVIVAL.monster_multiplier(String(HERO_SURVIVAL.MONSTER_SCALE_FIELDS[stat]),float(monster.get_meta("hero_survival_spawn_seconds",0.0)))
+					value = float(value)*_hero_survival_multiplier(String(HERO_SURVIVAL.MONSTER_SCALE_FIELDS[stat]),float(monster.get_meta("hero_survival_spawn_seconds",0.0)))
 					if stat != "move_speed": value = maxi(1,roundi(value))
 				monster.set(stat, value)
 		monster.set_meta("monster_collection_upgrade_level", 0)
@@ -6128,3 +6285,38 @@ func configure_campaign_difficulty(difficulty: String) -> void:
 		hero.attack_damage = roundi(hero.attack_damage*1.35); hero.move_speed *= 1.08
 		hero.health_changed.emit(hero.current_hp,hero.max_hp)
 		run_metrics.reset(run_time_limit_seconds,hero.current_hp,hero.max_hp)
+
+func _is_reserved_hero_boss_request(_id: String,modifiers: Dictionary) -> bool:
+	return hero_player_mode and not online_match_mode and _hero_boss_spawn_pending and not hero_final_boss_spawned and not battle_over and run_metrics.elapsed_seconds >= HERO_SURVIVAL.DURATION and bool(modifiers.get("hero_final_boss_spawn",false))
+
+func spawn_hero_encounter(id: String, point: Vector2, modifiers: Dictionary) -> Node2D:
+	if not hero_player_mode or battle_over or not HERO_SURVIVAL.monster_allowed(id,int(current_stage_data.get("number",1)),campaign_difficulty): return null
+	var is_boss := String(modifiers.get("type","")) == "boss"
+	if is_boss and (hero_final_boss_spawned or _hero_boss_spawn_pending or run_metrics.elapsed_seconds < HERO_SURVIVAL.DURATION): return null
+	if not is_boss:
+		id = hero_spawn_candidate(id,hero_control_roster,true)
+		if id.is_empty(): return null
+	point = _clamp_manual_spawn_position(point)
+	if active_monsters.size() >= HERO_SURVIVAL.monster_limit(int(current_stage_data.get("number",1)))+(1 if is_boss else 0) or point.distance_squared_to(hero.position) < 180.0*180.0: return null
+	_hero_boss_spawn_pending = is_boss
+	var monster = _spawn_monster(id,point,0.0,false,{"elite_variant":true,"counts_population":true,"hero_encounter_position_locked":true,"hero_final_boss_spawn":is_boss})
+	_hero_boss_spawn_pending = false
+	if not is_instance_valid(monster): return null
+	_apply_special_monster_modifiers(monster,id,modifiers)
+	if is_boss:
+		hero_final_boss_spawned = true
+		monster.set_meta("hero_final_boss",true)
+		if modifiers.has("target_hp"):
+			monster.max_hp = int(modifiers.target_hp); monster.current_hp = monster.max_hp
+			monster.set_meta("demon_level_base_max_hp",float(monster.max_hp)/_get_demon_level_monster_hp_multiplier(run_metrics.elapsed_seconds))
+		if modifiers.has("target_damage"):
+			monster.attack_damage = int(modifiers.target_damage)
+			monster.set_meta("demon_level_base_attack_damage",float(monster.attack_damage)/_get_demon_level_monster_damage_multiplier(run_metrics.elapsed_seconds))
+	return monster
+func _finish_hero_boss_victory() -> void:
+	if hero_player_mode and run_metrics.elapsed_seconds >= HERO_SURVIVAL.DURATION and not battle_over and is_instance_valid(hero) and hero.current_hp > 0:
+		_finish_battle("용사 승리 · 최종 보스를 처치했습니다!",true)
+
+func finish_hero_boss_timeout() -> void:
+	if not hero_player_mode or battle_over: return
+	_finish_battle("패배 · 최종 보스 제한시간 5분을 초과했습니다.",false)

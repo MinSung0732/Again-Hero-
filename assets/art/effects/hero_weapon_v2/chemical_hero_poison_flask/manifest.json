@@ -1,0 +1,48 @@
+{
+  "weapon_id": "chemical_hero_poison_flask",
+  "name": "촉매 혼합장",
+  "source_size": [
+    1254,
+    1254
+  ],
+  "source_sha256": "3fa6dc74d031d486920775bbc95bc4ce688f671cec91574257102bd118e06e1e",
+  "sheet": "sprite_sheet.png",
+  "sheet_size": [
+    384,
+    384
+  ],
+  "cell_size": [
+    128,
+    128
+  ],
+  "anchor": [
+    64,
+    64
+  ],
+  "alpha": "binary; existing transparency only; black foreground retained",
+  "common_source_crop": [
+    12,
+    12,
+    116,
+    116
+  ],
+  "normalization": "one common crop and nearest scale; identical frame canvases",
+  "animation": {
+    "fps": 12,
+    "loop_playback": "ping_pong",
+    "transient_window_seconds": 0.28,
+    "transient_playback": "normalized to visual window; no gameplay timing change",
+    "loop": true,
+    "frames": [
+      "frames/effect_01.png",
+      "frames/effect_02.png",
+      "frames/effect_03.png",
+      "frames/effect_04.png",
+      "frames/effect_05.png",
+      "frames/effect_06.png",
+      "frames/effect_07.png",
+      "frames/effect_08.png"
+    ]
+  },
+  "unique_frames": 8
+}

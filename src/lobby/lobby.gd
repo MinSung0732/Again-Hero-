@@ -175,6 +175,8 @@ const UI_LOBBY_BACKGROUND_PATH := "res://assets/art/background/mainlobby_backgro
 @onready var hero_name_label: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/TopPanel/HeroName
 @onready var stage_description_label: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/BottomPanel/StageDescription
 @onready var stage_status_label: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/BottomPanel/StageStatus
+var stage_entry_mode_host: PanelContainer
+var stage_repeat_reward_label: Label
 @onready var stage_reward_label: Label = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/BottomPanel/StageReward
 @onready var enter_stage_button: Button = $SafeArea/Layout/Content/MainTab/StageLayout/StagePicker/StageCardSlot/StageCard/CardMargin/CardVBox/BottomPanel/EnterButton
 
@@ -183,6 +185,7 @@ const UI_LOBBY_BACKGROUND_PATH := "res://assets/art/background/mainlobby_backgro
 @onready var stage_select_close_button: Button = $StageSelectOverlay/Panel/Margin/VBox/Header/CloseButton
 @onready var stage_select_grid: GridContainer = $StageSelectOverlay/Panel/Margin/VBox/StageGrid
 
+var research_reset_button
 @onready var research_points_label: Label = $SafeArea/Layout/Content/ResearchTab/ResearchLayout/Points
 @onready var research_status_label: Label = $SafeArea/Layout/Content/ResearchTab/ResearchLayout/Status
 @onready var research_mode_button: Button = $SafeArea/Layout/Content/ResearchTab/ResearchLayout/ModeTabs/ResearchModeButton
@@ -405,12 +408,17 @@ func _install_hero_lobby_view() -> void:
 		main_modes_view.perspective = "hero"
 		selected_stage_index = maxi(stage_ids.find(preload("res://src/systems/hero_mode_store.gd").selected_battle_stage()),0)
 
+func _on_cloud_account_notice(message: String) -> void:
+	if is_instance_valid(other_account_panel):
+		var guide := other_account_panel.get_node_or_null("Guide") as Label
+		if guide != null: guide.text = message
+
 func _setup_cloud_account() -> void:
 	var guide := other_account_panel.get_node("Guide") as Label
 	guide.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	guide.text = "게스트 저장은 이 기기에만 보관됩니다." if LoginGateway.user_id.is_empty() else "계정 저장 · 변경 후 자동 동기화됩니다."
-	CloudStore.status_changed.connect(func(message: String): guide.text = message)
-	LoginGateway.login_unavailable.connect(func(message: String): guide.text = message)
+	CloudStore.status_changed.connect(_on_cloud_account_notice)
+	LoginGateway.login_unavailable.connect(_on_cloud_account_notice)
 	var sync := other_account_panel.get_node("KakaoLogin") as Button
 	sync.text = "클라우드 저장 동기화"
 	sync.disabled = LoginGateway.local_guest_active
@@ -420,7 +428,7 @@ func _setup_cloud_account() -> void:
 			get_tree().change_scene_to_file("res://src/startup/Startup.tscn")
 		else:
 			await CloudStore.flush()
-			sync.disabled = false
+			if is_instance_valid(sync): sync.disabled = false
 	)
 	var logout_button := other_account_panel.get_node("GoogleLogin") as Button
 	logout_button.text = "계정 로그인" if LoginGateway.local_guest_active else "로그아웃 / 계정 변경"
@@ -953,81 +961,67 @@ func _add_frame_piece_stretched(
 	parent.add_child(piece)
 
 func _load_png_texture_direct(path: String) -> Texture2D:
-	var cached := PresentationWarmup.get_texture(path)
-	if cached != null:
-		return cached
-	var image := Image.new()
-	var load_error := image.load(path)
-	if load_error != OK or image.is_empty():
-		push_warning("UI PNG load failed: %s / error=%s" % [path, load_error])
-		return null
-	return ImageTexture.create_from_image(image)
+	return _load_ui_texture_resource(path)
 
 
 func _load_ui_texture_resource(path: String) -> Texture2D:
-	var resource := load(path)
-	if resource is Texture2D:
-		return resource as Texture2D
-	if path.get_extension().to_lower() == "svg":
-		return _load_svg_texture_direct(path)
-	push_warning("UI texture resource load failed: %s" % path)
+	if path.is_empty():
+		return null
+	var cached := PresentationWarmup.get_texture(path)
+	if cached != null:
+		return cached
+	# Exported sources are remapped to imported textures in the PCK.
+	if ResourceLoader.exists(path):
+		var resource := load(path)
+		if resource is Texture2D:
+			return resource as Texture2D
+	# Raw fallback is needed only before editor import has completed.
+	if FileAccess.file_exists(path):
+		var image := Image.load_from_file(path)
+		if image != null and not image.is_empty():
+			return ImageTexture.create_from_image(image)
+	push_warning("UI texture resource missing: %s" % path)
 	return null
 
 
 func _load_svg_texture_direct(path: String) -> Texture2D:
-	var cached := PresentationWarmup.get_texture(path)
-	if cached != null:
-		return cached
-	if not FileAccess.file_exists(path):
-		push_warning("UI SVG file missing: %s" % path)
-		return null
-	var svg_text := FileAccess.get_file_as_string(path)
-	if svg_text.is_empty():
-		push_warning("UI SVG file empty: %s" % path)
-		return null
-	var image := Image.new()
-	var load_error := image.load_svg_from_string(svg_text, 1.0)
-	if load_error != OK or image.is_empty():
-		push_warning("UI SVG load failed: %s / error=%s" % [path, load_error])
-		return null
-	return ImageTexture.create_from_image(image)
+	return _load_ui_texture_resource(path)
+
+
+func _ui_texture_used_rect(texture: Texture2D) -> Rect2:
+	var image := texture.get_image()
+	if image != null:
+		if image.is_compressed() and image.decompress() != OK:
+			return Rect2(Vector2.ZERO, texture.get_size())
+		var used := image.get_used_rect()
+		if used.has_area():
+			return Rect2(used)
+	return Rect2(Vector2.ZERO, texture.get_size())
 
 
 func _load_png_texture_cropped(path: String) -> Texture2D:
 	var cached := PresentationWarmup.get_cropped(path)
 	if cached != null:
 		return cached
-	var image := Image.new()
-	var load_error := image.load(path)
-	if load_error != OK or image.is_empty():
-		push_warning("UI PNG crop load failed: %s / error=%s" % [path, load_error])
+	var texture := _load_ui_texture_resource(path)
+	if texture == null:
 		return null
-
-	var used_rect := image.get_used_rect()
-	if used_rect.size.x <= 0 or used_rect.size.y <= 0:
-		return ImageTexture.create_from_image(image)
-
-	var cropped := image.get_region(used_rect)
-	return ImageTexture.create_from_image(cropped)
+	var cropped := AtlasTexture.new()
+	cropped.atlas = texture
+	cropped.region = _ui_texture_used_rect(texture)
+	return cropped
 
 
 func _load_png_texture_top_region(path: String, height_ratio: float) -> Texture2D:
-	var image := Image.new()
-	var load_error := image.load(path)
-	if load_error != OK or image.is_empty():
-		push_warning("UI PNG region load failed: %s / error=%s" % [path, load_error])
+	var texture := _load_ui_texture_resource(path)
+	if texture == null:
 		return null
-
-	var used_rect := image.get_used_rect()
-	if used_rect.size.x <= 0 or used_rect.size.y <= 0:
-		return ImageTexture.create_from_image(image)
-
-	var cropped_used := image.get_region(used_rect)
-	var region_height := maxi(1, int(round(cropped_used.get_height() * clampf(height_ratio, 0.1, 1.0))))
-	var top_region := cropped_used.get_region(
-		Rect2i(0, 0, cropped_used.get_width(), region_height)
-	)
-	return ImageTexture.create_from_image(top_region)
+	var region := _ui_texture_used_rect(texture)
+	region.size.y = maxi(1, int(round(region.size.y * clampf(height_ratio, 0.1, 1.0))))
+	var cropped := AtlasTexture.new()
+	cropped.atlas = texture
+	cropped.region = region
+	return cropped
 
 
 func _apply_content_card_skin(content_frame: PanelContainer) -> void:
@@ -1774,20 +1768,6 @@ func _install_stage_entry_hud() -> void:
 		bottom_panel.add_child(info_backing)
 		bottom_panel.move_child(info_backing, 1)
 
-		for split_ratio in [0.280, 0.720]:
-			var divider := ColorRect.new()
-			divider.mouse_filter = Control.MOUSE_FILTER_IGNORE
-			divider.color = Color(0.67, 0.48, 0.22, 0.55)
-			divider.z_index = 1
-			divider.anchor_left = split_ratio
-			divider.anchor_top = 0.24
-			divider.anchor_right = split_ratio
-			divider.anchor_bottom = 0.76
-			divider.offset_left = -1.0
-			divider.offset_right = 1.0
-			divider.offset_top = 0.0
-			divider.offset_bottom = 0.0
-			info_backing.add_child(divider)
 	var info_style := _make_svg_style(
 		UI_LOBBY_STAGE_INFO_PATH,
 		24.0,
@@ -1813,50 +1793,18 @@ func _install_stage_entry_hud() -> void:
 		TextServer.OVERRUN_TRIM_ELLIPSIS
 	)
 
-	stage_status_label.anchor_top = 0.355
-	stage_status_label.anchor_bottom = 0.525
-	stage_reward_label.anchor_top = 0.355
-	stage_reward_label.anchor_bottom = 0.525
-	stage_status_label.clip_text = true
-	stage_reward_label.clip_text = true
+	stage_repeat_reward_label = Label.new()
+	stage_repeat_reward_label.name = "RepeatReward"
+	stage_repeat_reward_label.add_theme_color_override("font_color",Color("d7c8df"))
+	description_backing.hide()
+	info_backing.hide()
+	stage_entry_mode_host = preload("res://src/ui/stage_entry_info_view.gd").install(
+		bottom_panel,stage_description_label,stage_reward_label,stage_status_label,
+		stage_repeat_reward_label,enter_stage_button)
 
-	var repeat_label := bottom_panel.get_node_or_null("RepeatReward") as Label
-	if repeat_label == null:
-		repeat_label = Label.new()
-		repeat_label.name = "RepeatReward"
-		repeat_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		repeat_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		repeat_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		repeat_label.add_theme_color_override("font_color", Color("d7c8df"))
-		bottom_panel.add_child(repeat_label)
-	repeat_label.anchor_top = 0.355
-	repeat_label.anchor_bottom = 0.525
-	repeat_label.add_theme_font_size_override("font_size", 17)
-	repeat_label.clip_text = true
-	# Share the panel's column boundaries; outer columns get symmetric inset padding.
-	var info_width := info_backing.anchor_right - info_backing.anchor_left
-	for column in [
-		[stage_status_label, 0.0, 0.280, 24.0, 8.0],
-		[stage_reward_label, 0.280, 0.720, 8.0, 8.0],
-		[repeat_label, 0.720, 1.0, 8.0, 24.0],
-	]:
-		var label: Label = column[0]
-		label.anchor_left = info_backing.anchor_left + info_width * float(column[1])
-		label.anchor_right = info_backing.anchor_left + info_width * float(column[2])
-		label.offset_left = float(column[3])
-		label.offset_right = -float(column[4])
-		label.offset_top = 0.0
-		label.offset_bottom = 0.0
-
-	enter_stage_button.anchor_left = 0.090
-	enter_stage_button.anchor_top = 0.580
-	enter_stage_button.anchor_right = 0.910
-	enter_stage_button.anchor_bottom = 0.730
-	enter_stage_button.custom_minimum_size = Vector2(0.0, 76.0)
-
-	stage_description_label.add_theme_font_size_override("font_size", 18)
-	stage_status_label.add_theme_font_size_override("font_size", 17)
-	stage_reward_label.add_theme_font_size_override("font_size", 17)
+	stage_description_label.add_theme_font_size_override("font_size", 22)
+	stage_status_label.add_theme_font_size_override("font_size", 20)
+	stage_reward_label.add_theme_font_size_override("font_size", 22)
 	stage_status_label.add_theme_color_override("font_color", Color("ded3e4"))
 	stage_reward_label.add_theme_color_override("font_color", Color("f0cb68"))
 
@@ -2005,11 +1953,11 @@ func _apply_lobby_visual_polish() -> void:
 	stage_name_label.add_theme_color_override("font_color", Color("fff6e5"))
 	hero_name_label.add_theme_font_size_override("font_size", 30)
 	hero_name_label.add_theme_color_override("font_color", Color("f2d486"))
-	stage_description_label.add_theme_font_size_override("font_size", 18)
+	stage_description_label.add_theme_font_size_override("font_size", 22)
 	stage_description_label.add_theme_color_override("font_color", Color("eee7f0"))
-	stage_status_label.add_theme_font_size_override("font_size", 17)
+	stage_status_label.add_theme_font_size_override("font_size", 20)
 	stage_status_label.add_theme_color_override("font_color", Color("d6cadc"))
-	stage_reward_label.add_theme_font_size_override("font_size", 17)
+	stage_reward_label.add_theme_font_size_override("font_size", 22)
 	stage_reward_label.add_theme_color_override("font_color", Color("e6c66d"))
 	_apply_enter_stage_button_skin()
 
@@ -2084,7 +2032,17 @@ func _apply_lobby_visual_polish() -> void:
 	)
 	_apply_lobby_button_skin(research_mode_button, true, 22)
 	_apply_lobby_button_skin(relic_mode_button, false, 22)
-	_apply_lobby_button_skin(research_upgrade_button, true, 22)
+	_apply_lobby_button_skin(research_upgrade_button, true, 28)
+	preload("res://src/ui/research_wallet_view.gd").install(research_points_label,research_detail_cost)
+	var research_heading := HBoxContainer.new()
+	var detail_rows := research_detail_name.get_parent()
+	detail_rows.add_child(research_heading); detail_rows.move_child(research_heading,0)
+	research_detail_name.reparent(research_heading)
+	research_detail_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	research_reset_button = preload("res://src/ui/research_reset_button.gd").create("demon",_on_research_reset)
+	research_heading.add_child(research_reset_button)
+	_apply_lobby_button_skin(research_reset_button,false,24)
+
 	_apply_lobby_button_skin(relic_upgrade_button, true, 21)
 	for filter_button in relic_filter_buttons:
 		_apply_lobby_button_skin(filter_button, false, 18)
@@ -4812,28 +4770,21 @@ func _refresh_stage_card() -> void:
 	stage_selector_button.text = "STAGE %02d  ·  목록 선택" % stage_number
 	stage_name_label.text = String(stage.get("display_name", "미지의 침입자"))
 	hero_name_label.text = hero_name
-	stage_description_label.text = String(
-		stage.get(
-			"lobby_description",
-			"이 침입자의 전투 패턴을 관찰하고 카운터를 준비하세요."
-		)
-	)
-
+	stage_description_label.tooltip_text = String(stage.get("lobby_description",""))
+	stage_description_label.text = preload("res://src/data/stage_entry_copy_catalog.gd").summary(stage_id)
 	var experience := preload("res://src/data/campaign_experience_catalog.gd").profile(stage_id)
-	if not experience.is_empty() and unlocked:
-		stage_description_label.text = String(experience.preview)
 	var entry_state := (
 		"클리어 완료"
 		if cleared
 		else ("입장 가능" if unlocked else "잠김")
 	)
-	var time_text := "제한 %d분" % minutes if minutes > 0 else "시간 제한 없음"
+	var time_text := "%d분 도전" % minutes if minutes > 0 else "시간 제한 없음"
 	stage_status_label.text = "%s\n%s" % [entry_state, time_text]
 
 	if not STAGE_PROGRESS.is_gold_reward_claimed(stage_id):
-		stage_reward_label.text = "최초 보상\n골드%d" % int(STAGE_CATALOG.CLEAR_GOLD_REWARDS.stage_first_clear)
+		stage_reward_label.text = "최초 보상\n골드 +%d" % int(STAGE_CATALOG.CLEAR_GOLD_REWARDS.stage_first_clear)
 		if not reward_claimed and reward > 0:
-			stage_reward_label.text += " · 연구%d" % reward
+			stage_reward_label.text += "\n연구 +%d" % reward
 	elif reward_claimed:
 		stage_reward_label.text = "최초 보상\n획득 완료"
 	elif reward > 0:
@@ -4842,11 +4793,9 @@ func _refresh_stage_card() -> void:
 		stage_reward_label.text = "최초 보상\n-"
 
 	if not experience.is_empty() and not STAGE_PROGRESS.is_campaign_reward_claimed(stage_id):
-		stage_reward_label.text += " · "+MONSTER_CATALOG.get_monster_name(String(experience.reward_monster))
+		stage_reward_label.text += "\n"+MONSTER_CATALOG.get_monster_name(String(experience.reward_monster))
 
-	var repeat_label := stage_description_label.get_parent().get_node_or_null(
-		"RepeatReward"
-	) as Label
+	var repeat_label := stage_repeat_reward_label
 	if repeat_label != null:
 		repeat_label.text = "반복 보상\n×%.2f" % run_reward_multiplier
 
@@ -4882,7 +4831,7 @@ func _refresh_stage_card() -> void:
 	if silhouette:
 		hero_name_label.text = "???"
 		stage_name_label.text = "미지의 침입자"
-		stage_description_label.text = "앞선 스테이지를 클리어하면 정체가 밝혀집니다."
+		stage_description_label.text = "앞선 스테이지 클리어 필요"
 	if main_modes_view != null:
 		main_modes_view.refresh()
 
@@ -5134,11 +5083,12 @@ func _enter_selected_stage(allow_unregistered: bool = false) -> void:
 func _enter_hero_stage(stage_id: String) -> void:
 	var hero_store := preload("res://src/systems/hero_mode_store.gd")
 	var selected_hero: String = hero_store.selected_hero()
-	if not hero_store.battle_stage_unlocked(stage_id):
-		stamina_view.show_entry_notice("이전 용사 스테이지를 먼저 클리어하세요.")
+	var selected_difficulty := hero_store.difficulty()
+	if not hero_store.can_start(stage_id,selected_difficulty):
+		stamina_view.show_entry_notice("마왕 쉬움 10스테이지 또는 해당 용사 스테이지 쉬움을 먼저 클리어하세요.")
 		return
 	if not hero_store.character_unlocked(selected_hero):
-		stamina_view.show_entry_notice("이 용사는 해당 스테이지 어려움 클리어 후 개방됩니다.")
+		stamina_view.show_entry_notice("용사는 마왕 모드 쉬움 10스테이지 클리어 후 전체 개방됩니다.")
 		return
 	var scene := preload("res://src/data/hero_mode_catalog.gd").SCENE
 	if not ResourceLoader.exists(scene): return
@@ -5146,13 +5096,13 @@ func _enter_hero_stage(stage_id: String) -> void:
 		stamina_view.show_entry_notice("스테이지 선택을 저장하지 못했습니다."); return
 	_stamina_entry = STAMINA.try_enter(stage_id,LocalTestMode.active,-1,false)
 	if not bool(_stamina_entry.get("success",false)):
-		stamina_view.show_entry_notice("스테미너 또는 저장 상태를 확인하세요.")
+		stamina_view.show_entry_notice("스테미너가 부족합니다." if _stamina_entry.get("reason") == "insufficient" else "저장을 확인하고 다시 시도해 주세요.")
 		return
 	_battle_entry_pending = true
 	enter_stage_button.disabled = true
 	await stamina_view.play_entry_cost(int(_stamina_entry.get("charged",0)))
 	if not is_inside_tree(): return
-	if not SceneTransition.change_scene(scene,"용사 도전 준비 중...",{"stage_id":stage_id,"hero_id":selected_hero,"hero_entry":_stamina_entry}):
+	if not SceneTransition.change_scene(scene,"용사 도전 준비 중...",{"stage_id":stage_id,"hero_id":selected_hero,"hero_entry":_stamina_entry,"difficulty":selected_difficulty}):
 		_refund_failed_stamina_entry()
 func _begin_threaded_scene_change(path: String) -> void:
 	if _scene_load_pending or path.is_empty():
@@ -5190,8 +5140,9 @@ func _rebuild_research_list() -> void:
 		child.free()
 	research_buttons_by_id.clear()
 
+	if is_instance_valid(research_reset_button): research_reset_button.refresh()
 	var research_points := STAGE_PROGRESS.get_research_points()
-	research_points_label.text = "보유 연구 포인트  %s" % _format_shop_number(
+	research_points_label.text = "%s P" % _format_shop_number(
 		research_points
 	)
 
@@ -5199,40 +5150,29 @@ func _rebuild_research_list() -> void:
 	if selected_research_id.is_empty() and not research_ids.is_empty():
 		selected_research_id = research_ids[0]
 
+	var grid := GridContainer.new()
+	grid.name = "ResearchGrid"
+	research_list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grid.columns = 4
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grid.add_theme_constant_override("h_separation",12)
+	grid.add_theme_constant_override("v_separation",12)
+	research_list.add_child(grid)
+	var icons := preload("res://src/data/research_icon_catalog.gd")
+	var art := preload("res://src/ui/hero_augment_icons.gd")
+	var card_view := preload("res://src/ui/research_grid_card.gd")
 	for research_id in research_ids:
 		var data := RESEARCH_CATALOG.get_research(research_id)
-		if data.is_empty():
-			continue
-
+		if data.is_empty(): continue
 		var level := STAGE_PROGRESS.get_research_level(research_id)
-		var max_level := int(data.get("max_level", 0))
-		var button := Button.new()
-		button.custom_minimum_size = Vector2(0, 112)
-		button.focus_mode = Control.FOCUS_NONE
-		button.mouse_filter = Control.MOUSE_FILTER_PASS
-		var selected := research_id == selected_research_id
-		_apply_lobby_button_skin(button, selected, 21)
-
-		if level >= max_level:
-			button.text = "%s    Lv.%d / %d\n%s    ·    연구 완료" % [
-				String(data.get("name", research_id)),
-				level,
-				max_level,
-				RESEARCH_CATALOG.get_effect_summary(research_id, level),
-			]
-		else:
-			var cost := RESEARCH_CATALOG.get_cost(research_id, level)
-			button.text = "%s    Lv.%d / %d\n%s    ·    비용 %s" % [
-				String(data.get("name", research_id)),
-				level,
-				max_level,
-				RESEARCH_CATALOG.get_effect_summary(research_id, level),
-				_format_shop_number(cost),
-			]
-		button.set_meta("audio_cue", "click")
+		var max_level := int(data.get("max_level",0))
+		var texture: Texture2D = art.texture(String(icons.SOURCES.get(research_id,"survival_learning")))
+		var button := card_view.create(texture,level,max_level)
+		button.name = research_id
+		_apply_lobby_button_skin(button,research_id == selected_research_id,21)
+		button.set_meta("audio_cue","click")
 		button.pressed.connect(_select_research.bind(research_id))
-
-		research_list.add_child(button)
+		grid.add_child(button)
 		research_buttons_by_id[research_id] = button
 
 	_refresh_research_detail()
@@ -5352,6 +5292,12 @@ func _purchase_selected_research() -> void:
 
 	_refresh_header()
 	_rebuild_research_list.call_deferred()
+
+
+func _on_research_reset(result: Dictionary) -> void:
+	research_status_label.text = "연구 초기화 · %s P 환급" % _format_shop_number(int(result.get("refunded",0))) if bool(result.get("success",false)) else "초기화를 저장하지 못했습니다. 다시 시도해 주세요."
+	_refresh_header()
+	_rebuild_research_list()
 
 
 func _select_relic_category(category_id: String) -> void:

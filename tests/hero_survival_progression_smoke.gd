@@ -27,15 +27,14 @@ func run() -> void:
 	root.get_node("CloudStore").stop(); root.get_node("LoginGateway").remember_session_enabled = false
 	SCOPE.select_guest(); SCOPE.guest_directory = "user://hero_survival_"+str(Time.get_ticks_usec()); DirAccess.make_dir_recursive_absolute(SCOPE.guest_directory)
 	check(MODE.DURATION == 900.0,"all heroes survive 15 minutes")
-	check(STORE.character_unlocked("stage_1"),"apprentice opens without clear")
+	check(not STORE.character_unlocked("stage_1"),"hero mode is locked before demon easy10")
 	var config := ConfigFile.new()
 	config.set_value("progress","highest_unlocked_stage",10)
 	for id in ["stage_2","stage_10"]: config.set_value("cleared",id,true)
 	check(SCOPE.save_config(config,PROGRESS.SAVE_PATH) == OK,"easy-clear fixture")
-	check(not STORE.character_unlocked("stage_2") and not STORE.character_unlocked("stage_10"),"easy clears do not unlock other heroes")
-	check(not STORE.select_stage("stage_2"),"locked selection cannot be saved")
-	check(PROGRESS.complete_hard_stage("stage_2").success and STORE.character_unlocked("stage_2"),"hard clear unlocks only matching hero")
-	check(not STORE.character_unlocked("stage_10"),"other hero stays locked")
+	check(STORE.character_unlocked("stage_2") and STORE.character_unlocked("stage_10"),"demon easy10 unlocks all heroes")
+	check(STORE.select_stage("stage_2"),"unlocked character selection saved")
+	check(PROGRESS.complete_hard_stage("stage_2").success,"demon hard requires matching easy clear")
 	check(int(PROGRESS.complete_hard_stage("stage_2").reward) == 0,"duplicate hard-clear grant refused")
 	check(not PROGRESS.complete_hard_stage("stage_3").success,"hard clear requires easy clear")
 	check(MODE.roster_for(1) != MODE.roster_for(10) and MODE.stage_pressure(10) > MODE.stage_pressure(1),"stage changes roster and pressure")
@@ -55,8 +54,9 @@ func run() -> void:
 		check(not runtime.apply_chest(clone),"receipt cannot replay through a cloned dictionary")
 	fixture.hero_id = "ranged_rookie"
 	var runtime := RUNTIME.new(); runtime.install(fixture)
-	var pool := DATA.weapon_pool()
-	check(runtime.add(String(pool[1])) and runtime.add(String(pool[2])) and not runtime.add(String(pool[3])),"three weapon slots")
+	var pool := DATA.weapon_pool(fixture.hero_id)
+	for id in pool.slice(1,6): check(runtime.add(String(id)),"six weapon slots")
+	check(not runtime.add(String(pool[6])),"seventh weapon rejected")
 	var chest := runtime.roll_chest(); var old: int = runtime.levels[chest.id]
 	check(not chest.evolution and runtime.apply_chest(chest) and int(runtime.levels[chest.id]) == old+1,"non-max chest upgrades owned weapon")
 	for index in range(6): check(runtime.add(String(DATA.PASSIVES.keys()[index])),"passive slot")
@@ -67,9 +67,13 @@ func run() -> void:
 	for id in runtime.weapon_ids:
 		while int(runtime.levels[id]) < DATA.MAX_LEVEL: runtime.add(id)
 		var receipt := runtime.roll_chest(); runtime.apply_chest(receipt)
+	var passive_reward := runtime.roll_chest()
+	check(passive_reward.kind == "passive" and runtime.apply_chest(passive_reward),"all weapons evolved upgrade owned passive")
+	for id in runtime.passives:
+		while int(runtime.passives[id]) < DATA.passive_limit(id): runtime.add(String(id))
 	var blessing := runtime.roll_chest()
 	check(blessing.id == "survival_restore" and runtime.apply_chest(blessing),"all evolved gives recovery")
-	check(DATA.PASSIVES.size() == 8 and DATA.PASSIVE_SLOTS == 6,"eight passive types, six equipped")
+	check(DATA.PASSIVES.size() == 16 and DATA.PASSIVE_SLOTS == 6,"sixteen passive types, six equipped")
 	var stats_fixture := HeroFixture.new(); root.add_child(stats_fixture)
 	var stats_runtime := RUNTIME.new(); stats_runtime.install(stats_fixture)
 	for id in ["survival_projectile","survival_magnet","survival_armor","survival_haste","survival_vitality","survival_mobility"]:
@@ -95,7 +99,7 @@ func run() -> void:
 	stats_fixture.queue_free()
 	var original_scope := SCOPE.guest_directory
 	SCOPE.guest_directory += "_other"; DirAccess.make_dir_recursive_absolute(SCOPE.guest_directory)
-	check(not STORE.character_unlocked("stage_2"),"hard unlock is account scoped")
+	check(not STORE.character_unlocked("stage_2"),"global hero unlock is account scoped")
 	SCOPE.guest_directory = original_scope; fixture.queue_free()
 	print("HERO_SURVIVAL_PROGRESSION_SMOKE checks=",checks," failures=",failures)
 	quit(1 if failures else 0)

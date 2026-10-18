@@ -1,0 +1,178 @@
+[
+  {
+    "id": "crystal_tortoise",
+    "name": "수정등거북",
+    "design": "Low stout turquoise tortoise with chunky violet crystal shell, short sturdy legs, blunt beak. Attack thrusts shell and small crystal shard.",
+    "form": "normal",
+    "source": "assets/art/monsters/crystal_tortoise/crystal_tortoise_source.png",
+    "height": 32,
+    "rarity": "rare",
+    "prompt": "Use case: stylized-concept. Production pixelart monster animation sheet for Godot Again Hero. Reference ONLY pixel density, colored outlines, three-tone shading and grid layout, NOT crab design. ONE normal form of 수정등거북. Actual transparent alpha background, absolutely no backdrop, vignette, floor, shadow, glow, text, grid lines. Regular invisible 6-column 5-row grid. Crisp colored pixel clusters, no antialias, approximately two-head SD proportions. All sprites face RIGHT three-quarter side. Constant anatomy, body size and palette. Body occupies only45%cellheight, generous transparent gutters, commoncenterX andfootY82%. EXACT: row1 columns1-4 idle4 distinct breathing poses, columns5-6 EMPTY; row2 all6 inplace walk6 distinct leg phases; row3 all6 attack6 anticipation windup peak toward right followthrough recoil return; row4 columns1-3 hit3 recoilrecover, others EMPTY; row5 columns1-4 death4 falling to groundcorpse, others EMPTY. EXACT23 isolated distinct sprites. No duplicate poses. No clipping or touching neighboring cells. Effects tiny and local. CHARACTER: Low stout turquoise tortoise with chunky violet crystal shell, short sturdy legs, blunt beak. Attack thrusts shell and small crystal shard.",
+    "reference": "assets/art/monsters/shell_crab/shell_crab_source.png"
+  },
+  {
+    "id": "crystal_tortoise",
+    "name": "수정등거북",
+    "design": "Low stout turquoise tortoise with chunky violet crystal shell, short sturdy legs, blunt beak. Attack thrusts shell and small crystal shard.",
+    "form": "elite",
+    "source": "assets/art/elitemonster/crystal_tortoise/crystal_tortoise_elite_source.png",
+    "height": 32,
+    "rarity": "rare",
+    "prompt": "Use case: identity-preserve. Edit this normal monster animation sheet into its ELITE variant for Godot. Preserve exact character identity, anatomy, body size, facing RIGHT, all23 poses and6column5row layout: idle4 first4cells row1; walk6 row2; attack6 row3; hit3 first3 row4; death4 first4row5. Other cellsEMPTY. Change ONLY palette and minor armor details: deep teal skin, dark amethyst shell crystals with gold mineral edges, small bronze shell rim. Preserve crisp colored pixel clusters and three-tone shading, fully isolated sprites, wide empty gutters. NO backdrop, fog, vignette, gradient, shadow, floor, external glow, grid or text. Background actual fully transparent alpha. All body/effects inside cells.",
+    "reference": "assets/art/monsters/crystal_tortoise/crystal_tortoise_source.png"
+  },
+  {
+    "id": "ember_salamander",
+    "name": "잿불도롱뇽",
+    "design": "Orange-red upright salamander with charcoal dorsal plates, cream belly and small ember tail. Spits a tiny fireball.",
+    "form": "normal",
+    "source": "assets/art/monsters/ember_salamander/ember_salamander_source.png",
+    "height": 32,
+    "rarity": "rare",
+    "prompt": "Use case: stylized-concept. Production pixelart monster animation sheet for Godot Again Hero. Reference ONLY pixel density, colored outlines, three-tone shading and grid layout, NOT crab design. ONE normal form of 잿불도롱뇽. Actual transparent alpha background, absolutely no backdrop, vignette, floor, shadow, glow, text, grid lines. Regular invisible 6-column 5-row grid. Crisp colored pixel clusters, no antialias, approximately two-head SD proportions. All sprites face RIGHT three-quarter side. Constant anatomy, body size and palette. Body occupies only45%cellheight, generous transparent gutters, commoncenterX andfootY82%. EXACT: row1 columns1-4 idle4 distinct breathing poses, columns5-6 EMPTY; row2 all6 inplace walk6 distinct leg phases; row3 all6 attack6 anticipation windup peak toward right followthrough recoil return; row4 columns1-3 hit3 recoilrecover, others EMPTY; row5 columns1-4 death4 falling to groundcorpse, others EMPTY. EXACT23 isolated distinct sprites. No duplicate poses. No clipping or touching neighboring cells. Effects tiny and local. CHARACTER: Orange-red upright salamander with charcoal dorsal plates, cream belly and small ember tail. Spits a tiny fireball.",
+    "reference": "assets/art/monsters/shell_crab/shell_crab_source.png"
+  },
+  {
+    "id": "ember_salamander",
+    "name": "잿불도롱뇽",
+    "design": "Orange-red upright salamander with charcoal dorsal plates, cream belly and small ember tail. Spits a tiny fireball.",
+    "form": "elite",
+    "source": "assets/art/elitemonster/ember_salamander/ember_salamander_elite_source.png",
+    "height": 32,
+    "rarity": "rare",
+    "prompt": "Use case: identity-preserve. Edit this normal monster animation sheet into its ELITE variant for Godot. Preserve exact character identity, anatomy, body size, facing RIGHT, all23 poses and6column5row layout: idle4 first4cells row1; walk6 row2; attack6 row3; hit3 first3 row4; death4 first4row5. Other cellsEMPTY. Change ONLY palette and minor armor details: dark crimson skin, golden belly, black volcanic dorsal plates with small gold seams, blue-white tail flame. Preserve crisp colored pixel clusters and three-tone shading, fully isolated sprites, wide empty gutters. NO backdrop, fog, vignette, gradient, shadow, floor, external glow, grid or text. Background actual fully transparent alpha. All body/effects inside cells.",
+    "reference": "assets/art/monsters/ember_salamander/ember_salamander_source.png"
+  },
+  {
+    "id": "frost_owl",
+    "name": "서리깃올빼미",
+    "design": "Round white and slate blue owl walking on two talons, ice eyebrow tufts and folded wings. Casts one small ice feather.",
+    "form": "normal",
+    "source": "assets/art/monsters/frost_owl/frost_owl_source.png",
+    "height": 32,
+    "rarity": "rare",
+    "prompt": "Use case: stylized-concept. Production pixelart monster animation sheet for Godot Again Hero. Reference ONLY pixel density, colored outlines, three-tone shading and grid layout, NOT crab design. ONE normal form of 서리깃올빼미. Actual transparent alpha background, absolutely no backdrop, vignette, floor, shadow, glow, text, grid lines. Regular invisible 6-column 5-row grid. Crisp colored pixel clusters, no antialias, approximately two-head SD proportions. All sprites face RIGHT three-quarter side. Constant anatomy, body size and palette. Body occupies only45%cellheight, generous transparent gutters, commoncenterX andfootY82%. EXACT: row1 columns1-4 idle4 distinct breathing poses, columns5-6 EMPTY; row2 all6 inplace walk6 distinct leg phases; row3 all6 attack6 anticipation windup peak toward right followthrough recoil return; row4 columns1-3 hit3 recoilrecover, others EMPTY; row5 columns1-4 death4 falling to groundcorpse, others EMPTY. EXACT23 isolated distinct sprites. No duplicate poses. No clipping or touching neighboring cells. Effects tiny and local. CHARACTER: Round white and slate blue owl walking on two talons, ice eyebrow tufts and folded wings. Casts one small ice feather.",
+    "reference": "assets/art/monsters/shell_crab/shell_crab_source.png"
+  },
+  {
+    "id": "frost_owl",
+    "name": "서리깃올빼미",
+    "design": "Round white and slate blue owl walking on two talons, ice eyebrow tufts and folded wings. Casts one small ice feather.",
+    "form": "elite",
+    "source": "assets/art/elitemonster/frost_owl/frost_owl_elite_source.png",
+    "height": 32,
+    "rarity": "rare",
+    "prompt": "Use case: identity-preserve. Edit this normal monster animation sheet into its ELITE variant for Godot. Preserve exact character identity, anatomy, body size, facing RIGHT, all23 poses and6column5row layout: idle4 first4cells row1; walk6 row2; attack6 row3; hit3 first3 row4; death4 first4row5. Other cellsEMPTY. Change ONLY palette and minor armor details: midnight blue feathers, silver facial disk and icy turquoise crown tufts, small gold wing bands. Preserve crisp colored pixel clusters and three-tone shading, fully isolated sprites, wide empty gutters. NO backdrop, fog, vignette, gradient, shadow, floor, external glow, grid or text. Background actual fully transparent alpha. All body/effects inside cells.",
+    "reference": "assets/art/monsters/frost_owl/frost_owl_source.png"
+  },
+  {
+    "id": "thorn_dryad",
+    "name": "가시덩굴드리아드",
+    "design": "Small olive wooden dryad, rounded leaf crown, thorn forearms, root feet, amber eyes. Roots lash forward short distance.",
+    "form": "normal",
+    "source": "assets/art/monsters/thorn_dryad/thorn_dryad_source.png",
+    "height": 32,
+    "rarity": "rare",
+    "prompt": "Use case: stylized-concept. Production pixelart monster animation sheet for Godot Again Hero. Reference ONLY pixel density, colored outlines, three-tone shading and grid layout, NOT crab design. ONE normal form of 가시덩굴드리아드. Actual transparent alpha background, absolutely no backdrop, vignette, floor, shadow, glow, text, grid lines. Regular invisible 6-column 5-row grid. Crisp colored pixel clusters, no antialias, approximately two-head SD proportions. All sprites face RIGHT three-quarter side. Constant anatomy, body size and palette. Body occupies only45%cellheight, generous transparent gutters, commoncenterX andfootY82%. EXACT: row1 columns1-4 idle4 distinct breathing poses, columns5-6 EMPTY; row2 all6 inplace walk6 distinct leg phases; row3 all6 attack6 anticipation windup peak toward right followthrough recoil return; row4 columns1-3 hit3 recoilrecover, others EMPTY; row5 columns1-4 death4 falling to groundcorpse, others EMPTY. EXACT23 isolated distinct sprites. No duplicate poses. No clipping or touching neighboring cells. Effects tiny and local. CHARACTER: Small olive wooden dryad, rounded leaf crown, thorn forearms, root feet, amber eyes. Roots lash forward short distance.",
+    "reference": "assets/art/monsters/shell_crab/shell_crab_source.png"
+  },
+  {
+    "id": "thorn_dryad",
+    "name": "가시덩굴드리아드",
+    "design": "Small olive wooden dryad, rounded leaf crown, thorn forearms, root feet, amber eyes. Roots lash forward short distance.",
+    "form": "elite",
+    "source": "assets/art/elitemonster/thorn_dryad/thorn_dryad_elite_source.png",
+    "height": 32,
+    "rarity": "rare",
+    "prompt": "Use case: identity-preserve. Edit this normal dryad monster animation sheet into its ELITE variant for Godot. Preserve exact character identity, anatomy, body size, facing RIGHT, all23 poses and6column5row layout: idle4 first4cells row1; walk6 row2; attack6 row3; hit3 first3 row4; death4 first4row5. Other cellsEMPTY. Change ONLY palette and minor armor details: deep emerald leaves with copper edges, pale birch bark skin, violet thorn tips, a tiny bronze acorn clasp. Preserve crisp colored pixel clusters and three-tone shading, fully isolated sprites, wide empty gutters. NO backdrop, fog, vignette, gradient, shadow, floor, external glow, grid or text. Background actual fully transparent alpha. All body/effects inside cells.",
+    "reference": "assets/art/monsters/thorn_dryad/thorn_dryad_source.png"
+  },
+  {
+    "id": "dusk_panther",
+    "name": "황혼표범",
+    "design": "Compact quadruped deep purple panther with amber eyes, silver crescent forehead and broad curved tail. Pouncing claw swipe.",
+    "form": "normal",
+    "source": "assets/art/monsters/dusk_panther/dusk_panther_source.png",
+    "height": 32,
+    "rarity": "rare",
+    "prompt": "Use case: stylized-concept. Production pixelart monster animation sheet for Godot Again Hero. Reference ONLY pixel density, colored outlines, three-tone shading and grid layout, NOT crab design. ONE normal form of 황혼표범. Actual transparent alpha background, absolutely no backdrop, vignette, floor, shadow, glow, text, grid lines. Regular invisible 6-column 5-row grid. Crisp colored pixel clusters, no antialias, approximately two-head SD proportions. All sprites face RIGHT three-quarter side. Constant anatomy, body size and palette. Body occupies only45%cellheight, generous transparent gutters, commoncenterX andfootY82%. EXACT: row1 columns1-4 idle4 distinct breathing poses, columns5-6 EMPTY; row2 all6 inplace walk6 distinct leg phases; row3 all6 attack6 anticipation windup peak toward right followthrough recoil return; row4 columns1-3 hit3 recoilrecover, others EMPTY; row5 columns1-4 death4 falling to groundcorpse, others EMPTY. EXACT23 isolated distinct sprites. No duplicate poses. No clipping or touching neighboring cells. Effects tiny and local. CHARACTER: Compact quadruped deep purple panther with amber eyes, silver crescent forehead and broad curved tail. Pouncing claw swipe.",
+    "reference": "assets/art/monsters/shell_crab/shell_crab_source.png"
+  },
+  {
+    "id": "dusk_panther",
+    "name": "황혼표범",
+    "design": "Compact quadruped deep purple panther with amber eyes, silver crescent forehead and broad curved tail. Pouncing claw swipe.",
+    "form": "elite",
+    "source": "assets/art/elitemonster/dusk_panther/dusk_panther_elite_source.png",
+    "height": 32,
+    "rarity": "rare",
+    "prompt": "Use case: identity-preserve. Edit this normal monster animation sheet into its ELITE variant for Godot. Preserve exact character identity, anatomy, body size, facing RIGHT, all23 poses and6column5row layout: idle4 first4cells row1; walk6 row2; attack6 row3; hit3 first3 row4; death4 first4row5. Other cellsEMPTY. Change ONLY palette and minor armor details: charcoal violet fur with silver shoulder markings, gold crescent forehead and gold claw tips, small bronze collar. Preserve crisp colored pixel clusters and three-tone shading, fully isolated sprites, wide empty gutters. NO backdrop, fog, vignette, gradient, shadow, floor, external glow, grid or text. Background actual fully transparent alpha. All body/effects inside cells.",
+    "reference": "assets/art/monsters/dusk_panther/dusk_panther_source.png"
+  },
+  {
+    "id": "rune_sentinel",
+    "name": "룬방패수호병",
+    "design": "Small hollow bronze armored construct, cyan rune face in helmet, square shield left arm, mace right hand. Shield bash.",
+    "form": "normal",
+    "source": "assets/art/monsters/rune_sentinel/rune_sentinel_source.png",
+    "height": 32,
+    "rarity": "rare",
+    "prompt": "Use case: stylized-concept. Production pixelart monster animation sheet for Godot Again Hero. Reference ONLY pixel density, colored outlines, three-tone shading and grid layout, NOT crab design. ONE normal form of 룬방패수호병. Actual transparent alpha background, absolutely no backdrop, vignette, floor, shadow, glow, text, grid lines. Regular invisible 6-column 5-row grid. Crisp colored pixel clusters, no antialias, approximately two-head SD proportions. All sprites face RIGHT three-quarter side. Constant anatomy, body size and palette. Body occupies only45%cellheight, generous transparent gutters, commoncenterX andfootY82%. EXACT: row1 columns1-4 idle4 distinct breathing poses, columns5-6 EMPTY; row2 all6 inplace walk6 distinct leg phases; row3 all6 attack6 anticipation windup peak toward right followthrough recoil return; row4 columns1-3 hit3 recoilrecover, others EMPTY; row5 columns1-4 death4 falling to groundcorpse, others EMPTY. EXACT23 isolated distinct sprites. No duplicate poses. No clipping or touching neighboring cells. Effects tiny and local. CHARACTER: Small hollow bronze armored construct, cyan rune face in helmet, square shield left arm, mace right hand. Shield bash.",
+    "reference": "assets/art/monsters/shell_crab/shell_crab_source.png"
+  },
+  {
+    "id": "venom_scorpion",
+    "name": "독침전갈",
+    "design": "Compact teal scorpion with six short legs, two purple pincers, arched segmented tail with lime poison stinger. Tail sting toward right.",
+    "form": "normal",
+    "source": "assets/art/monsters/venom_scorpion/venom_scorpion_source.png",
+    "height": 32,
+    "rarity": "rare",
+    "prompt": "Use case: stylized-concept. Production pixelart monster animation sheet for Godot Again Hero. Reference ONLY pixel density, colored outlines, three-tone shading and grid layout, NOT crab design. ONE normal form of 독침전갈. Actual transparent alpha background, absolutely no backdrop, vignette, floor, shadow, glow, text, grid lines. Regular invisible 6-column 5-row grid. Crisp colored pixel clusters, no antialias, approximately two-head SD proportions. All sprites face RIGHT three-quarter side. Constant anatomy, body size and palette. Body occupies only45%cellheight, generous transparent gutters, commoncenterX andfootY82%. EXACT: row1 columns1-4 idle4 distinct breathing poses, columns5-6 EMPTY; row2 all6 inplace walk6 distinct leg phases; row3 all6 attack6 anticipation windup peak toward right followthrough recoil return; row4 columns1-3 hit3 recoilrecover, others EMPTY; row5 columns1-4 death4 falling to groundcorpse, others EMPTY. EXACT23 isolated distinct sprites. No duplicate poses. No clipping or touching neighboring cells. Effects tiny and local. CHARACTER: Compact teal scorpion with six short legs, two purple pincers, arched segmented tail with lime poison stinger. Tail sting toward right.",
+    "reference": "assets/art/monsters/shell_crab/shell_crab_source.png"
+  },
+  {
+    "id": "moon_moth",
+    "name": "달가루나방",
+    "design": "Small upright cream moth with lavender moon-patterned wings, fluffy collar and two antennae, small feet. Wing pulse scattering tiny violet motes.",
+    "form": "normal",
+    "source": "assets/art/monsters/moon_moth/moon_moth_source.png",
+    "height": 32,
+    "rarity": "rare",
+    "prompt": "Use case: stylized-concept. Production pixelart monster animation sheet for Godot Again Hero. Reference ONLY pixel density, colored outlines, three-tone shading and grid layout, NOT crab design. ONE normal form of 달가루나방. Actual transparent alpha background, absolutely no backdrop, vignette, floor, shadow, glow, text, grid lines. Regular invisible 6-column 5-row grid. Crisp colored pixel clusters, no antialias, approximately two-head SD proportions. All sprites face RIGHT three-quarter side. Constant anatomy, body size and palette. Body occupies only45%cellheight, generous transparent gutters, commoncenterX andfootY82%. EXACT: row1 columns1-4 idle4 distinct breathing poses, columns5-6 EMPTY; row2 all6 inplace walk6 distinct leg phases; row3 all6 attack6 anticipation windup peak toward right followthrough recoil return; row4 columns1-3 hit3 recoilrecover, others EMPTY; row5 columns1-4 death4 falling to groundcorpse, others EMPTY. EXACT23 isolated distinct sprites. No duplicate poses. No clipping or touching neighboring cells. Effects tiny and local. CHARACTER: Small upright cream moth with lavender moon-patterned wings, fluffy collar and two antennae, small feet. Wing pulse scattering tiny violet motes.",
+    "reference": "assets/art/monsters/shell_crab/shell_crab_source.png"
+  },
+  {
+    "id": "rune_sentinel",
+    "name": "룬방패수호병",
+    "design": "Small hollow bronze armored construct, cyan rune face in helmet, square shield left arm, mace right hand. Shield bash.",
+    "form": "elite",
+    "source": "assets/art/elitemonster/rune_sentinel/rune_sentinel_elite_source.png",
+    "height": 32,
+    "rarity": "rare",
+    "prompt": "Use case: identity-preserve. Edit this normal monster animation sheet into its ELITE variant for Godot. Preserve exact character identity, anatomy, body size, facing RIGHT, all23 poses and6column5row layout: idle4 first4cells row1; walk6 row2; attack6 row3; hit3 first3 row4; death4 first4row5. Other cellsEMPTY. Change ONLY palette and minor armor details: dark steel armored plates with silver edges, violet rune face and shield rune, small gold crest, no change to shield and mace shapes. Preserve crisp colored pixel clusters and three-tone shading, fully isolated sprites, wide empty gutters. NO backdrop, fog, vignette, gradient, shadow, floor, external glow, grid or text. Background actual fully transparent alpha. All body/effects inside cells.",
+    "reference": "assets/art/monsters/rune_sentinel/rune_sentinel_source.png"
+  },
+  {
+    "id": "venom_scorpion",
+    "name": "독침전갈",
+    "design": "Compact teal scorpion with six short legs, two purple pincers, arched segmented tail with lime poison stinger. Tail sting toward right.",
+    "form": "elite",
+    "source": "assets/art/elitemonster/venom_scorpion/venom_scorpion_elite_source.png",
+    "height": 32,
+    "rarity": "rare",
+    "prompt": "Use case: identity-preserve. Edit this normal monster animation sheet into its ELITE variant for Godot. Preserve exact character identity, anatomy, body size, facing RIGHT, all23 poses and6column5row layout: idle4 first4cells row1; walk6 row2; attack6 row3; hit3 first3 row4; death4 first4row5. Other cellsEMPTY. Change ONLY palette and minor armor details: deep jade carapace with gold segment bands, dark violet claws, bright lime stinger, same six legs and tail anatomy. Preserve crisp colored pixel clusters and three-tone shading, fully isolated sprites, wide empty gutters. NO backdrop, fog, vignette, gradient, shadow, floor, external glow, grid or text. Background actual fully transparent alpha. All body/effects inside cells.",
+    "reference": "assets/art/monsters/venom_scorpion/venom_scorpion_source.png"
+  },
+  {
+    "id": "moon_moth",
+    "name": "달가루나방",
+    "design": "Small upright cream moth with lavender moon-patterned wings, fluffy collar and two antennae, small feet. Wing pulse scattering tiny violet motes.",
+    "form": "elite",
+    "source": "assets/art/elitemonster/moon_moth/moon_moth_elite_source.png",
+    "height": 32,
+    "rarity": "rare",
+    "prompt": "Use case: identity-preserve. Edit this normal moon moth monster animation sheet into its ELITE variant for Godot. Preserve exact character identity, anatomy, body size, facing RIGHT, all23 poses and6column5row layout: idle4 first4cells row1; walk6 row2; attack6 row3; hit3 first3 row4; death4 first4row5. Other cellsEMPTY. Change ONLY palette and minor armor details: deep midnight indigo wings with silver crescent markings and small gold stars, pale mint fluffy collar and face, violet eyes and gold antenna tips. Preserve crisp colored pixel clusters and three-tone shading, fully isolated sprites, wide empty gutters. NO backdrop, fog, vignette, gradient, shadow, floor, external glow, grid or text. Background actual fully transparent alpha. All body/effects inside cells.",
+    "reference": "assets/art/monsters/moon_moth/moon_moth_source.png"
+  }
+]

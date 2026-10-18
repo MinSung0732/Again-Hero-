@@ -45,14 +45,14 @@ func run() -> void:
 	check(view.hard_button.icon == view.icons.lock and view.hero_button.icon == view.icons.lock, "lock icons")
 	check(view.hero_button.tooltip_text.contains("10"), "unlock condition explained")
 	view.choose_difficulty("hard")
-	view.choose_perspective("hero")
+	await view.choose_perspective("hero")
 	view.toggle_ranked()
 	check(view.difficulty == "easy" and view.perspective == "demon" and not view.ranked, "direct handlers cannot bypass locks")
 	await shot("locked")
 	PROGRESS.complete_stage("stage_1", 1, "stage_2", 2, 0)
 	lobby._refresh_stage_card()
 	await process_frame
-	check(not view.hard_button.disabled and view.hero_button.disabled, "stage1 clear unlocks only stage1 hard")
+	check(view.hard_button.disabled and UNLOCKS.unlocked("hard","stage_1") and view.hero_button.disabled, "stage1 hard unlocked but preparing")
 	check(is_instance_valid(view.unlock_feedback) and not view.unlock_feedback.ready_to_close, "opening animation focus and input guard")
 	await create_timer(1.2).timeout
 	check(view.unlock_feedback.ready_to_close, "opening animation finished")
@@ -62,7 +62,7 @@ func run() -> void:
 	await process_frame
 	check(UNLOCKS.announcement_seen("hard", "stage_1") and not is_instance_valid(view.unlock_feedback), "seen stored and no duplicate effect")
 	view.choose_difficulty("hard")
-	check(view.difficulty == "hard", "unlocked hard selectable")
+	check(view.difficulty == "easy", "unlocked hard unavailable")
 	lobby.selected_stage_index = 1
 	lobby._refresh_stage_card()
 	check(view.hard_button.disabled and view.difficulty == "easy", "uncleared stage hard locked and selection corrected")
@@ -74,8 +74,8 @@ func run() -> void:
 	PROGRESS.complete_stage("stage_10", 10, "", 0, 0)
 	lobby._refresh_stage_card()
 	await process_frame
-	check(not view.hero_button.disabled and not view.ranked_button.disabled, "stage10 clear unlocks hero and ranked")
-	for key in ["hero", "rank"]:
+	check(not view.hero_button.disabled and view.ranked_button.disabled, "demon stage10 opens hero but rank requires hero easy10")
+	for key in ["hero"]:
 		check(is_instance_valid(view.unlock_feedback), "global opening focus " + key)
 		await create_timer(1.2).timeout
 		await shot(key + "-open")
@@ -83,13 +83,24 @@ func run() -> void:
 		await process_frame
 		await process_frame
 		check(UNLOCKS.announcement_seen(key, "stage_2"), "global seen " + key)
-	view.choose_perspective("hero")
+	var hero_progress := ConfigFile.new()
+	SCOPE.load_config(hero_progress,"user://team_loadout.cfg")
+	hero_progress.set_value("hero_progress","stage_10_easy_wins",1)
+	SCOPE.save_config(hero_progress,"user://team_loadout.cfg")
+	lobby._refresh_stage_card()
+	await process_frame
+	await create_timer(1.2).timeout
+	check(not view.ranked_button.disabled,"both easy10 clears open rank")
+	if is_instance_valid(view.unlock_feedback): view.unlock_feedback.close()
+	await process_frame
+	await process_frame
+	await view.choose_perspective("hero")
 	view.toggle_ranked()
 	check(view.ranked and view.perspective == "hero", "unlocked navigation works")
 	check(view.blocks_entry(), "not-yet-implemented modes remain preview only")
 	view.notice.hide()
 	view.toggle_ranked()
-	view.choose_perspective("demon")
+	await view.choose_perspective("demon")
 	UNLOCKS.mark_announced("hard", "stage_10")
 	check(PROGRESS.get_gold() == 777, "unlock feedback never changes rewards")
 	# Actual tutorial buttons keep the same callbacks, only presentation changes.
@@ -117,9 +128,10 @@ func run() -> void:
 	SCOPE.select_guest()
 	lobby._refresh_stage_card()
 	check(lobby.main_modes_view.hero_button.disabled and not UNLOCKS.announcement_seen("hero", "stage_1"), "namespace isolation")
+	root.get_node("LocalTestMode").test_directory = SCOPE.guest_directory
 	root.get_node("LocalTestMode").active = true
 	lobby._refresh_stage_card()
-	check(not lobby.main_modes_view.hero_button.disabled and not lobby.main_modes_view.hard_button.disabled, "localtest keeps all-mode preview override")
+	check(not lobby.main_modes_view.hero_button.disabled and lobby.main_modes_view.hard_button.disabled, "localtest cannot bypass hard preparation")
 	root.get_node("LocalTestMode").active = false
 	print("MODE_UNLOCK_TEST: " + ("FAILED" if failed else "OK"))
 	quit(1 if failed else 0)

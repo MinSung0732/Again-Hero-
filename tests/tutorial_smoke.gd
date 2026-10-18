@@ -9,33 +9,40 @@ class FakeCloud extends "res://src/network/cloud_store.gd":
 	var awarded := false
 	var offline := false
 	var grants := 0
+	var drop_tutorial_ack := false
 	var snapshot: Dictionary = {}
 	var version := 1
 	func request_rpc(method: String, data: Dictionary) -> Dictionary:
 		await get_tree().process_frame
 		if offline:
 			return {}
-		if method == "save_game_snapshot":
+		if method == "cloud_sync" and data.action in ["claim", "check"]: return {"ok":true}
+		if method == "cloud_sync" and data.action == "read": return {"found":true,"revision":version,"payload":snapshot.duplicate(true)}
+		if method == "cloud_sync" and data.action == "save":
 			if data.expected_revision != version:
 				return {"conflict": true}
 			snapshot = data.new_payload.duplicate(true)
 			version += 1
 			return {"ok": true, "revision": version}
-		if method != "account_tutorial":
+		if method != "cloud_sync" or data.action != "tutorial":
 			return {}
-		if data.action == "start" and tutorial_status == "pending":
+		if data.tutorial_action == "start" and tutorial_status == "pending":
 			tutorial_status = "active"
 		var result := {"ok": true, "status": tutorial_status, "reward_claimed": awarded}
-		if data.action in ["skip", "complete"]:
+		if data.tutorial_action in ["skip", "complete"]:
 			if data.expected_revision != version:
 				return {"conflict": true}
+			var was_awarded := awarded
 			if not awarded:
-				tutorial_status = "completed" if data.action == "complete" else "skipped"
+				tutorial_status = "completed" if data.tutorial_action == "complete" else "skipped"
 				snapshot["stage_progress.cfg"].meta.gold += 1000
 				version += 1
 				awarded = true
 				grants += 1
-			result.merge({"status": tutorial_status, "reward_claimed": true, "granted": 1000 if grants == 1 else 0, "revision": version, "payload": snapshot.duplicate(true)}, true)
+			result.merge({"status": tutorial_status, "reward_claimed": true, "granted": 0 if was_awarded else 1000, "revision": version, "payload": snapshot.duplicate(true)}, true)
+			if drop_tutorial_ack:
+				drop_tutorial_ack = false
+				return {}
 		return result
 
 func _initialize() -> void:
@@ -68,6 +75,7 @@ func run() -> void:
 	root.add_child(fake)
 	fake.snapshot = SCOPE.files.duplicate(true)
 	fake.ready_for_play = true
+	fake._initialized = true
 	var flow := root.get_node("TutorialFlow")
 	flow.transport = fake
 	var folder := "user://tutorial_fixture_" + bytes
@@ -85,6 +93,8 @@ func run() -> void:
 	await flow.finish_lobby()
 	check(PROGRESS.get_gold() == 23 and fake.grants == 0 and flow.title.text == "보상 저장 실패", "offline never grants locally")
 	fake.offline = false
+	fake._reload_after_sync = false
+	await fake.initialize()
 	await flow.start_lobby()
 	check(flow.active() and lobby.selected_stage_index == 0, "active tutorial persisted and stage one selected")
 	await shot("entry")

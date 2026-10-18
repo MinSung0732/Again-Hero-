@@ -17,8 +17,9 @@ class Cloud extends "res://src/network/cloud_store.gd":
 		calls.append(method)
 		await get_tree().process_frame
 		if method == "account_lifecycle_status": return {"active": true}
-		if method == "read_game_save": return accounts.get(id, {"found": false, "revision": 0}).duplicate(true)
-		if method == "save_game_snapshot":
+		if method == "cloud_sync" and data.action in ["claim", "check"]: return {"ok": true}
+		if method == "cloud_sync" and data.action == "read": return accounts.get(id, {"found": false, "revision": 0}).duplicate(true)
+		if method == "cloud_sync" and data.action == "save":
 			var remote: Dictionary = accounts.get(id, {"revision": 0})
 			if remote.revision != data.expected_revision: return {"conflict": true}
 			accounts[id] = {"found": true, "revision": int(remote.revision) + 1, "payload": data.new_payload.duplicate(true)}
@@ -66,6 +67,8 @@ func login(gateway: Node, id: String) -> void:
 func _initialize() -> void: call_deferred("run")
 
 func run() -> void:
+	root.get_node("CloudConnectionOverlay").queue_free()
+	await process_frame
 	var gateway := root.get_node("LoginGateway")
 	var mode := root.get_node("LocalTestMode")
 	var old_cloud := root.get_node("CloudStore")

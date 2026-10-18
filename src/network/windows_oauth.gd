@@ -139,7 +139,10 @@ func _exchange(code: String, generation: int) -> void:
 	cancel()
 	validated.emit(session, user)
 
+var last_http_status := 0
+
 func request_json(path: String, body: Variant = null, token: String = "") -> Dictionary:
+	last_http_status = 0
 	var request := HTTPRequest.new()
 	request.timeout = 20.0
 	request.body_size_limit = 1048576
@@ -153,6 +156,7 @@ func request_json(path: String, body: Variant = null, token: String = "") -> Dic
 		return {}
 	var response: Array = await request.request_completed
 	request.queue_free()
+	last_http_status = int(response[1]) if response[0] == HTTPRequest.RESULT_SUCCESS else 0
 	if response[0] != HTTPRequest.RESULT_SUCCESS or response[1] < 200 or response[1] >= 300:
 		return {}
 	var decoded: Variant = JSON.parse_string((response[3] as PackedByteArray).get_string_from_utf8())
@@ -187,10 +191,10 @@ func _android_package_name() -> String:
 # Focus is requested only after the loopback callback has passed Host/nonce
 # checks. This transports no code/token and does not change OAuth verification.
 func _focus_windows_game() -> void:
-	var command := "$w=New-Object -ComObject WScript.Shell;[void]$w.AppActivate(%d)" % OS.get_process_id()
-	OS.create_process("powershell.exe", PackedStringArray([
-		"-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-Command", command
-	]), false)
+	var window := get_window()
+	if window != null:
+		window.grab_focus()
+		window.request_attention()
 
 func _drop_peer() -> void:
 	if _peer != null:

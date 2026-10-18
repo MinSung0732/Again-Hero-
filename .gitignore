@@ -20,3 +20,9 @@ Thumbs.db
 
 # Godot CSV importer output from documentation tables (not game translations).
 /docs/*.translation
+
+# Local match gateway domain configuration
+deploy/match_server/.env
+
+# Local Supabase CLI cache
+supabase/.temp/

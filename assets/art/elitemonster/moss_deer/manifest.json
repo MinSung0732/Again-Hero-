@@ -1,0 +1,627 @@
+{
+  "character_id": "moss_deer_elite",
+  "name_ko": "이끼뿔사슴",
+  "form": "elite",
+  "intended_rarity": "uncommon",
+  "status": "gameplay_registered",
+  "direction": "right",
+  "cell_size": [
+    322,
+    209
+  ],
+  "sheet_size": [
+    1932,
+    1045
+  ],
+  "anchor": {
+    "center_x": 161,
+    "foot_y": 197
+  },
+  "columns": 6,
+  "rows": 5,
+  "animations": {
+    "idle": {
+      "fps": 6,
+      "loop": true,
+      "frames": [
+        "frames/idle_01.png",
+        "frames/idle_02.png",
+        "frames/idle_03.png",
+        "frames/idle_04.png"
+      ]
+    },
+    "move": {
+      "fps": 10,
+      "loop": true,
+      "frames": [
+        "frames/move_01.png",
+        "frames/move_02.png",
+        "frames/move_03.png",
+        "frames/move_04.png",
+        "frames/move_05.png",
+        "frames/move_06.png"
+      ]
+    },
+    "attack": {
+      "fps": 14,
+      "loop": false,
+      "frames": [
+        "frames/attack_01.png",
+        "frames/attack_02.png",
+        "frames/attack_03.png",
+        "frames/attack_04.png",
+        "frames/attack_05.png",
+        "frames/attack_06.png"
+      ]
+    },
+    "hit": {
+      "fps": 12,
+      "loop": false,
+      "frames": [
+        "frames/hit_01.png",
+        "frames/hit_02.png",
+        "frames/hit_03.png"
+      ]
+    },
+    "death": {
+      "fps": 10,
+      "loop": false,
+      "frames": [
+        "frames/death_01.png",
+        "frames/death_02.png",
+        "frames/death_03.png",
+        "frames/death_04.png"
+      ]
+    }
+  },
+  "source": "moss_deer_elite_source.png",
+  "sheet": "moss_deer_elite_spritesheet.png",
+  "portrait": null,
+  "source_sha256": "594c5c171979ebe6c04300673fa180622910a16053f94b607766113da0c20979",
+  "design": "a compact magical quadruped fawn with warm brown fur, cream muzzle and belly, two small branching antlers wrapped with moss and tiny mint leaves, four visible slender legs, round dark eyes and short tail. No humanoid stance or staff. Attack: head dip then a tiny green seed puff released between antlers to RIGHT. Elite armored/spirit variant; see exact prompt.",
+  "generation": {
+    "tool": "image_gen",
+    "prompt": "Use case: identity-preserve. Make the ELITE variant of this same magical quadruped moss fawn animation sheet. Preserve all23poses, body proportions, four legs,6column5row layout and transparent unused cells: idle4/move6/attack6/hit3/death4. Upgrade fur from brown to pale cream with moss-green markings, antlers to slightly larger branching jade crystals with small gold leaf buds. Same character, no humanoid stance, no staff or clothes. Attack stays small rightward green seed puff. Crisp pixel clusters,3-tone shading, dark colored outlines. Actual transparent alpha background, no backdrop/glow fog/shadows/text/grid. Wide empty gutters, no clipped antlers/effects."
+  },
+  "normalization": {
+    "alpha_threshold": 128,
+    "resampling": "nearest",
+    "uniform_scale": 1.0,
+    "rgb_keying": false,
+    "body_height_target": 34,
+    "native_resolution": true,
+    "native_idle_height": 185.0,
+    "preview_scale": 0.5513513513513514
+  },
+  "frames": [
+    {
+      "file": "frames/idle_01.png",
+      "source_crop": [
+        0,
+        0,
+        270,
+        230
+      ],
+      "source_body_center_x": 144.0,
+      "source_foot_y": 223,
+      "destination_offset": [
+        17,
+        -26
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        85,
+        12,
+        239,
+        197
+      ],
+      "sha256": "e1c8082b30791aa47bfe32b67e91c40d5c7c44b702a979beb248cd48d3c1e8d3"
+    },
+    {
+      "file": "frames/idle_02.png",
+      "source_crop": [
+        270,
+        0,
+        527,
+        230
+      ],
+      "source_body_center_x": 127.0,
+      "source_foot_y": 223,
+      "destination_offset": [
+        34,
+        -26
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        83,
+        12,
+        245,
+        197
+      ],
+      "sha256": "caa862d7c5de7a1d348c2fdd209951c68e65faa0b021245d5e2cdd4cb2e64e57"
+    },
+    {
+      "file": "frames/idle_03.png",
+      "source_crop": [
+        527,
+        0,
+        783,
+        230
+      ],
+      "source_body_center_x": 126.0,
+      "source_foot_y": 223,
+      "destination_offset": [
+        35,
+        -26
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        82,
+        12,
+        243,
+        197
+      ],
+      "sha256": "918215dedb0b4a7ddb2c2213d0eb0bdae5dd8d3cecd2e3958c4a4dba04cae963"
+    },
+    {
+      "file": "frames/idle_04.png",
+      "source_crop": [
+        783,
+        0,
+        1054,
+        230
+      ],
+      "source_body_center_x": 127.0,
+      "source_foot_y": 223,
+      "destination_offset": [
+        34,
+        -26
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        82,
+        12,
+        244,
+        197
+      ],
+      "sha256": "78e6ed75623c4d4ab81abfd41d2875fb10a82bc0e652c104f3b85fd37c2a9c1c"
+    },
+    {
+      "file": "frames/move_01.png",
+      "source_crop": [
+        0,
+        230,
+        270,
+        422
+      ],
+      "source_body_center_x": 137.0,
+      "source_foot_y": 185,
+      "destination_offset": [
+        24,
+        12
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        83,
+        19,
+        251,
+        197
+      ],
+      "sha256": "1e717ae6a944fc5e4d4afa822deb22ccfcb857b81a9027dc7da8c5e9dca06938"
+    },
+    {
+      "file": "frames/move_02.png",
+      "source_crop": [
+        270,
+        230,
+        527,
+        422
+      ],
+      "source_body_center_x": 123.0,
+      "source_foot_y": 185,
+      "destination_offset": [
+        38,
+        12
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        81,
+        22,
+        250,
+        197
+      ],
+      "sha256": "847b38308e70f6dec6e4a89907d9ec114f344e6ec33969cae8740fcea2fe0939"
+    },
+    {
+      "file": "frames/move_03.png",
+      "source_crop": [
+        527,
+        230,
+        785,
+        422
+      ],
+      "source_body_center_x": 128.0,
+      "source_foot_y": 185,
+      "destination_offset": [
+        33,
+        12
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        78,
+        19,
+        248,
+        197
+      ],
+      "sha256": "43cca30d402f5f79c8ca4e5550185174bff50ea360d2e8c7df0abfebcb4decfb"
+    },
+    {
+      "file": "frames/move_04.png",
+      "source_crop": [
+        785,
+        230,
+        1040,
+        422
+      ],
+      "source_body_center_x": 124.0,
+      "source_foot_y": 185,
+      "destination_offset": [
+        37,
+        12
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        80,
+        19,
+        254,
+        197
+      ],
+      "sha256": "7c49b8ecf668b346c7fc2f819ebdee9cffd64d3cb02f246edfb342e43cfd0145"
+    },
+    {
+      "file": "frames/move_05.png",
+      "source_crop": [
+        1040,
+        230,
+        1292,
+        422
+      ],
+      "source_body_center_x": 118.0,
+      "source_foot_y": 185,
+      "destination_offset": [
+        43,
+        12
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        81,
+        19,
+        247,
+        197
+      ],
+      "sha256": "14a60f0d7a96e6e4a981291f332e8cb5972f95f3221d11d0fccb9447005b5198"
+    },
+    {
+      "file": "frames/move_06.png",
+      "source_crop": [
+        1292,
+        230,
+        1536,
+        422
+      ],
+      "source_body_center_x": 127.0,
+      "source_foot_y": 185,
+      "destination_offset": [
+        34,
+        12
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        82,
+        19,
+        247,
+        197
+      ],
+      "sha256": "00c66edb3a92b2a28eabb9ac8e7beb723ef00ff412618bc78c3d5e4c5e2f79a4"
+    },
+    {
+      "file": "frames/attack_01.png",
+      "source_crop": [
+        0,
+        422,
+        265,
+        615
+      ],
+      "source_body_center_x": 132.0,
+      "source_foot_y": 180,
+      "destination_offset": [
+        29,
+        17
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        76,
+        45,
+        258,
+        197
+      ],
+      "sha256": "4323e8c4ff9254ed3bf4b1e626a1ce8fddfdf7f5a0d42008e34ae5e800affb73"
+    },
+    {
+      "file": "frames/attack_02.png",
+      "source_crop": [
+        265,
+        422,
+        525,
+        615
+      ],
+      "source_body_center_x": 129.0,
+      "source_foot_y": 182,
+      "destination_offset": [
+        32,
+        15
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        69,
+        47,
+        271,
+        197
+      ],
+      "sha256": "d72263a65e6faa531696e4c5456790bc375d94c57f4b76e0e228fc51b02a6c5d"
+    },
+    {
+      "file": "frames/attack_03.png",
+      "source_crop": [
+        525,
+        422,
+        799,
+        615
+      ],
+      "source_body_center_x": 116.0,
+      "source_foot_y": 182,
+      "destination_offset": [
+        45,
+        15
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        67,
+        23,
+        310,
+        197
+      ],
+      "sha256": "0c71e73498b058047e1b0666a7a9f72069ff914c5869f22890ee9bb2f0df8127"
+    },
+    {
+      "file": "frames/attack_04.png",
+      "source_crop": [
+        799,
+        422,
+        1069,
+        615
+      ],
+      "source_body_center_x": 107.0,
+      "source_foot_y": 182,
+      "destination_offset": [
+        54,
+        15
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        63,
+        45,
+        306,
+        197
+      ],
+      "sha256": "f59e6af40180c15d7932a774b35d528c74df33a9c8e57dd30cbb6d7fa6c6147d"
+    },
+    {
+      "file": "frames/attack_05.png",
+      "source_crop": [
+        1069,
+        422,
+        1294,
+        615
+      ],
+      "source_body_center_x": 91.0,
+      "source_foot_y": 187,
+      "destination_offset": [
+        70,
+        10
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        88,
+        25,
+        249,
+        197
+      ],
+      "sha256": "fdcf27fb26e59a9dafc0320d4e8313b110dfb01323950b3b504ef7fb22423b4f"
+    },
+    {
+      "file": "frames/attack_06.png",
+      "source_crop": [
+        1294,
+        422,
+        1536,
+        615
+      ],
+      "source_body_center_x": 124.0,
+      "source_foot_y": 184,
+      "destination_offset": [
+        37,
+        13
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        83,
+        22,
+        251,
+        197
+      ],
+      "sha256": "322faf9c8dd04109b220a0cdd03efe6518cb33ac626345f44b4b802fa16d78c5"
+    },
+    {
+      "file": "frames/hit_01.png",
+      "source_crop": [
+        0,
+        615,
+        265,
+        807
+      ],
+      "source_body_center_x": 136.0,
+      "source_foot_y": 182,
+      "destination_offset": [
+        25,
+        15
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        88,
+        21,
+        252,
+        197
+      ],
+      "sha256": "89a0cfbadd4d8b22ed0263a5b7a55346dd9d4814935e32097338fd7732685ed2"
+    },
+    {
+      "file": "frames/hit_02.png",
+      "source_crop": [
+        265,
+        615,
+        512,
+        807
+      ],
+      "source_body_center_x": 125.0,
+      "source_foot_y": 181,
+      "destination_offset": [
+        36,
+        16
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        75,
+        48,
+        253,
+        197
+      ],
+      "sha256": "418aae7c3e9e2a1b34db91ed8ce03047d970197c28f28df36173ebb2e1b3ba8a"
+    },
+    {
+      "file": "frames/hit_03.png",
+      "source_crop": [
+        512,
+        615,
+        784,
+        807
+      ],
+      "source_body_center_x": 110.0,
+      "source_foot_y": 186,
+      "destination_offset": [
+        51,
+        11
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        82,
+        29,
+        249,
+        197
+      ],
+      "sha256": "eed0b330bf9dc1d744fcb708a4aa836bc644c60a681bcb692ed8b537a4e85179"
+    },
+    {
+      "file": "frames/death_01.png",
+      "source_crop": [
+        0,
+        807,
+        270,
+        1024
+      ],
+      "source_body_center_x": 136.0,
+      "source_foot_y": 179,
+      "destination_offset": [
+        25,
+        18
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        83,
+        24,
+        252,
+        197
+      ],
+      "sha256": "c2fb97293c03bf2cfac6d941914eeda92a6e1dde91247cb48e826c2b3bfa96ff"
+    },
+    {
+      "file": "frames/death_02.png",
+      "source_crop": [
+        270,
+        807,
+        519,
+        1024
+      ],
+      "source_body_center_x": 132.0,
+      "source_foot_y": 179,
+      "destination_offset": [
+        29,
+        18
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        73,
+        46,
+        255,
+        197
+      ],
+      "sha256": "44410efa6448c94699ef9595e859dc9d245697aeb6940ebf42a0de782ff19188"
+    },
+    {
+      "file": "frames/death_03.png",
+      "source_crop": [
+        519,
+        807,
+        768,
+        1024
+      ],
+      "source_body_center_x": 137.0,
+      "source_foot_y": 177,
+      "destination_offset": [
+        24,
+        20
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        48,
+        87,
+        256,
+        197
+      ],
+      "sha256": "15d24bcbd63ba8e2e6fde70819e8cf5e17e49e3d2a5e568240e62891fc16432d"
+    },
+    {
+      "file": "frames/death_04.png",
+      "source_crop": [
+        768,
+        807,
+        1065,
+        1024
+      ],
+      "source_body_center_x": 136.0,
+      "source_foot_y": 174,
+      "destination_offset": [
+        25,
+        23
+      ],
+      "source_isolation": "transparent_gutters",
+      "bbox": [
+        43,
+        116,
+        272,
+        197
+      ],
+      "sha256": "2774f271e25aaef60d9ea0a7adfc0d1facd7643dabe88b15e4878781074b4955"
+    }
+  ]
+}

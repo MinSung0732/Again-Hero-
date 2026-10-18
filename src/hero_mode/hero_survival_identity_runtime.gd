@@ -44,6 +44,8 @@ func install(host, runtime) -> void:
 		# Preserve original gas per second when native 24s skills become 2s
 		# survival weapons, rather than multiplying their resource demand tenfold.
 		gas_costs[id] = float(value)*float(WEAPONS.WEAPONS[id].cooldown)/maxf(period,0.1)
+	for id in WEAPONS.weapon_pool(String(hero.hero_id)):
+		if WEAPONS.WEAPONS[id].has("gas_cost"): gas_costs[id] = maxf(0.0,float(WEAPONS.WEAPONS[id].gas_cost))
 	if spec.has("audio"): audio_call = Callable(hero,String(spec.audio))
 	if spec.has("player"): audio = hero.get(String(spec.player)) as AudioStreamPlayer
 	if spec.has("audio_path"):
@@ -179,7 +181,7 @@ func can_cast(id: String, pattern: String) -> bool:
 	if archetype == "alchemist_chemical": return hero.alchemist_gas >= float(gas_costs.get(id,0))
 	return true
 func uses_ammo(id: String) -> bool:
-	return archetype == "pistol_gunner" and id in spec.ammo_weapons
+	return archetype == "pistol_gunner" and (id in spec.ammo_weapons or bool(WEAPONS.WEAPONS.get(id,{}).get("uses_ammo",false)))
 func prepare_cast(id: String) -> void:
 	if archetype == "berserker_madness" and id == starter and hero.berserker_madness_active:
 		var target: Node2D = hero._find_berserker_madness_target()
@@ -255,7 +257,7 @@ func native_basic(id: String, target: Node2D, damage: int, reach: float) -> bool
 		hero.sage_config.basic_range = basic_range; hero.sage_config.basic_projectile_speed = basic_speed; hero.sage_config.piercing_projectile_speed = piercing_speed
 	# Original helper already plays the appropriate element/third-shot sound.
 	on_cast(id,false,false); audio_serial += 1
-	if authority.is_combat_simulation_paused(): set_paused(true)
+	if authority.is_combat_simulation_paused() and not (authority.has_method("uses_hero_subtree_pause") and authority.uses_hero_subtree_pause()): set_paused(true)
 	return true
 func tick_revive(delta: float) -> void:
 	if not hero.berserker_reviving: return

@@ -2,7 +2,10 @@ extends SceneTree
 ## Static budget snapshots, not a combat simulation. All theoretical targets stay in range.
 const DATA := preload("res://src/data/hero_weapon_catalog.gd")
 func _initialize() -> void:
-	var output := FileAccess.open("res://docs/HERO_WEAPON_GROWTH_BUDGET_20261013.tsv",FileAccess.WRITE)
+	var args := OS.get_cmdline_user_args()
+	var output_path := String(args[0]) if not args.is_empty() else "res://docs/HERO_WEAPON_GROWTH_BUDGET_20261013.tsv"
+	var output := FileAccess.open(output_path,FileAccess.WRITE)
+	if output == null: push_error("Cannot write growth budget: "+output_path); quit(1); return
 	output.store_csv_line(PackedStringArray(["id","name","rank","evolved","pattern","per_hit_atk_ratio","cooldown_seconds","hits_or_native_actors","fields","field_seconds","field_interval","pulses","pulse_damage_ratio","summon_seconds","nominal_pattern_damage_units_excluding_area_target_count"]),"\t")
 	for id in DATA.WEAPONS:
 		for phase in [1,3,6,10,11]:
@@ -25,5 +28,5 @@ func _initialize() -> void:
 			var multiplier := float(data.power)*float(data.damage_scale)
 			output.store_csv_line(PackedStringArray([String(id),DATA.GROWTH.evolution_name(id) if awakened else String(data.name),str(rank),str(awakened),pattern,str(multiplier),str(float(data.cooldown)*float(data.cooldown_scale)),str(hits),str(data.get("field_count",1)),str(data.get("field_duration",0)),str(data.get("field_interval",0)),str(data.get("pulse_count",0)),str(data.get("pulse_ratio",0)),str(data.get("summon_duration",0)),str(units*multiplier)]),"\t")
 	output.close()
-	print("HERO_WEAPON_GROWTH_AUDIT rows=300; nominal maximum model only; native basics, shared ammo/gas, caps, shielding/healing, misses and occupancy separate")
+	print("HERO_WEAPON_GROWTH_AUDIT rows=",DATA.WEAPONS.size()*5,"; nominal maximum model only; native basics, shared ammo/gas, caps, shielding/healing, misses and occupancy separate")
 	quit()

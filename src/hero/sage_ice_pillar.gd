@@ -1,4 +1,5 @@
 extends Area2D
+const COMBAT_DELAY := preload("res://src/systems/combat_delay.gd")
 
 const EFFECT_DIR := "res://assets/art/heroes/stage10_sage/frames/effect1"
 const POOL_KEY := "sage_ice_pillar"
@@ -108,7 +109,7 @@ func _activate_pillar() -> void:
 	pillar_active = true
 	active_remaining = duration
 	var destroy_tail_msec := int(ceil(4.0 / DESTROY_FPS * 1000.0))
-	effect_end_msec = Time.get_ticks_msec() + int(ceil(duration * 1000.0)) + destroy_tail_msec
+	effect_end_msec = COMBAT_DELAY.now_msec(self) + int(ceil(duration * 1000.0)) + destroy_tail_msec
 	obstacle_shape.set_deferred("disabled", false)
 	effect_area.set_deferred("monitoring", true)
 	trap_area.set_deferred("monitoring", true)
@@ -195,7 +196,7 @@ func _refresh_slowed_bodies() -> void:
 func _refresh_slow(body: Node) -> void:
 	if not _is_valid_monster(body):
 		return
-	var now_msec := Time.get_ticks_msec()
+	var now_msec := COMBAT_DELAY.now_msec(self)
 	body.set_meta(
 		"sage_ice_slow_until",
 		now_msec + SLOW_REFRESH_DURATION_MSEC

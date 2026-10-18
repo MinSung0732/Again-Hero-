@@ -1,0 +1,48 @@
+{
+  "weapon_id": "archmage_hero_lightning_rod",
+  "name": "체인대거",
+  "source_size": [
+    1536,
+    1024
+  ],
+  "source_sha256": "fafbcdc532a360f59156efc7f2f4fe823869a5473e59589d99a8b32a396d3da4",
+  "sheet": "sprite_sheet.png",
+  "sheet_size": [
+    384,
+    384
+  ],
+  "cell_size": [
+    128,
+    128
+  ],
+  "anchor": [
+    64,
+    64
+  ],
+  "alpha": "binary; existing transparency only; black foreground retained",
+  "common_source_crop": [
+    8,
+    8,
+    120,
+    120
+  ],
+  "normalization": "one common crop and nearest scale; identical frame canvases",
+  "animation": {
+    "fps": 12,
+    "loop_playback": "ping_pong",
+    "transient_window_seconds": 0.28,
+    "transient_playback": "normalized to visual window; no gameplay timing change",
+    "loop": false,
+    "frames": [
+      "frames/effect_01.png",
+      "frames/effect_02.png",
+      "frames/effect_03.png",
+      "frames/effect_04.png",
+      "frames/effect_05.png",
+      "frames/effect_06.png",
+      "frames/effect_07.png",
+      "frames/effect_08.png"
+    ]
+  },
+  "unique_frames": 8
+}

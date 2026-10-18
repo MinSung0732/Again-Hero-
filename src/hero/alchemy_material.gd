@@ -1,5 +1,7 @@
 extends Node2D
 
+const PICKUP_PLACEMENT := preload("res://src/systems/pickup_placement.gd")
+
 const MATERIAL_TEXTURES: Array[Array] = [
 	[
 		preload("res://assets/art/heroes/stage7_alchemist/frames/item1/idle_01.png"),
@@ -85,6 +87,7 @@ func activate(
 	is_temporary: bool = false
 ) -> void:
 	global_position = world_position
+	PICKUP_PLACEMENT.ensure_reachable(self)
 	gas_value = maxf(value, 0.0)
 	material_type = randi_range(1, MATERIAL_TEXTURES.size())
 	lifetime_remaining = maxf(lifetime_seconds, 0.0)
@@ -137,6 +140,7 @@ func _process(delta: float) -> void:
 		if t >= 1.0:
 			in_flight = false
 			global_position = flight_target
+			PICKUP_PLACEMENT.ensure_reachable(self)
 
 	if lifetime_remaining <= 0.0:
 		if not in_flight:

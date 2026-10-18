@@ -12,10 +12,12 @@ var weight_cache: Array[PackedFloat32Array] = []
 
 func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	var image := Image.load_from_file(DATA.TEXTURE)
-	if image == null:
+	var texture: Texture2D = load(DATA.TEXTURE) as Texture2D if ResourceLoader.exists(DATA.TEXTURE) else null
+	if texture == null and FileAccess.file_exists(DATA.TEXTURE):
+		var image := Image.load_from_file(DATA.TEXTURE)
+		if image != null and not image.is_empty(): texture = ImageTexture.create_from_image(image)
+	if texture == null:
 		return
-	var texture := ImageTexture.create_from_image(image)
 	skeleton = Skeleton2D.new()
 	skeleton.name = "Skeleton"
 	add_child(skeleton)

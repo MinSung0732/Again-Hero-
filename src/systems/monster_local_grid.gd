@@ -56,6 +56,7 @@ func separation_bias(owner: Node2D, radius: float) -> Vector2:
 	var padding := Vector2i.ONE * motion_padding
 	var origin := owner.global_position
 	var owner_id := owner.get_instance_id()
+	var owner_family := String(owner.get_meta("noncollision_family",""))
 	var low := cell_for(origin - Vector2.ONE * radius) - padding
 	var high := cell_for(origin + Vector2.ONE * radius) + padding
 	var radius_sq := radius * radius
@@ -67,17 +68,23 @@ func separation_bias(owner: Node2D, radius: float) -> Vector2:
 				continue
 			# Steering only: dense piles use different stable neighbors per owner.
 			# Damage/target queries below always retain the complete hit set.
-			var sample_count := mini(bucket.size(), MAX_DENSE_SEPARATION_SAMPLES)
-			var sample_start := int(owner_id % bucket.size()) if bucket.size() > sample_count else 0
+			var bucket_size: int = bucket.size()
+			var sample_count := mini(bucket_size, MAX_DENSE_SEPARATION_SAMPLES)
+			var sample_index := int(owner_id % bucket_size) if bucket_size > sample_count else 0
 			for sample in range(sample_count):
-				var other = bucket[(sample_start + sample) % bucket.size()]
-				if other == owner or not is_instance_valid(other) or other.is_queued_for_deletion() or bool(other.get_meta("ignore_monster_separation", false)):
+				var other = bucket[sample_index]
+				sample_index += 1
+				if sample_index == bucket_size: sample_index = 0
+				if other == owner or not is_instance_valid(other) or other.is_queued_for_deletion():
 					continue
-				if COMMON.ignores_separation_pair(owner,other): continue
 				var offset: Vector2 = origin - other.global_position
 				var distance_sq := offset.length_squared()
 				if distance_sq >= radius_sq:
 					continue
+				# Live flags/positions remain live; only skip expensive metadata reads
+				# for candidates that cannot contribute to this steering query.
+				if bool(other.get_meta("ignore_monster_separation",false)): continue
+				if not owner_family.is_empty() and owner_family == String(other.get_meta("noncollision_family","")): continue
 				var distance := 0.0
 				var away: Vector2
 				if distance_sq <= 0.01:

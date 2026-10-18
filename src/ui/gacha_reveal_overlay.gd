@@ -9,6 +9,7 @@ const CUTSCENE_PLAYER := preload("res://src/ui/transcendent_cutscene_player.gd")
 var _cutscene
 var _cutscene_seen: Dictionary = {}
 var _cutscene_token := -1
+var _skip_normal_reveals := false
 
 const CARD_GLOW_SHADER := preload("res://src/ui/gacha_card_glow.gdshader")
 static var _card_glow_materials: Dictionary = {}
@@ -146,6 +147,7 @@ func present(results: Array) -> void:
 	_sequence_token += 1
 	_cutscene.cancel()
 	_cutscene_seen.clear()
+	_skip_normal_reveals = false
 	_results = results.duplicate(true)
 	_reveal_index = -1
 	_phase = "door"
@@ -158,10 +160,22 @@ func present(results: Array) -> void:
 func skip_to_results() -> void:
 	if not is_presenting() or _phase == "result":
 		return
+	_skip_normal_reveals = true
+	# ESC/repeated skip must not cancel an already-playing transcendent reveal.
+	if _phase == "cutscene": return
 	_sequence_token += 1
 	_cutscene.cancel()
+	_stop_sounds()
 	_stop_active_tweens()
 	_door_sprite.stop()
+	_show_next_skipped_cutscene()
+
+func _show_next_skipped_cutscene() -> void:
+	# Index receipts preserve draw order and repeat IDs in multi-draw results.
+	for index in _results.size():
+		if not _cutscene_seen.has(index) and CUTSCENE_CATALOG.has_cutscene(_results[index]):
+			_show_reveal(index)
+			return
 	_show_final_results()
 
 
@@ -353,7 +367,8 @@ func _show_reveal(index: int) -> void:
 
 func _on_cutscene_finished() -> void:
 	if _phase == "cutscene" and _cutscene_token == _sequence_token:
-		_show_reveal(_reveal_index)
+		if _skip_normal_reveals: _show_next_skipped_cutscene()
+		else: _show_reveal(_reveal_index)
 
 
 func _advance_reveal() -> void:

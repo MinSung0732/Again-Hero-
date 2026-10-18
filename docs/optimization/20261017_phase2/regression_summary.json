@@ -1,0 +1,124 @@
+{
+  "checks": 11603,
+  "tests": [
+    {
+      "test": "combat_phase2_hit_smoke",
+      "checks": 198,
+      "runtime_errors": 0,
+      "passed": true
+    },
+    {
+      "test": "combat_phase2_popup_smoke",
+      "checks": 665,
+      "runtime_errors": 0,
+      "passed": true
+    },
+    {
+      "test": "combat_phase2_profile_smoke",
+      "checks": 25,
+      "runtime_errors": 0,
+      "passed": true
+    },
+    {
+      "test": "combat_phase1_smoke",
+      "checks": 2009,
+      "runtime_errors": 0,
+      "passed": true
+    },
+    {
+      "test": "combat_phase1_stage9_smoke",
+      "checks": 206,
+      "runtime_errors": 0,
+      "passed": true
+    },
+    {
+      "test": "combat_phase1_online_smoke",
+      "checks": 12,
+      "runtime_errors": 0,
+      "passed": true
+    },
+    {
+      "test": "hero_weapon_remake_smoke",
+      "checks": 2469,
+      "runtime_errors": 0,
+      "passed": true
+    },
+    {
+      "test": "hero_weapon_extension_smoke",
+      "checks": 2193,
+      "runtime_errors": 0,
+      "passed": true
+    },
+    {
+      "test": "hero_attack_paths_smoke",
+      "checks": 1130,
+      "runtime_errors": 0,
+      "passed": true
+    },
+    {
+      "test": "hero_max_evolution_smoke",
+      "checks": 925,
+      "runtime_errors": 0,
+      "passed": true
+    },
+    {
+      "test": "hero_awakening_smoke",
+      "checks": 433,
+      "runtime_errors": 0,
+      "passed": true
+    },
+    {
+      "test": "projectile_quantity_smoke",
+      "checks": 232,
+      "runtime_errors": 0,
+      "passed": true
+    },
+    {
+      "test": "hero_pause_resume_smoke",
+      "checks": 83,
+      "runtime_errors": 0,
+      "passed": true
+    },
+    {
+      "test": "hero_summon_slot_growth_smoke",
+      "checks": 109,
+      "runtime_errors": 0,
+      "passed": true,
+      "fixture_note": "Level-up MP3 disabled in this slot-only test; repeated paused dummy-driver playback leaked on shutdown. Slot/cast assertions unchanged. Audio excluded."
+    },
+    {
+      "test": "hero_summon_growth_smoke",
+      "checks": 394,
+      "runtime_errors": 0,
+      "passed": true
+    },
+    {
+      "test": "hero_summon_area_smoke",
+      "checks": 458,
+      "runtime_errors": 0,
+      "passed": true
+    },
+    {
+      "test": "online_battle_smoke",
+      "checks": 44,
+      "runtime_errors": 0,
+      "passed": true
+    },
+    {
+      "test": "online_transport_smoke",
+      "checks": 18,
+      "runtime_errors": 0,
+      "passed": true
+    },
+    {
+      "test": "optimization_20261010_smoke",
+      "checks": null,
+      "runtime_errors": 0,
+      "passed": true
+    }
+  ],
+  "checks_note": "Known explicit checks; optimization_20261010_smoke reports pass/fail without an aggregate count. Weapon replay has 300 scenarios / 24000 ticks per implementation, reported separately.",
+  "fixture": "Production combat scripts; missing presentation and unused roster isolated by build_combat_phase1_fixture.py.",
+  "editor_import_errors": 0,
+  "diff_check": "passed"
+}

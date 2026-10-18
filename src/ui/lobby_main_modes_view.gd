@@ -28,6 +28,7 @@ var character_button: Button
 var notice: AcceptDialog
 var unlock_feedback: CanvasLayer
 var _unlock_scheduled := false
+var switching_perspective := false
 var _announced_this_session: Dictionary = {}
 
 func install(host) -> void:
@@ -37,19 +38,19 @@ func install(host) -> void:
 	for id in ["demon", "hero", "rank", "easy", "hard", "lock"]:
 		icons[id] = lobby._load_svg_texture_direct(ART + "icon_" + id + ".svg")
 	var top: Control = lobby.hero_name_label.get_parent()
-	var bottom: Control = lobby.stage_description_label.get_parent()
+	var bottom: PanelContainer = lobby.stage_entry_mode_host
 	difficulty_row = HBoxContainer.new()
 	difficulty_row.name = "DifficultySelector"
 	top.add_child(difficulty_row)
 	place(difficulty_row, 0.18, 0.0, 0.82, 0.065)
 	difficulty_row.add_theme_constant_override("separation", 10)
 	easy_button = button(difficulty_row, "쉬움", func(): choose_difficulty("easy"))
-	hard_button = button(difficulty_row, "어려움", func(): choose_difficulty("hard"))
+	hard_button = button(difficulty_row, "어려움 · 준비 중", func(): choose_difficulty("hard"))
 	mode_row = HBoxContainer.new()
 	mode_row.name = "MainModeSelector"
 	mode_row.add_theme_constant_override("separation", 12)
 	bottom.add_child(mode_row)
-	place(mode_row, 0.03, 0.81, 0.97, 1.02)
+	mode_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var sides := HBoxContainer.new()
 	sides.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	sides.add_theme_constant_override("separation", 6)
@@ -64,16 +65,9 @@ func install(host) -> void:
 	for id in lobby.stage_ids:
 		var stage: Dictionary = lobby.STAGE_CATALOG.get_stage(id)
 		heroes.append(stage)
-	for label in [lobby.stage_description_label, lobby.stage_status_label, lobby.stage_reward_label, bottom.get_node("RepeatReward")]:
-		label.add_theme_font_size_override("font_size", 21 if label == lobby.stage_description_label else 20)
-	# A single framed tray visually groups the two perspectives and ranked toggle.
-	var tray := Panel.new()
-	tray.name = "ModeSelectorTray"
-	tray.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	bottom.add_child(tray)
-	bottom.move_child(tray, 0)
-	place(tray, 0.01, 0.78, 0.99, 1.05)
-	tray.add_theme_stylebox_override("panel", idle_style)
+	for label in [lobby.stage_description_label, lobby.stage_status_label, lobby.stage_reward_label, lobby.stage_repeat_reward_label]:
+		label.add_theme_font_size_override("font_size", 20 if label in [lobby.stage_status_label,lobby.stage_repeat_reward_label] else 22)
+	bottom.add_theme_stylebox_override("panel",preload("res://src/ui/pixel_panel_skin.gd").button_style(idle_style))
 	var transition: Node = lobby.get_node("/root/SceneTransition")
 	var on_complete := Callable(self, "schedule_unlock")
 	transition.transition_completed.connect(on_complete)
@@ -124,22 +118,43 @@ func button(parent: Control, text: String, action: Callable) -> Button:
 	return result
 
 func choose_difficulty(value: String) -> void:
-	if value not in ["easy", "hard"] or (value == "hard" and not UNLOCKS.unlocked("hard", current_stage())):
+	if switching_perspective or not UNLOCK_DATA.difficulty_available(value) or (value == "hard" and not UNLOCKS.unlocked("hard", current_stage(),perspective)):
 		refresh()
 		return
 	if lobby._stage_transition_running:
 		refresh()
 		return
+	if perspective == "hero" and not HERO_STORE.set_difficulty(value,current_stage()):
+		refresh(); return
 	difficulty = value
 	lobby._refresh_stage_card()
 
 func choose_perspective(value: String) -> void:
+	if switching_perspective or value == perspective: return
 	if value not in ["demon", "hero"] or (value == "hero" and not UNLOCKS.unlocked("hero", current_stage())):
-		refresh()
-		return
-	if lobby._stage_transition_running:
-		refresh()
-		return
+		refresh(); return
+	if lobby._stage_transition_running: return
+	var transition: Node = lobby.get_node("/root/SceneTransition")
+	if transition.is_transitioning(): return
+	switching_perspective = true
+	var owner := HERO_STORE.owner()
+	await transition.prepare_in_place(_prepare_perspective.bind(value,owner),"용사 모드 준비 중..." if value == "hero" else "마왕 모드 준비 중...")
+	switching_perspective = false
+
+func _prepare_perspective(value: String, owner: String) -> bool:
+	if not is_instance_valid(lobby) or not lobby.is_inside_tree(): return false
+	# Never commit hero entry rules while its lobby extension failed to load.
+	if value == "hero":
+		if lobby.hero_lobby_view == null:
+			push_error("용사 로비를 불러오지 못해 모드 전환을 취소했습니다.")
+			if is_instance_valid(notice):
+				notice.title = "모드 전환 실패"
+				notice.dialog_text = "용사 로비를 불러오지 못했습니다. 게임을 업데이트한 뒤 다시 실행해 주세요."
+				notice.popup_centered(Vector2i(640,240))
+			return false
+		await lobby.hero_lobby_view.prepare_mode()
+	if not is_instance_valid(lobby) or not lobby.is_inside_tree() or owner != HERO_STORE.owner(): return false
+	if value == "hero" and not UNLOCKS.unlocked("hero",current_stage()): return false
 	perspective = value
 	if value == "hero":
 		var selected := HERO_STORE.selected_battle_stage()
@@ -150,7 +165,10 @@ func choose_perspective(value: String) -> void:
 		lobby.selected_stage_index = clampi(lobby.stage_ids.find(saved),0,maxi(0,int(state.get("highest_unlocked_stage",1))-1))
 	lobby._refresh_stage_card()
 
+	return true
+
 func toggle_ranked() -> void:
+	if switching_perspective: return
 	if not UNLOCKS.unlocked("rank", current_stage()):
 		refresh()
 		return
@@ -178,12 +196,20 @@ func request_data() -> Dictionary:
 		"hero_id": HERO_STORE.selected_hero()}
 
 func blocks_entry() -> bool:
-	if (ranked and not UNLOCKS.unlocked("rank", current_stage())) or (perspective == "hero" and not UNLOCKS.unlocked("hero", current_stage())) or (not ranked and difficulty == "hard" and not UNLOCKS.unlocked("hard", current_stage())):
+	if not ranked and not UNLOCK_DATA.difficulty_available(difficulty):
+		notice.title = "준비 중"
+		notice.dialog_text = UNLOCK_DATA.HARD_NOTICE
+		notice.popup_centered(Vector2i(640,180))
 		return true
+	if (ranked and not UNLOCKS.unlocked("rank", current_stage())) or (perspective == "hero" and not UNLOCKS.unlocked("hero", current_stage())) or (not ranked and difficulty == "hard" and not UNLOCKS.unlocked("hard", current_stage(),perspective)):
+		return true
+	if ranked:
+		lobby.get_node("/root/SceneTransition").change_scene("res://src/online/OnlineMatch.tscn","대전 준비 중...",{"role":perspective})
+		return true # Consume entry before solo stamina/account writes.
 	if not ranked and perspective == "demon":
 		return false
-	if not ranked and perspective == "hero" and difficulty == "easy": return false
-	notice.dialog_text = "랭킹 매칭은 준비 중입니다. 실제 매칭은 아직 시작되지 않습니다." if ranked else "용사 시점과 어려움 난이도는 준비 중입니다. 현재는 마왕 · 쉬움으로 입장할 수 있습니다."
+	if not ranked and perspective == "hero" and HERO_STORE.can_enter(current_stage(),difficulty): return false
+	notice.dialog_text = "용사 시점과 어려움 난이도는 준비 중입니다. 현재는 마왕 · 쉬움으로 입장할 수 있습니다."
 	notice.popup_centered(Vector2i(640, 180))
 	return true
 
@@ -194,53 +220,58 @@ func refresh() -> void:
 		ranked = false
 	if not UNLOCKS.unlocked("hero", current_stage()):
 		perspective = "demon"
-	if not UNLOCKS.unlocked("hard", current_stage()):
+	if perspective == "hero":
+		HERO_STORE.select_battle_stage(current_stage())
+		difficulty = HERO_STORE.difficulty()
+	if not UNLOCK_DATA.difficulty_available(difficulty) or not UNLOCKS.unlocked("hard", current_stage(),perspective):
 		difficulty = "easy"
-	if perspective == "hero": difficulty = "easy"
 	if lobby.hero_lobby_view != null: lobby.hero_lobby_view.set_active(perspective == "hero")
 	for item in [[demon_button, perspective == "demon", "demon"], [hero_button, perspective == "hero", "hero"], [ranked_button, ranked, "rank"], [easy_button, difficulty == "easy", "easy"], [hard_button, difficulty == "hard", "hard"]]:
 		item[0].set_pressed_no_signal(item[1])
 		style_button(item[0], item[1], item[2])
 	for item in [[hard_button, "hard"], [hero_button, "hero"], [ranked_button, "rank"]]:
-		var locked := not UNLOCKS.unlocked(item[1], current_stage())
+		var locked := not UNLOCKS.unlocked(item[1], current_stage(),perspective)
 		item[0].disabled = locked
 		item[0].tooltip_text = String(UNLOCK_DATA.RULES[item[1]].condition) if locked else ""
 		if locked:
 			item[0].icon = icons.lock
+	hard_button.text = "어려움" if UNLOCK_DATA.HARD_AVAILABLE else "어려움 · 준비 중"
+	if not UNLOCK_DATA.HARD_AVAILABLE:
+		hard_button.disabled = true
+		hard_button.tooltip_text = UNLOCK_DATA.HARD_NOTICE+"\n"+String(UNLOCK_DATA.RULES.hard.condition)
 	schedule_unlock()
 	difficulty_row.visible = not ranked
 	var section: Control = lobby.get_node("SafeArea/Layout/Content/MainTab/StageLayout/SectionHeaderBox")
 	section.get_node("SectionTitle").text = "랭킹 매칭" if ranked else "침입자 기록"
-	section.get_node("SectionSubtitle").text = "시점과 캐릭터를 선택하세요 · 매칭 기능 준비 중" if ranked else "대상 용사를 선택하고, 던전에 입장하세요."
+	section.get_node("SectionSubtitle").text = "역할을 선택하세요 · 견습마도사 고정 연결 테스트" if ranked else "대상 용사를 선택하고, 던전에 입장하세요."
 	if not ranked:
 		if perspective == "hero":
 			var stage := current_stage()
 			HERO_STORE.select_battle_stage(stage)
 			lobby.enter_stage_button.text = "용사 도전 · 15분 생존"
-			lobby.stage_description_label.text = "이동·증강 직접 선택 / 공격 자동\nAI 마왕의 군단을 피해 15분 동안 생존하세요."
-			lobby.stage_status_label.text = "AI 마왕\n15분 생존 도전"
-			lobby.stage_reward_label.text = "승리 보상\n연구 %d · 골드 %d" % [preload("res://src/data/hero_mode_catalog.gd").WIN_RESEARCH,preload("res://src/data/hero_mode_catalog.gd").WIN_GOLD]
-			lobby.stage_description_label.get_parent().get_node("RepeatReward").text = "무기 증강\n전투 중 습득 · Lv.10 상자 진화"
+			lobby.stage_description_label.text = "직접 이동 · 자동 공격 · 15분 생존"
+			lobby.stage_status_label.text = "AI 마왕\n15분 생존"
+			lobby.stage_reward_label.text = "승리 보상\n연구 +%d\n골드 +%d" % [preload("res://src/data/hero_mode_catalog.gd").WIN_RESEARCH,preload("res://src/data/hero_mode_catalog.gd").WIN_GOLD]
+			lobby.stage_repeat_reward_label.text = "무기 진화\nLv.10 상자"
 			section.get_node("SectionTitle").text = "용사 원정"
-			section.get_node("SectionSubtitle").text = "이전 단계 생존 성공 시 다음 단계 개방 · 용사는 캐릭터 편성에서 선택하세요."
+			section.get_node("SectionSubtitle").text = "쉬움 클리어 → 다음 전장 해금"
 			_apply_selected_hero_portrait()
 			lobby.stage_name_label.text = "마왕의 성 · 붕괴 %d단계" % int(lobby.STAGE_CATALOG.get_stage(stage).get("number",1))
-			var unlocked := HERO_STORE.battle_stage_unlocked(stage)
+			var unlocked := HERO_STORE.can_enter(stage,difficulty)
 			lobby.enter_stage_button.disabled = not unlocked
-			if lobby.stamina_view != null: lobby.stamina_view.configure_entry(unlocked,0 if LocalTestMode.active else preload("res://src/data/stamina_catalog.gd").ENTRY_COST)
-			if not unlocked:
-				lobby.enter_stage_button.text = "이전 용사 스테이지 클리어 필요"
-				lobby.stage_status_label.text = "잠김 · 이전 단계 클리어 필요"
-			elif HERO_STORE.battle_stage_cleared(stage): lobby.stage_status_label.text = "클리어 완료 · 15분 생존"
-			hard_button.disabled = true
+			if lobby.stamina_view != null: lobby.stamina_view.configure_entry(unlocked,0 if UNLOCKS.is_test_override() else preload("res://src/data/stamina_catalog.gd").ENTRY_COST)
+			_set_hero_entry_lock(unlocked,int(lobby.STAGE_CATALOG.get_stage(stage).get("number",1)),HERO_STORE.battle_stage_unlocked(stage))
+			if unlocked and HERO_STORE.battle_stage_cleared(stage,difficulty): lobby.stage_status_label.text = "클리어 완료\n15분 생존"
+
+
 		elif difficulty == "hard":
-			lobby.enter_stage_button.text = "어려움 도전 · 용사 해금"
-			lobby.stage_description_label.text = "강화된 용사를 처치하세요.\n클리어하면 이 스테이지 용사가 플레이 캐릭터로 해금됩니다."
-			lobby.stage_status_label.text = "어려움\n강화 용사 도전"
-			lobby.stage_reward_label.text = "최초 어려움\n연구 30 · 용사 해금"
-			lobby.stage_description_label.get_parent().get_node("RepeatReward").text = "반복 도전\n추가 용사 해금 없음"
+			lobby.enter_stage_button.text = "어려움 도전"
+			lobby.stage_description_label.text = "강화 용사 · 쉬움 클리어 후 도전"
+			lobby.stage_status_label.text = "어려움\n강화 용사"
+			lobby.stage_reward_label.text = "최초 어려움\n연구 30"
+			lobby.stage_repeat_reward_label.text = "반복 도전\n추가 지급 없음"
 		return
-	lobby.stage_selector_button.text = "SEASON · 준비 중"
+	lobby.stage_selector_button.text = "연결 테스트 · v1"
 	lobby.stage_selector_button.disabled = true
 	lobby.stage_name_label.text = "마왕 매칭 대기실" if perspective == "demon" else "용사 매칭 대기실"
 	var nickname := String(PROFILE.get_profile().get("nickname", ""))
@@ -252,11 +283,12 @@ func refresh() -> void:
 	lobby.portrait_texture.self_modulate = Color.WHITE
 	lobby.portrait_badge.visible = false
 	lobby.portrait_texture.get_node("StageLock").visible = false
-	lobby.stage_description_label.text = "마왕이 되어 상대 용사를 막아내세요.\n실시간 대전 · 시즌 점수는 준비 중입니다." if perspective == "demon" else "선택한 용사로 상대 마왕의 성에 도전하세요.\n실시간 대전 · 시즌 점수는 준비 중입니다."
-	lobby.stage_status_label.text = "랭킹 점수\n미배치"
-	lobby.stage_reward_label.text = "랭킹 등급\n미배치"
-	lobby.stage_description_label.get_parent().get_node("RepeatReward").text = "닉네임\n" + lobby.hero_name_label.text
-	lobby.enter_stage_button.text = "매칭 시작"
+	lobby.stage_description_label.text = "견습마도사 고정 · 3분 생존 · 서버 연결 필요"
+	lobby.stage_status_label.text = "랭킹 점수\n변동 없음"
+	lobby.stage_reward_label.text = "테스트 보상\n없음"
+	lobby.stage_repeat_reward_label.text = "대전 방식\n1 vs 1"
+	if lobby.stamina_view != null: lobby.stamina_view.configure_entry(true,0)
+	lobby.enter_stage_button.text = "매칭 연결 테스트"
 	lobby.enter_stage_button.disabled = false
 	var navigable := false
 	lobby.prev_stage_button.disabled = not navigable
@@ -280,24 +312,26 @@ func show_pending_unlock() -> void:
 	if lobby.get_node("/root/SceneTransition").is_transitioning() or lobby.get_node("/root/TutorialFlow").modal_visible or lobby.get_node("/root/TutorialFlow").locks_lobby():
 		return
 	var stage_id := current_stage()
+	var announced_perspective := perspective
 	var owner := PROFILE.SCOPE.user_id + ":" + PROFILE.SCOPE.guest_directory
 	for key in UNLOCK_DATA.ORDER:
-		var session_key := owner + ":" + UNLOCK_DATA.announcement_key(key, stage_id)
-		if not UNLOCKS.unlocked(key, stage_id) or UNLOCKS.announcement_seen(key, stage_id) or _announced_this_session.has(session_key):
+		var session_key := owner + ":" + UNLOCK_DATA.announcement_key(key, stage_id,perspective)
+		if not UNLOCKS.unlocked(key, stage_id,perspective) or UNLOCKS.announcement_seen(key, stage_id,perspective) or _announced_this_session.has(session_key):
 			continue
 		unlock_feedback = UNLOCK_FEEDBACK.new()
 		lobby.add_child(unlock_feedback)
 		unlock_feedback.dismissed.connect(func():
 			if owner == PROFILE.SCOPE.user_id + ":" + PROFILE.SCOPE.guest_directory:
 				_announced_this_session[session_key] = true
-				if not UNLOCKS.mark_announced(key, stage_id):
+				if not UNLOCKS.mark_announced(key, stage_id,announced_perspective):
 					push_warning("Mode unlock announcement could not be saved; retry next session.")
 			unlock_feedback = null
 			schedule_unlock())
 		var description := String(UNLOCK_DATA.RULES[key].condition).replace("후 개방", "완료")
 		if key == "hard":
-			description = "쉬움 Stage %d 클리어 완료" % int(stage_id.trim_prefix("stage_"))
-		unlock_feedback.present(String(UNLOCK_DATA.RULES[key].name), description)
+			description = "%s 쉬움 Stage %d 클리어 완료" % ["용사" if perspective == "hero" else "마왕",int(stage_id.trim_prefix("stage_"))]
+			if not UNLOCK_DATA.HARD_AVAILABLE: description += "\n전용 패턴 준비 중 · 입장은 추후 개방됩니다."
+		unlock_feedback.present(String(UNLOCK_DATA.RULES[key].name), description,key != "hard" or UNLOCK_DATA.HARD_AVAILABLE)
 		return
 
 func _apply_selected_hero_portrait() -> void:
@@ -310,3 +344,22 @@ func _apply_selected_hero_portrait() -> void:
 	lobby.portrait_badge.visible = false
 	var lock := lobby.portrait_texture.get_node_or_null("StageLock") as CanvasItem
 	if lock != null: lock.hide()
+
+func _set_hero_entry_lock(unlocked: bool, stage_number: int, stage_unlocked: bool) -> void:
+	# Lock the displayed battlefield, independently of the selected character.
+	lobby.enter_stage_button.disabled = not unlocked
+	lobby.enter_stage_button.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	lobby.portrait_texture.self_modulate = Color.WHITE if unlocked else Color(0.28,0.25,0.33,1)
+	lobby.portrait_badge.visible = not unlocked
+	var lock := lobby.portrait_texture.get_node_or_null("StageLock") as CanvasItem
+	if lock != null: lock.visible = not unlocked
+	if unlocked:
+		lobby.portrait_badge.text = ""
+		lobby.enter_stage_button.tooltip_text = ""
+		return
+	var required_stage := stage_number if difficulty == "hard" and stage_unlocked else maxi(stage_number-1,1)
+	var condition := "Stage %d 클리어 필요" % required_stage
+	lobby.enter_stage_button.text = condition
+	lobby.enter_stage_button.tooltip_text = "용사 모드 쉬움 " + condition
+	lobby.portrait_badge.text = "잠김 · " + condition
+	lobby.stage_status_label.text = "잠김\nStage %d 필요" % required_stage

@@ -1,0 +1,478 @@
+{
+  "character_id": "mimic_elite",
+  "direction": "right",
+  "cell_size": [
+    96,
+    72
+  ],
+  "body_pixel_target": [
+    32,
+    32
+  ],
+  "anchor": {
+    "center_x": 48,
+    "foot_y": 60
+  },
+  "columns": 6,
+  "rows": 5,
+  "animations": {
+    "idle": {
+      "fps": 6,
+      "loop": true,
+      "frames": [
+        "frames/idle_01.png",
+        "frames/idle_02.png",
+        "frames/idle_03.png",
+        "frames/idle_04.png"
+      ]
+    },
+    "move": {
+      "fps": 10,
+      "loop": true,
+      "frames": [
+        "frames/move_01.png",
+        "frames/move_02.png",
+        "frames/move_03.png",
+        "frames/move_04.png",
+        "frames/move_05.png",
+        "frames/move_06.png"
+      ]
+    },
+    "attack": {
+      "fps": 14,
+      "loop": false,
+      "frames": [
+        "frames/attack_01.png",
+        "frames/attack_02.png",
+        "frames/attack_03.png",
+        "frames/attack_04.png",
+        "frames/attack_05.png",
+        "frames/attack_06.png"
+      ]
+    },
+    "hit": {
+      "fps": 12,
+      "loop": false,
+      "frames": [
+        "frames/hit_01.png",
+        "frames/hit_02.png",
+        "frames/hit_03.png"
+      ]
+    },
+    "death": {
+      "fps": 10,
+      "loop": false,
+      "frames": [
+        "frames/death_01.png",
+        "frames/death_02.png",
+        "frames/death_03.png",
+        "frames/death_04.png"
+      ]
+    }
+  },
+  "source": "mimic_elite_source.png",
+  "sheet": "mimic_elite_spritesheet.png",
+  "portrait": null,
+  "source_sha256": "5647c41a9712ee3320c9d34dea6a6a336b6b76b1f997836944aaf71706ab199d",
+  "normalization": {
+    "alpha_threshold": 128,
+    "resampling": "nearest",
+    "uniform_scale": 0.1875,
+    "notes": "Source is not a uniform grid. Explicit non-overlapping crops; dark opaque mouth preserved. walk is named move for MonsterVisual compatibility."
+  },
+  "generator": "built-in imagegen",
+  "prompt": "Elite variant of existing right-facing wooden chest mimic: dark purple walnut, antique gold armor and curved horns, ruby lock, amber eyes, burgundy tongue. Pixel art; transparent background. Idle 4 / walk 6 / attack 6 / hit 3 / death 4. Stage8 reference for pixel density only. No text or grid. Requested 1536x1280; actual source 1374x1145, normalized with explicit crops.",
+  "frames": [
+    {
+      "file": "frames/idle_01.png",
+      "source_crop": [
+        0,
+        0,
+        240,
+        280
+      ],
+      "source_body_center_x": 136,
+      "source_foot_y": 249,
+      "bbox": [
+        32,
+        29,
+        64,
+        60
+      ]
+    },
+    {
+      "file": "frames/idle_02.png",
+      "source_crop": [
+        240,
+        0,
+        460,
+        280
+      ],
+      "source_body_center_x": 355,
+      "source_foot_y": 249,
+      "bbox": [
+        32,
+        28,
+        64,
+        60
+      ]
+    },
+    {
+      "file": "frames/idle_03.png",
+      "source_crop": [
+        460,
+        0,
+        690,
+        280
+      ],
+      "source_body_center_x": 574,
+      "source_foot_y": 249,
+      "bbox": [
+        32,
+        28,
+        63,
+        60
+      ]
+    },
+    {
+      "file": "frames/idle_04.png",
+      "source_crop": [
+        690,
+        0,
+        920,
+        280
+      ],
+      "source_body_center_x": 793,
+      "source_foot_y": 249,
+      "bbox": [
+        32,
+        29,
+        64,
+        60
+      ]
+    },
+    {
+      "file": "frames/move_01.png",
+      "source_crop": [
+        0,
+        280,
+        240,
+        500
+      ],
+      "source_body_center_x": 130,
+      "source_foot_y": 474,
+      "bbox": [
+        32,
+        28,
+        64,
+        60
+      ]
+    },
+    {
+      "file": "frames/move_02.png",
+      "source_crop": [
+        240,
+        280,
+        470,
+        500
+      ],
+      "source_body_center_x": 357,
+      "source_foot_y": 472,
+      "bbox": [
+        32,
+        28,
+        64,
+        60
+      ]
+    },
+    {
+      "file": "frames/move_03.png",
+      "source_crop": [
+        470,
+        280,
+        690,
+        500
+      ],
+      "source_body_center_x": 577,
+      "source_foot_y": 473,
+      "bbox": [
+        32,
+        28,
+        64,
+        60
+      ]
+    },
+    {
+      "file": "frames/move_04.png",
+      "source_crop": [
+        690,
+        280,
+        920,
+        500
+      ],
+      "source_body_center_x": 798,
+      "source_foot_y": 475,
+      "bbox": [
+        32,
+        28,
+        64,
+        60
+      ]
+    },
+    {
+      "file": "frames/move_05.png",
+      "source_crop": [
+        920,
+        280,
+        1145,
+        500
+      ],
+      "source_body_center_x": 1030,
+      "source_foot_y": 471,
+      "bbox": [
+        32,
+        29,
+        64,
+        60
+      ]
+    },
+    {
+      "file": "frames/move_06.png",
+      "source_crop": [
+        1145,
+        280,
+        1374,
+        500
+      ],
+      "source_body_center_x": 1257,
+      "source_foot_y": 473,
+      "bbox": [
+        32,
+        28,
+        64,
+        60
+      ]
+    },
+    {
+      "file": "frames/attack_01.png",
+      "source_crop": [
+        0,
+        500,
+        240,
+        725
+      ],
+      "source_body_center_x": 134,
+      "source_foot_y": 701,
+      "bbox": [
+        31,
+        28,
+        65,
+        60
+      ]
+    },
+    {
+      "file": "frames/attack_02.png",
+      "source_crop": [
+        240,
+        500,
+        455,
+        725
+      ],
+      "source_body_center_x": 350,
+      "source_foot_y": 700,
+      "bbox": [
+        32,
+        26,
+        64,
+        60
+      ]
+    },
+    {
+      "file": "frames/attack_03.png",
+      "source_crop": [
+        455,
+        500,
+        695,
+        725
+      ],
+      "source_body_center_x": 553,
+      "source_foot_y": 701,
+      "bbox": [
+        32,
+        27,
+        73,
+        60
+      ]
+    },
+    {
+      "file": "frames/attack_04.png",
+      "source_crop": [
+        695,
+        500,
+        932,
+        725
+      ],
+      "source_body_center_x": 789,
+      "source_foot_y": 702,
+      "bbox": [
+        33,
+        26,
+        73,
+        60
+      ]
+    },
+    {
+      "file": "frames/attack_05.png",
+      "source_crop": [
+        932,
+        500,
+        1145,
+        725
+      ],
+      "source_body_center_x": 1030,
+      "source_foot_y": 697,
+      "bbox": [
+        32,
+        27,
+        64,
+        60
+      ]
+    },
+    {
+      "file": "frames/attack_06.png",
+      "source_crop": [
+        1145,
+        500,
+        1374,
+        725
+      ],
+      "source_body_center_x": 1258,
+      "source_foot_y": 700,
+      "bbox": [
+        32,
+        29,
+        64,
+        60
+      ]
+    },
+    {
+      "file": "frames/hit_01.png",
+      "source_crop": [
+        0,
+        725,
+        240,
+        940
+      ],
+      "source_body_center_x": 136,
+      "source_foot_y": 919,
+      "bbox": [
+        32,
+        31,
+        64,
+        60
+      ]
+    },
+    {
+      "file": "frames/hit_02.png",
+      "source_crop": [
+        240,
+        725,
+        470,
+        940
+      ],
+      "source_body_center_x": 350,
+      "source_foot_y": 922,
+      "bbox": [
+        31,
+        25,
+        66,
+        60
+      ]
+    },
+    {
+      "file": "frames/hit_03.png",
+      "source_crop": [
+        470,
+        725,
+        700,
+        940
+      ],
+      "source_body_center_x": 577,
+      "source_foot_y": 919,
+      "bbox": [
+        32,
+        30,
+        64,
+        60
+      ]
+    },
+    {
+      "file": "frames/death_01.png",
+      "source_crop": [
+        0,
+        940,
+        245,
+        1145
+      ],
+      "source_body_center_x": 136,
+      "source_foot_y": 1116,
+      "bbox": [
+        31,
+        29,
+        66,
+        60
+      ]
+    },
+    {
+      "file": "frames/death_02.png",
+      "source_crop": [
+        245,
+        940,
+        470,
+        1145
+      ],
+      "source_body_center_x": 350,
+      "source_foot_y": 1116,
+      "bbox": [
+        30,
+        36,
+        69,
+        60
+      ]
+    },
+    {
+      "file": "frames/death_03.png",
+      "source_crop": [
+        470,
+        940,
+        700,
+        1145
+      ],
+      "source_body_center_x": 568,
+      "source_foot_y": 1116,
+      "bbox": [
+        31,
+        41,
+        71,
+        60
+      ]
+    },
+    {
+      "file": "frames/death_04.png",
+      "source_crop": [
+        700,
+        940,
+        955,
+        1145
+      ],
+      "source_body_center_x": 790,
+      "source_foot_y": 1119,
+      "bbox": [
+        31,
+        44,
+        76,
+        60
+      ]
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="SpriteFrames" path="res://assets/art/monsters/venom_scorpion/venom_scorpion_animations.tres" id="1"]
+
+[node name="venom_scorpion" type="Node2D"]
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+texture_filter = 1
+sprite_frames = ExtResource("1")
+animation = &"idle"
+autoplay = "idle"
+centered = false
+offset = Vector2(-147, -169)
+scale = Vector2(0.67132867, 0.67132867)

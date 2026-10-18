@@ -20,8 +20,10 @@ class Cloud extends "res://src/network/cloud_store.gd":
 		owner_during_request = SCOPE.user_id
 		await get_tree().process_frame
 		return response.duplicate(true)
-	func request_rpc(_method: String, _data: Dictionary) -> Dictionary:
+	func request_rpc(_method: String, data: Dictionary) -> Dictionary:
 		writes += 1
+		if data.action in ["claim", "check"]: return {"ok": true}
+		if data.action == "read": return {"found": true,"revision":response.revision,"payload":response.payload}
 		return {}
 
 func check(ok: bool, message: String) -> void:
@@ -35,6 +37,8 @@ func uuid() -> String:
 	return "%s-%s-%s-%s-%s" % [s.substr(0,8),s.substr(8,4),s.substr(12,4),s.substr(16,4),s.substr(20,12)]
 
 func run() -> void:
+	root.get_node("CloudConnectionOverlay").queue_free()
+	await process_frame
 	var gateway := root.get_node("LoginGateway")
 	var mode := root.get_node("LocalTestMode")
 	var old := root.get_node("CloudStore")

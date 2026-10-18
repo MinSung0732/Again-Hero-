@@ -1,4 +1,5 @@
 extends Node2D
+var area_attack = preload("res://src/hero/summon_area_attack.gd").new()
 const RECEIVED_STATUS := preload("res://src/data/status_effect_catalog.gd")
 
 const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
@@ -19,6 +20,7 @@ static var _frames_cache_by_dir: Dictionary = {}
 @onready var attack_audio: AudioStreamPlayer = $AttackAudio
 @onready var summon_audio: AudioStreamPlayer = $SummonAudio
 
+var survival_weapon_id := ""
 var active: bool = false
 var owner_hero: Node2D = null
 var duration_total: float = 20.0
@@ -49,7 +51,9 @@ func _ready() -> void:
 
 
 func activate(world_position: Vector2, new_owner: Node2D, config: Dictionary) -> void:
+	area_attack.configure(config)
 	owner_hero = new_owner
+	survival_weapon_id = String(config.get("survival_weapon_id",""))
 	follow_slot = maxi(int(config.get("follow_slot", 0)), 0)
 	duration_total = maxf(float(config.get("duration", 20.0)), 0.1)
 	duration_remaining = duration_total
@@ -98,6 +102,7 @@ func activate(world_position: Vector2, new_owner: Node2D, config: Dictionary) ->
 func _physics_process(delta: float) -> void:
 	if not active:
 		return
+	area_attack.tick(delta)
 	if not is_instance_valid(owner_hero) or owner_hero.is_queued_for_deletion():
 		deactivate()
 		return
@@ -214,6 +219,7 @@ func _fire_at_target(current_target: Node2D) -> void:
 	attack_timer = attack_cooldown / maxf(attack_speed_multiplier, 0.1)
 	var shot_damage := maxi(int(round(float(attack_damage) * (1.0 + (focus_damage_bonus if focus_active else 0.0)))), 1)
 	shot_damage = maxi(int(round(shot_damage*RECEIVED_STATUS.outgoing_multiplier(self))),1)
+	projectile.set_meta("survival_presentation",not survival_weapon_id.is_empty())
 	projectile.call(
 		"activate",
 		global_position,
@@ -222,6 +228,11 @@ func _fire_at_target(current_target: Node2D) -> void:
 		projectile_speed,
 		attack_range
 	)
+	projectile.area_attack.copy_from(area_attack)
+	if not survival_weapon_id.is_empty() and is_instance_valid(owner_hero):
+		var runtime = owner_hero.get("player_weapons")
+		if runtime != null: runtime.launch_summon_extras(survival_weapon_id,current_target,global_position,shot_damage,attack_range)
+
 	if attack_audio.stream != null:
 		attack_audio.stop()
 		attack_audio.play()
@@ -254,6 +265,7 @@ func _begin_release() -> void:
 
 
 func deactivate(emit_signal: bool = true) -> void:
+	area_attack.reset()
 	preload("res://src/systems/received_afflictions.gd").reset_on(self)
 	var was_active := active
 	active = false
@@ -374,6 +386,7 @@ func _load_audio(attack_path: String, summon_path: String) -> void:
 func _draw() -> void:
 	if not active:
 		return
+	area_attack.draw(self)
 	var bar_width := 54.0
 	var duration_ratio := clampf(duration_remaining / maxf(duration_total, 0.1), 0.0, 1.0)
 	draw_rect(Rect2(-bar_width / 2.0, -54.0, bar_width, 5.0), Color(0.10, 0.10, 0.12), true)

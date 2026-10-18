@@ -1,5 +1,7 @@
 extends CharacterBody2D
 
+const COMBAT_DELAY := preload("res://src/systems/combat_delay.gd")
+
 # Compatibility boundary: every legacy status call records into one retained buffer.
 const LEGACY_STATUS_RECEIPT = preload("res://src/systems/battle_status_receipt.gd")
 var legacy_status_receipt = LEGACY_STATUS_RECEIPT.new()
@@ -16,6 +18,7 @@ const LOCAL_GRID_MOVEMENT := preload("res://src/monsters/monster_runtime_common.
 const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
 
 signal died
+signal death_started
 signal health_changed(current_hp: int, max_hp_value: int)
 signal status_applied(status_id: String)
 signal status_action_applied(status_id: String)
@@ -27,8 +30,13 @@ signal progression_changed(level: int, current_exp: int, exp_to_next_level: int)
 signal leveled_up(new_level: int)
 signal augment_selected(level: int, candidates: Array, chosen_name: String, reason: String, build_summary: String)
 signal player_augment_requested(candidates: Array)
+const PLAYER_CONTROL_POLICY := preload("res://src/hero_mode/hero_control_policy.gd")
+var player_control_policy := PLAYER_CONTROL_POLICY.new()
+var player_root_timer := 0.0
+var player_root_multiplier := 1.0
 var player_controlled := false
 var player_exp_remainder := 0.0
+var player_exp_requirement_scale := 1.0
 var player_weapons: RefCounted
 var sage_blackspot_effects: Array[Node2D] = []
 var player_move_input := Vector2.ZERO
@@ -42,6 +50,13 @@ func _player_move_velocity() -> Vector2:
 	if hero_archetype == "alchemist_chemical": speed *= _get_alchemist_field_speed_multiplier()
 	if fighter_guard_active: speed *= clampf(float(ultimate_config.get("move_speed_multiplier",0.62))+fighter_guard_move_multiplier_bonus,0.25,1.0)
 	return player_move_input*speed
+func reroll_player_augment() -> bool:
+	if not player_controlled or current_hp <= 0 or player_weapons == null or player_augment_candidates.is_empty(): return false
+	var next: Array = player_weapons.reroll(player_augment_candidates)
+	if next.is_empty(): return false
+	player_augment_candidates = next
+	player_augment_requested.emit(next)
+	return true
 func choose_player_augment(id: String) -> bool:
 	if not player_controlled or current_hp <= 0 or player_augment_candidates.is_empty(): return false
 	var chosen: Dictionary = {}
@@ -156,17 +171,17 @@ const STAGE8_FRAME_DIR := "res://assets/art/heroes/stage8_summoner/frames"
 const STAGE9_FRAME_DIR := "res://assets/art/heroes/stage9_prist/frames"
 const STAGE10_FRAME_DIR := "res://assets/art/heroes/stage10_sage/frames"
 const CONTEXT_AUDIO := preload("res://src/data/contextual_audio_catalog.gd")
-const STAGE1_BASIC_ATTACK_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_basic_attack_pixabay.mp3"
-const STAGE1_BARRIER_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_barrier_pixabay.mp3"
-const STAGE1_ARCANE_FIELD_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_arcane_field_pixabay.mp3"
-const STAGE1_ARCANE_PIERCER_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_arcane_piercer_clean.wav"
+const STAGE1_BASIC_ATTACK_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_v4_basic.wav"
+const STAGE1_BARRIER_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_v4_barrier.wav"
+const STAGE1_ARCANE_FIELD_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_v4_focus.wav"
+const STAGE1_ARCANE_PIERCER_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_v4_piercer.wav"
 const STAGE1_HIT_AUDIO_PATH := CONTEXT_AUDIO.ROOT+"mage_hit.wav"
 const STAGE1_DEATH_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_death_pixabay.mp3"
 const STAGE1_LEVEL_UP_AUDIO_PATH := "res://assets/audio/sfx/level_up_rise07_cc0.mp3"
-const STAGE2_COMBO_SLASH_AUDIO_PATH := "res://assets/audio/sfx/contextual/rogue_dagger_contact.wav"
-const STAGE2_BLADE_STORM_AUDIO_PATH := "res://assets/audio/sfx/contextual/rogue_storm_short.wav"
-const STAGE2_ASSASSINATION_START_AUDIO_PATH := "res://assets/audio/sfx/stage2_rogue_assassination_start_pixabay.mp3"
-const STAGE2_ASSASSINATION_HIT_AUDIO_PATH := "res://assets/audio/sfx/contextual/rogue_assassination_short.wav"
+const STAGE2_COMBO_SLASH_AUDIO_PATH := "res://assets/audio/sfx/stage3_fighter_slash_pixabay.mp3"
+const STAGE2_BLADE_STORM_AUDIO_PATH := "res://assets/audio/sfx/rogue_blades_v2/blade_storm.wav"
+const STAGE2_ASSASSINATION_START_AUDIO_PATH := "res://assets/audio/sfx/rogue_blades_v2/assassination_start.wav"
+const STAGE2_ASSASSINATION_HIT_AUDIO_PATH := "res://assets/audio/sfx/rogue_blades_v2/assassination_hit.wav"
 const STAGE2_HIT_AUDIO_PATH := CONTEXT_AUDIO.ROOT+"rogue_hit.wav"
 const STAGE2_DEATH_AUDIO_PATH := "res://assets/audio/sfx/stage2_rogue_death_pixabay.mp3"
 const STAGE3_SLASH_AUDIO_PATH := "res://assets/audio/sfx/stage3_fighter_slash_pixabay.mp3"
@@ -764,6 +779,7 @@ var battlefield_size: Vector2 = Vector2(3200, 3200)
 
 # World-query cache state lives outside this giant facade. Keep these method
 # names stable because hero projectiles and skills already call them.
+var _combat_profile: RefCounted
 var _world_query_runtime: RefCounted
 var _movement_monster_scratch: Array = []
 var _combat_monster_scratch: Array = []
@@ -890,6 +906,8 @@ var charm_recovery_immunity := 7.0
 var charm_source: WeakRef
 var charm_cooldown_properties: Array = []
 var stun_timer: float = 0.0
+var player_control_gauge := preload("res://src/hero_mode/hero_control_gauge.gd").new()
+var player_weapon_tick_done := false
 var stun_sprite_speed: float = 1.0
 var fear_timer: float = 0.0
 var fear_immunity_timer := 0.0
@@ -946,6 +964,7 @@ var status_overlay: Node2D
 @onready var alchemist_philosopher_audio: AudioStreamPlayer = $AlchemistPhilosopherAudio
 
 func configure_profile(profile: Dictionary) -> void:
+	player_exp_requirement_scale = float(profile.get("survival_learning",1.0))
 	player_exp_remainder = 0.0
 	player_move_input = Vector2.ZERO
 	player_augment_candidates.clear()
@@ -970,6 +989,9 @@ func configure_profile(profile: Dictionary) -> void:
 	_clear_bleed()
 	_clear_burn()
 	_clear_stun()
+	player_control_policy.reset()
+	player_root_timer = 0.0
+	player_root_multiplier = 1.0
 	_clear_medusa_statuses()
 	_clear_charm()
 	_clear_received_modifiers()
@@ -1654,6 +1676,7 @@ func configure_battlefield(size: Vector2) -> void:
 	)
 
 func _ready() -> void:
+	_combat_profile = get_parent().get("combat_profile")
 	status_overlay = Node2D.new()
 	status_overlay.name = "CombatStatusOverlay"
 	status_overlay.z_as_relative = false
@@ -1821,7 +1844,15 @@ func _attach_status_effect_visual(effect_type: String) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	var started: int = Time.get_ticks_usec() if _combat_profile != null and _combat_profile.enabled else 0
+	_physics_process_hero(delta)
+	if started: _combat_profile.record(_combat_profile.Scope.HERO,started)
+
+func _physics_process_hero(delta: float) -> void:
 	player_moved_this_frame = false
+	if player_controlled:
+		player_control_policy.tick(delta)
+		player_root_timer = maxf(player_root_timer-delta,0.0)
 	silence_timer = maxf(silence_timer-delta,0.0)
 	set_meta("silence_active", silence_timer > 0.0)
 	imposed_skill_cooldown = maxf(imposed_skill_cooldown-delta,0.0)
@@ -1830,7 +1861,16 @@ func _physics_process(delta: float) -> void:
 		paralysis_ratio = 0.0
 	var immobilized := petrify_timer > 0.0
 	var anchor := global_position
+	player_weapon_tick_done = false
+	if player_controlled: player_control_gauge.sample(self)
 	_physics_process_actions(delta)
+	if player_controlled and player_weapons != null and not player_weapon_tick_done and player_input_suspended and current_hp > 0 and not is_dying:
+		# Existing world-space attacks keep moving/expiring during control locks.
+		# Redraw after forced movement so cached local draw commands do not follow.
+		player_weapons.tick(delta,false)
+	if player_controlled:
+		player_control_gauge.commit(self)
+		if is_instance_valid(status_overlay): status_overlay.queue_redraw()
 	if player_controlled and not player_input_suspended and not player_moved_this_frame and current_hp > 0 and not is_dying and not channeling and not purifier_gungnir_casting and not fighter_charge_active and not rogue_assassination_active:
 		_move_and_slide_with_obstacle_escape()
 	if immobilized and current_hp > 0 and not is_dying:
@@ -1883,6 +1923,7 @@ func _physics_process_actions(delta: float) -> void:
 		if slow_timer <= 0.0: move_multiplier = 1.0
 		attack_pose_timer = maxf(attack_pose_timer-delta,0.0)
 		hit_pose_timer = maxf(hit_pose_timer-delta,0.0)
+		player_weapon_tick_done = true
 		player_weapons.tick(delta)
 		if alchemist_philosopher_channeling or alchemist_philosopher_unlock_pending or berserker_reviving:
 			player_input_suspended = true; velocity = Vector2.ZERO; return
@@ -2010,6 +2051,8 @@ func _prepare_ranged_ai_intent(delta: float, distance: float) -> void:
 
 
 func _get_summoner_slot_capacity() -> int:
+	if player_controlled and player_weapons != null and player_weapons.native_skills != null:
+		return player_weapons.native_skills.summon_capacity()
 	return HERO_SUMMONER_RUNTIME.get_slot_capacity(
 		summoner_slot_base,
 		summoner_slot_bonus,
@@ -2706,8 +2749,8 @@ func _update_summoner_full_slot_shield(delta: float) -> void:
 		return
 
 	# Refresh-type passive: replace remaining shield amount and duration.
-	shield_max_hp = refreshed_shield
-	shield_hp = refreshed_shield
+	shield_max_hp = _player_shield_amount(refreshed_shield)
+	shield_hp = shield_max_hp
 	shield_duration_timer = maxf(
 		float(summoner_full_slot_shield_config.get("duration", 8.0))
 		+ float(shield_fortify_stacks) * 0.4,
@@ -3084,9 +3127,9 @@ func _summoner_basic_attack(current_target: Node2D) -> void:
 		is_instance_valid(summoner_basic_audio)
 		and summoner_basic_audio.stream != null
 		and not summoner_basic_audio.playing
-		and Time.get_ticks_msec() >= summoner_basic_audio_next_ms
+		and COMBAT_DELAY.now_msec(self) >= summoner_basic_audio_next_ms
 	):
-		summoner_basic_audio_next_ms = Time.get_ticks_msec()+SUMMONER_AUDIO.BASIC_INTERVAL_MS
+		summoner_basic_audio_next_ms = COMBAT_DELAY.now_msec(self)+SUMMONER_AUDIO.BASIC_INTERVAL_MS
 		summoner_basic_audio.play()
 
 	# Hitscan: damage is decided immediately; the summon_01~02 frames are
@@ -4373,7 +4416,7 @@ func _on_alchemist_cauldron_completed(
 			alchemist_mystery_cauldron_cooldown = 0.0
 		cauldron.call("play_result_sound", "great_success")
 		await _execute_alchemist_cauldron_great_success(origin)
-		await get_tree().create_timer(0.50).timeout
+		await COMBAT_DELAY.wait(self,0.50)
 	elif roll < great_chance + fail_chance:
 		# Failure should feel instantaneous: hide/deactivate the cauldron
 		# immediately, but let its child AudioStreamPlayer finish the boom.
@@ -4384,7 +4427,7 @@ func _on_alchemist_cauldron_completed(
 	else:
 		cauldron.call("play_result_sound", "success")
 		_execute_alchemist_cauldron_success(origin)
-		await get_tree().create_timer(0.65).timeout
+		await COMBAT_DELAY.wait(self,0.65)
 
 	if is_instance_valid(cauldron):
 		cauldron.call("deactivate")
@@ -4427,7 +4470,7 @@ func _execute_alchemist_cauldron_great_success(origin: Vector2) -> void:
 		for vial_index in range(vial_count):
 			_spawn_alchemist_mystery_vial(origin)
 		if batch_index + 1 < batch_count:
-			await get_tree().create_timer(batch_interval).timeout
+			await COMBAT_DELAY.wait(self,batch_interval)
 
 
 func _acquire_alchemist_mystery_vial() -> Node2D:
@@ -4622,6 +4665,7 @@ func _execute_alchemist_cauldron_success(origin: Vector2) -> void:
 			battlefield_size.y - 64.0
 		)
 		item.global_position = heal_position
+		preload("res://src/systems/pickup_placement.gd").ensure_reachable(item)
 		if item.has_method("set_temporary_lifetime"):
 			item.call("set_temporary_lifetime", lifetime)
 
@@ -4660,7 +4704,7 @@ func _on_alchemist_mixture_field_tick(origin: Vector2, radius: float) -> void:
 		0.1,
 		1.0
 	)
-	var slow_until := Time.get_ticks_msec() + int(round(
+	var slow_until := COMBAT_DELAY.now_msec(self) + int(round(
 		maxf(
 			float(alchemist_mixture_field_config.get("slow_refresh_seconds", 0.75)),
 			0.05
@@ -4857,7 +4901,7 @@ func _cast_alchemist_emergency_escape(
 	)
 	var effect_radius_sq := effect_radius * effect_radius
 	var enemy_damage := maxi(1, int(round(float(attack_damage) * damage_ratio)))
-	var slow_until := Time.get_ticks_msec() + int(round(slow_duration * 1000.0))
+	var slow_until := COMBAT_DELAY.now_msec(self) + int(round(slow_duration * 1000.0))
 
 	for monster in threats:
 		if not is_instance_valid(monster) or monster.is_queued_for_deletion():
@@ -5332,8 +5376,8 @@ func _refresh_gunner_empty_magazine_shield() -> void:
 		return
 
 	# 갱신형: 기존 실드에 더하지 않고 항상 새 10% 값으로 덮어쓴다.
-	shield_max_hp = refreshed_shield
-	shield_hp = refreshed_shield
+	shield_max_hp = _player_shield_amount(refreshed_shield)
+	shield_hp = shield_max_hp
 	queue_redraw()
 
 
@@ -5663,7 +5707,7 @@ func _use_gunner_cylinder_strike() -> void:
 		if damage_ratio > 0.0 and monster.has_method("take_damage"):
 			preload("res://src/systems/monster_hit_context.gd").hit(monster, maxi(1, int(round(float(attack_damage) * damage_ratio))), "ranged", self)
 		monster.set_meta("gunner_slow_multiplier", slow_multiplier)
-		monster.set_meta("gunner_slow_until", Time.get_ticks_msec() + int(slow_duration * 1000.0))
+		monster.set_meta("gunner_slow_until", COMBAT_DELAY.now_msec(self) + int(slow_duration * 1000.0))
 	gunner_query_candidates.clear()
 
 
@@ -5998,8 +6042,10 @@ func _rogue_combo_attack(current_target: Node2D) -> void:
 		maxf(target_distance - lunge_stop_distance, 0.0)
 	)
 	var lunge_start := global_position
-	global_position += direction * lunge_distance
-	_clamp_to_battlefield()
+	# Player movement stays on the pad; only the AI rogue lunges on attack.
+	if not player_controlled:
+		global_position += direction * lunge_distance
+		_clamp_to_battlefield()
 	var lunge_end := global_position
 
 	_start_rogue_attack_collision_ignore(
@@ -6345,7 +6391,7 @@ func _start_rogue_slash() -> void:
 		+ rogue_slash_shield_ratio_bonus,
 		0.0
 	)
-	shield_max_hp = float(max_hp) * shield_ratio
+	shield_max_hp = _player_shield_amount(float(max_hp) * shield_ratio)
 	shield_hp = shield_max_hp
 
 	_play_rogue_blade_storm_audio()
@@ -7504,22 +7550,16 @@ func _load_stage1_texture(path: String) -> Texture2D:
 	if prepared != null:
 		return prepared
 
-	# Stage 1 art is intentionally loaded from the source PNG first.
-	# Some moved effect PNGs still carry stale .import metadata pointing at
-	# their pre-frames/ paths, which can make ResourceLoader return the old
-	# cached .ctex even after the PNG itself was replaced.
-	if FileAccess.file_exists(path):
-		var image := Image.new()
-		var error := image.load(path)
-		if error == OK:
-			return ImageTexture.create_from_image(image)
-
-	# Fallback to Godot's imported resource only when the raw source cannot
-	# be read (for example, on a packaged platform).
+	# Reuse imported resources across actors/pools. Raw PNGs packaged alongside
+	# imports must not create another GPU texture for every projectile instance.
 	if ResourceLoader.exists(path):
 		var imported_texture = load(path)
 		if imported_texture is Texture2D:
 			return imported_texture
+	if FileAccess.file_exists(path):
+		var image := Image.load_from_file(path)
+		if image != null and not image.is_empty():
+			return ImageTexture.create_from_image(image)
 
 	return null
 
@@ -7605,7 +7645,7 @@ func _restart_stage1_animation(animation_name: String, speed_scale: float = 1.0)
 	if _is_current_hero_animation_protected(requested_animation):
 		return
 
-	var now_msec := Time.get_ticks_msec()
+	var now_msec := COMBAT_DELAY.now_msec(self)
 	if (
 		hero_sprite.animation == requested_animation
 		and hero_sprite.is_playing()
@@ -8001,7 +8041,7 @@ func _move_without_monsters() -> void:
 	_execute_ai_movement(direction * current_move_speed * 0.72 * _get_effective_move_multiplier())
 
 func _find_nearest_exp_orb() -> Node2D:
-	var now_msec := Time.get_ticks_msec()
+	var now_msec := COMBAT_DELAY.now_msec(self)
 	if (
 		now_msec < exp_orb_retarget_until_msec
 		and is_instance_valid(exp_orb_target)
@@ -8970,6 +9010,7 @@ func _find_nearest_monster() -> Node2D:
 		)
 		if registered_target is Node2D:
 			return registered_target as Node2D
+		if bool(battle.get("online_match_mode")): return null # Never scan another match.
 
 	# Compatibility fallback for isolated scenes/tests without Battle.
 	var nearest: Node2D = null
@@ -9305,19 +9346,19 @@ func _ensure_stage1_audio_runtime() -> void:
 		return
 	if not is_instance_valid(stage1_basic_audio):
 		stage1_basic_audio = _create_stage1_audio_player(
-			STAGE1_BASIC_ATTACK_AUDIO_PATH, HERO_SFX_DB_PRIMARY_ATTACK, 1.35
+			STAGE1_BASIC_ATTACK_AUDIO_PATH, HERO_SFX_DB_PRIMARY_ATTACK, 1.0
 		)
 	if not is_instance_valid(stage1_barrier_audio):
 		stage1_barrier_audio = _create_stage1_audio_player(
-			STAGE1_BARRIER_AUDIO_PATH, HERO_SFX_DB_REGULAR_SKILL, 1.08
+			STAGE1_BARRIER_AUDIO_PATH, HERO_SFX_DB_REGULAR_SKILL, 1.0
 		)
 	if not is_instance_valid(stage1_arcane_field_audio):
 		stage1_arcane_field_audio = _create_stage1_audio_player(
-			STAGE1_ARCANE_FIELD_AUDIO_PATH, HERO_SFX_DB_REGULAR_SKILL, 0.96
+			STAGE1_ARCANE_FIELD_AUDIO_PATH, HERO_SFX_DB_REGULAR_SKILL, 1.0
 		)
 	if not is_instance_valid(stage1_arcane_piercer_audio):
 		stage1_arcane_piercer_audio = _create_stage1_audio_player(
-			STAGE1_ARCANE_PIERCER_AUDIO_PATH, HERO_SFX_DB_HEAVY_SKILL, 1.08
+			STAGE1_ARCANE_PIERCER_AUDIO_PATH, HERO_SFX_DB_HEAVY_SKILL, 1.0
 		)
 	if not is_instance_valid(stage1_hit_audio):
 		stage1_hit_audio = _create_stage1_audio_player(
@@ -9398,8 +9439,8 @@ func _ensure_rogue_audio_runtime() -> void:
 	if not is_instance_valid(rogue_assassination_start_audio):
 		rogue_assassination_start_audio = _create_hero_sfx_player(
 			STAGE2_ASSASSINATION_START_AUDIO_PATH,
-			HERO_SFX_DB_HEAVY_SKILL,
-			0.82
+			HERO_SFX_DB_REGULAR_SKILL,
+			1.0
 		)
 
 	if rogue_assassination_hit_audio_pool.is_empty():
@@ -9426,7 +9467,7 @@ func _ensure_rogue_audio_runtime() -> void:
 
 
 func _play_rogue_combo_audio(_combo_index: int) -> void:
-	if Time.get_ticks_msec() < rogue_combo_audio_next_ms:
+	if COMBAT_DELAY.now_msec(self) < rogue_combo_audio_next_ms:
 		return
 	_ensure_rogue_audio_runtime()
 	if rogue_combo_audio_pool.is_empty():
@@ -9439,7 +9480,7 @@ func _play_rogue_combo_audio(_combo_index: int) -> void:
 	) % rogue_combo_audio_pool.size()
 	if not is_instance_valid(player) or player.stream == null:
 		return
-	rogue_combo_audio_next_ms = Time.get_ticks_msec()+CONTEXT_AUDIO.ROGUE_ATTACK_INTERVAL_MS
+	rogue_combo_audio_next_ms = COMBAT_DELAY.now_msec(self)+CONTEXT_AUDIO.ROGUE_ATTACK_INTERVAL_MS
 	player.pitch_scale = 1.0
 	player.stop()
 	player.play()
@@ -9463,7 +9504,7 @@ func _play_rogue_assassination_start_audio() -> void:
 
 
 func _play_rogue_assassination_hit_audio() -> void:
-	if Time.get_ticks_msec() < rogue_assassination_audio_next_ms:
+	if COMBAT_DELAY.now_msec(self) < rogue_assassination_audio_next_ms:
 		return
 	_ensure_rogue_audio_runtime()
 	if rogue_assassination_hit_audio_pool.is_empty():
@@ -9475,7 +9516,7 @@ func _play_rogue_assassination_hit_audio() -> void:
 	rogue_assassination_hit_audio_cursor = (
 		rogue_assassination_hit_audio_cursor + 1
 	) % rogue_assassination_hit_audio_pool.size()
-	rogue_assassination_audio_next_ms = Time.get_ticks_msec()+CONTEXT_AUDIO.ROGUE_ASSASSINATION_INTERVAL_MS
+	rogue_assassination_audio_next_ms = COMBAT_DELAY.now_msec(self)+CONTEXT_AUDIO.ROGUE_ASSASSINATION_INTERVAL_MS
 	if not is_instance_valid(player) or player.stream == null:
 		return
 	player.stop()
@@ -11139,7 +11180,7 @@ func _end_sage_phase() -> void:
 	var duration := maxf(float(sage_config.get("phase_duration", 7.0)), 0.0)
 	sage_phase_cooldown_timer = maxf(interval - duration, 0.1)
 	var shield_ratio := maxf(float(sage_config.get("post_phase_shield_ratio", 0.10)), 0.0)
-	shield_max_hp = float(max_hp) * shield_ratio
+	shield_max_hp = _player_shield_amount(float(max_hp) * shield_ratio)
 	shield_hp = shield_max_hp
 	sage_post_phase_shield_timer = maxf(float(sage_config.get("post_phase_shield_duration", 3.0)), 0.0)
 	queue_redraw()
@@ -11615,7 +11656,7 @@ func _start_archmage_multicast(origin_skill: String) -> void:
 	):
 		if reservation_revision != archmage_multicast_revision or not _is_delayed_skill_source_current(source_life, source_scope_id):
 			break
-		await get_tree().create_timer(0.30).timeout
+		await COMBAT_DELAY.wait(self,0.30)
 		if reservation_revision != archmage_multicast_revision or not _is_delayed_skill_source_current(source_life, source_scope_id):
 			break
 
@@ -11682,7 +11723,7 @@ func _cast_archmage_combustion(config: Dictionary, empowered: bool) -> void:
 		_damage_monsters_in_radius(orb_position, radius, tick_damage, source_life, source_scope_id)
 		if not _is_delayed_skill_source_current(source_life, source_scope_id):
 			break
-		await get_tree().create_timer(tick_interval).timeout
+		await COMBAT_DELAY.wait(self,tick_interval)
 		elapsed += tick_interval
 	if is_instance_valid(charge_fx):
 		_recycle_archmage_fx_if_current(charge_fx, charge_fx_revision, source_scope_id)
@@ -11848,7 +11889,7 @@ func _resolve_archmage_ice_pillars(hit_position: Vector2, empowered: bool) -> vo
 		_damage_monsters_in_radius(position, hit_radius, pillar_damage, source_life, source_scope_id)
 		if not _is_delayed_skill_source_current(source_life, source_scope_id):
 			break
-		await get_tree().create_timer(0.045).timeout
+		await COMBAT_DELAY.wait(self,0.045)
 
 
 func _cast_archmage_earth_spikes(config: Dictionary, empowered: bool) -> void:
@@ -11886,7 +11927,7 @@ func _cast_archmage_earth_spikes(config: Dictionary, empowered: bool) -> void:
 		_damage_monsters_in_radius_once(position, radius, spike_damage, hit_ids, source_life, source_scope_id)
 		if not _is_delayed_skill_source_current(source_life, source_scope_id):
 			break
-		await get_tree().create_timer(spike_delay).timeout
+		await COMBAT_DELAY.wait(self,spike_delay)
 
 	if _is_delayed_skill_source_current(source_life, source_scope_id):
 		var original_distance: float = spacing * float(count)
@@ -11945,7 +11986,7 @@ func _cast_archmage_earth_spikes(config: Dictionary, empowered: bool) -> void:
 				)
 				if not _is_delayed_skill_source_current(source_life, source_scope_id):
 					break
-				await get_tree().create_timer(spike_delay).timeout
+				await COMBAT_DELAY.wait(self,spike_delay)
 
 	# Old tasks must not decrement a new life's casting counter.
 	if _is_delayed_skill_life_current(source_life, source_scope_id):
@@ -12098,7 +12139,7 @@ func _cast_archmage_holy_power(config: Dictionary, empowered: bool) -> void:
 			)
 			monster.set_meta(
 				"gunner_slow_until",
-				Time.get_ticks_msec()
+				COMBAT_DELAY.now_msec(self)
 				+ int(
 					maxf(
 						float(config.get("slow_duration", 2.0)),
@@ -12110,9 +12151,9 @@ func _cast_archmage_holy_power(config: Dictionary, empowered: bool) -> void:
 
 		if not _is_delayed_skill_source_current(source_life, source_scope_id):
 			break
-		await get_tree().create_timer(
+		await COMBAT_DELAY.wait(self,
 			maxf(float(config.get("burst_delay", 0.09)), 0.02)
-		).timeout
+		)
 
 	if _is_delayed_skill_life_current(source_life, source_scope_id):
 		_end_archmage_casting_sequence()
@@ -13040,8 +13081,8 @@ func _activate_shield() -> void:
 	if configured_hp <= 0.0:
 		return
 
-	shield_max_hp = configured_hp
-	shield_hp = configured_hp
+	shield_max_hp = _player_shield_amount(configured_hp)
+	shield_hp = shield_max_hp
 	shield_duration_timer = maxf(
 		float(shield_skill_config.get("duration", 8.0)),
 		0.01
@@ -13455,6 +13496,7 @@ func _add_purifier_shield_layer() -> void:
 		),
 		1.0
 	)
+	layer_amount = _player_shield_amount(layer_amount)
 	shield_max_hp += layer_amount
 	shield_hp += layer_amount
 	queue_redraw()
@@ -13519,7 +13561,7 @@ func _trigger_purifier_protection_break_pulse() -> void:
 		0.1,
 		1.0
 	)
-	var slow_until := Time.get_ticks_msec() + int(round(
+	var slow_until := COMBAT_DELAY.now_msec(self) + int(round(
 		maxf(
 			float(purifier_protection_config.get("break_slow_duration", 1.5)),
 			0.05
@@ -16478,7 +16520,7 @@ func _level_up() -> void:
 	level_flash_timer = 0.45
 	_play_level_up_feedback()
 	_apply_level_growth()
-	if not player_controlled and hero_archetype == "summoner_gatekeeper" and level % 5 == 0:
+	if hero_archetype == "summoner_gatekeeper" and level % 5 == 0:
 		# Stage 8 gains one shared summon slot every five levels. Expand the
 		# fixed pools only at the milestone instead of instantiating during combat.
 		_ensure_summoner_pool_capacity()
@@ -17496,6 +17538,9 @@ func apply_charm(source: Node2D, duration: float) -> bool:
 func _apply_charm_status(source: Node2D, duration: float, receipt = null, receipt_revision: int = 0) -> bool:
 	if current_hp <= 0 or is_dying or charm_timer > 0.0 or charm_immunity_timer > 0.0 or not is_instance_valid(source):
 		return false
+	if player_controlled:
+		duration = player_control_policy.accept(duration, get_status_resistance("charm"))
+		if duration <= 0.0: return false
 	charm_recovery_immunity = maxf(float(get_meta("incoming_charm_immunity",SUCCUBUS_BEHAVIOR.CHARM.immunity)),0.0)
 	charm_stacks = 0
 	charm_timer = maxf(duration * (1.0 - get_status_resistance("charm")), 0.05)
@@ -17597,6 +17642,9 @@ func apply_petrify(duration: float, release_slow: float = 1.0, release_duration:
 func _apply_petrify_status(duration: float, release_slow: float = 1.0, release_duration: float = 0.0, receipt = null, receipt_revision: int = 0) -> bool:
 	if current_hp <= 0 or is_dying or petrify_timer > 0.0 or duration <= 0.0:
 		return false
+	if player_controlled:
+		duration = player_control_policy.accept(duration, get_status_resistance("petrify"))
+		if duration <= 0.0: return false
 	petrify_status_action = STATUS_ACTION_SCOPE.current(self)
 	record_status_effect_event("petrify")
 	petrify_timer = maxf(duration * (1.0 - get_status_resistance("petrify")),0.05)
@@ -17733,6 +17781,9 @@ func apply_stun(duration: float) -> void:
 func _apply_stun_status(duration: float, receipt = null, receipt_revision: int = 0) -> void:
 	if duration <= 0.0 or current_hp <= 0 or is_dying:
 		return
+	if player_controlled:
+		duration = player_control_policy.accept(duration, get_status_resistance("stun"))
+		if duration <= 0.0: return
 	record_status_effect_event("stun")
 	if stun_timer <= 0.0 and is_instance_valid(hero_sprite):
 		stun_sprite_speed = hero_sprite.speed_scale
@@ -17801,6 +17852,9 @@ func _apply_fear_status(
 	if current_hp <= 0 or is_dying or fear_immunity_timer > 0.0:
 		return
 
+	if player_controlled:
+		duration = player_control_policy.accept(duration, get_status_resistance("fear"))
+		if duration <= 0.0: return
 	fear_recovery_immunity = maxf(fear_recovery_immunity,float(get_meta("incoming_fear_immunity",0.0)))
 	record_status_effect_event("fear")
 	var resistance := get_status_resistance("fear")
@@ -17995,7 +18049,11 @@ func _tick_fear_state(delta: float) -> bool:
 	return true
 
 func _get_effective_move_multiplier() -> float:
-	return move_multiplier * float(get_meta("yuki_slow_multiplier",1.0))
+	var multiplier := move_multiplier * float(get_meta("yuki_slow_multiplier",1.0))
+	if player_controlled:
+		multiplier = maxf(multiplier, PLAYER_CONTROL_POLICY.DATA.SLOW_SPEED_FLOOR)
+		if player_root_timer > 0.0: multiplier = minf(multiplier, player_root_multiplier)
+	return multiplier
 
 func apply_slow_with_result(multiplier: float, duration: float, receipt) -> bool:
 	if receipt == null:
@@ -18014,27 +18072,29 @@ func apply_slow(multiplier: float, duration: float) -> void:
 	legacy_status_result_complete = legacy_status_receipt.finish(revision)
 
 func _apply_slow_status(multiplier: float, duration: float, receipt = null, receipt_revision: int = 0) -> void:
-	if current_hp <= 0:
+	if current_hp <= 0 or duration <= 0.0:
 		return
-
-	record_status_effect_event("slow")
-
 	var resistance := get_status_resistance("slow")
 	var raw_multiplier := clampf(multiplier, 0.01, 1.0)
-	var effective_multiplier := lerpf(
-		raw_multiplier,
-		1.0,
-		resistance
-	)
-	var effective_duration := maxf(
-		duration * (1.0 - resistance),
-		0.05
-	)
-
-	move_multiplier = minf(move_multiplier, effective_multiplier)
-	slow_timer = maxf(slow_timer, effective_duration)
+	var effective_multiplier := lerpf(raw_multiplier, 1.0, resistance)
+	if player_controlled and raw_multiplier <= 0.05:
+		var accepted := player_control_policy.accept(duration, resistance)
+		if accepted <= 0.0: return
+		player_root_timer = maxf(accepted*(1.0-resistance),0.05)
+		player_root_multiplier = effective_multiplier
+		record_status_effect_event("slow")
+		if receipt != null:
+			receipt.record_application(player_root_timer,1.0-player_root_multiplier,receipt_revision)
+		queue_redraw()
+		return
+	var effective_duration := maxf(duration*(1.0-resistance),0.05)
+	if player_controlled:
+		effective_multiplier = maxf(effective_multiplier,PLAYER_CONTROL_POLICY.DATA.SLOW_SPEED_FLOOR)
+	record_status_effect_event("slow")
+	move_multiplier = minf(move_multiplier,effective_multiplier)
+	slow_timer = maxf(slow_timer,effective_duration)
 	if receipt != null:
-		receipt.record_application(slow_timer, 1.0 - move_multiplier, receipt_revision)
+		receipt.record_application(slow_timer,1.0-move_multiplier,receipt_revision)
 	queue_redraw()
 
 func get_build_summary() -> String:
@@ -18694,9 +18754,9 @@ func _run_berserker_skill2_wave(
 		current_position = next_position
 
 		var step_time: float = cell_length / wave_speed
-		await get_tree().create_timer(
+		await COMBAT_DELAY.wait(self,
 			maxf(step_time, 0.03)
-		).timeout
+		)
 
 	var blood_duration: float = maxf(
 		float(skill_config.get("blood_duration", 2.0)),
@@ -18718,7 +18778,7 @@ func _run_berserker_skill2_wave(
 			heal_per_touch,
 			healed_ids
 		)
-		await get_tree().create_timer(tick_interval).timeout
+		await COMBAT_DELAY.wait(self,tick_interval)
 		elapsed += tick_interval
 
 	for blood_fx in blood_visuals:
@@ -19008,11 +19068,11 @@ func _execute_berserker_skill3(
 		0.08
 	)
 	if orb_count > 0:
-		await get_tree().create_timer(
+		await COMBAT_DELAY.wait(self,
 			pickup_duration + 0.10
-		).timeout
+		)
 	else:
-		await get_tree().create_timer(0.16).timeout
+		await COMBAT_DELAY.wait(self,0.16)
 
 	if not is_inside_tree():
 		return
@@ -19751,7 +19811,7 @@ func _begin_berserker_revive() -> void:
 	if player_controlled and player_weapons != null and player_weapons.identity != null:
 		player_weapons.identity.revive_left = revive_delay
 		return
-	await get_tree().create_timer(revive_delay).timeout
+	await COMBAT_DELAY.wait(self,revive_delay)
 	if not is_inside_tree() or is_dying:
 		return
 	_finish_berserker_revive()
@@ -20494,7 +20554,7 @@ func _start_fighter_guard() -> void:
 		+ fighter_guard_shield_ratio_bonus,
 		0.0
 	)
-	shield_max_hp = float(max_hp) * shield_ratio
+	shield_max_hp = _player_shield_amount(float(max_hp) * shield_ratio)
 	shield_hp = shield_max_hp
 
 	_play_fighter_guard_start_audio()
@@ -20880,7 +20940,7 @@ func _add_prefixed_effect_animation(
 	return true
 
 func _required_exp_for_level(target_level: int) -> int:
-	if player_controlled: return preload("res://src/data/hero_mode_catalog.gd").required_exp(target_level)
+	if player_controlled: return preload("res://src/data/hero_mode_catalog.gd").required_exp(target_level,player_exp_requirement_scale)
 	return 50 + maxi(target_level - 1, 0) * 25
 
 func take_damage(amount: int, source: Node = null) -> bool:
@@ -20964,6 +21024,7 @@ func _take_damage_internal(
 		)
 		var absorbed := minf(shield_hp, remaining_damage)
 		shield_hp = maxf(shield_hp - absorbed, 0.0)
+		if player_weapons != null and player_weapons.has_method("on_shield_absorbed"): player_weapons.on_shield_absorbed(absorbed)
 		remaining_damage = maxf(remaining_damage - absorbed, 0.0)
 		if shield_hp <= 0.0:
 			if hero_archetype == "sword_shield" and fighter_guard_active:
@@ -21036,7 +21097,7 @@ func _prepare_contextual_damage_audio() -> void:
 
 
 func _play_contextual_damage_audio(physical_block: bool, magical_block: bool) -> void:
-	if Time.get_ticks_msec() < contextual_hit_next_ms or not CONTEXT_AUDIO.HITS.has(hero_archetype):
+	if COMBAT_DELAY.now_msec(self) < contextual_hit_next_ms or not CONTEXT_AUDIO.HITS.has(hero_archetype):
 		return
 	var player: AudioStreamPlayer
 	if physical_block:
@@ -21052,7 +21113,7 @@ func _play_contextual_damage_audio(physical_block: bool, magical_block: bool) ->
 		call(String(cue.ensure))
 		player = get(String(cue.player)) as AudioStreamPlayer
 	if is_instance_valid(player) and player.stream != null:
-		contextual_hit_next_ms = Time.get_ticks_msec()+CONTEXT_AUDIO.HIT_INTERVAL_MS
+		contextual_hit_next_ms = COMBAT_DELAY.now_msec(self)+CONTEXT_AUDIO.HIT_INTERVAL_MS
 		player.stop()
 		player.play()
 
@@ -21162,6 +21223,7 @@ func _begin_death_sequence() -> void:
 		return
 
 	is_dying = true
+	death_started.emit()
 	_clear_bleed()
 	_clear_burn()
 	_clear_stun()
@@ -21288,6 +21350,8 @@ func _draw_combat_status_overlay() -> void:
 		hp_bar_y = player_weapons.identity.status_hp_y
 		shield_bar_y = player_weapons.identity.status_shield_y
 	var bar_left_x := -bar_width / 2.0 + bar_x_offset
+	if player_controlled:
+		player_control_gauge.draw_on(status_overlay,self,minf(resource_bar_y,minf(hp_bar_y,shield_bar_y))-24.0,bar_width)
 	if hero_archetype == "pistol_gunner":
 		var gap := 2.0
 		var cell_width := (bar_width - gap * float(gunner_magazine_size - 1)) / float(gunner_magazine_size)
@@ -21500,3 +21564,6 @@ func _apply_burn_status(duration: float, total_damage: int, source: Node = null,
 func _clear_burn() -> void:
 	burn_runtime.clear()
 	set_meta("burn_active",false)
+
+func _player_shield_amount(amount: float) -> float:
+	return player_weapons.shield_amount(amount) if player_controlled and player_weapons != null else amount

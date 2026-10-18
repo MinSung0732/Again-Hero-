@@ -1,0 +1,91 @@
+{
+  "species_id": "frost_owl",
+  "direction": "right",
+  "cell_size": [
+    878,
+    240
+  ],
+  "sheet_size": [
+    1756,
+    480
+  ],
+  "source_cell_size": [
+    627,
+    627
+  ],
+  "source_anchors": [
+    [
+      510,
+      339
+    ],
+    [
+      510,
+      339
+    ],
+    [
+      510,
+      313
+    ],
+    [
+      510,
+      313
+    ]
+  ],
+  "layout": [
+    2,
+    2
+  ],
+  "anchor": [
+    439.0,
+    120.0
+  ],
+  "source_file": "frost_owl_source.png",
+  "source_sha256": "9be39f0a4d3bf86ea7aa6ee78bc2c4328a6be11408b1b4614931ed5204693ccd",
+  "packaging": "Native 1:1 crop and integer core-anchor alignment; alpha>=128 boundary cleanup; no RGB keying or resampling",
+  "bounds": [
+    [
+      44,
+      18,
+      491,
+      219
+    ],
+    [
+      16,
+      18,
+      491,
+      219
+    ],
+    [
+      43,
+      16,
+      491,
+      220
+    ],
+    [
+      38,
+      16,
+      491,
+      220
+    ]
+  ],
+  "display_scale": 0.05673759,
+  "animations": {
+    "projectile": {
+      "fps": 12,
+      "loop": true,
+      "frames": [
+        "frames/projectile_01.png",
+        "frames/projectile_02.png",
+        "frames/projectile_03.png",
+        "frames/projectile_04.png"
+      ]
+    }
+  },
+  "generation": {
+    "id": "frost_owl",
+    "tool": "built-in imagegen",
+    "source": "/workspace/scratch/86f0991835d6/generated_images/exec-eea59b0b-9011-402f-9600-20e6f953b899.png",
+    "reference": "/workspace/scratch/86f0991835d6/export-image-fix/assets/art/monsters/frost_owl/frames/idle_01.png",
+    "prompt": "Use case: stylized-concept. Asset type: production pixel-art game projectile animation sheet for Godot mobile RPG Again, Hero?.\nReference image role: ONLY the monster's palette/theme and pixel-art material style. Do NOT draw the monster.\nSubject: Frost owl: a sharp pale-blue ice feather lance with icy cyan crystalline shaft and white segmented feather barbs, three sparse ice chips trailing left. Clearly feather-shaped, not an orb.\nCreate ONE sprite sheet on a genuinely transparent RGBA background, exactly FOUR consecutive FLIGHT LOOP frames in a strict 2-column by 2-row grid, equal cells. Reading order upper-left, upper-right, lower-left, lower-right. All projectiles point exactly RIGHT, zero tilt, side view. Each core sits at exactly the center of its cell; identical core size, orientation and anchor across all four. Subtle changing tail/spark arrangement makes a seamless loop frame4-to-frame1. Keep overall silhouette readable in a 40px-wide in-game display.\nStyle: crisp handmade retro pixel art, large clear pixel clusters, colored dark outline, restrained 3-tone material shading, NO antialiasing, NO blur, NO smooth gradients, NO soft bloom, NO semitransparent glow. All drawn pixels opaque. Leave very wide transparent gutters: each complete projectile including tail should occupy ONLY the middle 55 percent of its cell width and middle 35 percent height. Do not overlap cells, no cropped parts. Final contains exactly 4 separated sprites, no extra icons, characters, backgrounds, text, labels, grids, frame numbers, borders or UI. Square sheet."
+  }
+}

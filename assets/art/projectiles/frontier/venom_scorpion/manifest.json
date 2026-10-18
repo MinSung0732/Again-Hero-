@@ -1,0 +1,91 @@
+{
+  "species_id": "venom_scorpion",
+  "direction": "right",
+  "cell_size": [
+    954,
+    216
+  ],
+  "sheet_size": [
+    1908,
+    432
+  ],
+  "source_cell_size": [
+    627,
+    627
+  ],
+  "source_anchors": [
+    [
+      520,
+      332
+    ],
+    [
+      503,
+      332
+    ],
+    [
+      521,
+      293
+    ],
+    [
+      505,
+      291
+    ]
+  ],
+  "layout": [
+    2,
+    2
+  ],
+  "anchor": [
+    477.0,
+    108.0
+  ],
+  "source_file": "venom_scorpion_source.png",
+  "source_sha256": "6d539ce46d678d979beef11584f2700f933442873b2809d7ce89ae59ead3da62",
+  "packaging": "Native 1:1 crop and integer core-anchor alignment; alpha>=128 boundary cleanup; no RGB keying or resampling",
+  "bounds": [
+    [
+      16,
+      18,
+      540,
+      197
+    ],
+    [
+      30,
+      18,
+      539,
+      198
+    ],
+    [
+      26,
+      19,
+      539,
+      198
+    ],
+    [
+      57,
+      22,
+      536,
+      200
+    ]
+  ],
+  "display_scale": 0.05206074,
+  "animations": {
+    "projectile": {
+      "fps": 12,
+      "loop": true,
+      "frames": [
+        "frames/projectile_01.png",
+        "frames/projectile_02.png",
+        "frames/projectile_03.png",
+        "frames/projectile_04.png"
+      ]
+    }
+  },
+  "generation": {
+    "id": "venom_scorpion",
+    "tool": "built-in imagegen",
+    "source": "/workspace/scratch/86f0991835d6/generated_images/exec-6048b112-486c-4d31-a079-e41177732edb.png",
+    "reference": "/workspace/scratch/86f0991835d6/export-image-fix/assets/art/monsters/venom_scorpion/frames/idle_01.png",
+    "prompt": "Use case: stylized-concept. Asset type: production pixel-art game projectile animation sheet for Godot mobile RPG Again, Hero?.\nReference image role: ONLY the monster's palette/theme and pixel-art material style. Do NOT draw the monster.\nSubject: Venom scorpion: a curved dark-teal pointed stinger dart coated in neon lime venom, a single green poison droplet below the core and tiny acid flecks trailing left. Clear black-teal barb tip.\nCreate ONE sprite sheet on a genuinely transparent RGBA background, exactly FOUR consecutive FLIGHT LOOP frames in a strict 2-column by 2-row grid, equal cells. Reading order upper-left, upper-right, lower-left, lower-right. All projectiles point exactly RIGHT, zero tilt, side view. Each core sits at exactly the center of its cell; identical core size, orientation and anchor across all four. Subtle changing tail/spark arrangement makes a seamless loop frame4-to-frame1. Keep overall silhouette readable in a 40px-wide in-game display.\nStyle: crisp handmade retro pixel art, large clear pixel clusters, colored dark outline, restrained 3-tone material shading, NO antialiasing, NO blur, NO smooth gradients, NO soft bloom, NO semitransparent glow. All drawn pixels opaque. Leave very wide transparent gutters: each complete projectile including tail should occupy ONLY the middle 55 percent of its cell width and middle 35 percent height. Do not overlap cells, no cropped parts. Final contains exactly 4 separated sprites, no extra icons, characters, backgrounds, text, labels, grids, frame numbers, borders or UI. Square sheet."
+  }
+}

@@ -1,5 +1,6 @@
 extends RefCounted
 class_name EliteMonsterSkillRuntime
+const COMBAT_DELAY := preload("res://src/systems/combat_delay.gd")
 const STATUS_SCOPE := preload("res://src/systems/status_action_scope.gd")
 
 const SPIDER_WEB_POOL_KEY := "elite_spider_web"
@@ -476,7 +477,7 @@ func _tick_goblin_commander(
 		battle.call("fill_monsters_near", monster.global_position, radius, _monster_scratch)
 
 	var speed_multiplier := maxf(float(skill.get("speed_multiplier", 1.15)), 1.0)
-	var speed_until := Time.get_ticks_msec() + int(round(aura_interval * 1.50 * 1000.0))
+	var speed_until := COMBAT_DELAY.now_msec(battle) + int(round(aura_interval * 1.50 * 1000.0))
 	var shield_ratio := maxf(float(skill.get("shield_max_hp_ratio", 0.10)), 0.0)
 
 	for raw_monster in _monster_scratch:
@@ -746,7 +747,7 @@ func _tick_spider_webs(delta: float) -> void:
 			float(web.get("monster_speed_multiplier", 1.15)),
 			1.0
 		)
-		var buff_until := Time.get_ticks_msec() + int(round(
+		var buff_until := COMBAT_DELAY.now_msec(battle) + int(round(
 			tick_interval * 1.50 * 1000.0
 		))
 		for raw_monster in _monster_scratch:

@@ -1,0 +1,130 @@
+{
+  "weapon_id": "ranged_rookie_restoration_codex",
+  "name": "안식의 마도서",
+  "source_size": [
+    1254,
+    1254
+  ],
+  "source_sha256": "dc0a2666837c3f704ca4a631a37c1fdb38f7c31aeaed998389804400a3844489",
+  "sheet": "sprite_sheet.png",
+  "sheet_size": [
+    384,
+    384
+  ],
+  "cell_size": [
+    128,
+    128
+  ],
+  "anchor": [
+    64,
+    64
+  ],
+  "alpha": "binary; existing transparency only; black foreground retained",
+  "normalization": "whole alpha components; reviewed core anchors; one common nearest scale; no source crop loss",
+  "animation": {
+    "fps": 12,
+    "loop_playback": "ping_pong",
+    "transient_window_seconds": 0.28,
+    "transient_playback": "normalized to visual window; no gameplay timing change",
+    "loop": false,
+    "frames": [
+      "frames/effect_01.png",
+      "frames/effect_02.png",
+      "frames/effect_03.png",
+      "frames/effect_04.png",
+      "frames/effect_05.png",
+      "frames/effect_06.png",
+      "frames/effect_07.png",
+      "frames/effect_08.png"
+    ]
+  },
+  "unique_frames": 8,
+  "source_file": "source.png",
+  "source_anchors": [
+    [
+      629,
+      292
+    ],
+    [
+      1035,
+      287
+    ],
+    [
+      224,
+      683
+    ],
+    [
+      628,
+      679
+    ],
+    [
+      1030,
+      686
+    ],
+    [
+      227,
+      1051
+    ],
+    [
+      627,
+      1056
+    ],
+    [
+      1033,
+      1042
+    ]
+  ],
+  "source_component_bounds": [
+    [
+      531,
+      180,
+      729,
+      394
+    ],
+    [
+      892,
+      145,
+      1179,
+      425
+    ],
+    [
+      74,
+      508,
+      375,
+      793
+    ],
+    [
+      472,
+      508,
+      782,
+      796
+    ],
+    [
+      867,
+      507,
+      1191,
+      800
+    ],
+    [
+      36,
+      872,
+      417,
+      1178
+    ],
+    [
+      440,
+      906,
+      818,
+      1159
+    ],
+    [
+      913,
+      928,
+      1153,
+      1149
+    ]
+  ],
+  "common_source_extent": 193,
+  "source_opaque_pixels": 376984,
+  "assigned_opaque_pixels": 376984
+}

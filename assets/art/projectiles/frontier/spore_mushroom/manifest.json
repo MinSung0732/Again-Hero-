@@ -1,0 +1,91 @@
+{
+  "species_id": "spore_mushroom",
+  "direction": "right",
+  "cell_size": [
+    768,
+    238
+  ],
+  "sheet_size": [
+    1536,
+    476
+  ],
+  "source_cell_size": [
+    627,
+    627
+  ],
+  "source_anchors": [
+    [
+      483,
+      377
+    ],
+    [
+      465,
+      384
+    ],
+    [
+      479,
+      321
+    ],
+    [
+      451,
+      320
+    ]
+  ],
+  "layout": [
+    2,
+    2
+  ],
+  "anchor": [
+    384.0,
+    119.0
+  ],
+  "source_file": "spore_mushroom_source.png",
+  "source_sha256": "c269130414fd1ecee158c3c0d4f33cc1a25db20e7e238b63500d7f8a79b4e4e5",
+  "packaging": "Native 1:1 crop and integer core-anchor alignment; alpha>=128 boundary cleanup; no RGB keying or resampling",
+  "bounds": [
+    [
+      31,
+      23,
+      429,
+      189
+    ],
+    [
+      16,
+      16,
+      421,
+      193
+    ],
+    [
+      32,
+      26,
+      433,
+      189
+    ],
+    [
+      40,
+      27,
+      435,
+      197
+    ]
+  ],
+  "display_scale": 0.06521739,
+  "animations": {
+    "projectile": {
+      "fps": 12,
+      "loop": true,
+      "frames": [
+        "frames/projectile_01.png",
+        "frames/projectile_02.png",
+        "frames/projectile_03.png",
+        "frames/projectile_04.png"
+      ]
+    }
+  },
+  "generation": {
+    "id": "spore_mushroom",
+    "tool": "built-in imagegen",
+    "source": "/workspace/scratch/86f0991835d6/generated_images/exec-02dd624c-c4d9-4fc6-9e73-98e7db40bc0f.png",
+    "reference": "/workspace/scratch/86f0991835d6/export-image-fix/assets/art/monsters/spore_mushroom/frames/idle_01.png",
+    "prompt": "Use case: stylized-concept. Asset type: production pixel-art game projectile animation sheet for Godot mobile RPG Again, Hero?.\nReference image role: ONLY the monster's palette/theme and pixel-art material style. Do NOT draw the monster.\nSubject: Spore mushroom: a compact cluster of three rose-beige fungal spores with cream spots and a short red-pink spore dust wake. Floating organic seed pods, no mushroom character.\nCreate ONE sprite sheet on a genuinely transparent RGBA background, exactly FOUR consecutive FLIGHT LOOP frames in a strict 2-column by 2-row grid, equal cells. Reading order upper-left, upper-right, lower-left, lower-right. All projectiles point exactly RIGHT, zero tilt, side view. Each core sits at exactly the center of its cell; identical core size, orientation and anchor across all four. Subtle changing tail/spark arrangement makes a seamless loop frame4-to-frame1. Keep overall silhouette readable in a 40px-wide in-game display.\nStyle: crisp handmade retro pixel art, large clear pixel clusters, colored dark outline, restrained 3-tone material shading, NO antialiasing, NO blur, NO smooth gradients, NO soft bloom, NO semitransparent glow. All drawn pixels opaque. Leave very wide transparent gutters: each complete projectile including tail should occupy ONLY the middle 55 percent of its cell width and middle 35 percent height. Do not overlap cells, no cropped parts. Final contains exactly 4 separated sprites, no extra icons, characters, backgrounds, text, labels, grids, frame numbers, borders or UI. Square sheet."
+  }
+}

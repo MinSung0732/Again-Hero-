@@ -57,7 +57,7 @@ func run() -> void:
 	await settle()
 	check(view._name_scroll.scroll_vertical > 0, "short viewport can scroll")
 	check(view._name_scroll.get_global_rect().grow(1).encloses(button.get_global_rect()), "confirm reachable by scrolling")
-	check(input == view.name_input and button == view.confirm and input.text == "달빛마왕7" and not button.disabled, "layout preserves input and validation")
+	check(input == view.name_input and button == view.confirm and input.text == "달빛마왕7" and button.disabled, "layout preserves input and unchecked validation")
 	view._apply_name_layout(1920, false)
 	await settle()
 	check(view.choice.get_rect().is_equal_approx(Rect2(108, 825.6, 864, 537.6)), "keyboard close restores original modal")

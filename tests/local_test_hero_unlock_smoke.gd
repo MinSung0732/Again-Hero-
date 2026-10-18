@@ -36,7 +36,7 @@ func run() -> void:
 	check(not STORE.character_unlocked("sage_astra"),"tutorial preview stays locked")
 	mode.tutorial_preview = false
 	var lobby = load("res://src/lobby/Lobby.tscn").instantiate(); root.add_child(lobby)
-	lobby.main_modes_view.choose_perspective("hero"); lobby.team_button.pressed.emit()
+	await lobby.main_modes_view.choose_perspective("hero"); lobby.team_button.pressed.emit()
 	for id in CHARACTERS.ORDER: check(not lobby.hero_lobby_view.hero_cards[id].disabled,"actual roster card unlocked: "+id)
 	lobby.hero_lobby_view._select_character("sage_astra")
 	check(STORE.selected_hero() == "sage_astra","actual card click saves locked-by-default sage")

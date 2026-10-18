@@ -80,7 +80,7 @@ func _populate(ids: Array[String], token: int, cold: bool) -> void:
 		# Capacity changes affect all buttons, including otherwise unchanged cards.
 		var action := card.get_meta("team_action") as Button
 		var selected: bool = id in host.team_selected_ids
-		action.disabled = id not in host.team_available_ids or (selected and host.team_selected_ids.size() <= 1) or (not selected and host.team_selected_ids.size() >= host.TEAM_MAX_SLOTS)
+		action.disabled = id not in host.team_available_ids or (not selected and host.team_selected_ids.size() >= host.TEAM_MAX_SLOTS)
 		if card.get_parent() != null:
 			card.reparent(host.team_monster_grid, false)
 		else:

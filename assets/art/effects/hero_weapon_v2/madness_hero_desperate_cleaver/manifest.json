@@ -1,0 +1,130 @@
+{
+  "weapon_id": "madness_hero_desperate_cleaver",
+  "name": "결사의 참수검",
+  "source_size": [
+    1254,
+    1254
+  ],
+  "source_sha256": "300d1090a2d3bbf1727975294330144737447ad99ce1116944736b774988015e",
+  "sheet": "sprite_sheet.png",
+  "sheet_size": [
+    384,
+    384
+  ],
+  "cell_size": [
+    128,
+    128
+  ],
+  "anchor": [
+    64,
+    64
+  ],
+  "alpha": "binary; existing transparency only; black foreground retained",
+  "normalization": "whole alpha components; reviewed core anchors; one common nearest scale; no source crop loss",
+  "animation": {
+    "fps": 12,
+    "loop_playback": "ping_pong",
+    "transient_window_seconds": 0.28,
+    "transient_playback": "normalized to visual window; no gameplay timing change",
+    "loop": false,
+    "frames": [
+      "frames/effect_01.png",
+      "frames/effect_02.png",
+      "frames/effect_03.png",
+      "frames/effect_04.png",
+      "frames/effect_05.png",
+      "frames/effect_06.png",
+      "frames/effect_07.png",
+      "frames/effect_08.png"
+    ]
+  },
+  "unique_frames": 8,
+  "source_file": "source.png",
+  "source_anchors": [
+    [
+      630,
+      270
+    ],
+    [
+      1040,
+      270
+    ],
+    [
+      210,
+      650
+    ],
+    [
+      630,
+      650
+    ],
+    [
+      1040,
+      650
+    ],
+    [
+      210,
+      1040
+    ],
+    [
+      630,
+      1040
+    ],
+    [
+      1040,
+      1040
+    ]
+  ],
+  "source_component_bounds": [
+    [
+      559,
+      156,
+      799,
+      367
+    ],
+    [
+      946,
+      153,
+      1194,
+      364
+    ],
+    [
+      114,
+      528,
+      425,
+      773
+    ],
+    [
+      492,
+      505,
+      855,
+      797
+    ],
+    [
+      943,
+      517,
+      1229,
+      779
+    ],
+    [
+      133,
+      907,
+      406,
+      1154
+    ],
+    [
+      537,
+      927,
+      796,
+      1147
+    ],
+    [
+      953,
+      935,
+      1168,
+      1146
+    ]
+  ],
+  "common_source_extent": 227,
+  "source_opaque_pixels": 188930,
+  "assigned_opaque_pixels": 188930
+}

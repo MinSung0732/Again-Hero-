@@ -1,0 +1,48 @@
+{
+  "weapon_id": "pistol_hero_revolver",
+  "name": "육연발 권총",
+  "source_size": [
+    1254,
+    1254
+  ],
+  "source_sha256": "bfc6a82b7adddb39f39f293ee37ff245b192206ced25bd878f4f4cbb44b969d4",
+  "sheet": "sprite_sheet.png",
+  "sheet_size": [
+    384,
+    384
+  ],
+  "cell_size": [
+    128,
+    128
+  ],
+  "anchor": [
+    64,
+    64
+  ],
+  "alpha": "binary; existing transparency only; black foreground retained",
+  "common_source_crop": [
+    21,
+    21,
+    107,
+    107
+  ],
+  "normalization": "one common crop and nearest scale; identical frame canvases",
+  "animation": {
+    "fps": 12,
+    "loop_playback": "ping_pong",
+    "transient_window_seconds": 0.28,
+    "transient_playback": "normalized to visual window; no gameplay timing change",
+    "loop": true,
+    "frames": [
+      "frames/effect_01.png",
+      "frames/effect_02.png",
+      "frames/effect_03.png",
+      "frames/effect_04.png",
+      "frames/effect_05.png",
+      "frames/effect_06.png",
+      "frames/effect_07.png",
+      "frames/effect_08.png"
+    ]
+  },
+  "unique_frames": 8
+}

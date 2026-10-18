@@ -1,0 +1,162 @@
+{
+	"cpu_only": true,
+	"engine": "4.5.1-stable (official)",
+	"rows": [
+		{
+			"after_median_ms": 20.745,
+			"after_samples_ms": [
+				20.12,
+				20.276,
+				20.424,
+				20.745,
+				20.799,
+				21.213,
+				21.831
+			],
+			"before_median_ms": 20.43,
+			"before_samples_ms": [
+				20.043,
+				20.307,
+				20.38,
+				20.43,
+				20.704,
+				21.265,
+				21.67
+			],
+			"hits_per_trial": 12000,
+			"runs": 7,
+			"siphon": 0.0,
+			"source": "none"
+		},
+		{
+			"after_median_ms": 20.745,
+			"after_samples_ms": [
+				19.848,
+				20.029,
+				20.475,
+				20.745,
+				21.094,
+				21.288,
+				21.959
+			],
+			"before_median_ms": 20.003,
+			"before_samples_ms": [
+				19.591,
+				19.689,
+				19.76,
+				20.003,
+				20.35,
+				20.488,
+				21.966
+			],
+			"hits_per_trial": 12000,
+			"runs": 7,
+			"siphon": 0.1,
+			"source": "none"
+		},
+		{
+			"after_median_ms": 34.506,
+			"after_samples_ms": [
+				34.095,
+				34.245,
+				34.292,
+				34.506,
+				35.3,
+				37.28,
+				37.494
+			],
+			"before_median_ms": 34.679,
+			"before_samples_ms": [
+				33.959,
+				34.02,
+				34.058,
+				34.679,
+				34.746,
+				34.969,
+				37.751
+			],
+			"hits_per_trial": 12000,
+			"runs": 7,
+			"siphon": 0.0,
+			"source": "hero"
+		},
+		{
+			"after_median_ms": 43.335,
+			"after_samples_ms": [
+				42.594,
+				42.7,
+				43.314,
+				43.335,
+				43.573,
+				43.758,
+				49.898
+			],
+			"before_median_ms": 44.795,
+			"before_samples_ms": [
+				42.776,
+				43.34,
+				44.577,
+				44.795,
+				45.092,
+				46.045,
+				47.007
+			],
+			"hits_per_trial": 12000,
+			"runs": 7,
+			"siphon": 0.1,
+			"source": "hero"
+		},
+		{
+			"after_median_ms": 37.506,
+			"after_samples_ms": [
+				36.324,
+				36.859,
+				37.159,
+				37.506,
+				37.756,
+				38.574,
+				40.034
+			],
+			"before_median_ms": 39.188,
+			"before_samples_ms": [
+				36.976,
+				38.25,
+				38.994,
+				39.188,
+				39.222,
+				40.367,
+				40.428
+			],
+			"hits_per_trial": 12000,
+			"runs": 7,
+			"siphon": 0.0,
+			"source": "projectile"
+		},
+		{
+			"after_median_ms": 44.268,
+			"after_samples_ms": [
+				43.171,
+				43.294,
+				43.452,
+				44.268,
+				44.36,
+				45.398,
+				45.529
+			],
+			"before_median_ms": 44.93,
+			"before_samples_ms": [
+				43.803,
+				44.104,
+				44.163,
+				44.93,
+				45.05,
+				53.412,
+				58.193
+			],
+			"hits_per_trial": 12000,
+			"runs": 7,
+			"siphon": 0.1,
+			"source": "projectile"
+		}
+	]
+}

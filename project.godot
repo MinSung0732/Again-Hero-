@@ -28,6 +28,7 @@ SceneTransition="*res://src/systems/scene_transition.gd"
 CloudStore="*res://src/network/cloud_store.gd"
 LocalTestMode="*res://src/systems/local_test_mode.gd"
 LoginGateway="*res://src/network/login_gateway.gd"
+CloudConnectionOverlay="*res://src/ui/cloud_connection_overlay.gd"
 TutorialFlow="*res://src/systems/tutorial_flow.gd"
 ExplorationRewards="*res://src/systems/exploration_rewards.gd"
 MissionProgress="*res://src/systems/mission_progress.gd"
@@ -51,3 +52,11 @@ enabled=PackedStringArray("res://addons/againhero_oauth/plugin.cfg")
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 2d/snap/snap_2d_transforms_to_pixel=true
+
+[testing]
+
+allow_coupons=true
+
+[online]
+
+match_endpoint=""

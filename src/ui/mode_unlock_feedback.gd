@@ -23,7 +23,7 @@ class OpeningLock extends Control:
 				draw_line(point - Vector2(4, 0), point + Vector2(4, 0), Color("fff1ac"), 2)
 				draw_line(point - Vector2(0, 4), point + Vector2(0, 4), Color("fff1ac"), 2)
 
-func present(heading: String, description: String) -> void:
+func present(heading: String, description: String, available: bool = true) -> void:
 	layer = 160
 	var dim := ColorRect.new()
 	dim.color = Color(0.025, 0.01, 0.045, 0.82)
@@ -45,7 +45,7 @@ func present(heading: String, description: String) -> void:
 	column.add_theme_constant_override("separation", 30)
 	panel.add_child(column)
 	var title := Label.new()
-	title.text = heading + " 개방!"
+	title.text = heading + (" 개방!" if available else " 해금!")
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_font_size_override("font_size", 38)
 	title.add_theme_color_override("font_color", Color("ffdf91"))

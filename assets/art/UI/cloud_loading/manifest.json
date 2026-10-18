@@ -1,0 +1,27 @@
+{
+  "generated": "2026-10-17",
+  "assets": [
+    {
+      "file": "castle_portal.png",
+      "width": 941,
+      "height": 1672,
+      "sha256": "c28b6fe05b74d9a5ac7532e4ccedc4eedc17a1de2798a02a81a63fcaf3478b5b",
+      "tool": "image_gen.imagegen",
+      "mode": "generate",
+      "transparent_background": false,
+      "prompt": "Create one polished portrait 9:16 pixel-art mobile game loading screen background, no text, no letters, no numbers, no logo, no UI, no characters. Game: whimsical dark fantasy demon lord castle dungeon. Crisp coarse pixel clusters, authentic hand-placed 16-bit RPG art, hard pixel edges, no anti-aliasing, no blur, limited rich palette of deep midnight indigo, violet, muted stone, gold, turquoise accents. Composition: atmospheric quiet dark violet upper 40 percent with distant moon and tiny floating square stars, leave large quiet space for logo and text overlays. In middle-lower portion at y=55%-70%, a magnificent ancient stone arch portal on a castle landing, glowing circular violet magical gateway and thin cyan rune accents, two small golden torches, moonlit stairs descend to bottom foreground. Portal is the focal point but keep upper area calm and bottom 22 percent dark for progress bar/tip text. Symmetric inviting magical setting, excellent clean readable pixel-art clusters, natural subdued lighting made of flat pixel color steps, nothing photorealistic. Full bleed environmental illustration, opaque background. Preserve a deliberate coarse visible pixel scale across all details.",
+      "processing": "Original PNG copied byte-for-byte; no resize, palette quantization, RGB keying, JPEG recompression or runtime Base64. Godot lossless import, nearest filtering, no mipmaps."
+    },
+    {
+      "file": "connection_archive.png",
+      "width": 941,
+      "height": 1672,
+      "sha256": "09f04bf76f670cf8bb1658042e7fd4be710cd89d3b52e25abd6b6ebd82b7a146",
+      "tool": "image_gen.imagegen",
+      "mode": "generate",
+      "transparent_background": false,
+      "prompt": "One finished portrait 9:16 16-bit pixel art background for a dark fantasy mobile game's reconnect / server connection screen. NO text, NO letters, NO logo, NO characters, no actual UI. Crisp visible hard pixel clusters without blur or anti-aliasing, restrained indigo and deep violet with cyan and old gold highlights. Enchanting demon king castle archive: in the center at 55% vertical height an ornate gold and purple floating crystal orb in a stone pedestal, with two slender curved stone pylons and small cyan sparks connecting to a rune ring, symbolizing reconnecting magic. Ancient shelves and tall arched window behind, faraway stars visible. Upper 40 percent and bottom 25 percent dark, quiet, minimal and low contrast for readable UI text overlays. Main orb and magic ring occupy 28% width, at center slightly below midpoint. Consistent clean pixel density like classic RPG environmental art, no gritty noise, no realistic textures, stepped palette lighting. Atmospheric, beautiful calm waiting illustration. Opaque full-bleed background.",
+      "processing": "Original PNG copied byte-for-byte; no resize, palette quantization, RGB keying, JPEG recompression or runtime Base64. Godot lossless import, nearest filtering, no mipmaps."
+    }
+  ]
+}

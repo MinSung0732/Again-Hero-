@@ -1,29 +1,28 @@
 extends Area2D
 
-const STAGE1_PROJECTILE_FRAME_PATHS := [
-	"res://assets/art/projectiles/stage1_mage/projectile_01.png",
-	"res://assets/art/projectiles/stage1_mage/projectile_02.png",
-	"res://assets/art/projectiles/stage1_mage/projectile_03.png",
-	"res://assets/art/projectiles/stage1_mage/projectile_04.png",
-]
-const STAGE1_PROJECTILE_FPS := 12.0
-const STAGE9_EFFECT_DIR := "res://assets/art/heroes/stage9_prist/frames/effect1"
-const STAGE9_PROJECTILE_FPS := 14.0
-const STAGE9_IMPACT_FPS := 18.0
-const POOL_KEY := "hero_basic_projectile"
+const DATA := preload("res://src/data/hero_basic_projectile_catalog.gd")
+const POOL_KEY := DATA.POOL_KEY
 const VOLLEY := preload("res://src/hero/projectile_volley.gd")
 
-static var _stage1_frames_cache: SpriteFrames
-static var _stage9_frames_cache: SpriteFrames
+static var _frames_cache: Dictionary = {}
 static var _chest_nodes_cache: Array = []
 static var _chest_nodes_cache_physics_frame: int = -1
 
 var direction: Vector2 = Vector2.RIGHT
-var speed: float = 680.0
-var max_range: float = 420.0
-var damage: int = 34
+var speed: float = DATA.DEFAULT_SPEED
+var max_range: float = DATA.DEFAULT_RANGE
+var damage: int = DATA.DEFAULT_DAMAGE
 var traveled_distance: float = 0.0
-var source_hero_id: String = ""
+var _projectile_profile: Dictionary = DATA.EMPTY_PROFILE
+var _impact_animation: StringName = &""
+var _damage_multiplier_method: StringName = &""
+var source_hero_id: String = "":
+	set(value):
+		if source_hero_id == value: return
+		source_hero_id = value
+		_projectile_profile = DATA.profile(value)
+		_impact_animation = StringName(_projectile_profile.get("impact_animation", &""))
+		_damage_multiplier_method = StringName(_projectile_profile.get("damage_multiplier_method", &""))
 var splash_radius: float = 0.0
 var splash_damage_ratio: float = 0.0
 var has_impacted: bool = false
@@ -109,12 +108,12 @@ func _check_chest_sweep(from_position: Vector2, to_position: Vector2) -> void:
 		var chest := node as Node2D
 		if chest == null or not chest.has_method("take_damage"):
 			continue
-		if _distance_squared_to_segment(chest.global_position, from_position, to_position) > 36.0 * 36.0:
+		if _distance_squared_to_segment(chest.global_position, from_position, to_position) > DATA.CHEST_HIT_RADIUS * DATA.CHEST_HIT_RADIUS:
 			continue
 		has_impacted = true
 		chest.call("take_damage", damage)
-		if source_hero_id == "purifier_hero":
-			_play_stage9_impact()
+		if not _impact_animation.is_empty():
+			_play_impact()
 		else:
 			_finish_projectile()
 		return
@@ -142,17 +141,17 @@ func _on_body_entered(body: Node) -> void:
 	has_impacted = true
 	var dealt_damage := damage
 	if (
-		source_hero_id == "purifier_hero"
+		not _damage_multiplier_method.is_empty()
 		and body.is_in_group("monsters")
 		and is_instance_valid(source_hero)
-		and source_hero.has_method("get_purifier_holy_damage_multiplier")
+		and source_hero.has_method(_damage_multiplier_method)
 	):
 		dealt_damage = maxi(
 			1,
 			int(round(
 				float(damage)
 				* float(source_hero.call(
-					"get_purifier_holy_damage_multiplier",
+					_damage_multiplier_method,
 					body
 				))
 			))
@@ -165,12 +164,12 @@ func _on_body_entered(body: Node) -> void:
 	if splash_radius > 0.0 and splash_damage_ratio > 0.0:
 		_apply_splash_damage(body)
 
-	if source_hero_id == "purifier_hero":
-		_play_stage9_impact()
+	if not _impact_animation.is_empty():
+		_play_impact()
 	else:
 		_finish_projectile()
 
-func _play_stage9_impact() -> void:
+func _play_impact() -> void:
 	if not active:
 		return
 	set_physics_process(false)
@@ -178,13 +177,13 @@ func _play_stage9_impact() -> void:
 	rotation = 0.0
 	if (
 		projectile_sprite.sprite_frames != null
-		and projectile_sprite.sprite_frames.has_animation("impact")
-		and projectile_sprite.sprite_frames.get_frame_count("impact") > 0
+		and projectile_sprite.sprite_frames.has_animation(_impact_animation)
+		and projectile_sprite.sprite_frames.get_frame_count(_impact_animation) > 0
 	):
 		projectile_sprite.stop()
-		projectile_sprite.animation = &"impact"
+		projectile_sprite.animation = _impact_animation
 		projectile_sprite.frame = 0
-		projectile_sprite.play(&"impact")
+		projectile_sprite.play(_impact_animation)
 		return
 	_finish_projectile()
 
@@ -193,8 +192,8 @@ func _on_projectile_animation_finished() -> void:
 	if (
 		active
 		and has_impacted
-		and source_hero_id == "purifier_hero"
-		and projectile_sprite.animation == &"impact"
+		and not _impact_animation.is_empty()
+		and projectile_sprite.animation == _impact_animation
 	):
 		_finish_projectile()
 
@@ -248,16 +247,16 @@ func _apply_splash_damage(direct_target: Node) -> void:
 
 		var dealt_damage := splash_damage
 		if (
-			source_hero_id == "purifier_hero"
+			not _damage_multiplier_method.is_empty()
 			and is_instance_valid(source_hero)
-			and source_hero.has_method("get_purifier_holy_damage_multiplier")
+			and source_hero.has_method(_damage_multiplier_method)
 		):
 			dealt_damage = maxi(
 				1,
 				int(round(
 					float(splash_damage)
 					* float(source_hero.call(
-						"get_purifier_holy_damage_multiplier",
+						_damage_multiplier_method,
 						monster
 					))
 				))
@@ -267,70 +266,33 @@ func _apply_splash_damage(direct_target: Node) -> void:
 func _apply_projectile_visual() -> void:
 	projectile_sprite.visible = false
 	projectile_sprite.sprite_frames = null
-
-	if source_hero_id == "purifier_hero":
-		var purifier_frames := _stage9_frames_cache
-		if purifier_frames == null:
-			purifier_frames = SpriteFrames.new()
-			if purifier_frames.has_animation("default"):
-				purifier_frames.remove_animation("default")
-			purifier_frames.add_animation("fly")
-			purifier_frames.set_animation_loop("fly", true)
-			purifier_frames.set_animation_speed("fly", STAGE9_PROJECTILE_FPS)
-			for frame_index in range(1, 7):
-				var texture := _load_texture_direct(
-					"%s/effect_%02d.png" % [STAGE9_EFFECT_DIR, frame_index]
-				)
-				if texture != null:
-					purifier_frames.add_frame("fly", texture)
-			purifier_frames.add_animation("impact")
-			purifier_frames.set_animation_loop("impact", false)
-			purifier_frames.set_animation_speed("impact", STAGE9_IMPACT_FPS)
-			for frame_index in range(7, 11):
-				var texture := _load_texture_direct(
-					"%s/effect_%02d.png" % [STAGE9_EFFECT_DIR, frame_index]
-				)
-				if texture != null:
-					purifier_frames.add_frame("impact", texture)
-			_stage9_frames_cache = purifier_frames
-		if purifier_frames.get_frame_count("fly") <= 0:
-			return
-		projectile_sprite.sprite_frames = purifier_frames
-		projectile_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		projectile_sprite.scale = Vector2(0.46, 0.46)
-		projectile_sprite.visible = true
-		projectile_sprite.play("fly")
-		queue_redraw()
-		return
-
-	if source_hero_id != "ranged_rookie":
-		return
-
-	var frames := _stage1_frames_cache
+	if _projectile_profile.is_empty(): return
+	var frames: SpriteFrames = _frames_cache.get(source_hero_id)
 	if frames == null:
-		frames = SpriteFrames.new()
-		if frames.has_animation("default"):
-			frames.remove_animation("default")
-
-		frames.add_animation("fly")
-		frames.set_animation_loop("fly", true)
-		frames.set_animation_speed("fly", STAGE1_PROJECTILE_FPS)
-
-		for frame_path in STAGE1_PROJECTILE_FRAME_PATHS:
-			var texture := _load_texture_direct(frame_path)
-			if texture == null:
-				continue
-			frames.add_frame("fly", texture)
-		_stage1_frames_cache = frames
-
-	if frames.get_frame_count("fly") <= 0:
-		return
-
+		frames = _build_projectile_frames()
+		_frames_cache[source_hero_id] = frames
+	var flight := StringName(_projectile_profile.get("flight_animation", &""))
+	if not frames.has_animation(flight) or frames.get_frame_count(flight) <= 0: return
 	projectile_sprite.sprite_frames = frames
-	projectile_sprite.scale = Vector2.ONE
+	if _projectile_profile.get("nearest", false):
+		projectile_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	projectile_sprite.scale = _projectile_profile.get("scale", Vector2.ONE)
 	projectile_sprite.visible = true
-	projectile_sprite.play("fly")
+	projectile_sprite.play(flight)
 	queue_redraw()
+
+func _build_projectile_frames() -> SpriteFrames:
+	var frames := SpriteFrames.new()
+	if frames.has_animation("default"): frames.remove_animation("default")
+	for animation in _projectile_profile.get("animations", []):
+		var name := StringName(animation.name)
+		frames.add_animation(name)
+		frames.set_animation_loop(name, bool(animation.loop))
+		frames.set_animation_speed(name, float(animation.fps))
+		for path in animation.paths:
+			var texture := _load_texture_direct(String(path))
+			if texture != null: frames.add_frame(name, texture)
+	return frames
 
 func _load_texture_direct(path: String) -> Texture2D:
 	# First use Godot's imported resource if it is ready.

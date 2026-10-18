@@ -1,0 +1,51 @@
+{
+  "common_hit": [
+    "src/hero/archmage_element_status.gd",
+    "src/hero/archmage_projectile.gd",
+    "src/hero/archmage_skill_projectile.gd",
+    "src/hero/gunner_projectile.gd",
+    "src/hero/hero.gd",
+    "src/hero/hero_projectile.gd",
+    "src/hero/purifier_gungnir.gd",
+    "src/hero/purifier_orb_link.gd",
+    "src/hero/sage_annihilation_point.gd",
+    "src/hero/sage_blackspot_explosion.gd",
+    "src/hero/sage_ice_pillar.gd",
+    "src/hero/sage_projectile.gd",
+    "src/hero/sage_radiance_orb.gd",
+    "src/hero/sage_starlight_meteor.gd",
+    "src/hero/summon_area_attack.gd",
+    "src/hero/summoner_gatekeeper_projectile.gd",
+    "src/hero/summoner_hound.gd",
+    "src/hero/summoner_scout.gd",
+    "src/hero/summoner_suicide_drone.gd",
+    "src/hero/ultimate_piercing_projectile.gd",
+    "src/hero_mode/hero_weapon_runtime.gd",
+    "src/monsters/monster_runtime_common.gd"
+  ],
+  "damage_popup": [
+    "src/hero/hero.gd",
+    "src/hero/summoner_gatekeeper.gd",
+    "src/hero/summoner_hound.gd",
+    "src/hero/summoner_scout.gd",
+    "src/hero/summoner_suicide_drone.gd",
+    "src/main/main.gd",
+    "src/monsters/bat.gd",
+    "src/monsters/bomb_rat.gd",
+    "src/monsters/ghost.gd",
+    "src/monsters/goblin.gd",
+    "src/monsters/goblin_thrower.gd",
+    "src/monsters/kobolt.gd",
+    "src/monsters/monster_runtime_common.gd",
+    "src/monsters/orc.gd",
+    "src/monsters/skeleton.gd",
+    "src/monsters/skeleton_archer.gd",
+    "src/monsters/slime.gd",
+    "src/monsters/spider.gd"
+  ],
+  "notes": [
+    "Common hit source consumers, not proof every monster damage path uses this helper.",
+    "Damage popup batching applies through the common spawner including direct monster-to-Hero damage.",
+    "Five core actor movement scopes include inherited base-body updates only, not every derived pre/post branch."
+  ]
+}

@@ -1,0 +1,66 @@
+extends SceneTree
+const DATA := preload("res://src/data/mode_unlock_catalog.gd")
+const STORE := preload("res://src/systems/hero_mode_store.gd")
+const SCOPE := preload("res://src/systems/account_save_scope.gd")
+const UNLOCKS := preload("res://src/systems/mode_unlock_store.gd")
+const UI := preload("res://src/ui/lobby_main_modes_view.gd")
+var checks := 0
+var failures := 0
+func check(ok: bool,label: String) -> void:
+	checks += 1
+	if not ok: failures += 1; push_error(label)
+func _initialize() -> void: run.call_deferred()
+func run() -> void:
+	check(DATA.difficulty_available("easy") and not DATA.difficulty_available("hard"),"release gate")
+	check(not DATA.difficulty_available("invalid"),"unknown difficulty denied")
+	var previous := SCOPE.guest_directory
+	SCOPE.guest_directory = "user://hard_release_"+str(Time.get_ticks_usec())
+	SCOPE.select_guest()
+	DirAccess.make_dir_recursive_absolute(SCOPE.guest_directory)
+	var progress := ConfigFile.new()
+	for stage in ["stage_1","stage_2","stage_3"]: progress.set_value("cleared",stage,true)
+	progress.set_value("meta","gold",777)
+	check(SCOPE.save_config(progress,"user://stage_progress.cfg") == OK,"fixture progress saved")
+	var config := ConfigFile.new()
+	config.set_value("hero_loadout","battle_stage","stage_1")
+	config.set_value("hero_loadout","difficulty","hard")
+	config.set_value("hero_progress","stage_1_easy_wins",1)
+	config.set_value("hero_progress","stage_1_hard_wins",2)
+	check(SCOPE.save_config(config,STORE.PATH) == OK,"fixture loadout saved")
+	var saved := config.encode_to_text()
+	check(UNLOCKS.unlocked("hard","stage_1","demon") and UNLOCKS.unlocked("hard","stage_1","hero"),"both earned unlocks retained")
+	check(STORE.difficulty() == "easy","legacy hard selection resolves easy")
+	check(not STORE.can_start("stage_1","hard") and STORE.can_start("stage_1","easy"),"hero start gate")
+	check(not STORE.set_difficulty("hard"),"hard cannot be saved")
+	SCOPE.load_config(config,STORE.PATH)
+	check(config.encode_to_text() == saved,"preference and existing hard records not erased")
+	var transition := root.get_node("SceneTransition")
+	var options: Dictionary = transition.get("_entry_options").duplicate(true)
+	for path in ["res://src/main/Main.tscn","res://src/hero_mode/HeroMode.tscn"]:
+		check(DATA.scene_entry_available(path,{"difficulty":"easy"}),"easy route allowed")
+		check(not transition.change_scene(path,"blocked",{"difficulty":"hard"}),"actual hard transition blocked")
+		check(not transition.is_transitioning() and transition.get("_entry_options") == options,"no loading or entry mutation")
+	check(DATA.scene_entry_available("res://src/online/OnlineMatch.tscn",{"difficulty":"hard"}),"matching gate unchanged")
+	for perspective in ["demon","hero"]:
+		var view := UI.new()
+		view.difficulty = "hard"
+		view.perspective = perspective
+		view.notice = AcceptDialog.new()
+		root.add_child(view.notice)
+		check(view.blocks_entry(),perspective+" direct lobby entry blocked")
+		check(view.notice.dialog_text == DATA.HARD_NOTICE,perspective+" preparation reason shown")
+		view.notice.hide()
+		view.notice.queue_free()
+	var main := FileAccess.get_file_as_string("res://src/main/main.gd")
+	var retry := main.substr(main.find("func _restart_with_stamina("))
+	check(retry.find("difficulty_available") < retry.find("STAMINA.try_enter"),"demon retry before stamina charge")
+	var hero := FileAccess.get_file_as_string("res://src/hero_mode/hero_mode.gd")
+	retry = hero.substr(hero.find("func _retry()"))
+	check(retry.find("difficulty_available") < retry.find("STAMINA.try_enter"),"hero retry before stamina charge")
+	SCOPE.load_config(progress,"user://stage_progress.cfg")
+	check(int(progress.get_value("meta","gold",0)) == 777 and not progress.has_section("stamina"),"blocked entry spends nothing")
+	SCOPE.guest_directory = previous
+	SCOPE.select_guest()
+	await process_frame
+	print("HARD_AVAILABILITY checks=",checks," failures=",failures)
+	quit(1 if failures else 0)

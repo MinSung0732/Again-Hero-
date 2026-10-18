@@ -179,7 +179,7 @@ func open() -> void:
 	ids.clear()
 	for id in CATALOG.ids():
 		var path := CATALOG.path(id, cosmetic_slot)
-		if not path.is_empty() and FileAccess.file_exists(path): ids.append(id)
+		if not path.is_empty() and ResourceLoader.exists(path): ids.append(id)
 	available = STORE.choices(cosmetic_slot)
 	_prioritize_owned()
 	candidate = STORE.selected_id(cosmetic_slot)

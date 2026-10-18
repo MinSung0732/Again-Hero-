@@ -1,5 +1,7 @@
 extends RefCounted
 class_name MonsterRuntimeCommon
+const PERFORMANCE_PROBE := preload("res://src/systems/combat_performance_probe.gd")
+const COMBAT_DELAY := preload("res://src/systems/combat_delay.gd")
 
 const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
 
@@ -17,6 +19,15 @@ const SOFT_SEPARATION_IDLE_SPEED_RATIO := 0.18
 const SOFT_SEPARATION_IDLE_SPEED_MAX := 26.0
 
 static var _soft_separation_scratch: Array = []
+
+
+## Preserve the engine movement operation; opt-in timing only.
+static func move_and_slide_profiled(actor: CharacterBody2D, profile: RefCounted = null) -> bool:
+	if profile == null or not profile.enabled: return actor.move_and_slide()
+	var started := Time.get_ticks_usec()
+	var collided := actor.move_and_slide()
+	profile.record(PERFORMANCE_PROBE.Scope.MONSTER_MOVE,started)
+	return collided
 
 
 static func notify_forced_position_change(actor: Node2D) -> void:
@@ -261,7 +272,7 @@ static func apply_standard_visual_lod(
 
 
 static func get_external_movement_multiplier(owner: Node) -> float:
-	var now_msec := Time.get_ticks_msec()
+	var now_msec := COMBAT_DELAY.now_msec(owner)
 	if int(owner.get_meta("archmage_root_until", 0)) > now_msec:
 		return 0.0
 	if int(owner.get_meta("sage_ice_root_until", 0)) > now_msec:
@@ -407,7 +418,7 @@ static func is_forced_movement_locked(owner: Node) -> bool:
 		return false
 	if bool(owner.get_meta("elite_skill_movement_lock", false)):
 		return true
-	return int(owner.get_meta("forced_movement_lock_until", 0)) > Time.get_ticks_msec()
+	return int(owner.get_meta("forced_movement_lock_until", 0)) > COMBAT_DELAY.now_msec(owner)
 
 
 static func can_be_forced_moved(owner: Node) -> bool:
@@ -674,5 +685,5 @@ static func follow_goblin_command(actor: CharacterBody2D, delta: float) -> bool:
 	if bonuses is Dictionary: speed *= float(bonuses.get("move_speed_multiplier",1.0))
 	actor.velocity = offset.normalized()*minf(speed,offset.length()/maxf(delta,0.001))
 	if actor.has_method("_update_visual_motion"): actor.call("_update_visual_motion",actor.velocity.x,true)
-	actor.move_and_slide()
+	move_and_slide_profiled(actor,actor.get("_combat_profile"))
 	return true

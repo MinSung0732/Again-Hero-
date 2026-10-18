@@ -1,4 +1,5 @@
 extends CharacterBody2D
+var area_attack = preload("res://src/hero/summon_area_attack.gd").new()
 const RECEIVED_STATUS := preload("res://src/data/status_effect_catalog.gd")
 
 const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
@@ -44,6 +45,7 @@ func _ready() -> void:
 
 
 func activate(world_position: Vector2, new_owner: Node2D, config: Dictionary) -> void:
+	area_attack.configure(config)
 	preload("res://src/systems/yuki_onna_runtime.gd").start_target_life(self)
 	global_position = world_position
 	owner_hero = new_owner
@@ -90,6 +92,7 @@ func activate(world_position: Vector2, new_owner: Node2D, config: Dictionary) ->
 func _physics_process(delta: float) -> void:
 	if not active:
 		return
+	area_attack.tick(delta)
 
 	duration_remaining = maxf(duration_remaining - delta, 0.0)
 	if duration_remaining <= 0.0:
@@ -231,7 +234,11 @@ func _attack_target(current_target: Node2D) -> void:
 		attack_audio.stop()
 		attack_audio.play()
 	if current_target.has_method("take_damage"):
-		preload("res://src/systems/monster_hit_context.gd").hit(current_target, maxi(int(round(float(attack_damage) * damage_multiplier * RECEIVED_STATUS.outgoing_multiplier(self))), 1), "melee", owner_hero)
+		var area_origin: Vector2 = current_target.global_position
+		var area_primary_id: int = current_target.get_instance_id()
+		var dealt: int = maxi(int(round(float(attack_damage) * damage_multiplier * RECEIVED_STATUS.outgoing_multiplier(self))), 1)
+		preload("res://src/systems/monster_hit_context.gd").hit(current_target, dealt, "melee", owner_hero)
+		area_attack.strike(self,area_primary_id,area_origin,dealt,"melee",owner_hero)
 
 
 func take_damage(amount: int, _source: Node = null) -> bool:
@@ -262,6 +269,7 @@ func _begin_release() -> void:
 
 
 func deactivate(emit_signal: bool = true) -> void:
+	area_attack.reset()
 	preload("res://src/systems/received_afflictions.gd").reset_on(self)
 	var was_active := active
 	active = false
@@ -357,6 +365,7 @@ func _load_audio(attack_path: String, summon_path: String) -> void:
 func _draw() -> void:
 	if not active:
 		return
+	area_attack.draw(self)
 	var bar_width := 64.0
 	var hp_ratio := clampf(float(current_hp) / float(maxi(max_hp, 1)), 0.0, 1.0)
 	var duration_ratio := clampf(duration_remaining / maxf(duration_total, 0.1), 0.0, 1.0)

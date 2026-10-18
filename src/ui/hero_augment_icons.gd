@@ -1,8 +1,9 @@
 extends RefCounted
 ## One-time atlas regions; selection/HUD reuse textures without disk loads.
 const DATA := preload("res://src/data/hero_weapon_catalog.gd")
-const WEAPONS := preload("res://assets/art/ui/hero_augments/weapons_normalized.png")
-const PASSIVES := preload("res://assets/art/ui/hero_augments/passives_normalized.png")
+const WEAPONS := preload("res://assets/art/UI/hero_augments/weapons_normalized.png")
+const UNIQUE_WEAPONS := preload("res://assets/art/UI/hero_augments/weapons_unique_v2.png")
+const PASSIVES := preload("res://assets/art/UI/hero_augments/passives_normalized.png")
 const PASSIVE_ORDER := ["survival_power","survival_mobility","survival_projectile","survival_haste","survival_learning","survival_magnet","survival_vitality","survival_armor"]
 static var cache: Dictionary = {}
 static func texture(id: String) -> Texture2D:
@@ -10,12 +11,20 @@ static func texture(id: String) -> Texture2D:
 		var row := 0
 		for hero_id in DATA.HERO_WEAPONS:
 			var column := 0
-			for weapon in DATA.HERO_WEAPONS[hero_id]:
+			for weapon in DATA.HERO_WEAPONS[hero_id].slice(0,6):
 				cache[weapon] = _region(WEAPONS,column,row,6,10)
 				column += 1
 			row += 1
+		for weapon_id in DATA.WEAPONS:
+			if DATA.WEAPONS[weapon_id].has("icon_index_v2"):
+				var index := int(DATA.WEAPONS[weapon_id].icon_index_v2)
+				var columns := maxi(1,int(UNIQUE_WEAPONS.get_width()/64))
+				cache[weapon_id] = _region(UNIQUE_WEAPONS,index%columns,int(index/columns),columns,maxi(1,int(UNIQUE_WEAPONS.get_height()/64)))
 		for index in PASSIVE_ORDER.size():
 			cache[PASSIVE_ORDER[index]] = _region(PASSIVES,index%4,int(index/4),4,2)
+		for passive_id in DATA.PASSIVES:
+			var source := String(DATA.PASSIVES[passive_id].get("icon_source",""))
+			if cache.has(source): cache[passive_id] = cache[source]
 		cache["survival_restore"] = cache["survival_vitality"]
 	return cache.get(id,cache["survival_restore"]) as Texture2D
 static func _region(atlas: Texture2D,column: int,row: int,columns: int,rows: int) -> AtlasTexture:

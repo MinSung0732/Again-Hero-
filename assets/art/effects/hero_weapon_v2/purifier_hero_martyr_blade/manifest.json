@@ -1,0 +1,48 @@
+{
+  "weapon_id": "purifier_hero_martyr_blade",
+  "name": "순교자의 검",
+  "source_size": [
+    1254,
+    1254
+  ],
+  "source_sha256": "57a4ea5f6bf84f6f69c16c120912238121d6c948ce8432bd67d9851804d0de9c",
+  "sheet": "sprite_sheet.png",
+  "sheet_size": [
+    384,
+    384
+  ],
+  "cell_size": [
+    128,
+    128
+  ],
+  "anchor": [
+    64,
+    64
+  ],
+  "alpha": "binary; existing transparency only; black foreground retained",
+  "common_source_crop": [
+    3,
+    3,
+    125,
+    125
+  ],
+  "normalization": "one common crop and nearest scale; identical frame canvases",
+  "animation": {
+    "fps": 12,
+    "loop_playback": "ping_pong",
+    "transient_window_seconds": 0.28,
+    "transient_playback": "normalized to visual window; no gameplay timing change",
+    "loop": false,
+    "frames": [
+      "frames/effect_01.png",
+      "frames/effect_02.png",
+      "frames/effect_03.png",
+      "frames/effect_04.png",
+      "frames/effect_05.png",
+      "frames/effect_06.png",
+      "frames/effect_07.png",
+      "frames/effect_08.png"
+    ]
+  },
+  "unique_frames": 8
+}

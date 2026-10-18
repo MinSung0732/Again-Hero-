@@ -99,6 +99,7 @@ func play_dialogue(dialogue: Dictionary) -> void:
 	var raw_lines = dialogue.get("lines", [])
 	_lines = raw_lines.duplicate(true) if raw_lines is Array else []
 	if _lines.is_empty():
+		GameAudio.stop_dialogue_bgm(self)
 		finished.emit(false)
 		return
 
@@ -137,6 +138,7 @@ func play_dialogue(dialogue: Dictionary) -> void:
 	_current_speaker = ""
 	_last_advance_msec = -1000000
 	_active = true
+	GameAudio.play_dialogue_bgm(self)
 	set_process(true)
 	visible = true
 	call_deferred("_apply_initial_responsive_layout")
@@ -576,6 +578,7 @@ func _finish(skipped: bool) -> void:
 	if not _active:
 		return
 	_active = false
+	GameAudio.stop_dialogue_bgm(self)
 	if skipped:
 		# Only explicitly marked story milestones survive skipping. Do not replay
 		# the current/already visited line or unrelated future dialogue events.
@@ -597,6 +600,10 @@ func _finish(skipped: bool) -> void:
 	_intro_tween = null
 	visible = false
 	finished.emit(skipped)
+
+
+func _exit_tree() -> void:
+	GameAudio.stop_dialogue_bgm(self)
 
 
 func _load_texture(path: String) -> Texture2D:

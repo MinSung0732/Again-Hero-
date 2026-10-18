@@ -12,6 +12,7 @@ const REVEAL := preload("res://src/data/hero_reveal_catalog.gd")
 const HEROES := preload("res://src/data/hero_profiles.gd")
 const SHOP := preload("res://src/data/shop_catalog.gd")
 const MONSTERS := preload("res://src/data/monster_catalog.gd")
+const EFFECT_LAYOUTS := preload("res://src/data/hero_effect_layout_catalog.gd")
 const LOAD_BATCH_SIZE := 4
 const MAIN_THREAD_BUDGET_US := 4000
 const LOADING_DIR := "res://assets/art/UI/loading/loadingframes"
@@ -21,6 +22,12 @@ var _destination: Dictionary = {}
 var _cropped: Dictionary = {}
 var _busy := false
 var texture_load_count := 0
+
+
+func release_destination() -> void:
+	# Entry boundary only. Textures still used by live nodes remain referenced.
+	_destination.clear()
+	_cropped.clear()
 
 
 func get_texture(path: String) -> Texture2D:
@@ -39,6 +46,15 @@ func prepare_common() -> bool:
 	for index in range(1, 9):
 		paths.append("%s/loading_logo_%02d.png" % [LOADING_DIR, index])
 	return await _prepare(paths, true)
+
+
+func prepare_hero_lobby() -> bool:
+	while _busy and is_inside_tree(): await get_tree().process_frame
+	if not is_inside_tree(): return false
+	var paths: Array[String] = ["res://assets/art/UI/hero_mode/hero_guild_lobby.png"]
+	for id in preload("res://src/data/hero_character_catalog.gd").ORDER:
+		paths.append(String(STAGES.get_stage(preload("res://src/data/hero_character_catalog.gd").stage_for_hero(id)).get("portrait_path","")))
+	return await _prepare(paths,false)
 
 
 func prepare_scene(scene_path: String, entry_options: Dictionary = {}) -> bool:
@@ -84,9 +100,11 @@ func prepare_scene(scene_path: String, entry_options: Dictionary = {}) -> bool:
 		dirs.assign(["ui_gagebar_frames", "01_large_left_panel", "02_top_right_panel", "03_middle_right_panel", "05_right_bars", "battle_castle_v3"])
 	elif scene_path == "res://src/hero_mode/HeroMode.tscn":
 		var store := preload("res://src/systems/hero_mode_store.gd")
+		paths.append("res://assets/art/UI/hero_hud/hero_hud_atlas.png")
 		var hero_id := String(entry_options.get("hero_id", store.selected_hero()))
+		paths.append(preload("res://src/ui/hero_survival_hud.gd").portrait_path(hero_id))
 		var profile := HEROES.get_profile(hero_id)
-		# Only the selected character and their six weapons, never all ten kits.
+		# Only the selected character and their weapons, never all ten kits.
 		_append_texture_directory(String(profile.get("sprite_frame_dir", "")), paths)
 		paths.append(String(profile.get("sprite_sheet_path", "")))
 		paths.append("res://assets/art/heroes/stage1_mage/stage1_mage_spritesheet.png")
@@ -172,11 +190,16 @@ func prepare_scene(scene_path: String, entry_options: Dictionary = {}) -> bool:
 
 
 func _append_texture_directory(directory: String, paths: Array[String]) -> void:
-	if directory.is_empty() or not DirAccess.dir_exists_absolute(directory):
+	if directory.is_empty(): return
+	var names := preload("res://src/data/hero_effect_frame_catalog.gd").files(directory)
+	if not names.is_empty():
+		for name in names: paths.append(directory.path_join(name))
 		return
+	if not DirAccess.dir_exists_absolute(directory): return
 	for filename in DirAccess.get_files_at(directory):
-		if filename.get_extension().to_lower() in ["png", "svg"]:
-			paths.append(directory.path_join(filename))
+		var name := String(filename).trim_suffix(".remap").trim_suffix(".import")
+		if name.get_extension().to_lower() in ["png","svg"]:
+			paths.append(directory.path_join(name))
 	for child in DirAccess.get_directories_at(directory):
 		_append_texture_directory(directory.path_join(child), paths)
 
@@ -202,7 +225,7 @@ func _prepare(paths: Array[String], shared: bool) -> bool:
 	progress_changed.emit(0, unique.size())
 	# Bound in-flight reads and GPU work. Preserve every previously warmed path.
 	# The headless dummy texture backend cannot initialize concurrent Images.
-	var batch_size := 1 if DisplayServer.get_name() == "headless" else LOAD_BATCH_SIZE
+	var batch_size := 1 if OS.has_feature("mobile") or DisplayServer.get_name() == "headless" else LOAD_BATCH_SIZE
 	for batch_start in range(0, unique.size(), batch_size):
 		var batch_end := mini(batch_start + batch_size, unique.size())
 		var requested: Dictionary = {}

@@ -1,5 +1,7 @@
 extends Area2D
 
+const COMBAT_DELAY := preload("res://src/systems/combat_delay.gd")
+
 const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
 
 const DAMAGE_RECEIPT := preload("res://src/systems/battle_damage_receipt.gd")
@@ -249,7 +251,7 @@ func _damage_storm_area(returning: bool) -> void:
 		):
 			monster.set_meta(
 				"archmage_root_until",
-				Time.get_ticks_msec()
+				COMBAT_DELAY.now_msec(self)
 				+ int(
 					maxf(float(config.get("root_duration", 2.0)), 0.0)
 					* 1000.0
@@ -641,7 +643,7 @@ func _finish_after_chain_ticks() -> void:
 		* float(maxi(tick_count - 1, 0))
 		+ 0.04
 	)
-	await get_tree().create_timer(wait_time).timeout
+	await COMBAT_DELAY.wait(self,wait_time)
 	# Only this local pool life may finish; a dead source still needs cleanup.
 	if active and _chain_life_revision == life_revision and is_inside_tree():
 		_finish()
@@ -669,7 +671,7 @@ func _apply_chain_current_ticks(
 		if not _is_chain_life_current(life_revision):
 			break
 		if tick_index < tick_count - 1:
-			await get_tree().create_timer(tick_interval).timeout
+			await COMBAT_DELAY.wait(self,tick_interval)
 
 func _get_monster_nodes() -> Array:
 	if is_instance_valid(source_hero) and source_hero.has_method("_get_monster_nodes_cached"):

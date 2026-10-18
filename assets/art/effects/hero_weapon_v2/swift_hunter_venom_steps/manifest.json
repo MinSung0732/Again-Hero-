@@ -1,0 +1,48 @@
+{
+  "weapon_id": "swift_hunter_venom_steps",
+  "name": "독무 발톱",
+  "source_size": [
+    1254,
+    1254
+  ],
+  "source_sha256": "b45ae886b461ab95b67d3a80b988ef83c1e59d64ef431d1698e8d9fe70e3f1a2",
+  "sheet": "sprite_sheet.png",
+  "sheet_size": [
+    384,
+    384
+  ],
+  "cell_size": [
+    128,
+    128
+  ],
+  "anchor": [
+    64,
+    64
+  ],
+  "alpha": "binary; existing transparency only; black foreground retained",
+  "common_source_crop": [
+    11,
+    11,
+    117,
+    117
+  ],
+  "normalization": "one common crop and nearest scale; identical frame canvases",
+  "animation": {
+    "fps": 12,
+    "loop_playback": "ping_pong",
+    "transient_window_seconds": 0.28,
+    "transient_playback": "normalized to visual window; no gameplay timing change",
+    "loop": true,
+    "frames": [
+      "frames/effect_01.png",
+      "frames/effect_02.png",
+      "frames/effect_03.png",
+      "frames/effect_04.png",
+      "frames/effect_05.png",
+      "frames/effect_06.png",
+      "frames/effect_07.png",
+      "frames/effect_08.png"
+    ]
+  },
+  "unique_frames": 8
+}

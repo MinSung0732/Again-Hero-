@@ -1,5 +1,7 @@
 extends StaticBody2D
 
+const PICKUP_PLACEMENT := preload("res://src/systems/pickup_placement.gd")
+
 signal destroyed(drop_position: Vector2)
 
 const FRAME_SIZE := Vector2(444.0, 444.0)
@@ -21,6 +23,12 @@ func _ready() -> void:
 	current_hp = maxi(max_hp, 1)
 	_apply_visual()
 	queue_redraw()
+
+
+func _physics_process(_delta: float) -> void:
+	# Also repair externally placed chests, once; never scan all field items.
+	PICKUP_PLACEMENT.ensure_reachable(self)
+	set_physics_process(false)
 
 
 func take_damage(amount: int) -> bool:

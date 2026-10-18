@@ -115,6 +115,24 @@ static func grant(amount: int, grant_id: String, at: int = -1) -> Dictionary:
 		return {"success": false, "reason": "save_failed"}
 	return {"success": true, "reason": "granted", "granted": amount, "amount": state.amount}
 
+# Explicit repeatable test reward: one save per use, no growing receipt list.
+# Ordinary gifts/purchases continue using the deduplicated grant() above.
+static func grant_repeatable(amount: int, source_id: String, at: int = -1) -> Dictionary:
+	if amount <= 0 or source_id.is_empty() or source_id.length() > 160:
+		return {"success":false,"reason":"invalid"}
+	var config := ConfigFile.new()
+	if _load(config) != OK:
+		return {"success":false,"reason":"save_failed"}
+	var now := _now(at)
+	var state := _from_config(config,now)
+	state.amount += amount
+	if int(state.amount) >= RULES.MAX_NATURAL: state.recovery_at = now
+	var uses := int(config.get_value("stamina_repeatable_grants",source_id,0))+1
+	config.set_value("stamina_repeatable_grants",source_id,uses)
+	if not _commit(config,state):
+		return {"success":false,"reason":"save_failed"}
+	return {"success":true,"reason":"granted","granted":amount,"amount":state.amount}
+
 static func refund_failed_entry(entry: Dictionary, at: int = -1) -> bool:
 	if not bool(entry.get("success", false)) or String(entry.get("owner", "")) != _owner():
 		return false

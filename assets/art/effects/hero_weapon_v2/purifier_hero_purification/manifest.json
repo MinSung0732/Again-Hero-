@@ -1,0 +1,130 @@
+{
+  "weapon_id": "purifier_hero_purification",
+  "name": "정화",
+  "source_size": [
+    1254,
+    1254
+  ],
+  "source_sha256": "dfc51c1fd9fe2539c10826b7c7d5aeac29b250a6ba9fd9604d3628b97fb1bb33",
+  "sheet": "sprite_sheet.png",
+  "sheet_size": [
+    384,
+    384
+  ],
+  "cell_size": [
+    128,
+    128
+  ],
+  "anchor": [
+    64,
+    64
+  ],
+  "alpha": "binary; existing transparency only; black foreground retained",
+  "normalization": "whole alpha components; reviewed core anchors; one common nearest scale; no source crop loss",
+  "animation": {
+    "fps": 12,
+    "loop_playback": "ping_pong",
+    "transient_window_seconds": 0.28,
+    "transient_playback": "normalized to visual window; no gameplay timing change",
+    "loop": false,
+    "frames": [
+      "frames/effect_01.png",
+      "frames/effect_02.png",
+      "frames/effect_03.png",
+      "frames/effect_04.png",
+      "frames/effect_05.png",
+      "frames/effect_06.png",
+      "frames/effect_07.png",
+      "frames/effect_08.png"
+    ]
+  },
+  "unique_frames": 8,
+  "source_file": "source.png",
+  "source_anchors": [
+    [
+      627,
+      249
+    ],
+    [
+      1045,
+      249
+    ],
+    [
+      209,
+      648
+    ],
+    [
+      627,
+      649
+    ],
+    [
+      1047,
+      649
+    ],
+    [
+      209,
+      1044
+    ],
+    [
+      627,
+      1046
+    ],
+    [
+      1045,
+      1044
+    ]
+  ],
+  "source_component_bounds": [
+    [
+      529,
+      144,
+      725,
+      352
+    ],
+    [
+      923,
+      132,
+      1170,
+      367
+    ],
+    [
+      47,
+      486,
+      371,
+      803
+    ],
+    [
+      414,
+      436,
+      841,
+      858
+    ],
+    [
+      883,
+      486,
+      1207,
+      808
+    ],
+    [
+      84,
+      921,
+      339,
+      1169
+    ],
+    [
+      503,
+      927,
+      751,
+      1171
+    ],
+    [
+      939,
+      938,
+      1153,
+      1152
+    ]
+  ],
+  "common_source_extent": 216,
+  "source_opaque_pixels": 366573,
+  "assigned_opaque_pixels": 366573
+}

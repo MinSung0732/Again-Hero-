@@ -3,12 +3,12 @@ extends Control
 signal tool_requested(tool_id: StringName)
 
 const CATALOG := preload("res://src/data/lobby_tool_catalog.gd")
-const BUTTON_SIZE := Vector2(104, 108)
-const GAP := 8.0
-const EDGE_MARGIN := 8.0
-const TOP_OFFSET := 190.0
-const DIRECT_LIMIT := 3
-const BADGE_PATH := "res://assets/art/UI/lobby_tools/notification_dot.svg"
+const BUTTON_SIZE := CATALOG.BUTTON_SIZE
+const GAP := CATALOG.GAP
+const EDGE_MARGIN := CATALOG.EDGE_MARGIN
+const TOP_OFFSET := CATALOG.TOP_OFFSET
+const DIRECT_LIMIT := CATALOG.DIRECT_LIMIT
+const BADGE_PATH := CATALOG.BADGE_PATH
 
 var can_open: Callable
 var _badges := {}
@@ -29,7 +29,7 @@ func install(parent: Control, permission: Callable, entries: Array = CATALOG.ENT
 	can_open = permission
 	parent.add_child(self)
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for side in [&"left", &"right"]:
+	for side in CATALOG.SIDES:
 		var rail := VBoxContainer.new()
 		rail.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		rail.add_theme_constant_override("separation", int(GAP))
@@ -50,7 +50,7 @@ func install(parent: Control, permission: Callable, entries: Array = CATALOG.ENT
 			var entry := matching[index]
 			rail.add_child(_button(entry))
 		if matching.size() > DIRECT_LIMIT:
-			var more := _button({"title": "더보기", "id": &"", "icon": ""})
+			var more := _button({"title": CATALOG.MORE_TITLE, "id": &"", "icon": ""})
 			more.name = "MoreTools"
 			_install_badge(more, StringName("__more_" + String(side)))
 			more.pressed.connect(_show_more.bind(side))
@@ -143,14 +143,14 @@ func _activate(id: StringName) -> void:
 		return
 	if not is_instance_valid(_notice):
 		_notice = _dialog()
-	_notice.title = String(_entries[id].get("title", "도구"))
-	_notice.dialog_text = String(_entries[id].get("empty_message", "이 기능은 준비 중입니다.\n업데이트 후 이 버튼에서 이용할 수 있습니다."))
+	_notice.title = String(_entries[id].get("title", CATALOG.TOOL_TITLE))
+	_notice.dialog_text = String(_entries[id].get("empty_message", CATALOG.EMPTY_MESSAGE))
 	_notice.popup_centered(Vector2i(580, 220))
 
 func _dialog() -> AcceptDialog:
 	var dialog := AcceptDialog.new()
 	dialog.exclusive = true
-	dialog.ok_button_text = "닫기"
+	dialog.ok_button_text = CATALOG.CLOSE_TITLE
 	dialog.add_theme_stylebox_override("panel", _style(Color("170e25"), Color("eac14d")))
 	dialog.add_theme_font_size_override("font_size", 26)
 	dialog.get_ok_button().custom_minimum_size = Vector2(150, 64)
@@ -180,7 +180,7 @@ func _show_more(side: StringName) -> void:
 			if entry.get("side", &"left") == side:
 				_overflow_grid.add_child(_button(entry))
 		_overflow_side = side
-	_overflow.title = "미션 · 이벤트" if side == &"left" else "친구 · 커뮤니티"
+	_overflow.title = CATALOG.SIDE_TITLES.get(side, CATALOG.SIDE_TITLES[&"right"])
 	_overflow.popup_centered(Vector2i(560, 500))
 
 func blocks_stage_input(event: InputEvent) -> bool:

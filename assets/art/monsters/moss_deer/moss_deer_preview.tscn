@@ -1,0 +1,14 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="SpriteFrames" path="res://assets/art/monsters/moss_deer/moss_deer_animations.tres" id="1"]
+
+[node name="moss_deer" type="Node2D"]
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+texture_filter = 1
+sprite_frames = ExtResource("1")
+animation = &"idle"
+autoplay = "idle"
+centered = false
+offset = Vector2(-164, -171)
+scale = Vector2(0.66233766, 0.66233766)

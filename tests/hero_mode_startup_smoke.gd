@@ -48,7 +48,7 @@ func run() -> void:
 		quit(1)
 		return
 	check(scene.battle.run_time_limit_seconds == 900.0 and scene.battle.hero.player_weapons != null, "15 minute weapon survival configured")
-	check(scene.get_node("HeroHUD") != null and scene.weapon_buttons.size() == 3, "top HUD weapon slots")
+	check(scene.get_node("HeroHUD") != null and scene.weapon_buttons.size() == 6, "top HUD weapon slots")
 	check(scene.battle.current_stage_id == "stage_10" and String(scene.battle.current_hero_profile.id) == "ranged_rookie", "apprentice plays high-stage map without changing character")
 	var saved := ConfigFile.new(); SCOPE.load_config(saved,"user://stage_progress.cfg")
 	check(saved.get_value("progress","current_stage_id","") == "stage_1", "hero entry does not change demon campaign selection")

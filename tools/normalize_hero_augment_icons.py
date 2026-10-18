@@ -13,7 +13,7 @@ import numpy as np
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
-ART = ROOT / "assets/art/ui/hero_augments"
+ART = ROOT / "assets/art/UI/hero_augments"
 CELL, INSET = 128, 10
 
 

@@ -5,7 +5,8 @@ const RISE_DISTANCE := 78.0
 const FADE_START := 0.52
 const MERGE_WINDOW := 0.11
 
-@onready var value_label: Label = $Value
+@onready var value_label: Label = get_node_or_null("Value")
+# Server rooms use this same state/RNG/lifetime without a Label subtree.
 
 var elapsed: float = 0.0
 var start_position: Vector2 = Vector2.ZERO
@@ -14,6 +15,10 @@ var numeric_amount: int = 0
 var is_numeric: bool = false
 var numeric_prefix: String = ""
 var pool_active: bool = false
+# Merge arithmetic is immediate; formatting/theme invalidation happens once
+# before the next draw. Never defer HP, combat receipts or damage callbacks.
+var _number_dirty := false
+var _pending_color := Color.WHITE
 
 
 func _ready() -> void:
@@ -27,9 +32,10 @@ func setup(
 	numeric_amount = maxi(amount, 0)
 	is_numeric = true
 	numeric_prefix = ""
-	value_label.text = str(numeric_amount)
-	value_label.add_theme_font_size_override("font_size", 32)
-	value_label.add_theme_color_override("font_color", text_color)
+	if value_label != null:
+		value_label.text = str(numeric_amount)
+		value_label.add_theme_font_size_override("font_size", 32)
+		value_label.add_theme_color_override("font_color", text_color)
 	_start_float()
 
 
@@ -40,9 +46,10 @@ func setup_heal(
 	numeric_amount = maxi(amount, 0)
 	is_numeric = true
 	numeric_prefix = "+"
-	value_label.text = "+%d" % numeric_amount
-	value_label.add_theme_font_size_override("font_size", 32)
-	value_label.add_theme_color_override("font_color", text_color)
+	if value_label != null:
+		value_label.text = "+%d" % numeric_amount
+		value_label.add_theme_font_size_override("font_size", 32)
+		value_label.add_theme_color_override("font_color", text_color)
 	_start_float()
 
 
@@ -53,9 +60,10 @@ func setup_text(
 	numeric_amount = 0
 	is_numeric = false
 	numeric_prefix = ""
-	value_label.text = message
-	value_label.add_theme_font_size_override("font_size", 23)
-	value_label.add_theme_color_override("font_color", text_color)
+	if value_label != null:
+		value_label.text = message
+		value_label.add_theme_font_size_override("font_size", 23)
+		value_label.add_theme_color_override("font_color", text_color)
 	_start_float()
 
 
@@ -88,8 +96,8 @@ func add_damage(
 	if not can_merge_damage():
 		return
 	numeric_amount += maxi(amount, 0)
-	value_label.text = str(numeric_amount)
-	value_label.add_theme_color_override("font_color", text_color)
+	_number_dirty = true
+	_pending_color = text_color
 	elapsed = minf(elapsed, MERGE_WINDOW * 0.35)
 	scale = Vector2.ONE * 1.08
 
@@ -101,13 +109,14 @@ func add_heal(
 	if not can_merge_heal():
 		return
 	numeric_amount += maxi(amount, 0)
-	value_label.text = "+%d" % numeric_amount
-	value_label.add_theme_color_override("font_color", text_color)
+	_number_dirty = true
+	_pending_color = text_color
 	elapsed = minf(elapsed, MERGE_WINDOW * 0.35)
 	scale = Vector2.ONE * 1.08
 
 
 func _start_float() -> void:
+	_number_dirty = false
 	pool_active = true
 	visible = true
 	set_process(true)
@@ -119,6 +128,7 @@ func _start_float() -> void:
 
 
 func _deactivate_for_pool() -> void:
+	_number_dirty = false
 	pool_active = false
 	visible = false
 	set_process(false)
@@ -134,6 +144,12 @@ func _deactivate_for_pool() -> void:
 func _process(delta: float) -> void:
 	if not pool_active:
 		return
+
+	if _number_dirty:
+		if value_label != null:
+			value_label.text = numeric_prefix+str(numeric_amount)
+			value_label.add_theme_color_override("font_color", _pending_color)
+		_number_dirty = false
 
 	elapsed += delta
 	var progress := clampf(elapsed / LIFETIME, 0.0, 1.0)
