@@ -1,0 +1,11 @@
+{
+  "target_lufs": -18.0,
+  "limiter_ceiling_db": -2.5,
+  "maximum_true_peak_db": -1.5,
+  "oversample_factor": 4,
+  "limiter_attack_ms": 5,
+  "limiter_release_ms": 50,
+  "loudness_tolerance_lu": 0.1,
+  "maximum_gain_passes": 6,
+  "workers": 4
+}

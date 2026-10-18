@@ -1,5 +1,7 @@
 # 용사 음성 이벤트 연결 — 2026-10-18
 
+> 2026-10-19 음성 원본의 공통 음량 보정은 [정규화 보고서](HERO_VOICE_LOUDNESS_20261019.md)를 따른다. 아래는 최초 연결 시점의 기록이다.
+
 - 기준: `feature/stage10-astra` / `cd691a1ddd48a5a3b962392699f336b6c1a5ae26` (사용자가 업로드한 WAV33개 포함). main 최신 조회 SHA `6f22053f462e1176ec2ecde131d589d5491791b2`. 시작 작업 트리 clean, fast-forward만 수행. main 병합 없음.
 - 음원 출처는 사용자가 저장소에 추가한 `assets/audio/sfx/hero_voices/` WAV33개다. 새 외부 음원/합성/런타임 Base64 디코딩은 추가하지 않았다. 원본 오디오와 project.godot은 수정하지 않았다.
 

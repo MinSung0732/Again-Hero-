@@ -1,0 +1,876 @@
+{
+  "policy": {
+    "target_lufs": -18.0,
+    "limiter_ceiling_db": -2.5,
+    "maximum_true_peak_db": -1.5,
+    "oversample_factor": 4,
+    "limiter_attack_ms": 5,
+    "limiter_release_ms": 50,
+    "loudness_tolerance_lu": 0.1,
+    "maximum_gain_passes": 6,
+    "workers": 4
+  },
+  "applied": true,
+  "ffmpeg_version": "ffmpeg version 6.1.1-3ubuntu5 Copyright (c) 2000-2023 the FFmpeg developers",
+  "files": [
+    {
+      "path": "stage1/Stage1_battle_hero_failed.wav",
+      "source_sha256": "4dc365c4719f5151d1f7aed3d67a4300c7eb7bb7d5f99d925a44bf7479e8a16b",
+      "format": {
+        "rate": 24000,
+        "channels": 1,
+        "sample_width": 2,
+        "frames": 105600
+      },
+      "before": {
+        "input_i": "-15.45",
+        "input_tp": "-1.27",
+        "input_lra": "1.10",
+        "input_thresh": "-27.04"
+      },
+      "output_sha256": "7d76756bf013fd00050068b5641b0eacdd0680d7329d7221d943f9ebe2d6cc57",
+      "after": {
+        "input_i": "-18.09",
+        "input_tp": "-3.83",
+        "input_lra": "1.20",
+        "input_thresh": "-29.60"
+      },
+      "gain_db": -2.55,
+      "method": "gain_and_oversampled_peak_limiter",
+      "passes": 1
+    },
+    {
+      "path": "stage1/Stage1_battle_hero_victory.wav",
+      "source_sha256": "499b2a1d0ddb845f807db12d185b46ba37707ea194f51596c1cbd89531a2cbc2",
+      "format": {
+        "rate": 24000,
+        "channels": 1,
+        "sample_width": 2,
+        "frames": 103680
+      },
+      "before": {
+        "input_i": "-16.93",
+        "input_tp": "-1.17",
+        "input_lra": "2.00",
+        "input_thresh": "-28.11"
+      },
+      "output_sha256": "897f1d1048b9c438e3db9f4a3af631d2e4bcc9a435eea8913215f05495dcce23",
+      "after": {
+        "input_i": "-18.06",
+        "input_tp": "-2.50",
+        "input_lra": "2.00",
+        "input_thresh": "-29.24"
+      },
+      "gain_db": -1.07,
+      "method": "gain_and_oversampled_peak_limiter",
+      "passes": 1
+    },
+    {
+      "path": "stage1/Stage1_battle_start.wav",
+      "source_sha256": "b61555f87a3ef5ececaa4be60b1bf4520ce1645a9749be280e87dbb8e96349b8",
+      "format": {
+        "rate": 24000,
+        "channels": 1,
+        "sample_width": 2,
+        "frames": 78720
+      },
+      "before": {
+        "input_i": "-17.14",
+        "input_tp": "-1.44",
+        "input_lra": "0.10",
+        "input_thresh": "-28.05"
+      },
+      "output_sha256": "04feddb83d677cde3860911b25236d44b5f4e1a345b15f645d02b84e01d98b14",
+      "after": {
+        "input_i": "-18.02",
+        "input_tp": "-2.47",
+        "input_lra": "0.10",
+        "input_thresh": "-28.94"
+      },
+      "gain_db": -0.86,
+      "method": "gain_and_oversampled_peak_limiter",
+      "passes": 1
+    },
+    {
+      "path": "stage10/Stage10_battle_hero_failed.wav",
+      "source_sha256": "42b4a33180f4272aeb0e65c197d2624f6809a157a26f42cf90dd34c3267fb017",
+      "format": {
+        "rate": 24000,
+        "channels": 1,
+        "sample_width": 2,
+        "frames": 162240
+      },
+      "before": {
+        "input_i": "-15.84",
+        "input_tp": "0.54",
+        "input_lra": "2.00",
+        "input_thresh": "-27.45"
+      },
+      "output_sha256": "1df1fefeb5474e4783cf418bf13a33ea951f82fad1f0dde0d8b0d31f4ae742d9",
+      "after": {
+        "input_i": "-18.07",
+        "input_tp": "-2.47",
+        "input_lra": "2.10",
+        "input_thresh": "-29.67"
+      },
+      "gain_db": -2.16,
+      "method": "gain_and_oversampled_peak_limiter",
+      "passes": 1
+    },
+    {
+      "path": "stage10/Stage10_battle_hero_victory.wav",
+      "source_sha256": "b5775d7c711da3cf9b8d5895ad80d8c615e6be44f4965356128f736b6397f228",
+      "format": {
+        "rate": 24000,
+        "channels": 1,
+        "sample_width": 2,
+        "frames": 150720
+      },
+      "before": {
+        "input_i": "-13.01",
+        "input_tp": "3.16",
+        "input_lra": "3.60",
+        "input_thresh": "-26.74"
+      },
+      "output_sha256": "606a1b92a51a2920edce86ad91c73bdbe6b996468d49ab2d8928215d206aa418",
+      "after": {
+        "input_i": "-18.09",
+        "input_tp": "-2.44",
+        "input_lra": "3.10",
+        "input_thresh": "-31.81"
+      },
+      "gain_db": -4.73,
+      "method": "gain_and_oversampled_peak_limiter",
+      "passes": 2
+    },
+    {
+      "path": "stage10/Stage10_battle_start.wav",
+      "source_sha256": "85c78838119fd8866f8a2809c025c17d8ae30287274dd4482f87ea046c607778",
+      "format": {
+        "rate": 24000,
+        "channels": 1,
+        "sample_width": 2,
+        "frames": 81600
+      },
+      "before": {
+        "input_i": "-13.06",
+        "input_tp": "0.45",
+        "input_lra": "1.20",
+        "input_thresh": "-24.39"
+      },
+      "output_sha256": "d0cf3cecc40d5b5711ae5af0bb01a3e5e81adacb4cf66495cf845aabac70aad9",
+      "after": {
+        "input_i": "-18.01",
+        "input_tp": "-4.51",
+        "input_lra": "1.20",
+        "input_thresh": "-29.19"
+      },
+      "gain_db": -4.94,
+      "method": "gain_and_oversampled_peak_limiter",
+      "passes": 1
+    },
+    {
+      "path": "stage10/Stage10_hero_unlock_skill.wav",
+      "source_sha256": "fb6f8bf0bd29ee464669bd9272742339b0468f9dd957daaf9636d9cb0b8ef736",
+      "format": {
+        "rate": 24000,
+        "channels": 1,
+        "sample_width": 2,
+        "frames": 123840
+      },
+      "before": {
+        "input_i": "-13.25",
+        "input_tp": "2.00",
+        "input_lra": "2.50",
+        "input_thresh": "-25.19"
+      },
+      "output_sha256": "8f91baa171b002b266aecaaab6c2035b20b4a897f75175712d3b6745e5c33ec5",
+      "after": {
+        "input_i": "-18.00",
+        "input_tp": "-2.80",
+        "input_lra": "2.60",
+        "input_thresh": "-29.39"
+      },
+      "gain_db": -4.95,
+      "method": "gain_and_oversampled_peak_limiter",
+      "passes": 2
+    },
+    {
+      "path": "stage2/Stage2_battle_hero_failed.wav",
+      "source_sha256": "9408302884f468209377afdee14965268c9f61810a4a434cd56f898052e166ed",
+      "format": {
+        "rate": 24000,
+        "channels": 1,
+        "sample_width": 2,
+        "frames": 84480
+      },
+      "before": {
+        "input_i": "-31.31",
+        "input_tp": "-12.70",
+        "input_lra": "0.30",
+        "input_thresh": "-42.51"
+      },
+      "output_sha256": "b252c597d7d39038a70498c9720c7497492e83cf2944fdd34d319b3b46fd3158",
+      "after": {
+        "input_i": "-18.02",
+        "input_tp": "-2.49",
+        "input_lra": "0.30",
+        "input_thresh": "-29.21"
+      },
+      "gain_db": 13.55,
+      "method": "gain_and_oversampled_peak_limiter",
+      "passes": 2
+    },
+    {
+      "path": "stage2/Stage2_battle_hero_victory.wav",
+      "source_sha256": "1ed5d749543cf75dd4563f4483e8a7ce59dc70ff5dd868119580daaefba8f2b8",
+      "format": {
+        "rate": 24000,
+        "channels": 1,
+        "sample_width": 2,
+        "frames": 72960
+      },
+      "before": {
+        "input_i": "-20.22",
+        "input_tp": "-1.83",
+        "input_lra": "0.20",
+        "input_thresh": "-31.78"
+      },
+      "output_sha256": "4c295f802e8cdc29f3b909cf4d069e29a43736bb61541f3c53ef4249e80657d7",
+      "after": {
+        "input_i": "-18.07",
+        "input_tp": "-2.49",
+        "input_lra": "0.20",
+        "input_thresh": "-29.39"
+      },
+      "gain_db": 3.84,
+      "method": "gain_and_oversampled_peak_limiter",
+      "passes": 5
+    },
+    {
+      "path": "stage2/Stage2_battle_start.wav",
+      "source_sha256": "b82fd7c1ab5ec1bb035ef4aa659fbaa90a86df03d1f389cee506fc9201160e28",
+      "format": {
+        "rate": 24000,
+        "channels": 1,
+        "sample_width": 2,
+        "frames": 69120
+      },
+      "before": {
+        "input_i": "-22.50",
+        "input_tp": "-4.25",
+        "input_lra": "0.00",
+        "input_thresh": "-33.69"
+      },
+      "output_sha256": "f193a62df84e504e61f122693aaeed6e649d7d5ca5e44e47f7295252838fc64b",
+      "after": {
+        "input_i": "-18.04",
+        "input_tp": "-2.49",
+        "input_lra": "0.00",
+        "input_thresh": "-28.98"
+      },
+      "gain_db": 5.62,
+      "method": "gain_and_oversampled_peak_limiter",
+      "passes": 3
+    },
+    {
+      "path": "stage3/Stage3_battle_hero_failed.wav",
+      "source_sha256": "41c283bbc4cf17d73e412362ef98917db245805629852557b3164204074de6af",
+      "format": {
+        "rate": 24000,
+        "channels": 1,
+        "sample_width": 2,
+        "frames": 194880
+      },
+      "before": {
+        "input_i": "-22.00",
+        "input_tp": "-5.19",
+        "input_lra": "5.20",
+        "input_thresh": "-33.43"
+      },
+      "output_sha256": "88d10dff8ec3707b5273d721413ecb460a49b4944cb35ff647381acea22b4e8e",
+      "after": {
+        "input_i": "-18.03",
+        "input_tp": "-2.48",
+        "input_lra": "5.00",
+        "input_thresh": "-29.50"
+      },
+      "gain_db": 4.13,
+      "method": "gain_and_oversampled_peak_limiter",
+      "passes": 2
+    },
+    {
+      "path": "stage3/Stage3_battle_hero_victory.wav",
+      "source_sha256": "43688bdf991ac4670f6c28b7f620ce78a60a7f185b515a865db87a7492cec126",
+      "format": {
+        "rate": 24000,
+        "channels": 1,
+        "sample_width": 2,
+        "frames": 108480
+      },
+      "before": {
+        "input_i": "-21.00",
+        "input_tp": "-2.97",
+        "input_lra": "1.30",
+        "input_thresh": "-31.98"
+      },
+      "output_sha256": "653242f5ee290f4cc1be417d6af2f11f43f2d2eff8eb417dc98f1b7db355eb1d",
+      "after": {
+        "input_i": "-17.98",
+        "input_tp": "-2.50",
+        "input_lra": "1.50",
+        "input_thresh": "-29.04"
+      },
+      "gain_db": 3.15,
+      "method": "gain_and_oversampled_peak_limiter",
+      "passes": 4
+    },
+    {
+      "path": "stage3/Stage3_battle_start.wav",
+      "source_sha256": "4b40b7faf8ac0a67da41bfcfa68fb690f4c6414b4207b07c9ac048dbb7966e7c",
+      "format": {
+        "rate": 24000,
+        "channels": 1,
+        "sample_width": 2,
+        "frames": 73920
+      },
+      "before": {
+        "input_i": "-20.35",
+        "input_tp": "-2.18",
+        "input_lra": "0.40",
+        "input_thresh": "-30.79"
+      },
+      "output_sha256": "2ee0019cf829e69e272586ca7463d35d2104d8ad2ff7956d62aff3d338d4f686",
+      "after": {
+        "input_i": "-18.04",
+        "input_tp": "-2.47",
+        "input_lra": "0.40",
+        "input_thresh": "-28.48"
+      },
+      "gain_db": 2.92,
+      "method": "gain_and_oversampled_peak_limiter",
+      "passes": 3
+    },
+    {
+      "path": "stage4/Stage4_battle_hero_failed.wav",
+      "source_sha256": "f53c382f05be69adfda11a2616a7fc05a394eebe6bf85755c9081b68a7b8eaaf",
+      "format": {
+        "rate": 24000,
+        "channels": 1,
+        "sample_width": 2,
+        "frames": 88320
+      },
+      "before": {
+        "input_i": "-19.67",
+        "input_tp": "-1.61",
+        "input_lra": "2.10",
+        "input_thresh": "-30.42"
+      },
+      "output_sha256": "81919446f47d729be70cf30756c2228ba732da034c32a639a9024f336c6eda46",
+      "after": {
+        "input_i": "-18.04",
+        "input_tp": "-2.46",
+        "input_lra": "1.90",
+        "input_thresh": "-28.79"
+      },
+      "gain_db": 1.85,
+      "method": "gain_and_oversampled_peak_limiter",
+      "passes": 2
+    },
+    {
+      "path": "stage4/Stage4_battle_hero_victory.wav",
+      "source_sha256": "b98ab2b9aa52d8d3c3c83f41aef711bfc37f074237a5cd98074fb572641306f2",
+      "format": {
+        "rate": 24000,
+        "channels": 1,
+        "sample_width": 2,
+        "frames": 103680
+      },
+      "before": {
+        "input_i": "-19.55",
+        "input_tp": "-1.76",
+        "input_lra": "7.00",
+        "input_thresh": "-30.69"
+      },
+      "output_sha256": "6a567c2a8948cc8e1d4c86860e15b91c810798abb827da2e16da1a4f5d78d450",
+      "after": {
+        "input_i": "-18.06",
+        "input_tp": "-2.48",
+        "input_lra": "6.00",
+        "input_thresh": "-29.19"
+      },
+      "gain_db": 2.25,
+      "method": "gain_and_oversampled_peak_limiter",
+      "passes": 3
+    },
+    {
+      "path": "stage4/Stage4_battle_start.wav",
+      "source_sha256": "41c98ad32da96bf4eb8f172a051205bf3c773cafa1bffa478f9e1b35281fa2ac",
+      "format": {
+        "rate": 24000,
+        "channels": 1,
+        "sample_width": 2,
+        "frames": 94080
+      },
+      "before": {
+        "input_i": "-15.56",
+        "input_tp": "-1.26",
+        "input_lra": "5.00",
+        "input_thresh": "-27.23"
+      },
+      "output_sha256": "8ce2893ebde3b3169a73623b1a4596038eeda643b99c346966388def82591844",
+      "after": {
+        "input_i": "-18.05",
+        "input_tp": "-3.70",
+        "input_lra": "5.10",
+        "input_thresh": "-29.29"
+      },
+      "gain_db": -2.44,
+      "method": "gain_and_oversampled_peak_limiter",
+      "passes": 1
+    },
+    {
+      "path": "stage5/Stage5_battle_hero_failed.wav",
+      "source_sha256": "7e47d441408d4200671db93e3df2b9ab184836c1dd292b1a7b9ed39e86169e3f",
+      "format": {
+        "rate": 24000,
+        "channels": 1,
+        "sample_width": 2,
+        "frames": 166080
+      },
+      "before": {
+        "input_i": "-16.25",
+        "input_tp": "-1.48",
+        "input_lra": "2.10",
+        "input_thresh": "-27.20"
+      },
+      "output_sha256": "f1f8d557796022275e222bb63ba7de26bf71d01174942a0aac8502c1424beac5",
+      "after": {
+        "input_i": "-18.00",
+        "input_tp": "-3.24",
+        "input_lra": "2.10",
+        "input_thresh": "-28.85"
+      },
+      "gain_db": -1.75,
+      "method": "gain_and_oversampled_peak_limiter",
+      "passes": 1
+    },
+    {
+      "path": "stage5/Stage5_battle_hero_victory.wav",
+      "source_sha256": "570f7308f8499e0cfc92258fc685f0f1e411207b1fa2163cb43ecd74d801ef6b",
+      "format": {
+        "rate": 24000,
+        "channels": 1,
+        "sample_width": 2,
+        "frames": 90240
+      },
+      "before": {
+        "input_i": "-14.56",
+        "input_tp": "-1.44",
+        "input_lra": "0.50",
+        "input_thresh": "-25.24"
+      },
+      "output_sha256": "40ea572fc9efc57ad0aacf13cbf4cd1909fd80f55ff1147e8fe14161ff185797",
+      "after": {
+        "input_i": "-18.01",
+        "input_tp": "-4.86",
+        "input_lra": "0.40",
+        "input_thresh": "-28.39"
+      },
+      "gain_db": -3.44,
+      "method": "gain_and_oversampled_peak_limiter",
+      "passes": 1
+    },
+    {
+      "path": "stage5/Stage5_battle_start.wav",
+      "source_sha256": "e3982433b9ad8be66071c972ea3ea1c87970711dbda0303a36d9498778727809",
+      "format": {
+        "rate": 24000,
+        "channels": 1,
+        "sample_width": 2,
+        "frames": 87360
+      },
+      "before": {
+        "input_i": "-13.44",
+        "input_tp": "-1.44",
+        "input_lra": "1.00",
+        "input_thresh": "-23.58"
+      },
+      "output_sha256": "5664db51fb4dccc8ecd3aba7d70f3d8b34a4c96c022778294668fbe54c907587",
+      "after": {
+        "input_i": "-18.00",
+        "input_tp": "-6.00",
+        "input_lra": "1.10",
+        "input_thresh": "-28.14"
+      },
+      "gain_db": -4.56,
+      "method": "gain_and_oversampled_peak_limiter",
+      "passes": 1
+    },
+    {
+      "path": "stage6/Stage6_battle_hero_failed.wav",
+      "source_sha256": "61ea94f6267b52c92680db8399f4ec49ef4fb9f99f8f5f8a15553268d22de14c",
+      "format": {
+        "rate": 24000,
+        "channels": 1,
+        "sample_width": 2,
+        "frames": 340800
+      },
+      "before": {
+        "input_i": "-21.48",
+        "input_tp": "0.46",
+        "input_lra": "12.80",
+        "input_thresh": "-34.67"
+      },
+      "output_sha256": "ebb033b0ce493283d586870f4326d368342a108fd763695e300e3964679fb844",
+      "after": {
+        "input_i": "-18.10",
+        "input_tp": "-2.31",
+        "input_lra": "8.30",
+        "input_thresh": "-30.51"
+      },
+      "gain_db": 8.3,
+      "method": "gain_and_oversampled_peak_limiter",
+      "passes": 6
+    },
+    {
+      "path": "stage6/Stage6_battle_hero_victory.wav",
+      "source_sha256": "c5b71fbe7fd037f00b2f38315e24528df4f8ec23678b89ff2fc0bdeeeed3d7ab",
+      "format": {
+        "rate": 24000,
+        "channels": 1,
+        "sample_width": 2,
+        "frames": 186240
+      },
+      "before": {
+        "input_i": "-21.01",
+        "input_tp": "-0.68",
+        "input_lra": "7.80",
+        "input_thresh": "-33.12"
+      },
+      "output_sha256": "f6572685a4d30c8afeb762e74f51846aa9d41b32f80de03cb5e7ef7b973a0380",
+      "after": {
+        "input_i": "-18.02",
+        "input_tp": "-2.36",
+        "input_lra": "6.90",
+        "input_thresh": "-29.87"
+      },
+      "gain_db": 4.6,
+      "method": "gain_and_oversampled_peak_limiter",
+      "passes": 4
+    },
+    {
+      "path": "stage6/Stage6_battle_start.wav",
+      "source_sha256": "6e45740501f18223bcef4eb7169c5a31e3b6b4f2076a82964f4ed59e95dd8a12",
+      "format": {
+        "rate": 24000,
+        "channels": 1,
+        "sample_width": 2,
+        "frames": 202560
+      },
+      "before": {
+        "input_i": "-20.98",
+        "input_tp": "-0.97",
+        "input_lra": "1.40",
+        "input_thresh": "-33.26"
+      },
+      "output_sha256": "c875403dce6230661730495e1bddbb434cce77912d809b315c4801f0b5cdde11",
+      "after": {
+        "input_i": "-18.06",
+        "input_tp": "-2.35",
+        "input_lra": "1.60",
+        "input_thresh": "-30.26"
+      },
+      "gain_db": 4.95,
+      "method": "gain_and_oversampled_peak_limiter",
+      "passes": 4
+    },
+    {
+      "path": "stage7/Stage7_battle_hero_failed.wav",
+      "source_sha256": "6cd6b394b0224e5c1d6353fdbb472a95ac42c31c82ff291472f8c40e6a5bf012",
+      "format": {
+        "rate": 24000,
+        "channels": 1,
+        "sample_width": 2,
+        "frames": 172800
+      },
+      "before": {
+        "input_i": "-19.46",
+        "input_tp": "-1.83",
+        "input_lra": "4.10",
+        "input_thresh": "-31.02"
+      },
+      "output_sha256": "e9d3593b176ae5da461377c3644ec594787f87404803dac8541654cbbc935153",
+      "after": {
+        "input_i": "-18.01",
+        "input_tp": "-2.49",
+        "input_lra": "3.80",
+        "input_thresh": "-29.57"
+      },
+      "gain_db": 1.61,
+      "method": "gain_and_oversampled_peak_limiter",
+      "passes": 2
+    },
+    {
+      "path": "stage7/Stage7_battle_hero_victory.wav",
+      "source_sha256": "53931c93cd160f6dea67755a0c366395dd52fbfeb150a1039b71622b55b44093",
+      "format": {
+        "rate": 24000,
+        "channels": 1,
+        "sample_width": 2,
+        "frames": 141120
+      },
+      "before": {
+        "input_i": "-16.84",
+        "input_tp": "-1.02",
+        "input_lra": "2.00",
+        "input_thresh": "-27.57"
+      },
+      "output_sha256": "a33dfc469f99d476b392cd9c7d7caaeccabb0994c6f94a4b5d1d955250dd9e95",
+      "after": {
+        "input_i": "-17.99",
+        "input_tp": "-2.48",
+        "input_lra": "2.00",
+        "input_thresh": "-28.72"
+      },
+      "gain_db": -1.16,
+      "method": "gain_and_oversampled_peak_limiter",
+      "passes": 1
+    },
+    {
+      "path": "stage7/Stage7_battle_start.wav",
+      "source_sha256": "96811f814eb7a87bc8a6b62599f246600cbbde81d1b9145301181f260df6ecc9",
+      "format": {
+        "rate": 24000,
+        "channels": 1,
+        "sample_width": 2,
+        "frames": 158400
+      },
+      "before": {
+        "input_i": "-15.89",
+        "input_tp": "-1.46",
+        "input_lra": "6.70",
+        "input_thresh": "-28.07"
+      },
+      "output_sha256": "a57d69b74875286437508fa39cb7fd3c37d944d94c91ec4748cf709a4192e801",
+      "after": {
+        "input_i": "-18.01",
+        "input_tp": "-3.58",
+        "input_lra": "6.70",
+        "input_thresh": "-30.18"
+      },
+      "gain_db": -2.11,
+      "method": "gain_and_oversampled_peak_limiter",
+      "passes": 1
+    },
+    {
+      "path": "stage8/Stage8_battle_hero_failed.wav",
+      "source_sha256": "fc5003f4cade159921442395599e1c9ee054fc2a75ce764edf93e600aa8b3655",
+      "format": {
+        "rate": 24000,
+        "channels": 1,
+        "sample_width": 2,
+        "frames": 74880
+      },
+      "before": {
+        "input_i": "-11.67",
+        "input_tp": "-0.47",
+        "input_lra": "0.40",
+        "input_thresh": "-22.61"
+      },
+      "output_sha256": "ccd41f2baa103b17ce24b4c49e9106f7c6ee0e3a23b8042f72e49153b2058792",
+      "after": {
+        "input_i": "-18.01",
+        "input_tp": "-6.82",
+        "input_lra": "0.50",
+        "input_thresh": "-28.79"
+      },
+      "gain_db": -6.33,
+      "method": "gain_and_oversampled_peak_limiter",
+      "passes": 1
+    },
+    {
+      "path": "stage8/Stage8_battle_hero_victory.wav",
+      "source_sha256": "5063378ca7fc43cffb56cd4a17a6a7bf83942ff0125a930898ce6a9b16a893bb",
+      "format": {
+        "rate": 24000,
+        "channels": 1,
+        "sample_width": 2,
+        "frames": 79680
+      },
+      "before": {
+        "input_i": "-12.92",
+        "input_tp": "0.13",
+        "input_lra": "0.20",
+        "input_thresh": "-23.21"
+      },
+      "output_sha256": "961e4b754cced99deb5f6b0945a496b285dd0ed984cc20667544e9ebe0221427",
+      "after": {
+        "input_i": "-18.00",
+        "input_tp": "-4.98",
+        "input_lra": "0.20",
+        "input_thresh": "-28.30"
+      },
+      "gain_db": -5.08,
+      "method": "gain_and_oversampled_peak_limiter",
+      "passes": 1
+    },
+    {
+      "path": "stage8/Stage8_battle_start.wav",
+      "source_sha256": "db4531147360b188a2c1271ffaa693254b7df4b379ee529e68128ed29a0e2479",
+      "format": {
+        "rate": 24000,
+        "channels": 1,
+        "sample_width": 2,
+        "frames": 124800
+      },
+      "before": {
+        "input_i": "-13.93",
+        "input_tp": "-0.41",
+        "input_lra": "3.80",
+        "input_thresh": "-25.13"
+      },
+      "output_sha256": "a2494d8b3302724d2439cfaa506bb899fc2bd7a89417fe424f64cafe1fd0409e",
+      "after": {
+        "input_i": "-18.02",
+        "input_tp": "-4.64",
+        "input_lra": "3.80",
+        "input_thresh": "-29.11"
+      },
+      "gain_db": -4.23,
+      "method": "gain_and_oversampled_peak_limiter",
+      "passes": 2
+    },
+    {
+      "path": "stage8/Stage8_hero_unlock_skill.wav",
+      "source_sha256": "aafee919900c8cda1c44269e37320c3be815b8a50922c08d26d3a5792bb7b93b",
+      "format": {
+        "rate": 24000,
+        "channels": 1,
+        "sample_width": 2,
+        "frames": 97920
+      },
+      "before": {
+        "input_i": "-12.52",
+        "input_tp": "0.83",
+        "input_lra": "1.50",
+        "input_thresh": "-23.14"
+      },
+      "output_sha256": "515c86e5d5730a73646579422e67b2bb66e640b18123a45b7d76029ed79d2161",
+      "after": {
+        "input_i": "-18.01",
+        "input_tp": "-5.07",
+        "input_lra": "1.50",
+        "input_thresh": "-28.62"
+      },
+      "gain_db": -5.48,
+      "method": "gain_and_oversampled_peak_limiter",
+      "passes": 1
+    },
+    {
+      "path": "stage9/Stage9_battle_hero_failed.wav",
+      "source_sha256": "b8a0c1f897cba654616017f3c4ff9ac4e0bdea5f06356585afb3a27a5b1bacfb",
+      "format": {
+        "rate": 24000,
+        "channels": 1,
+        "sample_width": 2,
+        "frames": 169920
+      },
+      "before": {
+        "input_i": "-23.19",
+        "input_tp": "-5.08",
+        "input_lra": "8.60",
+        "input_thresh": "-35.66"
+      },
+      "output_sha256": "d64f9ea7401e2c7637469b0ba375c118d0cbbd04565a9dae9c0dfed43c1333bf",
+      "after": {
+        "input_i": "-18.08",
+        "input_tp": "-2.49",
+        "input_lra": "8.00",
+        "input_thresh": "-30.66"
+      },
+      "gain_db": 5.66,
+      "method": "gain_and_oversampled_peak_limiter",
+      "passes": 2
+    },
+    {
+      "path": "stage9/Stage9_battle_hero_victory.wav",
+      "source_sha256": "377a7e6eea21a5d7bf6dba6a0a33256dc94d231249c4b38dc3996b1d5ff6c895",
+      "format": {
+        "rate": 24000,
+        "channels": 1,
+        "sample_width": 2,
+        "frames": 133440
+      },
+      "before": {
+        "input_i": "-23.02",
+        "input_tp": "-3.97",
+        "input_lra": "6.00",
+        "input_thresh": "-34.64"
+      },
+      "output_sha256": "08cbc30e5de2d7b0df4553db181d12f22e7974e65c47f31fdcff4169ddfc2d16",
+      "after": {
+        "input_i": "-18.04",
+        "input_tp": "-2.47",
+        "input_lra": "4.90",
+        "input_thresh": "-30.29"
+      },
+      "gain_db": 5.96,
+      "method": "gain_and_oversampled_peak_limiter",
+      "passes": 3
+    },
+    {
+      "path": "stage9/Stage9_battle_start.wav",
+      "source_sha256": "4bfd0cb1526a1b12392a872e950308d3b0b35d2c93b1ecd5d82422fb33e4f97a",
+      "format": {
+        "rate": 24000,
+        "channels": 1,
+        "sample_width": 2,
+        "frames": 157440
+      },
+      "before": {
+        "input_i": "-24.87",
+        "input_tp": "-7.66",
+        "input_lra": "2.60",
+        "input_thresh": "-35.81"
+      },
+      "output_sha256": "862026a485208f6464e3afa4bf56c78d81028c2f7fda74250972bbe972ff0bfa",
+      "after": {
+        "input_i": "-18.06",
+        "input_tp": "-2.38",
+        "input_lra": "2.50",
+        "input_thresh": "-29.65"
+      },
+      "gain_db": 7.25,
+      "method": "gain_and_oversampled_peak_limiter",
+      "passes": 2
+    },
+    {
+      "path": "stage9/Stage9_hero_unlock_skill.wav",
+      "source_sha256": "6e12522e3a98b0ba5852325737df7e91f6300488862b6e8a5c658340632e9e56",
+      "format": {
+        "rate": 24000,
+        "channels": 1,
+        "sample_width": 2,
+        "frames": 138240
+      },
+      "before": {
+        "input_i": "-20.73",
+        "input_tp": "-4.12",
+        "input_lra": "2.10",
+        "input_thresh": "-32.01"
+      },
+      "output_sha256": "f4463f010b21a5bc0c6b4ddc85d8cc145051fd256b1e34fc38d895297e40af70",
+      "after": {
+        "input_i": "-18.06",
+        "input_tp": "-2.48",
+        "input_lra": "1.90",
+        "input_thresh": "-29.36"
+      },
+      "gain_db": 3.01,
+      "method": "gain_and_oversampled_peak_limiter",
+      "passes": 2
+    }
+  ],
+  "source_revision": "660be6900be47e33ca3f3a0caa16a152173e42b4"
+}

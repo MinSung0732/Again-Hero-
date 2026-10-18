@@ -1,3 +1,9 @@
+## 2026-10-19 — 용사 음성33개 음량 균일화
+
+- 전체 WAV33개를 공통 -18LUFS 기준으로 오프라인 정규화. 이전 -31.31~-11.67LUFS(차이19.64LU)→-18.10~-17.98LUFS(차이0.12LU), 보정후 최대true peak -2.31dBTP. 작은 음성은 키우고 큰 음성은 낮추며 4배 oversampling peak limiter로 순간 피크 제어.
+- 경로/길이/샘플 수/24kHz mono PCM16·대사/피치/재생 타이밍 유지. runtime/개별용사 분기·실시간AGC 추가 없음. 공통 JSON 정책+재사용 정규화 도구, 원본/결과 SHA와33개 전후 측정 보고서 저장.
+- 전체 포맷/길이/해시·LUFS/피크 검사 및 Godot4.5.1 실제 WAV33개 import/재생 격리161검사 PASS·정적 통과. 실제스피커청취/전체게임·모바일 미검증. docs/HERO_VOICE_LOUDNESS_20261019.md. main 병합 없음.
+
 ## 2026-10-19 — 대화 BGM 음량 수정
 
 - 기존 대화 player -20dB가 로비 -3dB보다17dB 낮아 기본 BGM bus -27dB와 합산 시 실제 WAV 도입부 평균 약-67dB로 매우 작았음. game_audio_catalog의 로비 gain + 대화 상대 offset(-5dB)으로 계산해 player -8dB 적용. 사용자 볼륨/뮤트 유지, 원본WAV·시작1회/무루프/종료1초페이드·페이지/소유권 로직 불변.
