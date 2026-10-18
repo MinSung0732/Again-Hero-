@@ -1,3 +1,8 @@
+## 2026-10-18 — 하드코딩 정리7차: 자폭형 소환·거대화 배율
+
+- 폭탄쥐 giant_scaling.property_rules에6개 property의 순서/역수·반올림/최소값 선언. 신규 소환 도화선·폭발 피해는 기존 runtime_scaling 바인딩 재사용. ID 분기3곳 제거, raw/배율/XP·분열 자식 처리 시점 유지. 사망/실제보상 지급·AI/수치/풀 변경 없음.
+- Godot 신규2961+회귀12293=15254검사 PASS, property get/set 순서·독립XP 확인. 나머지 Battle233함수/소환 외곽 동일·밸런스 감사0·정적 통과. raw 누락 기존 진단 동일. 실제actor/폭발·보상지급/전체전투·실기/FPS 미검증. docs/BOMB_SCALING_POLICY_PHASE7_20261018.md. main 병합 없음.
+
 ## 2026-10-18 — 하드코딩 정리6차: 거미 둔화·거대화 대상
 
 - MonsterCatalog giant_scaling에 기존 기본공격10종/원거리5종·거미 둔화 property를 선언. runtime_scaling.spawn_property_multipliers로 거미의 신규 소환 둔화 배율 연결. Battle ID/list 선택6곳 제거, 기존 적용 시점·raw 기록·수치/반올림·승격/refresh·AI/보상 유지. 프레임 작업 추가 없음.

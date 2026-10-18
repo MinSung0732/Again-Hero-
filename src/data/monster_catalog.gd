@@ -1058,6 +1058,14 @@ const MONSTERS := {
 	},
 	"bomb_rat": {
 		"id": "bomb_rat",
+		"giant_scaling": {"property_rules": [
+			{"property": &"self_destruct_range"},
+			{"property": &"self_destruct_fuse", "inverse": true, "minimum": 0.10},
+			{"property": &"hero_kill_exp_reward", "integer": true, "minimum": 1},
+			{"property": &"self_destruct_exp_reward", "integer": true, "minimum": 1},
+			{"property": &"explosion_radius"},
+			{"property": &"explosion_damage", "integer": true, "minimum": 1},
+		]},
 		"runtime_scaling": {"fuse_property": &"self_destruct_fuse", "explosion_property": &"explosion_damage"},
 		"name": "폭탄쥐",
 		"role": "burst",

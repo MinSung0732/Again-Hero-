@@ -3,7 +3,7 @@ Catalog scene preloads are removed; refresh/level scaling services are stubs.
 """
 from pathlib import Path
 import argparse,re,subprocess,shutil
-p=argparse.ArgumentParser();p.add_argument('destination',type=Path);p.add_argument('--baseline',required=True);a=p.parse_args()
+p=argparse.ArgumentParser();p.add_argument('destination',type=Path);p.add_argument('--baseline',required=True);p.add_argument('--allow-changed-method',action='append',default=[],help='Explicitly audited later-phase changes');a=p.parse_args()
 repo=Path(__file__).resolve().parents[1];out=a.destination.resolve()
 if out==repo or repo in out.parents:raise SystemExit('Use directory outside repository')
 out.mkdir(parents=True,exist_ok=True)
@@ -25,14 +25,16 @@ before=old('src/battle/battle.gd');after=(repo/'src/battle/battle.gd').read_text
 spawn_before=method(before,'_spawn_monster');spawn_after=method(after,'_spawn_monster')
 slow_start=spawn_before.index('\tif monster_type == "spider":');slow_end=spawn_before.index('\n\tvar max_hp_value',slow_start)
 slow=spawn_before[slow_start:slow_end]
-assert spawn_before.replace(slow,'\t_apply_monster_spawn_property_multipliers(monster, monster_type)\n')==spawn_after,'spawn edits outside slow binding'
+if '_spawn_monster' not in a.allow_changed_method:
+ assert spawn_before.replace(slow,'\t_apply_monster_spawn_property_multipliers(monster, monster_type)\n')==spawn_after,'spawn edits outside slow binding'
 changed={'_spawn_monster','_apply_giant_monster_base_stats','promote_monster_to_giant'}
+changed.update(a.allow_changed_method)
 count=0
 for name in re.findall(r'^func (\w+)\(',before,re.M):
  if name not in changed:
   assert method(before,name)==method(after,name),name+' unexpectedly changed'
   count+=1
-print('Untouched Battle methods identical:',count,'; spawn differs only by slow helper call')
+print('Untouched Battle methods identical:',count,'; explicitly allowed:',a.allow_changed_method)
 header='''extends Node
 const MONSTER_CATALOG=preload("res://src/data/monster_catalog.gd")
 var spider_slow_duration_multiplier: float = 1.0
@@ -48,7 +50,9 @@ for label,text in [('before',before),('after',after)]:
  if label=='before':s+=re.search(r'^const GIANT_RANGED_MONSTER_IDS := \[[\s\S]*?^\]',text,re.M).group()+'\n'
  for name in ['_apply_giant_monster_base_stats','promote_monster_to_giant']:
   s+='\n'+method(text,name)
- if label=='after':s+='\n'+method(text,'_apply_monster_spawn_property_multipliers')
+ if label=='after':
+  s+='\n'+method(text,'_apply_monster_spawn_property_multipliers')
+  if 'func _apply_giant_stat_property_rules(' in text:s+='\n'+method(text,'_apply_giant_stat_property_rules')
  else:s+='\nfunc _apply_monster_spawn_property_multipliers(monster: Node, monster_type: String) -> void:\n'+slow+'\n'
  spawn=method(text,'_spawn_monster')
  begin=spawn.index('\tvar raw_speed_value =');end=spawn.index('\n\tvar speed_value =',begin)

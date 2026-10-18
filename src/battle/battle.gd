@@ -2046,60 +2046,31 @@ func _apply_giant_monster_base_stats(
 			float(monster.get(property)) * GIANT_MONSTER_STAT_MULTIPLIER
 		)
 
-	if monster_type == "bomb_rat":
-		monster.set(
-			"self_destruct_range",
-			float(monster.get("self_destruct_range"))
-			* GIANT_MONSTER_STAT_MULTIPLIER
-		)
-		monster.set(
-			"self_destruct_fuse",
-			maxf(
-				0.10,
-				float(monster.get("self_destruct_fuse"))
-				/ GIANT_MONSTER_STAT_MULTIPLIER
-			)
-		)
-		monster.set(
-			"hero_kill_exp_reward",
-			maxi(
-				1,
-				int(round(
-					float(monster.get("hero_kill_exp_reward"))
-					* GIANT_MONSTER_STAT_MULTIPLIER
-				))
-			)
-		)
-		monster.set(
-			"self_destruct_exp_reward",
-			maxi(
-				1,
-				int(round(
-					float(monster.get("self_destruct_exp_reward"))
-					* GIANT_MONSTER_STAT_MULTIPLIER
-				))
-			)
-		)
-		monster.set(
-			"explosion_radius",
-			float(monster.get("explosion_radius"))
-			* GIANT_MONSTER_STAT_MULTIPLIER
-		)
-		monster.set(
-			"explosion_damage",
-			maxi(
-				1,
-				int(round(
-					float(monster.get("explosion_damage"))
-					* GIANT_MONSTER_STAT_MULTIPLIER
-				))
-			)
-		)
+	_apply_giant_stat_property_rules(
+		monster,
+		giant_profile.get("property_rules", MONSTER_CATALOG.EMPTY_GIANT_STAT_PROPERTIES)
+	)
 
 	# Scaling the CharacterBody doubles the authored visual and its child
 	# CollisionShape2D together. This keeps the collision footprint matched to
 	# the requested 2x body size without mutating shared Shape2D resources.
 	monster.scale *= GIANT_MONSTER_SIZE_MULTIPLIER
+
+
+func _apply_giant_stat_property_rules(monster: Node, rules: Array) -> void:
+	for rule in rules:
+		var property: StringName = rule["property"]
+		var value := float(monster.get(property))
+		value = value / GIANT_MONSTER_STAT_MULTIPLIER if bool(rule.get("inverse", false)) else value * GIANT_MONSTER_STAT_MULTIPLIER
+		if bool(rule.get("integer", false)):
+			var integer_value := int(round(value))
+			if rule.has("minimum"):
+				integer_value = maxi(int(rule["minimum"]), integer_value)
+			monster.set(property, integer_value)
+		else:
+			if rule.has("minimum"):
+				value = maxf(float(rule["minimum"]), value)
+			monster.set(property, value)
 
 
 func promote_monster_to_giant(
@@ -2325,11 +2296,13 @@ func _spawn_monster(
 			)
 		)
 
-	if monster_type == "bomb_rat":
-		var fuse_value = monster.get("self_destruct_fuse")
+	var runtime_scaling := MONSTER_CATALOG.get_runtime_scaling_profile(monster_type)
+	var fuse_property: StringName = runtime_scaling.get("fuse_property", &"")
+	if not fuse_property.is_empty():
+		var fuse_value = monster.get(fuse_property)
 		if fuse_value != null:
 			monster.set(
-				"self_destruct_fuse",
+				fuse_property,
 				maxf(
 					0.10,
 					float(fuse_value)
@@ -2356,11 +2329,12 @@ func _spawn_monster(
 			)
 		)
 
-	if monster_type == "bomb_rat":
-		var explosion_damage_value = monster.get("explosion_damage")
+	var explosion_property: StringName = runtime_scaling.get("explosion_property", &"")
+	if not explosion_property.is_empty():
+		var explosion_damage_value = monster.get(explosion_property)
 		if explosion_damage_value != null:
 			monster.set(
-				"explosion_damage",
+				explosion_property,
 				maxi(
 					1,
 					int(round(
