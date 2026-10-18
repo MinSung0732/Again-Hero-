@@ -1,3 +1,9 @@
+## 2026-10-18 — 하드코딩 정리14차: 도적·검방패·권총 효과 초기화
+
+- hero_presentation_catalog에 3종 효과의 경로/프레임/FPS/loop·노드/속성·누락/로드·할당 순서 선언. 공통 setup 처리, 직접 archetype 비교3곳 및 미사용 빌더2개 제거. 공격/AI/수치/앵커/아트 불변, 매프레임 작업 추가 없음.
+- Godot 격리 전후376+13차 회귀1666=2042검사 PASS. 누락 경고 각212개 일치·정상 import/정적 통과, 나머지 Hero651함수/Main/Battle·기존 Catalog 동일. 합성 texture 검증이며 실제PNG/전체ready/전투/실기/FPS 미검증.
+- 같은 좁은 조사 패턴 후보125→122(고유기술 포함). docs/HERO_COMBAT_EFFECT_POLICY_PHASE14_20261018.md 및 위치 JSON. main 병합 없음.
+
 ## 2026-10-18 — 하드코딩 정리13차: 크기 정규화·채널 효과
 
 - hero_presentation_catalog에 참조 이미지/크기/배율·rookie 고정 높이 정책, 방패/권총 효과 종료, 광전사/연금술사 채널 초기화의 프레임/FPS/누락/좌표·크기/속성 순서 선언. 직접 ID/성향 선택5곳 제거. 실제 used_rect 계산·동적FPS·신호/stop/할당 순서·수치/AI/PNG 유지, 신규 프레임 작업/스캔 없음.

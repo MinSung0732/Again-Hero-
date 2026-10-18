@@ -222,3 +222,297 @@ const CHANNEL_EFFECT_PROFILES := {
 static func get_channel_effect_profile(archetype: String, event: StringName) -> Dictionary:
 	var rules: Dictionary = CHANNEL_EFFECT_PROFILES.get(archetype, EMPTY_PROFILE)
 	return rules.get(event, EMPTY_PROFILE)
+
+const STAGE2_EFFECT1_DIR := "res://assets/art/heroes/stage2_rogue/frames/effect_01"
+const STAGE2_EFFECT2_DIR := "res://assets/art/heroes/stage2_rogue/frames/effect_02"
+const STAGE2_EFFECT3_DIR := "res://assets/art/heroes/stage2_rogue/frames/effect_03"
+const STAGE3_BLOCK_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/effect1"
+const STAGE3_SLASH_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/effect2"
+const STAGE3_THRUST_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/effect3"
+const STAGE3_AURA_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/effect4"
+const STAGE3_CHARGE_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/effect5"
+
+# Setup-only bindings. Batches retain the legacy load/assign boundaries; missing
+# frames either abort one effect, stop one animation, or skip a frame.
+const COMBAT_EFFECT_PROFILES := {
+	"rogue_combo": {
+		"rogue": {
+			"before_build": {},
+			"batches": [
+				{
+					"builds": [
+						{
+							"animations": [
+								{
+									"name": &"stab",
+									"path_pattern": STAGE2_EFFECT1_DIR + "/frame_%02d.png",
+									"first": 1,
+									"last": 6,
+									"fps": 20.0,
+									"loop": false,
+									"missing": &"abort_effect",
+									"warning": "Stage 2 rogue effect frame load failed: %s",
+									"loop_first": false
+								}
+							]
+						},
+						{
+							"animations": [
+								{
+									"name": &"assassinate",
+									"path_pattern": STAGE2_EFFECT2_DIR + "/frame_%02d.png",
+									"first": 1,
+									"last": 6,
+									"fps": 22.0,
+									"loop": false,
+									"missing": &"abort_effect",
+									"warning": "Stage 2 rogue effect frame load failed: %s",
+									"loop_first": false
+								}
+							]
+						},
+						{
+							"animations": [
+								{
+									"name": &"slash",
+									"path_pattern": STAGE2_EFFECT3_DIR + "/frame_%02d.png",
+									"first": 1,
+									"last": 6,
+									"fps": 18.0,
+									"loop": false,
+									"missing": &"abort_effect",
+									"warning": "Stage 2 rogue effect frame load failed: %s",
+									"loop_first": false
+								}
+							]
+						}
+					],
+					"bindings": [
+						{
+							"slot": 0,
+							"target": &"rogue_attack_effect",
+							"require_nonempty": false,
+							"before_assign": {},
+							"properties": { "scale": Vector2(0.65, 0.65) }
+						},
+						{
+							"slot": 1,
+							"target": &"channel_effect",
+							"require_nonempty": false,
+							"before_assign": {},
+							"properties": { "scale": Vector2(0.72, 0.72), "position": Vector2.ZERO }
+						},
+						{
+							"slot": 2,
+							"target": &"shield_effect",
+							"require_nonempty": false,
+							"before_assign": {},
+							"properties": { "scale": Vector2(0.52, 0.52), "position": Vector2.ZERO, "z_index": 3 }
+						}
+					]
+				}
+			],
+		}
+	},
+	"sword_shield": {
+		"fighter": {
+			"before_build": {
+				"rogue_attack_effect": { "visible": false },
+				"channel_effect": { "visible": false },
+				"shield_effect": { "visible": false },
+			},
+			"batches": [
+				{
+					"builds": [
+						{
+							"animations": [
+								{
+									"name": &"slash",
+									"path_pattern": STAGE3_SLASH_EFFECT_DIR + "/hero_effect_slash_%02d.png",
+									"first": 1,
+									"last": 6,
+									"fps": 18.0,
+									"loop": false,
+									"missing": &"stop_animation",
+									"warning": "Stage 3 fighter effect frame load failed: %s",
+									"loop_first": false
+								},
+								{
+									"name": &"thrust",
+									"path_pattern": STAGE3_THRUST_EFFECT_DIR + "/hero_effect_thrust_%02d.png",
+									"first": 1,
+									"last": 6,
+									"fps": 18.0,
+									"loop": false,
+									"missing": &"stop_animation",
+									"warning": "Stage 3 fighter effect frame load failed: %s",
+									"loop_first": false
+								}
+							]
+						}
+					],
+					"bindings": [
+						{
+							"slot": 0,
+							"target": &"rogue_attack_effect",
+							"require_nonempty": false,
+							"before_assign": {},
+							"properties": { "scale": Vector2(0.74, 0.74), "position": Vector2.ZERO, "z_index": 2 }
+						}
+					]
+				},
+				{
+					"builds": [
+						{
+							"animations": [
+								{
+									"name": &"guard_release",
+									"path_pattern": STAGE3_BLOCK_EFFECT_DIR + "/hero_effect_block_%02d.png",
+									"first": 1,
+									"last": 6,
+									"fps": 15.0,
+									"loop": false,
+									"missing": &"stop_animation",
+									"warning": "Stage 3 fighter effect frame load failed: %s",
+									"loop_first": false
+								},
+								{
+									"name": &"charge_impact",
+									"path_pattern": STAGE3_CHARGE_EFFECT_DIR + "/ground_effect_%02d.png",
+									"first": 1,
+									"last": 8,
+									"fps": 20.0,
+									"loop": false,
+									"missing": &"stop_animation",
+									"warning": "Stage 3 fighter effect frame load failed: %s",
+									"loop_first": false
+								}
+							]
+						}
+					],
+					"bindings": [
+						{
+							"slot": 0,
+							"target": &"channel_effect",
+							"require_nonempty": false,
+							"before_assign": {},
+							"properties": { "scale": Vector2(0.76, 0.76), "position": Vector2.ZERO, "z_index": 3 }
+						}
+					]
+				},
+				{
+					"builds": [
+						{
+							"animations": [
+								{
+									"name": &"guard_aura",
+									"path_pattern": STAGE3_AURA_EFFECT_DIR + "/aura_%02d.png",
+									"first": 1,
+									"last": 8,
+									"fps": 10.0,
+									"loop": true,
+									"missing": &"stop_animation",
+									"warning": "Stage 3 fighter effect frame load failed: %s",
+									"loop_first": false
+								}
+							]
+						}
+					],
+					"bindings": [
+						{
+							"slot": 0,
+							"target": &"shield_effect",
+							"require_nonempty": false,
+							"before_assign": {},
+							"properties": { "scale": Vector2(0.60, 0.60), "position": Vector2.ZERO, "z_index": 3 }
+						}
+					]
+				}
+			],
+		}
+	},
+	"pistol_gunner": {
+		"gunner": {
+			"before_build": {
+				"rogue_attack_effect": {
+					"visible": false,
+					"sprite_frames": null,
+					"texture_filter": CanvasItem.TEXTURE_FILTER_NEAREST
+				},
+			},
+			"batches": [
+				{
+					"builds": [
+						{
+							"animations": [
+								{
+									"name": &"deadeye_flame",
+									"path_pattern": STAGE4_FRAME_DIR + "/effect/effect_projectile_%02d.png",
+									"first": 5,
+									"last": 6,
+									"fps": 28.0,
+									"loop": true,
+									"missing": &"skip",
+									"warning": "Stage 4 deadeye flame frame load failed: %s",
+									"loop_first": true
+								},
+								{
+									"name": &"deadeye_smoke",
+									"path_pattern": STAGE4_FRAME_DIR + "/effect/effect_projectile_%02d.png",
+									"first": 7,
+									"last": 12,
+									"fps": 20.0,
+									"loop": false,
+									"missing": &"skip",
+									"warning": "Stage 4 deadeye smoke frame load failed: %s",
+									"loop_first": true
+								}
+							]
+						},
+						{
+							"animations": [
+								{
+									"name": &"cylinder_dust",
+									"path_pattern": STAGE3_CHARGE_EFFECT_DIR + "/ground_effect_%02d.png",
+									"first": 1,
+									"last": 8,
+									"fps": 20.0,
+									"loop": false,
+									"missing": &"skip",
+									"warning": "Cylinder dust frame load failed: %s",
+									"loop_first": true
+								}
+							]
+						}
+					],
+					"bindings": [
+						{
+							"slot": 0,
+							"target": &"rogue_attack_effect",
+							"require_nonempty": true,
+							"before_assign": {},
+							"properties": { "scale": Vector2(0.30, 0.30), "z_index": 4 }
+						},
+						{
+							"slot": 1,
+							"target": &"channel_effect",
+							"require_nonempty": true,
+							"before_assign": { "visible": false },
+							"properties": {
+								"texture_filter": CanvasItem.TEXTURE_FILTER_NEAREST,
+								"scale": Vector2(0.92, 0.92),
+								"position": Vector2.ZERO,
+								"z_index": 2,
+								"modulate": Color(0.76, 0.68, 0.55, 0.88)
+							}
+						}
+					]
+				}
+			],
+		}
+	},
+}
+
+static func get_combat_effect_profile(archetype: String, event: StringName) -> Dictionary:
+	var rules: Dictionary = COMBAT_EFFECT_PROFILES.get(archetype, EMPTY_PROFILE)
+	return rules.get(event, EMPTY_PROFILE)

@@ -115,15 +115,7 @@ const STAGE1_CHANNEL_EFFECT_BASE_PATH := "res://assets/art/heroes/stage1_mage/fr
 const STAGE1_CHANNEL_EFFECT_FRAME_COUNT := 6
 const STAGE1_CHANNEL_EFFECT_TARGET_SIZE := 300.0
 const STAGE2_FRAME_DIR := HERO_PRESENTATION.STAGE2_FRAME_DIR
-const STAGE2_EFFECT1_DIR := "res://assets/art/heroes/stage2_rogue/frames/effect_01"
-const STAGE2_EFFECT2_DIR := "res://assets/art/heroes/stage2_rogue/frames/effect_02"
-const STAGE2_EFFECT3_DIR := "res://assets/art/heroes/stage2_rogue/frames/effect_03"
 const STAGE3_FRAME_DIR := HERO_PRESENTATION.STAGE3_FRAME_DIR
-const STAGE3_BLOCK_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/effect1"
-const STAGE3_SLASH_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/effect2"
-const STAGE3_THRUST_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/effect3"
-const STAGE3_AURA_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/effect4"
-const STAGE3_CHARGE_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/effect5"
 const STAGE4_FRAME_DIR := HERO_PRESENTATION.STAGE4_FRAME_DIR
 const STAGE5_FRAME_DIR := HERO_PRESENTATION.STAGE5_FRAME_DIR
 const ARCHMAGE_OFFENSIVE_SKILL_KEYS: Array[String] = [
@@ -7042,64 +7034,11 @@ func _add_sequence_animation(
 		frames.add_frame(animation_name, texture)
 	return true
 
-func _build_stage2_effect_frames(
-	base_dir: String,
-	animation_name: String,
-	fps: float = 18.0
-) -> SpriteFrames:
-	var frames := SpriteFrames.new()
-	if frames.has_animation("default"):
-		frames.remove_animation("default")
-	frames.add_animation(animation_name)
-	frames.set_animation_speed(animation_name, fps)
-	frames.set_animation_loop(animation_name, false)
-
-	for index in range(1, 7):
-		var path := "%s/frame_%02d.png" % [base_dir, index]
-		var texture := _load_stage1_texture(path)
-		if texture == null:
-			push_warning("Stage 2 rogue effect frame load failed: %s" % path)
-			return null
-		frames.add_frame(animation_name, texture)
-	return frames
-
 func _apply_stage2_rogue_effect_visuals() -> void:
+	# This reset is unconditional, including calls for another archetype.
 	rogue_attack_effect.visible = false
 	rogue_attack_effect.sprite_frames = null
-
-	if hero_archetype != "rogue_combo":
-		return
-
-	var attack_frames := _build_stage2_effect_frames(
-		STAGE2_EFFECT1_DIR,
-		"stab",
-		20.0
-	)
-	var assassination_frames := _build_stage2_effect_frames(
-		STAGE2_EFFECT2_DIR,
-		"assassinate",
-		22.0
-	)
-	var slash_frames := _build_stage2_effect_frames(
-		STAGE2_EFFECT3_DIR,
-		"slash",
-		18.0
-	)
-
-	if attack_frames != null:
-		rogue_attack_effect.sprite_frames = attack_frames
-		rogue_attack_effect.scale = Vector2(0.65, 0.65)
-
-	if assassination_frames != null:
-		channel_effect.sprite_frames = assassination_frames
-		channel_effect.scale = Vector2(0.72, 0.72)
-		channel_effect.position = Vector2.ZERO
-
-	if slash_frames != null:
-		shield_effect.sprite_frames = slash_frames
-		shield_effect.scale = Vector2(0.52, 0.52)
-		shield_effect.position = Vector2.ZERO
-		shield_effect.z_index = 3
+	_configure_combat_effect_profile(HERO_PRESENTATION.get_combat_effect_profile(hero_archetype, &"rogue"))
 
 func _apply_stage1_shield_visual() -> void:
 	shield_effect.visible = false
@@ -20348,149 +20287,10 @@ func _play_fighter_guard_release_effect() -> void:
 	channel_effect.play("guard_release")
 
 func _apply_stage3_fighter_effect_visuals() -> void:
-	if hero_archetype != "sword_shield":
-		return
-
-	rogue_attack_effect.visible = false
-	channel_effect.visible = false
-	shield_effect.visible = false
-
-	var attack_frames := SpriteFrames.new()
-	if attack_frames.has_animation("default"):
-		attack_frames.remove_animation("default")
-	_add_prefixed_effect_animation(
-		attack_frames,
-		"slash",
-		STAGE3_SLASH_EFFECT_DIR,
-		"hero_effect_slash",
-		6,
-		18.0,
-		false
-	)
-	_add_prefixed_effect_animation(
-		attack_frames,
-		"thrust",
-		STAGE3_THRUST_EFFECT_DIR,
-		"hero_effect_thrust",
-		6,
-		18.0,
-		false
-	)
-	rogue_attack_effect.sprite_frames = attack_frames
-	rogue_attack_effect.scale = Vector2(0.74, 0.74)
-	rogue_attack_effect.position = Vector2.ZERO
-	rogue_attack_effect.z_index = 2
-
-	var release_frames := SpriteFrames.new()
-	if release_frames.has_animation("default"):
-		release_frames.remove_animation("default")
-	_add_prefixed_effect_animation(
-		release_frames,
-		"guard_release",
-		STAGE3_BLOCK_EFFECT_DIR,
-		"hero_effect_block",
-		6,
-		15.0,
-		false
-	)
-	_add_prefixed_effect_animation(
-		release_frames,
-		"charge_impact",
-		STAGE3_CHARGE_EFFECT_DIR,
-		"ground_effect",
-		8,
-		20.0,
-		false
-	)
-	channel_effect.sprite_frames = release_frames
-	channel_effect.scale = Vector2(0.76, 0.76)
-	channel_effect.position = Vector2.ZERO
-	channel_effect.z_index = 3
-
-	var aura_frames := SpriteFrames.new()
-	if aura_frames.has_animation("default"):
-		aura_frames.remove_animation("default")
-	_add_prefixed_effect_animation(
-		aura_frames,
-		"guard_aura",
-		STAGE3_AURA_EFFECT_DIR,
-		"aura",
-		8,
-		10.0,
-		true
-	)
-	shield_effect.sprite_frames = aura_frames
-	shield_effect.scale = Vector2(0.60, 0.60)
-	shield_effect.position = Vector2.ZERO
-	shield_effect.z_index = 3
-
+	_configure_combat_effect_profile(HERO_PRESENTATION.get_combat_effect_profile(hero_archetype, &"fighter"))
 
 func _apply_stage4_gunner_effect_visuals() -> void:
-	if hero_archetype != "pistol_gunner":
-		return
-
-	rogue_attack_effect.visible = false
-	rogue_attack_effect.sprite_frames = null
-	rogue_attack_effect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-
-	var frames := SpriteFrames.new()
-	if frames.has_animation(&"default"):
-		frames.remove_animation(&"default")
-
-	frames.add_animation(&"deadeye_flame")
-	frames.set_animation_loop(&"deadeye_flame", true)
-	frames.set_animation_speed(&"deadeye_flame", 28.0)
-	for index in range(5, 7):
-		var flame_path := "res://assets/art/heroes/stage4_gunner/frames/effect/effect_projectile_%02d.png" % index
-		var flame_texture := _load_stage1_texture(flame_path)
-		if flame_texture == null:
-			push_warning("Stage 4 deadeye flame frame load failed: %s" % flame_path)
-			continue
-		frames.add_frame(&"deadeye_flame", flame_texture)
-
-	frames.add_animation(&"deadeye_smoke")
-	frames.set_animation_loop(&"deadeye_smoke", false)
-	frames.set_animation_speed(&"deadeye_smoke", 20.0)
-	for index in range(7, 13):
-		var smoke_path := "res://assets/art/heroes/stage4_gunner/frames/effect/effect_projectile_%02d.png" % index
-		var smoke_texture := _load_stage1_texture(smoke_path)
-		if smoke_texture == null:
-			push_warning("Stage 4 deadeye smoke frame load failed: %s" % smoke_path)
-			continue
-		frames.add_frame(&"deadeye_smoke", smoke_texture)
-
-	var dust_frames := SpriteFrames.new()
-	if dust_frames.has_animation(&"default"):
-		dust_frames.remove_animation(&"default")
-	dust_frames.add_animation(&"cylinder_dust")
-	dust_frames.set_animation_loop(&"cylinder_dust", false)
-	dust_frames.set_animation_speed(&"cylinder_dust", 20.0)
-
-	for index in range(1, 9):
-		var dust_path := "%s/ground_effect_%02d.png" % [STAGE3_CHARGE_EFFECT_DIR, index]
-		var dust_texture := _load_stage1_texture(dust_path)
-		if dust_texture == null:
-			push_warning("Cylinder dust frame load failed: %s" % dust_path)
-			continue
-		dust_frames.add_frame(&"cylinder_dust", dust_texture)
-
-	if (
-		frames.get_frame_count(&"deadeye_flame") > 0
-		or frames.get_frame_count(&"deadeye_smoke") > 0
-	):
-		rogue_attack_effect.sprite_frames = frames
-		rogue_attack_effect.scale = Vector2(0.30, 0.30)
-		rogue_attack_effect.z_index = 4
-
-	if dust_frames.get_frame_count(&"cylinder_dust") > 0:
-		channel_effect.visible = false
-		channel_effect.sprite_frames = dust_frames
-		channel_effect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		channel_effect.scale = Vector2(0.92, 0.92)
-		channel_effect.position = Vector2.ZERO
-		channel_effect.z_index = 2
-		channel_effect.modulate = Color(0.76, 0.68, 0.55, 0.88)
-
+	_configure_combat_effect_profile(HERO_PRESENTATION.get_combat_effect_profile(hero_archetype, &"gunner"))
 
 func _set_gunner_muzzle_transform(direction: Vector2) -> void:
 	var dir := direction.normalized()
@@ -20553,33 +20353,6 @@ func _play_gunner_cylinder_dust() -> void:
 	channel_effect.frame_progress = 0.0
 	channel_effect.play(&"cylinder_dust")
 
-
-func _add_prefixed_effect_animation(
-	frames: SpriteFrames,
-	animation_name: String,
-	base_dir: String,
-	file_prefix: String,
-	frame_count: int,
-	fps: float,
-	loop_animation: bool
-) -> bool:
-	frames.add_animation(animation_name)
-	frames.set_animation_speed(animation_name, fps)
-	frames.set_animation_loop(animation_name, loop_animation)
-
-	for index in range(1, frame_count + 1):
-		var path := "%s/%s_%02d.png" % [
-			base_dir,
-			file_prefix,
-			index,
-		]
-		var texture := _load_stage1_texture(path)
-		if texture == null:
-			push_warning("Stage 3 fighter effect frame load failed: %s" % path)
-			return false
-		frames.add_frame(animation_name, texture)
-
-	return true
 
 func _required_exp_for_level(target_level: int) -> int:
 	if player_controlled: return preload("res://src/data/hero_mode_catalog.gd").required_exp(target_level,player_exp_requirement_scale)
@@ -21209,3 +20982,65 @@ func _clear_burn() -> void:
 
 func _player_shield_amount(amount: float) -> float:
 	return player_weapons.shield_amount(amount) if player_controlled and player_weapons != null else amount
+
+
+func _configure_combat_effect_profile(profile: Dictionary) -> void:
+	if profile.is_empty():
+		return
+	var before_build: Dictionary = profile["before_build"]
+	for target_property in before_build:
+		var target: AnimatedSprite2D = get(target_property)
+		var properties: Dictionary = before_build[target_property]
+		for property in properties:
+			target.set(property, properties[property])
+	# Temporary frame slots exist only during setup, never during frame updates.
+	for batch in profile["batches"]:
+		var built_frames: Array[SpriteFrames] = []
+		for build in batch["builds"]:
+			built_frames.append(_build_bound_effect_frames(build))
+		for binding in batch["bindings"]:
+			var frames := built_frames[int(binding["slot"])]
+			if frames == null:
+				continue
+			if bool(binding["require_nonempty"]):
+				var has_frames := false
+				for animation in frames.get_animation_names():
+					if frames.get_frame_count(animation) > 0:
+						has_frames = true
+						break
+				if not has_frames:
+					continue
+			var target: AnimatedSprite2D = get(binding["target"])
+			var before_assign: Dictionary = binding["before_assign"]
+			for property in before_assign:
+				target.set(property, before_assign[property])
+			target.sprite_frames = frames
+			var properties: Dictionary = binding["properties"]
+			for property in properties:
+				target.set(property, properties[property])
+
+
+func _build_bound_effect_frames(profile: Dictionary) -> SpriteFrames:
+	var frames := SpriteFrames.new()
+	if frames.has_animation(&"default"):
+		frames.remove_animation(&"default")
+	for rule in profile["animations"]:
+		var animation: StringName = rule["name"]
+		frames.add_animation(animation)
+		if bool(rule["loop_first"]):
+			frames.set_animation_loop(animation, bool(rule["loop"]))
+		frames.set_animation_speed(animation, float(rule["fps"]))
+		if not bool(rule["loop_first"]):
+			frames.set_animation_loop(animation, bool(rule["loop"]))
+		for index in range(int(rule["first"]), int(rule["last"]) + 1):
+			var path := String(rule["path_pattern"]) % index
+			var texture := _load_stage1_texture(path)
+			if texture == null:
+				push_warning(String(rule["warning"]) % path)
+				if rule["missing"] == &"abort_effect":
+					return null
+				if rule["missing"] == &"stop_animation":
+					break
+				continue
+			frames.add_frame(animation, texture)
+	return frames
