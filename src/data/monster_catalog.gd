@@ -5,6 +5,9 @@ const FRONTIER := preload("res://src/data/frontier_monster_catalog.gd")
 const BALANCE := preload("res://src/data/monster_balance_catalog.gd")
 static var balanced_stats_cache: Dictionary = {}
 const EMPTY_RUNTIME_SCALING := {}
+const EMPTY_GIANT_SCALING := {}
+const EMPTY_PROPERTY_MULTIPLIERS := {}
+const EMPTY_GIANT_STAT_PROPERTIES := []
 
 enum EliteSpawnPosition { EVENT_RING, FARTHEST_ATTACK_RANGE }
 const DEFAULT_ELITE_SPAWN_DISTANCE := 720.0
@@ -447,6 +450,7 @@ const MONSTERS := {
 	},
 	"slime": {
 		"id": "slime",
+		"giant_scaling": {"basic_attack": true},
 		"name": "슬라임",
 		"role": "swarm",
 		"species": "liquid",
@@ -505,6 +509,8 @@ const MONSTERS := {
 	},
 	"spider": {
 		"id": "spider",
+		"runtime_scaling": {"spawn_property_multipliers": {&"slow_duration": &"spider_slow_duration_multiplier"}},
+		"giant_scaling": {"basic_attack": true, "ranged_attack": true, "stat_properties": [&"slow_duration"]},
 		"name": "거미",
 		"role": "controller",
 		"species": "beast",
@@ -564,6 +570,7 @@ const MONSTERS := {
 	},
 	"orc": {
 		"id": "orc",
+		"giant_scaling": {"basic_attack": true},
 		"runtime_scaling": {"hp_upgrade_property": &"orc_hp_multiplier"},
 		"name": "오크",
 		"role": "tank",
@@ -622,6 +629,7 @@ const MONSTERS := {
 	},
 	"skeleton": {
 		"id": "skeleton",
+		"giant_scaling": {"basic_attack": true},
 		"elite_spawn": {"alive_registration_method": &"set_elite_skeleton_alive"},
 		"name": "해골 전사",
 		"role": "tank",
@@ -682,6 +690,7 @@ const MONSTERS := {
 	},
 	"skeleton_archer": {
 		"id": "skeleton_archer",
+		"giant_scaling": {"basic_attack": true, "ranged_attack": true},
 		"name": "해골 궁병",
 		"role": "ranged",
 		"species": "undead",
@@ -751,6 +760,7 @@ const MONSTERS := {
 	},
 	"kobolt": {
 		"id": "kobolt",
+		"giant_scaling": {"basic_attack": true, "ranged_attack": true},
 		"elite_spawn": {"position_policy": EliteSpawnPosition.FARTHEST_ATTACK_RANGE},
 		"name": "코볼트",
 		"role": "ranged",
@@ -808,6 +818,7 @@ const MONSTERS := {
 	},
 	"bat": {
 		"id": "bat",
+		"giant_scaling": {"basic_attack": true},
 		"name": "박쥐",
 		"role": "swarm",
 		"species": "beast",
@@ -865,6 +876,7 @@ const MONSTERS := {
 	},
 	"goblin": {
 		"id": "goblin",
+		"giant_scaling": {"basic_attack": true},
 		"name": "고블린",
 		"role": "swarm",
 		"species": "beast",
@@ -926,6 +938,7 @@ const MONSTERS := {
 	},
 	"goblin_thrower": {
 		"id": "goblin_thrower",
+		"giant_scaling": {"basic_attack": true, "ranged_attack": true},
 		"name": "고블린투척병",
 		"role": "ranged",
 		"species": "beast",
@@ -989,6 +1002,7 @@ const MONSTERS := {
 	},
 	"ghost": {
 		"id": "ghost",
+		"giant_scaling": {"basic_attack": true, "ranged_attack": true},
 		"name": "유령",
 		"role": "controller",
 		"species": "gas",
@@ -1394,3 +1408,9 @@ static func get_elite_spawn_profile(monster_id: String) -> Dictionary:
 	if not MONSTERS.has(monster_id):
 		return DEFAULT_ELITE_SPAWN
 	return MONSTERS[monster_id].get("elite_spawn", DEFAULT_ELITE_SPAWN)
+
+# Opt-in bindings preserve legacy giant coverage independently of role/rarity.
+static func get_giant_scaling_profile(monster_id: String) -> Dictionary:
+	if not MONSTERS.has(monster_id):
+		return EMPTY_GIANT_SCALING
+	return MONSTERS[monster_id].get("giant_scaling", EMPTY_GIANT_SCALING)

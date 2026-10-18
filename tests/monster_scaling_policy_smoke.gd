@@ -40,10 +40,12 @@ func _initialize():
  for id in CATALOG.MONSTERS:
   var data:Dictionary=CATALOG.MONSTERS[id].duplicate(true)
   data.erase("runtime_scaling")
+  if not OLD_CATALOG.MONSTERS[id].has("giant_scaling"):data.erase("giant_scaling")
   if not OLD_CATALOG.MONSTERS[id].has("elite_spawn"):data.erase("elite_spawn")
   check(data==OLD_CATALOG.MONSTERS[id],"unchanged catalog "+id)
   var profile:Dictionary=CATALOG.get_runtime_scaling_profile(id)
-  check(profile.is_empty() if id not in ["orc","bomb_rat"] else not profile.is_empty(),"opt in "+id)
+  var has_legacy_binding:bool=profile.has("hp_upgrade_property") or profile.has("fuse_property") or profile.has("explosion_property")
+  check(has_legacy_binding==(id in ["orc","bomb_rat"]),"legacy opt in "+id)
  check(CATALOG.get_runtime_scaling_profile("unknown").is_empty(),"unknown neutral")
  for id in ["orc","bomb_rat","skeleton","slime","unknown"]:
   for value in [-1.0,0.0,0.003,0.3,1.0,2.5]:

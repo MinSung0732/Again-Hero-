@@ -135,13 +135,6 @@ const GIANT_MONSTER_CHANCE_PER_STEP := 0.01
 const GIANT_MONSTER_STAT_MULTIPLIER := 1.28
 const GIANT_MONSTER_HP_MULTIPLIER := 1.54
 const GIANT_MONSTER_SIZE_MULTIPLIER := 2.0
-const GIANT_RANGED_MONSTER_IDS := [
-	"spider",
-	"skeleton_archer",
-	"kobolt",
-	"goblin_thrower",
-	"ghost",
-]
 const HEAL_ITEM_KILLS_REQUIRED := 30
 const MAX_ACTIVE_HEAL_ITEMS := 2
 const CHEST_KILLS_REQUIRED := 50
@@ -1989,18 +1982,8 @@ func _apply_giant_monster_base_stats(
 			)
 		)
 
-	if monster_type in [
-		"slime",
-		"orc",
-		"spider",
-		"skeleton",
-		"skeleton_archer",
-		"kobolt",
-		"bat",
-		"goblin",
-		"goblin_thrower",
-		"ghost",
-	]:
+	var giant_profile := MONSTER_CATALOG.get_giant_scaling_profile(monster_type)
+	if bool(giant_profile.get("basic_attack", false)):
 		var damage_value = monster.get("attack_damage")
 		if damage_value != null:
 			monster.set(
@@ -2017,7 +2000,7 @@ func _apply_giant_monster_base_stats(
 		var attack_range_value = monster.get("attack_range")
 		if attack_range_value != null:
 			var attack_range_multiplier := GIANT_MONSTER_STAT_MULTIPLIER
-			if monster_type in GIANT_RANGED_MONSTER_IDS:
+			if bool(giant_profile.get("ranged_attack", false)):
 				attack_range_multiplier = GIANT_MONSTER_SIZE_MULTIPLIER
 			monster.set(
 				"attack_range",
@@ -2035,7 +2018,7 @@ func _apply_giant_monster_base_stats(
 				)
 			)
 
-	if monster_type in GIANT_RANGED_MONSTER_IDS:
+	if bool(giant_profile.get("ranged_attack", false)):
 		monster.set(
 			"projectile_speed",
 			float(monster.get("projectile_speed"))
@@ -2056,11 +2039,11 @@ func _apply_giant_monster_base_stats(
 				* GIANT_MONSTER_SIZE_MULTIPLIER
 			)
 
-	if monster_type == "spider":
+	for raw_property in giant_profile.get("stat_properties", MONSTER_CATALOG.EMPTY_GIANT_STAT_PROPERTIES):
+		var property: StringName = raw_property
 		monster.set(
-			"slow_duration",
-			float(monster.get("slow_duration"))
-			* GIANT_MONSTER_STAT_MULTIPLIER
+			property,
+			float(monster.get(property)) * GIANT_MONSTER_STAT_MULTIPLIER
 		)
 
 	if monster_type == "bomb_rat":
@@ -2166,7 +2149,7 @@ func promote_monster_to_giant(
 	var attack_range_value = monster.get("attack_range")
 	if attack_range_value != null:
 		var range_multiplier := GIANT_MONSTER_STAT_MULTIPLIER
-		if monster_type in GIANT_RANGED_MONSTER_IDS:
+		if bool(MONSTER_CATALOG.get_giant_scaling_profile(monster_type).get("ranged_attack", false)):
 			range_multiplier = GIANT_MONSTER_SIZE_MULTIPLIER
 		monster.set("attack_range", float(attack_range_value) * range_multiplier)
 
@@ -2394,13 +2377,7 @@ func _spawn_monster(
 				)
 			)
 
-	if monster_type == "spider":
-		var slow_duration_value = monster.get("slow_duration")
-		if slow_duration_value != null:
-			monster.set(
-				"slow_duration",
-				float(slow_duration_value) * spider_slow_duration_multiplier
-			)
+	_apply_monster_spawn_property_multipliers(monster, monster_type)
 
 	var max_hp_value = monster.get("max_hp")
 	if max_hp_value != null:
@@ -5162,6 +5139,15 @@ func _refresh_alive_monsters_for_augments(affected_ids: Array[String] = []) -> v
 			shared_profiles[monster_id] = _get_augment_refresh_profile(monster_id)
 		_apply_normal_augments_to_existing_monster(node, monster_id, shared_profiles[monster_id])
 		_apply_special_augments_to_monster(node, monster_id)
+
+
+func _apply_monster_spawn_property_multipliers(monster: Node, monster_type: String) -> void:
+	var profile := MONSTER_CATALOG.get_runtime_scaling_profile(monster_type)
+	var bindings: Dictionary = profile.get("spawn_property_multipliers", MONSTER_CATALOG.EMPTY_PROPERTY_MULTIPLIERS)
+	for property in bindings:
+		var value = monster.get(property)
+		if value != null:
+			monster.set(property, float(value) * float(get(bindings[property])))
 
 
 func _get_monster_hp_upgrade_multiplier(monster_id: String) -> float:

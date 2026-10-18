@@ -3,7 +3,7 @@ Scene resources are removed from Catalog fixtures; full Battle services are stub
 """
 import argparse,re,subprocess,shutil
 from pathlib import Path
-p=argparse.ArgumentParser();p.add_argument('destination',type=Path);p.add_argument('--baseline',required=True);a=p.parse_args()
+p=argparse.ArgumentParser();p.add_argument('destination',type=Path);p.add_argument('--baseline',required=True);p.add_argument('--allow-changed-method',action='append',default=[],help='Explicitly audited later-phase changes');a=p.parse_args()
 repo=Path(__file__).resolve().parents[1];out=a.destination.resolve()
 if out==repo or repo in out.parents:raise SystemExit('Use directory outside repo')
 out.mkdir(parents=True,exist_ok=True)
@@ -73,6 +73,7 @@ func _uses_castle_battlefield(_id):return current_stage_id=="castle"
 '''
 before=old('src/battle/battle.gd');after=(repo/'src/battle/battle.gd').read_text()
 changed={'spawn_special_monster','_apply_special_monster_modifiers','_get_farthest_kobolt_attack_spawn_position','_get_stage_event_spawn_position'}
+changed.update(a.allow_changed_method)
 count=0
 for name in re.findall(r'^func (\w+)\(',before,re.M):
  if name not in changed:

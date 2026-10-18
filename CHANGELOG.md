@@ -1,3 +1,8 @@
+## 2026-10-18 — 하드코딩 정리6차: 거미 둔화·거대화 대상
+
+- MonsterCatalog giant_scaling에 기존 기본공격10종/원거리5종·거미 둔화 property를 선언. runtime_scaling.spawn_property_multipliers로 거미의 신규 소환 둔화 배율 연결. Battle ID/list 선택6곳 제거, 기존 적용 시점·raw 기록·수치/반올림·승격/refresh·AI/보상 유지. 프레임 작업 추가 없음.
+- Godot 신규10829+이전 회귀12035=22864검사 PASS, 나머지 Battle231함수/소환 외곽 동일·밸런스 감사0·정적 통과. raw 누락 기존 진단 동일. 실제 actor/전체Battle·물리/풀/AI·실기/FPS 미검증. docs/GIANT_SCALING_POLICY_PHASE6_20261018.md. main 병합 없음.
+
 ## 2026-10-18 — 하드코딩 정리5차: 정예 소환 정책
 
 - MonsterCatalog elite_spawn에 코볼트 소환 위치·해골 생존 등록 후크 및 공통 기본값을 선언. Battle의 ID 분기2곳 제거, 좌표 계산기 일반화. 기존 clamp/난수·용사모드 대체/허용·정예 등록/해제/부활 알림·전투/AI/수치 유지.

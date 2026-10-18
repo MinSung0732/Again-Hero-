@@ -41,6 +41,10 @@ func run():
  for id in CATALOG.MONSTERS:
   var data:Dictionary=CATALOG.MONSTERS[id].duplicate(true)
   data.erase("elite_spawn")
+  if not OLD_CATALOG.MONSTERS[id].has("giant_scaling"):data.erase("giant_scaling")
+  if data.has("runtime_scaling") and not OLD_CATALOG.MONSTERS[id].get("runtime_scaling",{}).has("spawn_property_multipliers"):
+   data.runtime_scaling.erase("spawn_property_multipliers")
+   if data.runtime_scaling.is_empty():data.erase("runtime_scaling")
   check(data==OLD_CATALOG.MONSTERS[id],"catalog unchanged "+id)
   var profile:Dictionary=CATALOG.get_elite_spawn_profile(id)
   if id=="kobolt":
