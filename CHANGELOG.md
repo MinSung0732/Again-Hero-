@@ -1,3 +1,9 @@
+## 2026-10-18 — 하드코딩 정리10차 완료: 유령 사망 강화·누적 감사
+
+- 유령 사망 강화의 증강 바인딩·배율·순서 있는 raw 능력치/역수/최소값·스택 key를 Catalog로 이동. 기존 registry 대상 선택·RNG·refresh/보상 순서와 수치 유지. 새로운 프레임 작업/스캔/할당 없음.
+- Godot 정상2054+raw누락2050+사망 회귀963=5067검사 PASS. 나머지 Battle237함수 동일·밸런스 감사0·정적 통과. raw누락 진단은 기존과 동일하며 실제 전체전투/풀·일반증강refresh/실기/FPS 미검증.
+- 1차 직전 대비 좁은 정적 패턴: Battle monster_type 직접 선택18→1, 기본탄 source_hero_id 직접 선택7→0. 전역 제거율 아님. Hero 고유 기술/성장·코볼트 합체·기존 그룹 fallback 등 후속 범위 명시. docs/GHOST_EMPOWER_POLICY_PHASE10_20261018.md. main 병합 없음.
+
 ## 2026-10-18 — 하드코딩 정리9차: 사망 반응 바인딩
 
 - MonsterCatalog.death_reactions에 밴시 카운터/정예화 설정·유령 callback·슬라임 확률/반경 선언. 사망 owner ID 분기3곳 제거·무효 입력 기본ID도 Catalog 참조. 보상 전/환급 후 호출 순서·현재 확률 판독/난수·카운터 초기화·증강 제외·분열 gate 유지. 유령 대상 탐색/실제 보상/AI/풀 변경 없음.

@@ -3020,10 +3020,12 @@ func register_ghost_projectile_hit() -> void:
 		)
 
 
-func _apply_ghost_death_empower(dead_monster: Node) -> void:
-	var config: Dictionary = _get_special_augment_config("ghost").get(
-		"ghost_death_empower",
-		{}
+func _apply_ghost_death_empower(dead_monster: Node, profile: Dictionary) -> void:
+	var rule: Dictionary = profile.get("ally_empower", MONSTER_CATALOG.EMPTY_DEATH_REACTIONS)
+	if rule.is_empty():
+		return
+	var config: Dictionary = _get_special_augment_config(rule["owner_id"]).get(
+		rule["augment_id"], MONSTER_CATALOG.EMPTY_DEATH_REACTIONS
 	)
 	if config.is_empty():
 		return
@@ -3053,41 +3055,23 @@ func _apply_ghost_death_empower(dead_monster: Node) -> void:
 		return
 
 	var multiplier := maxf(
-		float(config.get("stat_multiplier", 1.10)),
-		1.0
+		float(config.get(rule["multiplier_key"], rule["default_multiplier"])),
+		float(rule["minimum_multiplier"])
 	)
-	var raw_hp = target.get_meta("augment_raw_max_hp", null)
-	if raw_hp != null:
-		target.set_meta(
-			"augment_raw_max_hp",
-			maxf(float(raw_hp) * multiplier, 1.0)
-		)
-	var raw_damage = target.get_meta("augment_raw_attack_damage", null)
-	if raw_damage != null:
-		target.set_meta(
-			"augment_raw_attack_damage",
-			maxf(float(raw_damage) * multiplier, 1.0)
-		)
-	var raw_speed = target.get_meta("augment_raw_move_speed", null)
-	if raw_speed != null:
-		target.set_meta(
-			"augment_raw_move_speed",
-			maxf(float(raw_speed) * multiplier, 1.0)
-		)
-	var raw_cooldown = target.get_meta(
-		"augment_raw_attack_cooldown",
-		null
-	)
-	if raw_cooldown != null:
-		target.set_meta(
-			"augment_raw_attack_cooldown",
-			maxf(float(raw_cooldown) / multiplier, 0.10)
-		)
+	for stat_rule in rule["raw_stats"]:
+		var metadata: StringName = stat_rule["metadata"]
+		var raw_value = target.get_meta(metadata, null)
+		if raw_value == null:
+			continue
+		var value := float(raw_value)
+		if bool(stat_rule.get("inverse", false)):
+			value /= multiplier
+		else:
+			value *= multiplier
+		target.set_meta(metadata, maxf(value, float(stat_rule["minimum"])))
 
-	target.set_meta(
-		"ghost_death_empower_stacks",
-		int(target.get_meta("ghost_death_empower_stacks", 0)) + 1
-	)
+	var stack_metadata: StringName = rule["stack_metadata"]
+	target.set_meta(stack_metadata, int(target.get_meta(stack_metadata, 0)) + 1)
 	_apply_normal_augments_to_existing_monster(
 		target,
 		String(target.get("monster_type"))
@@ -3266,7 +3250,7 @@ func _apply_pre_reward_death_reactions(
 					_apply_special_monster_modifiers(elite, monster_type, rule["elite_modifiers"].duplicate())
 	var callback: StringName = profile.get("pre_reward_method", &"")
 	if not callback.is_empty() and is_instance_valid(monster):
-		call(callback, monster)
+		call(callback, monster, profile)
 
 
 func _try_spawn_legacy_death_child(

@@ -3,7 +3,7 @@ Actual Catalog/secondary spawn/clamp code, with scene preload references removed
 """
 from pathlib import Path
 import argparse,re,subprocess,shutil
-p=argparse.ArgumentParser();p.add_argument('destination',type=Path);p.add_argument('--baseline',required=True);a=p.parse_args()
+p=argparse.ArgumentParser();p.add_argument('destination',type=Path);p.add_argument('--baseline',required=True);p.add_argument('--allow-changed-method',action='append',default=[]);a=p.parse_args()
 repo=Path(__file__).resolve().parents[1];out=a.destination.resolve()
 if out==repo or repo in out.parents:raise SystemExit('Use directory outside repository')
 out.mkdir(parents=True,exist_ok=True)
@@ -22,7 +22,7 @@ s=old('src/data/monster_catalog.gd').replace('class_name MonsterCatalog','')
 (out/'catalog_before.gd').write_text(re.sub(r'preload\("res://[^"\n]+\.tscn"\)','null',s))
 before=old('src/battle/battle.gd');after=(repo/'src/battle/battle.gd').read_text();count=0
 for name in re.findall(r'^func (\w+)\(',before,re.M):
- if name!='_on_monster_died':
+ if name!='_on_monster_died' and name not in a.allow_changed_method:
   assert method(before,name)==method(after,name),name+' unexpectedly changed';count+=1
 # Strip only the two moved blocks and fallback binding to verify owner ordering.
 normalized=[]
@@ -123,7 +123,7 @@ func _spawn_monster(id,point,cost,split,modifiers={}):
 func _apply_special_monster_modifiers(_actor,id,data):
  events.append(["elite",id,data.duplicate(true)])
  if mutate_modifiers:data["fixture_mutation"]=true
-func _apply_ghost_death_empower(actor):events.append(["ghost",actor.monster_type])
+func _apply_ghost_death_empower(actor,_profile={}):events.append(["ghost",actor.monster_type])
 func _get_demon_level_monster_exp_multiplier() -> float:return 1.25
 func _spawn_exp_orb(point,reward):events.append(["exp",point,reward])
 func _spawn_transcendent_exp_drop(point,reward,data):events.append(["trans_exp",point,reward,data])

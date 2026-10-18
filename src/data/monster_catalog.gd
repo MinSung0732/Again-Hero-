@@ -1033,7 +1033,23 @@ const MONSTERS := {
 	},
 	"ghost": {
 		"id": "ghost",
-		"death_reactions": {"pre_reward_method": &"_apply_ghost_death_empower"},
+		"death_reactions": {
+			"pre_reward_method": &"_apply_ghost_death_empower",
+			"ally_empower": {
+				"owner_id": &"ghost",
+				"augment_id": &"ghost_death_empower",
+				"multiplier_key": &"stat_multiplier",
+				"default_multiplier": 1.10,
+				"minimum_multiplier": 1.0,
+				"raw_stats": [
+					{"metadata": &"augment_raw_max_hp", "minimum": 1.0},
+					{"metadata": &"augment_raw_attack_damage", "minimum": 1.0},
+					{"metadata": &"augment_raw_move_speed", "minimum": 1.0},
+					{"metadata": &"augment_raw_attack_cooldown", "minimum": 0.10, "inverse": true},
+				],
+				"stack_metadata": &"ghost_death_empower_stacks",
+			},
+		},
 		"giant_scaling": {"basic_attack": true, "ranged_attack": true},
 		"name": "유령",
 		"role": "controller",
