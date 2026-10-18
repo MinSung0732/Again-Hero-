@@ -1,0 +1,896 @@
+{
+  "base_head": "a57335969cdcb0a6b50585a0b617932128fd72c1",
+  "source": "working tree",
+  "runtime_scripts_scanned": 351,
+  "scope": "Tracked src GDScript excluding src/data; seven named selectors, nonempty double-quoted ==/!= comparisons only; whole-line comments skipped. Excludes other names, String/get accessors, match arms, membership lists, paths, numeric tuning and declarations. Inline comments/string bodies may match. Includes necessary unique skills. Candidates, not a count of remaining tasks or a global hardcoding score.",
+  "pattern": "\\b(hero_archetype|hero_id|source_hero_id|monster_type|monster_id|stage_id|current_stage_id)\\s*(==|!=)\\s*\"([^\"\\n]+)\"",
+  "candidate_occurrences": 101,
+  "by_path": {
+    "src/hero/hero.gd": 101
+  },
+  "by_function": {
+    "src/hero/hero.gd::_take_damage_internal": 10,
+    "src/hero/hero.gd::_physics_process_actions": 7,
+    "src/hero/hero.gd::_build_ai_context": 6,
+    "src/hero/hero.gd::_fire_projectile": 4,
+    "src/hero/hero.gd::_move_without_monsters": 2,
+    "src/hero/hero.gd::_get_purifier_move_speed_multiplier": 2,
+    "src/hero/hero.gd::notify_monster_kill": 2,
+    "src/hero/hero.gd::_level_up": 2,
+    "src/hero/hero.gd::_apply_augment": 2,
+    "src/hero/hero.gd::_player_move_velocity": 1,
+    "src/hero/hero.gd::_prepare_ranged_ai_intent": 1,
+    "src/hero/hero.gd::_ensure_summoner_pool_capacity": 1,
+    "src/hero/hero.gd::_ensure_summoner_runtime": 1,
+    "src/hero/hero.gd::_ensure_alchemist_runtime": 1,
+    "src/hero/hero.gd::set_alchemist_cauldron_runtime_paused": 1,
+    "src/hero/hero.gd::_update_alchemist_pose_visual": 1,
+    "src/hero/hero.gd::_update_gunner_pose_visual": 1,
+    "src/hero/hero.gd::_apply_stage7_sprite_anchor": 1,
+    "src/hero/hero.gd::_build_stage9_frame_anchor_cache": 1,
+    "src/hero/hero.gd::_apply_stage9_sprite_anchor": 1,
+    "src/hero/hero.gd::_apply_stage8_sprite_anchor": 1,
+    "src/hero/hero.gd::_get_combat_strafe_scale": 1,
+    "src/hero/hero.gd::_ensure_purifier_basic_audio": 1,
+    "src/hero/hero.gd::_get_sage_augment_stacks": 1,
+    "src/hero/hero.gd::_ensure_sage_runtime": 1,
+    "src/hero/hero.gd::_ensure_stage1_audio_runtime": 1,
+    "src/hero/hero.gd::_ensure_rogue_audio_runtime": 1,
+    "src/hero/hero.gd::_ensure_fighter_audio_runtime": 1,
+    "src/hero/hero.gd::_ensure_gunner_audio_runtime": 1,
+    "src/hero/hero.gd::_ensure_archmage_audio_runtime": 1,
+    "src/hero/hero.gd::_ensure_berserker_audio_runtime": 1,
+    "src/hero/hero.gd::_add_sage_gauge": 1,
+    "src/hero/hero.gd::is_sage_skill_ready": 1,
+    "src/hero/hero.gd::_update_sage_runtime": 1,
+    "src/hero/hero.gd::_try_cast_sage_ice_pillar": 1,
+    "src/hero/hero.gd::_try_cast_sage_radiance_singularity": 1,
+    "src/hero/hero.gd::_try_cast_sage_annihilation": 1,
+    "src/hero/hero.gd::_try_cast_sage_starlight": 1,
+    "src/hero/hero.gd::_try_cast_sage_mana_condensation": 1,
+    "src/hero/hero.gd::_get_sage_condensation_cooldown_reduction": 1,
+    "src/hero/hero.gd::_get_sage_skill_damage_multiplier": 1,
+    "src/hero/hero.gd::_on_sage_skill_hit": 1,
+    "src/hero/hero.gd::_on_sage_blackspot_kill": 1,
+    "src/hero/hero.gd::_start_sage_phase": 1,
+    "src/hero/hero.gd::_resolve_sage_phase_obstacle_overlap": 1,
+    "src/hero/hero.gd::_add_archmage_gauge": 1,
+    "src/hero/hero.gd::_refresh_archmage_orbit_visuals": 1,
+    "src/hero/hero.gd::heal_direct": 1,
+    "src/hero/hero.gd::_activate_channel_skill": 1,
+    "src/hero/hero.gd::_activate_shield": 1,
+    "src/hero/hero.gd::_ensure_purifier_skill_runtime": 1,
+    "src/hero/hero.gd::_get_purifier_augment_stacks": 1,
+    "src/hero/hero.gd::_get_purifier_skill_cooldown_multiplier": 1,
+    "src/hero/hero.gd::get_purifier_holy_damage_multiplier": 1,
+    "src/hero/hero.gd::_try_activate_purifier_protection": 1,
+    "src/hero/hero.gd::_cast_purifier_crown": 1,
+    "src/hero/hero.gd::_cast_purifier_orb": 1,
+    "src/hero/hero.gd::_trigger_purifier_auto_cleansing": 1,
+    "src/hero/hero.gd::_cast_purifier_cleansing": 1,
+    "src/hero/hero.gd::_try_start_purifier_gungnir": 1,
+    "src/hero/hero.gd::_update_purifier_gauge": 1,
+    "src/hero/hero.gd::_add_purifier_gauge": 1,
+    "src/hero/hero.gd::_use_piercing_projectile_ultimate": 1,
+    "src/hero/hero.gd::_get_summoner_augment_ai_settings": 1,
+    "src/hero/hero.gd::_get_augment_roll_build_counts": 1,
+    "src/hero/hero.gd::_on_purifier_augment_stack_changed": 1,
+    "src/hero/hero.gd::_tick_charm_state": 1,
+    "src/hero/hero.gd::_update_berserker_pose_visual": 1,
+    "src/hero/hero.gd::_add_berserker_gauge": 1,
+    "src/hero/hero.gd::_update_berserker_madness": 1,
+    "src/hero/hero.gd::_update_berserker_hp_visual": 1,
+    "src/hero/hero.gd::_update_fighter_pose_visual": 1,
+    "src/hero/hero.gd::_prepare_contextual_damage_audio": 1
+  },
+  "rows": [
+    {
+      "path": "src/hero/hero.gd",
+      "line": 53,
+      "function": "_player_move_velocity",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "alchemist_chemical"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 1920,
+      "function": "_physics_process_actions",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "rogue_combo"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 1924,
+      "function": "_physics_process_actions",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "sword_shield"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 1928,
+      "function": "_physics_process_actions",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "pistol_gunner"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 1932,
+      "function": "_physics_process_actions",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "berserker_madness"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 1936,
+      "function": "_physics_process_actions",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "alchemist_chemical"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 1940,
+      "function": "_physics_process_actions",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "summoner_gatekeeper"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 1964,
+      "function": "_physics_process_actions",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "archmage_elementalist"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 2017,
+      "function": "_prepare_ranged_ai_intent",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "archmage_elementalist"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 2116,
+      "function": "_ensure_summoner_pool_capacity",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "summoner_gatekeeper"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 2192,
+      "function": "_ensure_summoner_runtime",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "summoner_gatekeeper"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 3276,
+      "function": "_ensure_alchemist_runtime",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "alchemist_chemical"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 4353,
+      "function": "set_alchemist_cauldron_runtime_paused",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "alchemist_chemical"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 5139,
+      "function": "_update_alchemist_pose_visual",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "alchemist_chemical"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 5239,
+      "function": "_update_gunner_pose_visual",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "pistol_gunner"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 7167,
+      "function": "_apply_stage7_sprite_anchor",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "alchemist_chemical"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 7229,
+      "function": "_build_stage9_frame_anchor_cache",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "cleric_purifier"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 7271,
+      "function": "_apply_stage9_sprite_anchor",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "cleric_purifier"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 7295,
+      "function": "_apply_stage8_sprite_anchor",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "summoner_gatekeeper"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 7437,
+      "function": "_move_without_monsters",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "alchemist_chemical"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 7463,
+      "function": "_move_without_monsters",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "alchemist_chemical"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 7774,
+      "function": "_get_combat_strafe_scale",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "alchemist_chemical"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 8521,
+      "function": "_ensure_purifier_basic_audio",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "cleric_purifier"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 8556,
+      "function": "_fire_projectile",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "archmage_elementalist"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 8559,
+      "function": "_fire_projectile",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "grand_sage_astra"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 8571,
+      "function": "_fire_projectile",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "ranged_kiter"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 8573,
+      "function": "_fire_projectile",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "cleric_purifier"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 8608,
+      "function": "_get_sage_augment_stacks",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "grand_sage_astra"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 8647,
+      "function": "_ensure_sage_runtime",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "grand_sage_astra"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 8815,
+      "function": "_ensure_stage1_audio_runtime",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "ranged_kiter"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 8889,
+      "function": "_ensure_rogue_audio_runtime",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "rogue_combo"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 9011,
+      "function": "_ensure_fighter_audio_runtime",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "sword_shield"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 9163,
+      "function": "_ensure_gunner_audio_runtime",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "pistol_gunner"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 9300,
+      "function": "_ensure_archmage_audio_runtime",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "archmage_elementalist"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 9495,
+      "function": "_ensure_berserker_audio_runtime",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "berserker_madness"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 9721,
+      "function": "_add_sage_gauge",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "grand_sage_astra"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 9729,
+      "function": "is_sage_skill_ready",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "grand_sage_astra"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 9735,
+      "function": "_update_sage_runtime",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "grand_sage_astra"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 9856,
+      "function": "_try_cast_sage_ice_pillar",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "grand_sage_astra"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 9943,
+      "function": "_try_cast_sage_radiance_singularity",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "grand_sage_astra"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 10062,
+      "function": "_try_cast_sage_annihilation",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "grand_sage_astra"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 10138,
+      "function": "_try_cast_sage_starlight",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "grand_sage_astra"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 10260,
+      "function": "_try_cast_sage_mana_condensation",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "grand_sage_astra"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 10362,
+      "function": "_get_sage_condensation_cooldown_reduction",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "grand_sage_astra"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 10390,
+      "function": "_get_sage_skill_damage_multiplier",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "grand_sage_astra"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 10435,
+      "function": "_on_sage_skill_hit",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "grand_sage_astra"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 10494,
+      "function": "_on_sage_blackspot_kill",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "grand_sage_astra"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 10621,
+      "function": "_start_sage_phase",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "grand_sage_astra"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 10660,
+      "function": "_resolve_sage_phase_obstacle_overlap",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "grand_sage_astra"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 10865,
+      "function": "_add_archmage_gauge",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "archmage_elementalist"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 11995,
+      "function": "_refresh_archmage_orbit_visuals",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "archmage_elementalist"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 12279,
+      "function": "heal_direct",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "berserker_madness"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 12432,
+      "function": "_activate_channel_skill",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "ranged_kiter"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 12568,
+      "function": "_activate_shield",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "ranged_kiter"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 12643,
+      "function": "_ensure_purifier_skill_runtime",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "cleric_purifier"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 12835,
+      "function": "_get_purifier_augment_stacks",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "cleric_purifier"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 12881,
+      "function": "_get_purifier_skill_cooldown_multiplier",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "cleric_purifier"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 12894,
+      "function": "_get_purifier_move_speed_multiplier",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "cleric_purifier"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 12899,
+      "function": "_get_purifier_move_speed_multiplier",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "grand_sage_astra"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 12911,
+      "function": "get_purifier_holy_damage_multiplier",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "cleric_purifier"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 12947,
+      "function": "notify_monster_kill",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "grand_sage_astra"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 12952,
+      "function": "notify_monster_kill",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "cleric_purifier"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 12979,
+      "function": "_try_activate_purifier_protection",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "cleric_purifier"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 13096,
+      "function": "_cast_purifier_crown",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "cleric_purifier"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 13657,
+      "function": "_cast_purifier_orb",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "cleric_purifier"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 14220,
+      "function": "_trigger_purifier_auto_cleansing",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "cleric_purifier"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 14368,
+      "function": "_cast_purifier_cleansing",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "cleric_purifier"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 14491,
+      "function": "_try_start_purifier_gungnir",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "cleric_purifier"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 14583,
+      "function": "_update_purifier_gauge",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "cleric_purifier"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 14677,
+      "function": "_add_purifier_gauge",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "cleric_purifier"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 14815,
+      "function": "_use_piercing_projectile_ultimate",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "ranged_kiter"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 15977,
+      "function": "_get_summoner_augment_ai_settings",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "summoner_gatekeeper"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 15993,
+      "function": "_level_up",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "summoner_gatekeeper"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 16027,
+      "function": "_level_up",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "summoner_gatekeeper"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 16235,
+      "function": "_build_ai_context",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "grand_sage_astra"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 16248,
+      "function": "_build_ai_context",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "cleric_purifier"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 16272,
+      "function": "_build_ai_context",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "pistol_gunner"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 16310,
+      "function": "_build_ai_context",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "cleric_purifier"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 16322,
+      "function": "_build_ai_context",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "berserker_madness"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 16328,
+      "function": "_build_ai_context",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "berserker_madness"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 16337,
+      "function": "_get_augment_roll_build_counts",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "alchemist_chemical"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 16382,
+      "function": "_apply_augment",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "summoner_gatekeeper"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 16387,
+      "function": "_apply_augment",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "cleric_purifier"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 16394,
+      "function": "_on_purifier_augment_stack_changed",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "cleric_purifier"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 17045,
+      "function": "_tick_charm_state",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "archmage_elementalist"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 18743,
+      "function": "_update_berserker_pose_visual",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "berserker_madness"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 18919,
+      "function": "_add_berserker_gauge",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "berserker_madness"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 18970,
+      "function": "_update_berserker_madness",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "berserker_madness"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 19188,
+      "function": "_update_berserker_hp_visual",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "berserker_madness"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 19706,
+      "function": "_update_fighter_pose_visual",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "sword_shield"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 20224,
+      "function": "_take_damage_internal",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "sword_shield"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 20225,
+      "function": "_take_damage_internal",
+      "selector": "hero_archetype",
+      "operator": "!=",
+      "literal": "sword_shield"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 20235,
+      "function": "_take_damage_internal",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "alchemist_chemical"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 20248,
+      "function": "_take_damage_internal",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "grand_sage_astra"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 20255,
+      "function": "_take_damage_internal",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "sword_shield"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 20277,
+      "function": "_take_damage_internal",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "sword_shield"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 20279,
+      "function": "_take_damage_internal",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "cleric_purifier"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 20282,
+      "function": "_take_damage_internal",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "summoner_gatekeeper"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 20318,
+      "function": "_take_damage_internal",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "berserker_madness"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 20329,
+      "function": "_take_damage_internal",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "pistol_gunner"
+    },
+    {
+      "path": "src/hero/hero.gd",
+      "line": 20340,
+      "function": "_prepare_contextual_damage_audio",
+      "selector": "hero_archetype",
+      "operator": "==",
+      "literal": "sword_shield"
+    }
+  ]
+}

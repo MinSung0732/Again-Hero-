@@ -634,3 +634,20 @@ static func get_status_layout(archetype: String) -> Vector4:
 
 static func get_status_resource(archetype: String) -> Dictionary:
 	return STATUS_RESOURCES.get(archetype, DEFAULT_STATUS_RESOURCE)
+
+
+const EVENT_AUDIO := {
+	"ranged_kiter": {
+		&"death": {"method": &"_play_stage1_audio", "arguments": [&"death"]},
+		&"level_up": {"method": &"_play_stage1_audio", "arguments": [&"level_up"]},
+	},
+	"rogue_combo": {&"death": {"method": &"_play_rogue_death_audio", "arguments": EMPTY_METHODS}},
+	"sword_shield": {&"death": {"method": &"_play_fighter_death_audio", "arguments": EMPTY_METHODS}},
+	"pistol_gunner": {&"death": {"method": &"_play_gunner_death_audio", "arguments": EMPTY_METHODS}},
+	"archmage_elementalist": {&"death": {"method": &"_play_archmage_death_audio", "arguments": EMPTY_METHODS}},
+	"berserker_madness": {&"death": {"method": &"_play_berserker_death_audio", "arguments": EMPTY_METHODS}},
+}
+
+static func get_event_audio(archetype: String, event: StringName) -> Dictionary:
+	var events: Dictionary = EVENT_AUDIO.get(archetype, EMPTY_PROFILE)
+	return events.get(event, EMPTY_PROFILE)

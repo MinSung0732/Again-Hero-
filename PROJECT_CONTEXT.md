@@ -1,3 +1,9 @@
+## 2026-10-18 — 하드코딩 정리17차: 쿨다운·사망/레벨업 이벤트 연결
+
+- hero_runtime_binding_catalog에 쿨다운 property/dictionary·조건부 해금 목록, presentation Catalog에 사망/레벨업 오디오 연결 선언. 직접 비교10곳 및 쿨다운 match arm9개 제거. 공포/지연/전체부여는 공유 목록, 매혹은 clear 가능한 독립 snapshot 유지. 난수/순서·사망/레벨업·전투/AI/수치 불변.
+- Godot 격리6725검사·import/정적 PASS, 실제 사망 coroutine/tween/timer/신호 포함·오디오/cleanup 등 일부 어댑터. 나머지 Hero654함수/Main/Battle·기존 presentation 데이터 동일. 실제전체전투/음원/실기/FPS 미검증. 합성 fear tick 중앙값3.4624→3.5669µs/호출(+0.1045), FPS 개선 주장 없음.
+- 같은 좁은 조사 패턴 후보111→101(고유기술 포함). docs/HERO_COOLDOWN_EVENT_POLICY_PHASE17_20261018.md 및 위치 JSON. main 병합 없음.
+
 ## 2026-10-18 — 하드코딩 정리16차: 상태 표시·애니메이션 연결
 
 - hero_presentation_catalog에 상태바 위치/색/크기·칸형/비율형 자원 바인딩, 애니메이션 우선순위·프레임 후크 선언. 직접 archetype 비교9곳 제거. 재장전/소환 getter 순서·용사 identity override·HP/쉴드 의미와 보호/재생/anchor 로직 유지. 매프레임 컬렉션 생성/그룹 조회 추가 없음.

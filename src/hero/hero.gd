@@ -1,6 +1,7 @@
 extends CharacterBody2D
 
 const HERO_PRESENTATION := preload("res://src/data/hero_presentation_catalog.gd")
+const HERO_RUNTIME_BINDINGS := preload("res://src/data/hero_runtime_binding_catalog.gd")
 
 const COMBAT_DELAY := preload("res://src/systems/combat_delay.gd")
 
@@ -119,15 +120,7 @@ const ARCHMAGE_OFFENSIVE_SKILL_KEYS: Array[String] = [
 	"chain_dagger",
 	"storm",
 ]
-const ARCHMAGE_SKILL_KEYS: Array[String] = [
-	"combustion",
-	"ice_bolt",
-	"earth_spikes",
-	"holy_power",
-	"chain_dagger",
-	"harmony",
-	"storm",
-]
+const ARCHMAGE_SKILL_KEYS: Array[String] = HERO_RUNTIME_BINDINGS.ARCHMAGE_SKILL_KEYS
 const ARCHMAGE_DEFAULT_BASIC_ELEMENTS: Array[String] = [
 	"earth",
 	"fire",
@@ -1813,12 +1806,9 @@ func _play_level_up_feedback() -> void:
 		level_up_effect.visible = true
 		level_up_effect.play(&"level_up")
 
-	if hero_archetype == "ranged_kiter":
-		_play_stage1_audio(&"level_up")
-	elif is_instance_valid(level_up_audio):
+	if not _play_bound_hero_audio(&"level_up") and is_instance_valid(level_up_audio):
 		level_up_audio.stop()
 		level_up_audio.play()
-
 
 func _on_level_up_effect_animation_finished() -> void:
 	level_up_effect.visible = false
@@ -17358,78 +17348,21 @@ func _apply_fear_status(
 
 
 func _get_external_skill_cooldown_properties() -> Array:
-	var properties: Array = []
-	match hero_archetype:
-		"grand_sage_astra":
-			properties = [
-				&"sage_skill1_cooldown_timer",
-				&"sage_skill2_cooldown_timer",
-				&"sage_skill3_cooldown_timer",
-				&"sage_skill4_cooldown_timer",
-			]
-			if is_conditional_skill_unlocked("sage_skill_5"):
-				properties.append(&"sage_skill5_cooldown_timer")
-		"cleric_purifier":
-			properties = [
-				&"purifier_crown_cooldown",
-				&"purifier_orb_cooldown",
-				&"purifier_cleansing_cooldown",
-			]
-			if is_conditional_skill_unlocked("purifier_fourth_skill"):
-				properties.append(&"purifier_gungnir_cooldown")
-		"summoner_gatekeeper":
-			properties = [
-				&"summoner_gatekeeper_cooldown",
-				&"summoner_scout_cooldown",
-				&"summoner_hound_cooldown",
-				&"summoner_watcher_cooldown",
-			]
-			if summoner_open_gate_unlocked:
-				properties.append(&"summoner_open_gate_cooldown")
-		"alchemist_chemical":
-			properties = [
-				&"alchemist_mixture_field_cooldown",
-				&"alchemist_mystery_cauldron_cooldown",
-				&"alchemist_emergency_cooldown",
-			]
-		"ranged_kiter":
-			properties = [
-				&"ultimate_cooldown_timer",
-				&"shield_cooldown_timer",
-				&"channel_cooldown_timer",
-			]
-		"rogue_combo":
-			properties = [
-				&"rogue_slash_cooldown_timer",
-				&"ultimate_cooldown_timer",
-			]
-		"sword_shield":
-			properties = [&"fighter_charge_cooldown_timer"]
-		"pistol_gunner":
-			properties = [
-				&"gunner_backstep_cooldown",
-				&"gunner_cylinder_cooldown",
-				&"gunner_deadeye_cooldown",
-			]
-		"berserker_madness":
-			properties = [
-				&"berserker_skill1_cooldown",
-				&"berserker_skill2_cooldown",
-				&"berserker_skill3_cooldown",
-				&"berserker_skill4_cooldown",
-			]
-	return properties
-
+	# Charm retains and clears this snapshot; never hand it the shared Catalog list.
+	return _get_skill_cooldown_bindings().duplicate()
 
 func add_random_skill_cooldown_delay(seconds: float) -> bool:
 	var delay := maxf(seconds, 0.0)
 	if delay <= 0.0 or current_hp <= 0 or is_dying:
 		return false
 
-	if hero_archetype == "archmage_elementalist":
+	var dictionary_rule: Dictionary = HERO_RUNTIME_BINDINGS.DICTIONARY_COOLDOWNS.get(hero_archetype, HERO_RUNTIME_BINDINGS.EMPTY_PROFILE)
+	if not dictionary_rule.is_empty():
+		var cooldowns: Dictionary = get(dictionary_rule["timers_property"])
+		var skill_config: Dictionary = get(dictionary_rule["config_property"])
 		var keys: Array[String] = []
-		for key in ARCHMAGE_SKILL_KEYS:
-			var config_value = archmage_skill_config.get(key, {})
+		for key in dictionary_rule["keys"]:
+			var config_value = skill_config.get(key, {})
 			if (
 				typeof(config_value) == TYPE_DICTIONARY
 				and not Dictionary(config_value).is_empty()
@@ -17438,9 +17371,9 @@ func add_random_skill_cooldown_delay(seconds: float) -> bool:
 		if keys.is_empty():
 			return false
 		var key := keys[randi() % keys.size()]
-		archmage_skill_cooldowns[key] = (
+		cooldowns[key] = (
 			maxf(
-				float(archmage_skill_cooldowns.get(key, 0.0)),
+				float(cooldowns.get(key, 0.0)),
 				0.0
 			)
 			+ delay
@@ -17448,7 +17381,7 @@ func add_random_skill_cooldown_delay(seconds: float) -> bool:
 		queue_redraw()
 		return true
 
-	var properties := _get_external_skill_cooldown_properties()
+	var properties := _get_skill_cooldown_bindings()
 	if properties.is_empty():
 		return false
 	var property_name = properties[randi() % properties.size()]
@@ -17462,17 +17395,18 @@ func add_random_skill_cooldown_delay(seconds: float) -> bool:
 	queue_redraw()
 	return true
 
-
 func _tick_fear_skill_cooldowns(delta: float) -> void:
-	if hero_archetype == "archmage_elementalist":
-		for key in ARCHMAGE_SKILL_KEYS:
-			archmage_skill_cooldowns[key] = maxf(
-				float(archmage_skill_cooldowns.get(key, 0.0)) - delta,
+	var dictionary_rule: Dictionary = HERO_RUNTIME_BINDINGS.DICTIONARY_COOLDOWNS.get(hero_archetype, HERO_RUNTIME_BINDINGS.EMPTY_PROFILE)
+	if not dictionary_rule.is_empty():
+		var cooldowns: Dictionary = get(dictionary_rule["timers_property"])
+		for key in dictionary_rule["keys"]:
+			cooldowns[key] = maxf(
+				float(cooldowns.get(key, 0.0)) - delta,
 				0.0
 			)
 		return
 
-	for property_name in _get_external_skill_cooldown_properties():
+	for property_name in _get_skill_cooldown_bindings():
 		var current_value = get(property_name)
 		if current_value == null:
 			continue
@@ -17480,7 +17414,6 @@ func _tick_fear_skill_cooldowns(delta: float) -> void:
 			property_name,
 			maxf(float(current_value) - delta, 0.0)
 		)
-
 
 func _tick_fear_state(delta: float) -> bool:
 	fear_immunity_timer = maxf(fear_immunity_timer-delta,0.0)
@@ -20560,18 +20493,7 @@ func _begin_death_sequence() -> void:
 	poison_source = null
 	set_meta("poison_active", false)
 	_set_poison_flash(false)
-	if hero_archetype == "ranged_kiter":
-		_play_stage1_audio(&"death")
-	elif hero_archetype == "rogue_combo":
-		_play_rogue_death_audio()
-	elif hero_archetype == "sword_shield":
-		_play_fighter_death_audio()
-	elif hero_archetype == "pistol_gunner":
-		_play_gunner_death_audio()
-	elif hero_archetype == "archmage_elementalist":
-		_play_archmage_death_audio()
-	elif hero_archetype == "berserker_madness":
-		_play_berserker_death_audio()
+	_play_bound_hero_audio(&"death")
 	invulnerability_timer = 0.0
 	modulate.a = 1.0
 	velocity = Vector2.ZERO
@@ -20730,11 +20652,13 @@ func impose_all_skill_cooldowns(seconds: float) -> void:
 		return
 	imposed_skill_cooldown = maxf(imposed_skill_cooldown,seconds)
 	archmage_blink_cooldown_timer = maxf(archmage_blink_cooldown_timer,seconds)
-	if hero_archetype == "archmage_elementalist":
-		for key in ARCHMAGE_SKILL_KEYS:
-			archmage_skill_cooldowns[key] = maxf(float(archmage_skill_cooldowns.get(key,0.0)),seconds)
+	var dictionary_rule: Dictionary = HERO_RUNTIME_BINDINGS.DICTIONARY_COOLDOWNS.get(hero_archetype, HERO_RUNTIME_BINDINGS.EMPTY_PROFILE)
+	if not dictionary_rule.is_empty():
+		var cooldowns: Dictionary = get(dictionary_rule["timers_property"])
+		for key in dictionary_rule["keys"]:
+			cooldowns[key] = maxf(float(cooldowns.get(key,0.0)),seconds)
 	else:
-		for property_name in _get_external_skill_cooldown_properties():
+		for property_name in _get_skill_cooldown_bindings():
 			set(property_name,maxf(float(get(property_name)),seconds))
 	queue_redraw()
 
@@ -20921,3 +20845,23 @@ func _get_status_displayed_cells(rule: Dictionary, capacity: int) -> int:
 	if rule.has("count_method"):
 		return int(call(rule["count_method"]))
 	return int(get(rule["count_property"]))
+
+
+func _get_skill_cooldown_bindings() -> Array:
+	var profile: Dictionary = HERO_RUNTIME_BINDINGS.PROPERTY_COOLDOWNS.get(hero_archetype, HERO_RUNTIME_BINDINGS.EMPTY_PROFILE)
+	if profile.is_empty():
+		return HERO_RUNTIME_BINDINGS.EMPTY_PROPERTIES
+	if profile.has("conditional_skill"):
+		if is_conditional_skill_unlocked(profile["conditional_skill"]):
+			return profile["expanded_properties"]
+	elif profile.has("unlock_property") and bool(get(profile["unlock_property"])):
+		return profile["expanded_properties"]
+	return profile["properties"]
+
+
+func _play_bound_hero_audio(event: StringName) -> bool:
+	var rule := HERO_PRESENTATION.get_event_audio(hero_archetype, event)
+	if rule.is_empty():
+		return false
+	callv(rule["method"], rule["arguments"])
+	return true
