@@ -1,5 +1,7 @@
 extends CharacterBody2D
 
+const HERO_PRESENTATION := preload("res://src/data/hero_presentation_catalog.gd")
+
 const COMBAT_DELAY := preload("res://src/systems/combat_delay.gd")
 
 # Compatibility boundary: every legacy status call records into one retained buffer.
@@ -104,7 +106,7 @@ const COMBAT_STATUS_EFFECT_VISUAL := preload("res://src/ui/combat_status_effect_
 const HERO_WORLD_QUERY_RUNTIME := preload("res://src/hero/hero_world_query_runtime.gd")
 const HERO_SUMMONER_RUNTIME := preload("res://src/hero/hero_summoner_runtime.gd")
 const HERO_FIGHTER_RUNTIME := preload("res://src/hero/hero_fighter_runtime.gd")
-const STAGE1_FRAME_DIR := "res://assets/art/heroes/stage1_mage/frames"
+const STAGE1_FRAME_DIR := HERO_PRESENTATION.STAGE1_FRAME_DIR
 const STAGE1_SHIELD_EFFECT_BASE_PATH := "res://assets/art/heroes/stage1_mage/frames/effect_02"
 const STAGE1_SHIELD_EFFECT_FRAME_COUNT := 6
 const STAGE1_SHIELD_EFFECT_FRAME_SIZE := Vector2(512, 512)
@@ -112,18 +114,18 @@ const STAGE1_SHIELD_EFFECT_TARGET_SIZE := 180.0
 const STAGE1_CHANNEL_EFFECT_BASE_PATH := "res://assets/art/heroes/stage1_mage/frames/effect_03"
 const STAGE1_CHANNEL_EFFECT_FRAME_COUNT := 6
 const STAGE1_CHANNEL_EFFECT_TARGET_SIZE := 300.0
-const STAGE2_FRAME_DIR := "res://assets/art/heroes/stage2_rogue/frames"
+const STAGE2_FRAME_DIR := HERO_PRESENTATION.STAGE2_FRAME_DIR
 const STAGE2_EFFECT1_DIR := "res://assets/art/heroes/stage2_rogue/frames/effect_01"
 const STAGE2_EFFECT2_DIR := "res://assets/art/heroes/stage2_rogue/frames/effect_02"
 const STAGE2_EFFECT3_DIR := "res://assets/art/heroes/stage2_rogue/frames/effect_03"
-const STAGE3_FRAME_DIR := "res://assets/art/heroes/stage3_fighter/frames"
+const STAGE3_FRAME_DIR := HERO_PRESENTATION.STAGE3_FRAME_DIR
 const STAGE3_BLOCK_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/effect1"
 const STAGE3_SLASH_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/effect2"
 const STAGE3_THRUST_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/effect3"
 const STAGE3_AURA_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/effect4"
 const STAGE3_CHARGE_EFFECT_DIR := "res://assets/art/heroes/stage3_fighter/frames/effect5"
-const STAGE4_FRAME_DIR := "res://assets/art/heroes/stage4_gunner/frames"
-const STAGE5_FRAME_DIR := "res://assets/art/heroes/stage5_archmage/frames"
+const STAGE4_FRAME_DIR := HERO_PRESENTATION.STAGE4_FRAME_DIR
+const STAGE5_FRAME_DIR := HERO_PRESENTATION.STAGE5_FRAME_DIR
 const ARCHMAGE_OFFENSIVE_SKILL_KEYS: Array[String] = [
 	"combustion",
 	"ice_bolt",
@@ -165,11 +167,11 @@ const ARCHMAGE_ORB_FRAME_INDEX := {
 	"earth": 5,
 	"holy": 7,
 }
-const STAGE6_FRAME_DIR := "res://assets/art/heroes/stage6_berserker/frames"
-const STAGE7_FRAME_DIR := "res://assets/art/heroes/stage7_alchemist/frames"
-const STAGE8_FRAME_DIR := "res://assets/art/heroes/stage8_summoner/frames"
-const STAGE9_FRAME_DIR := "res://assets/art/heroes/stage9_prist/frames"
-const STAGE10_FRAME_DIR := "res://assets/art/heroes/stage10_sage/frames"
+const STAGE6_FRAME_DIR := HERO_PRESENTATION.STAGE6_FRAME_DIR
+const STAGE7_FRAME_DIR := HERO_PRESENTATION.STAGE7_FRAME_DIR
+const STAGE8_FRAME_DIR := HERO_PRESENTATION.STAGE8_FRAME_DIR
+const STAGE9_FRAME_DIR := HERO_PRESENTATION.STAGE9_FRAME_DIR
+const STAGE10_FRAME_DIR := HERO_PRESENTATION.STAGE10_FRAME_DIR
 const CONTEXT_AUDIO := preload("res://src/data/contextual_audio_catalog.gd")
 const STAGE1_BASIC_ATTACK_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_v4_basic.wav"
 const STAGE1_BARRIER_AUDIO_PATH := "res://assets/audio/sfx/stage1_mage_v4_barrier.wav"
@@ -6905,381 +6907,60 @@ func _apply_profile_visual() -> void:
 	hero_sprite.show_behind_parent = false
 	hero_sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 
-	if hero_archetype == "grand_sage_astra":
-		var sage_dir := sprite_frame_dir if not sprite_frame_dir.is_empty() else STAGE10_FRAME_DIR
-		var sage_frames := SpriteFrames.new()
-		if sage_frames.has_animation("default"):
-			sage_frames.remove_animation("default")
-		if not _add_named_sequence_animation(sage_frames, "idle", sage_dir, "idle", 4, 5.5, true):
-			return
-		_add_named_sequence_animation(sage_frames, "move", sage_dir, "walk", 6, 8.0, true)
-		_add_named_sequence_animation(sage_frames, "attack", sage_dir, "atk", 6, 10.0, false)
-		_add_named_sequence_animation(sage_frames, "hit", sage_dir, "hit", 3, 12.0, false)
-		_add_named_sequence_animation(sage_frames, "death", sage_dir, "dead", 4, 8.0, false)
-		hero_sprite.sprite_frames = sage_frames
-		hero_sprite.visible = true
-		_apply_normalized_hero_visual_scale()
-		hero_sprite.speed_scale = 1.0
-		hero_sprite.play("idle")
+	var profile := HERO_PRESENTATION.get_visual_profile(hero_id, hero_archetype)
+	if profile.is_empty():
 		return
-
-	if hero_archetype == "cleric_purifier":
-		var purifier_dir := (
-			sprite_frame_dir
-			if not sprite_frame_dir.is_empty()
-			else STAGE9_FRAME_DIR
-		)
-		var purifier_frames := SpriteFrames.new()
-		if purifier_frames.has_animation("default"):
-			purifier_frames.remove_animation("default")
-		if not _add_named_sequence_animation(
-			purifier_frames, "idle", purifier_dir, "idle", 4, 6.0, true
-		):
-			return
-		_add_named_sequence_animation(
-			purifier_frames, "move", purifier_dir, "walk", 6, 9.0, true
-		)
-		_add_named_sequence_animation(
-			purifier_frames, "attack", purifier_dir, "attack", 4, 8.0, false
-		)
-		_add_named_sequence_animation(
-			purifier_frames, "hit", purifier_dir, "hit", 3, 12.0, false
-		)
-		_add_named_sequence_animation(
-			purifier_frames, "death", purifier_dir, "death", 4, 8.0, false
-		)
-		hero_sprite.sprite_frames = purifier_frames
-		hero_sprite.visible = true
-		# Stage 9 draw order: HeroSprite < crown effect < Hero._draw() bars.
-		hero_sprite.z_index = -2
-		hero_sprite.show_behind_parent = true
-		_build_stage9_frame_anchor_cache()
-		_apply_normalized_hero_visual_scale()
-		_apply_stage9_sprite_anchor()
-		hero_sprite.speed_scale = 1.0
-		hero_sprite.play("idle")
-		return
-
-	if hero_archetype == "summoner_gatekeeper":
-		var summoner_dir := (
-			sprite_frame_dir
-			if not sprite_frame_dir.is_empty()
-			else STAGE8_FRAME_DIR
-		)
-		var summoner_frames := SpriteFrames.new()
-		if summoner_frames.has_animation("default"):
-			summoner_frames.remove_animation("default")
-		if not _add_named_sequence_animation(
-			summoner_frames, "idle", summoner_dir, "idle", 4, 6.0, true
-		):
-			return
-		_add_named_sequence_animation(
-			summoner_frames, "move", summoner_dir, "walk", 6, 9.0, true
-		)
-		_add_named_sequence_animation(
-			summoner_frames, "attack", summoner_dir, "atk", 6, 12.0, false
-		)
-		_add_named_sequence_animation(
-			summoner_frames, "hit", summoner_dir, "hit", 3, 12.0, false
-		)
-		_add_named_sequence_animation(
-			summoner_frames, "death", summoner_dir, "dead", 4, 8.0, false
-		)
-		hero_sprite.sprite_frames = summoner_frames
-		hero_sprite.visible = true
-		_apply_normalized_hero_visual_scale()
-		_apply_stage8_sprite_anchor()
-		hero_sprite.speed_scale = 1.0
-		hero_sprite.play("idle")
-		return
-
-	if hero_archetype == "alchemist_chemical":
-		var alchemist_dir := (
-			sprite_frame_dir
-			if not sprite_frame_dir.is_empty()
-			else STAGE7_FRAME_DIR
-		)
-		var alchemist_frames := SpriteFrames.new()
-		if alchemist_frames.has_animation("default"):
-			alchemist_frames.remove_animation("default")
-		if not _add_named_sequence_animation(
-			alchemist_frames, "idle", alchemist_dir, "idle", 4, 6.0, true
-		):
-			return
-		_add_named_sequence_animation(
-			alchemist_frames, "move", alchemist_dir, "walk", 6, 9.0, true
-		)
-		_add_named_sequence_animation(
-			alchemist_frames, "run", alchemist_dir, "run", 6, 11.0, true
-		)
-		alchemist_frames.add_animation("attack")
-		alchemist_frames.set_animation_speed("attack", 7.0)
-		alchemist_frames.set_animation_loop("attack", false)
-		for attack_frame_index in [1, 2, 5]:
-			var attack_texture := _load_stage1_texture(
-				"%s/atk_%02d.png" % [alchemist_dir, attack_frame_index]
+	var frame_dir := sprite_frame_dir if not sprite_frame_dir.is_empty() else String(profile["frame_dir"])
+	var frames := SpriteFrames.new()
+	if frames.has_animation("default"):
+		frames.remove_animation("default")
+	for rule in profile["animations"]:
+		var loaded: bool
+		if rule.has("indices"):
+			loaded = _add_profile_indexed_animation(frames, frame_dir, rule)
+		else:
+			loaded = _add_named_sequence_animation(
+				frames, rule["name"], frame_dir, rule["prefix"],
+				int(rule["count"]), float(rule["fps"]), bool(rule["loop"])
 			)
-			if attack_texture == null:
-				push_warning(
-					"Stage 7 attack frame load failed: %s/atk_%02d.png"
-					% [alchemist_dir, attack_frame_index]
-				)
-				return
-			alchemist_frames.add_frame("attack", attack_texture)
-		_add_named_sequence_animation(
-			alchemist_frames, "hit", alchemist_dir, "hit", 2, 12.0, false
-		)
-		_add_named_sequence_animation(
-			alchemist_frames, "death", alchemist_dir, "dead", 4, 8.0, false
-		)
-		hero_sprite.sprite_frames = alchemist_frames
-		hero_sprite.visible = true
-		_apply_normalized_hero_visual_scale()
-		_apply_stage7_sprite_anchor()
-		hero_sprite.speed_scale = 1.0
-		hero_sprite.play("idle")
-		_apply_alchemist_philosopher_effect_visuals()
-		return
-
-	if hero_archetype == "berserker_madness":
-		var berserker_dir := (
-			sprite_frame_dir
-			if not sprite_frame_dir.is_empty()
-			else STAGE6_FRAME_DIR
-		)
-		var berserker_frames := SpriteFrames.new()
-		if berserker_frames.has_animation("default"):
-			berserker_frames.remove_animation("default")
-		if not _add_named_sequence_animation(
-			berserker_frames, "idle", berserker_dir, "idle", 4, 6.0, true
-		):
+		if not loaded and bool(rule["required"]):
 			return
-		_add_named_sequence_animation(
-			berserker_frames, "move", berserker_dir, "walk", 6, 9.0, true
-		)
-		berserker_frames.add_animation("attack")
-		berserker_frames.set_animation_speed("attack", 10.0)
-		berserker_frames.set_animation_loop("attack", false)
-		for attack_frame_index in [1, 5, 2, 6]:
-			var attack_texture := _load_stage1_texture(
-				"%s/atk_%02d.png" % [
-					berserker_dir,
-					attack_frame_index,
-				]
-			)
-			if attack_texture == null:
-				push_warning(
-					"Stage 6 attack frame load failed: %s/atk_%02d.png"
-					% [berserker_dir, attack_frame_index]
-				)
-				return
-			berserker_frames.add_frame("attack", attack_texture)
-
-		for dash_animation_data in [
-			["dash_start", 1],
-			["dash_finish", 2],
-		]:
-			var dash_animation_name: String = String(
-				dash_animation_data[0]
-			)
-			var dash_frame_index: int = int(
-				dash_animation_data[1]
-			)
-			var dash_texture := _load_stage1_texture(
-				"%s/atk_%02d.png" % [
-					berserker_dir,
-					dash_frame_index,
-				]
-			)
-			if dash_texture == null:
-				push_warning(
-					"Stage 6 dash frame load failed: %s/atk_%02d.png"
-					% [berserker_dir, dash_frame_index]
-				)
-				return
-			berserker_frames.add_animation(dash_animation_name)
-			berserker_frames.set_animation_speed(
-				dash_animation_name,
-				1.0
-			)
-			berserker_frames.set_animation_loop(
-				dash_animation_name,
-				true
-			)
-			berserker_frames.add_frame(
-				dash_animation_name,
-				dash_texture
-			)
-
-		_add_named_sequence_animation(
-			berserker_frames, "hit", berserker_dir, "hit", 3, 13.0, false
-		)
-		_add_named_sequence_animation(
-			berserker_frames, "death", berserker_dir, "dead", 4, 8.0, false
-		)
-		hero_sprite.sprite_frames = berserker_frames
-		hero_sprite.visible = true
-		_apply_normalized_hero_visual_scale()
-		hero_sprite.speed_scale = 1.0
-		hero_sprite.play("idle")
-		return
-
-	if hero_archetype == "archmage_elementalist":
-		var archmage_dir := (
-			sprite_frame_dir
-			if not sprite_frame_dir.is_empty()
-			else STAGE5_FRAME_DIR
-		)
-		var archmage_frames := SpriteFrames.new()
-		if archmage_frames.has_animation("default"):
-			archmage_frames.remove_animation("default")
-		if not _add_named_sequence_animation(
-			archmage_frames, "idle", archmage_dir, "idle", 4, 6.0, true
-		):
-			return
-		_add_named_sequence_animation(
-			archmage_frames, "move", archmage_dir, "walk", 7, 10.0, true
-		)
-		_add_named_sequence_animation(
-			archmage_frames, "attack", archmage_dir, "atk", 7, 17.0, false
-		)
-		_add_named_sequence_animation(
-			archmage_frames, "hit", archmage_dir, "hit", 3, 14.0, false
-		)
-		_add_named_sequence_animation(
-			archmage_frames, "death", archmage_dir, "dead", 4, 10.0, false
-		)
-		hero_sprite.sprite_frames = archmage_frames
-		hero_sprite.visible = true
-		_apply_normalized_hero_visual_scale()
-		hero_sprite.speed_scale = 1.0
-		hero_sprite.play("idle")
-		return
-
-	if hero_id == "ranged_rookie":
-		var frame_dir := (
-			sprite_frame_dir
-			if not sprite_frame_dir.is_empty()
-			else STAGE1_FRAME_DIR
-		)
-
-		var frames := SpriteFrames.new()
-		if frames.has_animation("default"):
-			frames.remove_animation("default")
-
-		if not _add_named_sequence_animation(
-			frames, "idle", frame_dir, "idle", 4, 5.5, true
-		):
-			return
-		if not _add_named_sequence_animation(
-			frames, "move", frame_dir, "walk", 7, 10.0, true
-		):
-			return
-		if not _add_named_sequence_animation(
-			frames, "attack", frame_dir, "atk", 7, 18.0, false
-		):
-			return
-		if not _add_named_sequence_animation(
-			frames, "hit", frame_dir, "hit", 3, 14.0, false
-		):
-			return
-		if not _add_named_sequence_animation(
-			frames, "death", frame_dir, "dead", 4, 10.0, false
-		):
-			return
-
-		hero_sprite.sprite_frames = frames
-		hero_sprite.visible = true
-		_apply_normalized_hero_visual_scale()
-		hero_sprite.speed_scale = 1.0
-		hero_sprite.play("idle")
-		return
-
-	if hero_archetype == "pistol_gunner":
-		var gunner_dir := (
-			sprite_frame_dir
-			if not sprite_frame_dir.is_empty()
-			else STAGE4_FRAME_DIR
-		)
-		var gunner_frames := SpriteFrames.new()
-		if gunner_frames.has_animation("default"):
-			gunner_frames.remove_animation("default")
-		if not _add_named_sequence_animation(gunner_frames, "idle", gunner_dir, "idle", 9, 8.0, true):
-			return
-		_add_named_sequence_animation(gunner_frames, "move", gunner_dir, "walk", 9, 12.0, true)
-		_add_named_sequence_animation(gunner_frames, "attack", gunner_dir, "atk", 9, 20.0, false)
-		_add_named_sequence_animation(gunner_frames, "hit", gunner_dir, "hit", 3, 15.0, false)
-		_add_named_sequence_animation(gunner_frames, "death", gunner_dir, "dead", 6, 10.0, false)
-		hero_sprite.sprite_frames = gunner_frames
-		hero_sprite.visible = true
-		_apply_normalized_hero_visual_scale()
-		hero_sprite.speed_scale = 1.0
-		hero_sprite.play("idle")
-		return
-
-	if hero_archetype == "sword_shield":
-		var fighter_dir := (
-			sprite_frame_dir
-			if not sprite_frame_dir.is_empty()
-			else STAGE3_FRAME_DIR
-		)
-		var fighter_frames := SpriteFrames.new()
-		if fighter_frames.has_animation("default"):
-			fighter_frames.remove_animation("default")
-		if not _add_named_sequence_animation(
-			fighter_frames, "idle", fighter_dir, "hero_idle", 6, 6.0, true
-		):
-			return
-		_add_named_sequence_animation(
-			fighter_frames, "move", fighter_dir, "hero_move", 6, 9.0, true
-		)
-		_add_named_sequence_animation(
-			fighter_frames, "attack", fighter_dir, "hero_attack", 6, 13.0, false
-		)
-		_add_named_sequence_animation(
-			fighter_frames, "hit", fighter_dir, "hero_hit", 6, 12.0, false
-		)
-		hero_sprite.sprite_frames = fighter_frames
-		hero_sprite.visible = true
-		_apply_normalized_hero_visual_scale()
-		hero_sprite.speed_scale = 1.0
-		hero_sprite.play("idle")
-		return
-
-	if hero_archetype != "rogue_combo":
-		return
-
-	var frame_dir := (
-		sprite_frame_dir
-		if not sprite_frame_dir.is_empty()
-		else STAGE2_FRAME_DIR
-	)
-	var rogue_frames := SpriteFrames.new()
-	if rogue_frames.has_animation("default"):
-		rogue_frames.remove_animation("default")
-
-	if not _add_named_sequence_animation(
-		rogue_frames, "idle", frame_dir, "idle", 4, 6.0, true
-	):
-		return
-	_add_named_sequence_animation(
-		rogue_frames, "move", frame_dir, "walk", 6, 11.0, true
-	)
-	_add_named_sequence_animation(
-		rogue_frames, "attack", frame_dir, "attack", 6, 18.0, false
-	)
-	_add_named_sequence_animation(
-		rogue_frames, "hit", frame_dir, "hit", 3, 14.0, false
-	)
-	_add_named_sequence_animation(
-		rogue_frames, "death", frame_dir, "dead", 4, 10.0, false
-	)
-
-	hero_sprite.sprite_frames = rogue_frames
+	hero_sprite.sprite_frames = frames
 	hero_sprite.visible = true
+	var sprite_properties: Dictionary = profile.get("sprite_properties", HERO_PRESENTATION.EMPTY_PROFILE)
+	for property in sprite_properties:
+		hero_sprite.set(property, sprite_properties[property])
+	for method in profile.get("before_scale_methods", HERO_PRESENTATION.EMPTY_METHODS):
+		call(method)
 	_apply_normalized_hero_visual_scale()
+	for method in profile.get("after_scale_methods", HERO_PRESENTATION.EMPTY_METHODS):
+		call(method)
 	hero_sprite.speed_scale = 1.0
 	hero_sprite.play("idle")
+	for method in profile.get("after_play_methods", HERO_PRESENTATION.EMPTY_METHODS):
+		call(method)
+
+
+func _configure_profile_animation(frames: SpriteFrames, rule: Dictionary) -> void:
+	frames.add_animation(rule["name"])
+	frames.set_animation_speed(rule["name"], float(rule["fps"]))
+	frames.set_animation_loop(rule["name"], bool(rule["loop"]))
+
+
+func _add_profile_indexed_animation(frames: SpriteFrames, frame_dir: String, rule: Dictionary) -> bool:
+	var configured := not bool(rule.get("defer_configuration", false))
+	if configured:
+		_configure_profile_animation(frames, rule)
+	for frame_index in rule["indices"]:
+		var texture := _load_stage1_texture("%s/%s_%02d.png" % [frame_dir, rule["prefix"], frame_index])
+		if texture == null:
+			push_warning(String(rule["failure_message"]) % [frame_dir, frame_index])
+			return false
+		if not configured:
+			_configure_profile_animation(frames, rule)
+			configured = true
+		frames.add_frame(rule["name"], texture)
+	return true
 
 func _apply_normalized_hero_visual_scale() -> void:
 	if hero_sprite.sprite_frames == null:

@@ -1,5 +1,7 @@
 extends Control
 
+const HERO_PRESENTATION := preload("res://src/data/hero_presentation_catalog.gd")
+
 var battle_responsive_layout
 
 const STAMINA_NOTICE := preload("res://src/ui/stamina_notice.gd")
@@ -2069,37 +2071,7 @@ func _refresh_hero_info_panel() -> void:
 	)
 	hero_info_stats.text = "\n".join(stat_lines)
 
-	var ability_lines: PackedStringArray = []
-	if hero_archetype == "rogue_combo":
-		ability_lines.append("3단 찌르기 · 약진/넉백 연계")
-		ability_lines.append(
-			"난도질 쉴드  최대 HP %.0f%%"
-			% (
-				float(snapshot.get("hero_slash_shield_ratio", 0.0))
-				* 100.0
-			)
-		)
-		ability_lines.append(
-			"피흡  실제 피해의 %.0f%%"
-			% (
-				float(snapshot.get("hero_lifesteal_ratio", 0.0))
-				* 100.0
-			)
-		)
-		ability_lines.append(
-			"급습-암살 처형선  일반 몬스터 HP %.0f%%"
-			% (
-				float(snapshot.get("hero_execute_ratio", 0.0))
-				* 100.0
-			)
-		)
-	else:
-		ability_lines.append(
-			"원거리 투사체 속도  %.0f"
-			% float(snapshot.get("hero_projectile_speed", 0.0))
-		)
-		ability_lines.append("거리 유지형 전투 AI")
-	hero_info_abilities.text = "\n".join(ability_lines)
+	hero_info_abilities.text = "\n".join(HERO_PRESENTATION.format_ability_lines(hero_archetype, snapshot))
 
 	var build_counts: Dictionary = Dictionary(
 		snapshot.get("hero_build_counts", {})
