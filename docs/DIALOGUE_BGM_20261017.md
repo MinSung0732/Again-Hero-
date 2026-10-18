@@ -1,5 +1,7 @@
 # 용사·마왕 대화 BGM
 
+> 아래 -20dB는 최초 구현 이력이다. 현재 음량 수정은 [2026-10-19 보고서](DIALOGUE_BGM_AUDIBILITY_20261019.md)를 따른다.
+
 - 기준: `feature/stage10-astra`의 `b9f8743baf637a76384d02b9a60116b30bb9543e`; main `10c9805842d745412ffe9b45e822896001ef27cb`. 기존 업로드 WAV를 그대로 연결했다.
 - 음원: `assets/audio/bgm/talk_background.wav`, 사용자 제공 「용사, 또 너야_.wav」와 동일. 184.48초 / 48kHz / stereo / PCM16. SHA256 `f8e946b90fae862a1d7085ce51a0565dde032c08741f4f3ba941524ca4900cd8`. 음원 변환·루프 구간·normalize·trim 없음. Godot WAV import는 기존 BGM과 같은 QOA 압축이며 loop disabled.
 - `game_audio_catalog.gd`의 `DIALOGUE_BGM`에 경로·초기 플레이어 음량 -20dB·종료 페이드 1초를 일원화했다. 기존 로비 플레이어는 -3dB이므로 초기 설정은 로비보다 플레이어 gain 17dB 낮다. 요청의 -20dB 시작값을 우선한 보수적 설정이며, 4~7dB 상대차/최종 청감 조정은 실제 플레이에서 결정해야 한다. 사용자 BGM bus 음량·음소거는 그대로 유지한다.

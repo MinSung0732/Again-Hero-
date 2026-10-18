@@ -22,7 +22,7 @@ def write(path, content):
 for path in ['src/audio/game_audio.gd', 'src/audio/audio_settings.gd',
              'src/data/game_audio_catalog.gd', 'src/data/contextual_audio_catalog.gd',
              'src/data/stage_intro_dialogues.gd', 'src/ui/stage_intro_cutscene.gd',
-             'tests/dialogue_bgm_smoke.gd', 'default_bus_layout.tres',
+             'tests/dialogue_bgm_smoke.gd', 'tests/dialogue_bgm_mix_smoke.gd', 'default_bus_layout.tres',
              'assets/audio/bgm/frontend_loop.ogg', 'assets/audio/bgm/talk_background.wav']:
     dest = out / path
     dest.parent.mkdir(parents=True, exist_ok=True)

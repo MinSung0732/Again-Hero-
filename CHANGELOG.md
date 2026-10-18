@@ -1,3 +1,8 @@
+## 2026-10-19 — 대화 BGM 음량 수정
+
+- 기존 대화 player -20dB가 로비 -3dB보다17dB 낮아 기본 BGM bus -27dB와 합산 시 실제 WAV 도입부 평균 약-67dB로 매우 작았음. game_audio_catalog의 로비 gain + 대화 상대 offset(-5dB)으로 계산해 player -8dB 적용. 사용자 볼륨/뮤트 유지, 원본WAV·시작1회/무루프/종료1초페이드·페이지/소유권 로직 불변.
+- 실제 GameAudio/대화 headless51검사+실제 Master mixer capture7검사=58 PASS, import/정적 통과. 기본설정 도입부 RMS0.00042713→0.00187073(약+12.83dB, 설정gain은+12dB; 측정창 차이 포함), mute출력0. 전체게임/실제스피커청취 미검증. docs/DIALOGUE_BGM_AUDIBILITY_20261019.md. main 병합 없음.
+
 ## 2026-10-18 — 용사 음성33개 이벤트 연결
 
 - hero_voice_catalog에 10종 pack·진입/승리/패배 및 8/9/10 해금·우선순위/지연/믹스 선언. 공용 player1/실시간Timer1·현재 pack최대4캐시, 기존 로딩100%/확정승패/채워진 컷신 신호로 연결. 전투·결과·컷신 전환을 음성 때문에 기다리지 않음.

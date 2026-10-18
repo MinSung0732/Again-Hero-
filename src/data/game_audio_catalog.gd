@@ -2,10 +2,11 @@ extends RefCounted
 const ROOT := "res://assets/audio/sfx/interface/"
 const FRONTEND_BGM := "res://assets/audio/bgm/frontend_loop.ogg"
 const FRONTEND_DB := {"title": -3.0, "lobby": -3.0, "result": -8.0}
-# Initial dialogue mix; the BGM bus still owns the user's volume/mute setting.
+# Keep dialogue gain relative to the lobby; the bus owns user volume/mute.
+const DIALOGUE_BGM_LOBBY_OFFSET_DB := -5.0
 const DIALOGUE_BGM := {
 	"path": "res://assets/audio/bgm/talk_background.wav",
-	"db": -20.0,
+	"db": FRONTEND_DB["lobby"] + DIALOGUE_BGM_LOBBY_OFFSET_DB,
 	"fade_out_seconds": 1.0,
 }
 const CONTEXT := preload("res://src/data/contextual_audio_catalog.gd")
