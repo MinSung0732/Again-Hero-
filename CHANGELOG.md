@@ -1,3 +1,8 @@
+## 2026-10-18 — 하드코딩 정리4차: 공용 기본 투사체
+
+- hero_basic_projectile_catalog에 견습/정화 기본탄의 frame·fps/scale·impact/holy method 및 기존 초기값/상자 반경/pool key 통합. runtime content ID 분기 제거, source ID 변경 시 정책 캐시 갱신·공유 SpriteFrames 캐시 일반화. 피해/배수 결과·source/HP는 원래 시점 판독, 공격/성장·AI·공간조회/풀·서버 의미 유지.
+- 실제 before/after300조합 포함323+누락PNG4=327 headless검사,11함수 본문/14frame경로·순서/정적/import 통과. 전체Battle/AI·온라인·실기Android/GPU·FPS 미검증. docs/COMBAT_POLICY_REFACTOR_PHASE4_20261018.md.
+
 ## 2026-10-17 — 하드코딩 정리3차: 로비 메뉴·설정·도구함
 
 - lobby_ui_policy_catalog로 기타6메뉴/5설정탭·노드 바인딩/하위 View·뒤로가기 높이/게임 옵션·용사 강제 설정을 통합. 등록 action 기반 연결·공용 화면 숨김/전환, 기존 sound/account 노드·신호 재사용. lobby_tool_catalog에 표시 한도/배치·기본 안내 이동. 기존순서·문구·노출/해금·저장/통화·서버 유지.

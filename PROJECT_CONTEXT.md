@@ -1,3 +1,8 @@
+## 2026-10-18 — 단계별 하드코딩 정리4차: 기본 투사체
+
+- 공용 기본탄의 content ID 분기를 hero_basic_projectile_catalog의 impact/holy method·frame metadata로 변경. source ID 변경 시 캐시 갱신하고 프레임은 프로필별 공유. 기존 피해·광역/반사·다발·풀·그룹/공간조회·초기값·성장/AI/보상 유지.
+- before/after300조합 포함327검사·11함수/14경로 동등성·정적/import 통과. 전체전투/AI·온라인/실기GPU/FPS 미검증. 남은 Battle 소환/강화 및 소유자/registry 조회는 후속 소범위 감사. docs/COMBAT_POLICY_REFACTOR_PHASE4_20261018.md.
+
 ## 2026-10-17 — 단계별 하드코딩 정리3차
 
 - 기타 메뉴/설정 탭 바인딩·하위 View/옵션 정책은 lobby_ui_policy_catalog, 사이드 도구함 표시/안내는 lobby_tool_catalog. 콘텐츠별 연결 목록/숨김 분기 중복 제거, 사운드·계정 기존 노드/신호 유지. 용사 강제 카메라 설정은 옵션 metadata이며 마왕 선호 저장을 덮어쓰지 않음. 해금/전투/DB 변경 없음.
