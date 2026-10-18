@@ -55,3 +55,16 @@ const DICTIONARY_COOLDOWNS := {
 		"timers_property": &"archmage_skill_cooldowns",
 	},
 }
+
+# The player pose and specialized AI owner must stay paired. Unknown/ranged
+# archetypes retain the common AI path and the shared Stage1 pose callback.
+const DEFAULT_POSE_TICK := &"_update_stage1_pose_visual"
+const ACTION_BINDINGS := {
+	"rogue_combo": {"physics": &"_physics_process_rogue", "pose": &"_update_rogue_pose_visual"},
+	"sword_shield": {"physics": &"_physics_process_fighter", "pose": &"_update_fighter_pose_visual"},
+	"pistol_gunner": {"physics": &"_physics_process_gunner", "pose": &"_update_gunner_pose_visual"},
+	"berserker_madness": {"physics": &"_physics_process_berserker", "pose": &"_update_berserker_pose_visual"},
+	"alchemist_chemical": {"physics": &"_physics_process_alchemist", "pose": &"_update_alchemist_pose_visual"},
+	"summoner_gatekeeper": {"physics": &"_physics_process_summoner", "pose": &"_update_summoner_pose_visual"},
+	"archmage_elementalist": {"common_runtime": &"_update_archmage_skill_runtime"},
+}

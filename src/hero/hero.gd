@@ -325,6 +325,13 @@ var heal_item_multiplier: float = 1.0
 var hero_id: String = "ranged_rookie"
 var hero_display_name: String = "견습 마법용사"
 var hero_archetype: String = "ranged_kiter"
+# Retained callbacks: rebuilt only when the archetype changes. Selection is
+# refreshed at each legacy dispatch point, after preceding callbacks may mutate it.
+var _hero_action_binding_key: String = ""
+var _hero_action_binding_valid := false
+var _hero_pose_tick: Callable
+var _hero_action_tick: Callable
+var _hero_common_runtime_tick: Callable
 var sprite_frame_dir: String = ""
 var ground_shadow_config: Dictionary = {}
 var augment_pool_ids: Array[String] = []
@@ -1906,39 +1913,14 @@ func _physics_process_actions(delta: float) -> void:
 			player_input_suspended = true; velocity = Vector2.ZERO; return
 		velocity = _player_move_velocity()
 		_move_and_slide_with_obstacle_escape()
-		match hero_archetype:
-			"rogue_combo": _update_rogue_pose_visual(delta)
-			"sword_shield": _update_fighter_pose_visual(delta)
-			"pistol_gunner": _update_gunner_pose_visual(delta)
-			"berserker_madness": _update_berserker_pose_visual(delta)
-			"alchemist_chemical": _update_alchemist_pose_visual(delta)
-			"summoner_gatekeeper": _update_summoner_pose_visual(delta)
-			_: _update_stage1_pose_visual(delta)
+		_refresh_hero_action_bindings()
+		_hero_pose_tick.call(delta)
 		return
 	if not player_controlled: _update_combat_reposition(delta)
 
-	if hero_archetype == "rogue_combo":
-		_physics_process_rogue(delta)
-		return
-
-	if hero_archetype == "sword_shield":
-		_physics_process_fighter(delta)
-		return
-
-	if hero_archetype == "pistol_gunner":
-		_physics_process_gunner(delta)
-		return
-
-	if hero_archetype == "berserker_madness":
-		_physics_process_berserker(delta)
-		return
-
-	if hero_archetype == "alchemist_chemical":
-		_physics_process_alchemist(delta)
-		return
-
-	if hero_archetype == "summoner_gatekeeper":
-		_physics_process_summoner(delta)
+	_refresh_hero_action_bindings()
+	if _hero_action_tick.is_valid():
+		_hero_action_tick.call(delta)
 		return
 
 	ai_memory_clock += delta
@@ -1961,8 +1943,9 @@ func _physics_process_actions(delta: float) -> void:
 	_update_sage_runtime(delta)
 	_update_shield_skill(delta)
 	_update_channel_skill(delta)
-	if hero_archetype == "archmage_elementalist":
-		_update_archmage_skill_runtime(delta)
+	_refresh_hero_action_bindings()
+	if _hero_common_runtime_tick.is_valid():
+		_hero_common_runtime_tick.call(delta)
 
 	if level_flash_timer > 0.0:
 		level_flash_timer = maxf(level_flash_timer - delta, 0.0)
@@ -20865,3 +20848,14 @@ func _play_bound_hero_audio(event: StringName) -> bool:
 		return false
 	callv(rule["method"], rule["arguments"])
 	return true
+
+
+func _refresh_hero_action_bindings() -> void:
+	if _hero_action_binding_valid and _hero_action_binding_key == hero_archetype:
+		return
+	var profile: Dictionary = HERO_RUNTIME_BINDINGS.ACTION_BINDINGS.get(hero_archetype, HERO_RUNTIME_BINDINGS.EMPTY_PROFILE)
+	_hero_pose_tick = Callable(self, profile.get("pose", HERO_RUNTIME_BINDINGS.DEFAULT_POSE_TICK))
+	_hero_action_tick = Callable(self, profile["physics"]) if profile.has("physics") else Callable()
+	_hero_common_runtime_tick = Callable(self, profile["common_runtime"]) if profile.has("common_runtime") else Callable()
+	_hero_action_binding_key = hero_archetype
+	_hero_action_binding_valid = true

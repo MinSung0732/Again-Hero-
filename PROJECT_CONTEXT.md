@@ -1,3 +1,9 @@
+## 2026-10-18 — 하드코딩 정리18차: 전투·포즈 실행 연결
+
+- hero_runtime_binding_catalog에 특수 physics6/pose6·공용 runtime 연결 선언. 직접 비교7곳과 pose match arm6개 제거. Callable은 최초/성향 변경 시에만 갱신하고 원래 선택 지점에서 캐시 확인. 기존 gate/순서/조기 return/고유 기술·AI 불변, 매프레임 컬렉션/Callable 생성 추가 없음.
+- Godot 격리43637검사·import/정적 PASS. 실제 action owner/intent/port, 특수 기술/상태/이동 등은 어댑터. 나머지 Hero661함수/Main/Battle/presentation·기존 runtime binding 데이터 동일. 합성 CPU5.777325→5.765625µs/호출로 유사, 실제전체전투/실기/FPS 미검증.
+- 같은 좁은 조사 후보101→94. 1차 분류=연결 재검토14/소유권 가드54/AI 관측6/고유 동작 재검토20. 전부 제거할 수나 전체 정리 완료가 아님. docs/HERO_ACTION_BINDING_POLICY_PHASE18_20261018.md 및 위치/검토 JSON. main 병합 없음.
+
 ## 2026-10-18 — 하드코딩 정리17차: 쿨다운·사망/레벨업 이벤트 연결
 
 - hero_runtime_binding_catalog에 쿨다운 property/dictionary·조건부 해금 목록, presentation Catalog에 사망/레벨업 오디오 연결 선언. 직접 비교10곳 및 쿨다운 match arm9개 제거. 공포/지연/전체부여는 공유 목록, 매혹은 clear 가능한 독립 snapshot 유지. 난수/순서·사망/레벨업·전투/AI/수치 불변.
