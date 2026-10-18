@@ -807,20 +807,10 @@ func _begin_stage_entry(snapshot: Dictionary) -> void:
 		_begin_hero_reveal(snapshot)
 		return
 	var dialogue := STAGE_INTRO_DIALOGUES.get_dialogue(stage_id)
-	if stage_id in ["stage_1", "stage_5"] and not dialogue.is_empty():
-		var hero_id := String(snapshot.get("hero_id", ""))
-		var reveal_data := HERO_REVEAL_CATALOG.get_reveal_data(
-			hero_id,
-			String(snapshot.get("hero_name", "용사")),
-			String(snapshot.get("hero_portrait_path", ""))
+	if not dialogue.is_empty():
+		dialogue["hero_name"] = STAGE_PROGRESS.hero_display_name(
+			String(snapshot.get("hero_id", "")), String(dialogue.get("hero_name", "용사"))
 		)
-		var identity_id := String(reveal_data.get("identity_id", hero_id))
-		var true_name := String(reveal_data.get("true_name", "")).strip_edges()
-		if (
-			not true_name.is_empty()
-			and STAGE_PROGRESS.is_hero_true_name_unlocked(stage_id, identity_id)
-		):
-			dialogue["hero_name"] = true_name
 	if dialogue.is_empty():
 		_begin_hero_reveal(snapshot)
 		return
@@ -843,7 +833,10 @@ func _on_stage_intro_dialogue_event(
 	var true_name := String(payload.get("true_name", "")).strip_edges()
 	if identity_id.is_empty() or true_name.is_empty():
 		return
-	STAGE_PROGRESS.reveal_hero_true_name(identity_id)
+	if STAGE_PROGRESS.reveal_hero_true_name(identity_id):
+		var hero_id := String(battle.current_hero_profile.get("id", ""))
+		battle.current_hero_profile["display_name"] = STAGE_PROGRESS.hero_display_name(hero_id, String(battle.current_hero_profile.get("display_name", "용사")))
+		_apply_stage_snapshot(battle.get_snapshot())
 
 
 func _on_stage_intro_finished(skipped: bool) -> void:

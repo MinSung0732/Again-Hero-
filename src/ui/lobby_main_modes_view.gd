@@ -338,8 +338,9 @@ func _apply_selected_hero_portrait() -> void:
 	var id := HERO_STORE.selected_hero()
 	var data: Dictionary = CHARACTERS.get_character(id)
 	var origin: Dictionary = lobby.STAGE_CATALOG.get_stage(String(data.stage))
-	lobby._apply_portrait(String(origin.get("portrait_path","")),String(data.name))
-	lobby.hero_name_label.text = String(data.name)
+	var name := preload("res://src/systems/stage_progress.gd").hero_display_name(id, String(data.name))
+	lobby._apply_portrait(String(origin.get("portrait_path","")),name)
+	lobby.hero_name_label.text = name
 	lobby.portrait_texture.self_modulate = Color.WHITE
 	lobby.portrait_badge.visible = false
 	var lock := lobby.portrait_texture.get_node_or_null("StageLock") as CanvasItem

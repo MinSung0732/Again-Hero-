@@ -15,7 +15,7 @@ def main():
         raise SystemExit('Use a destination outside the repository')
     out.mkdir(parents=True, exist_ok=True)
     paths = ['src/audio/audio_settings.gd', 'src/audio/hero_voice_player.gd',
-             'src/data/hero_voice_catalog.gd', 'src/data/hero_character_catalog.gd',
+             'src/data/hero_voice_catalog.gd', 'src/data/hero_character_catalog.gd', 'src/data/hero_reveal_catalog.gd',
              'src/ui/hero_reveal_cutscene.gd', 'src/ui/hero_reveal_magic.gdshader',
              'src/ui/skill_unlock_cutscene.gd', 'src/ui/SkillUnlockCutscene.tscn']
     paths.extend(str(p.relative_to(repo)) for p in (repo/'assets/audio/sfx/hero_voices').rglob('*.wav'))

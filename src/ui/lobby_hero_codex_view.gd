@@ -1,4 +1,6 @@
 extends RefCounted
+const HERO_NAMES := preload("res://src/data/hero_reveal_catalog.gd")
+var true_names: Dictionary = {}
 const SKILL_ART := preload("res://src/data/skill_icon_catalog.gd")
 const DATA := preload("res://src/data/hero_codex_catalog.gd")
 const TAP_BUTTON := preload("res://src/ui/drag_safe_button.gd")
@@ -257,6 +259,7 @@ func _fit_tabs() -> void:
 func show() -> void:
 	root.show()
 	title_plate.show()
+	true_names = PROGRESS.get_true_name_unlocks()
 	var state := PROGRESS.get_hero_codex_state()
 	encountered_stages = state.encountered
 	revealed_stages = state.revealed
@@ -269,7 +272,7 @@ func show() -> void:
 	for i in range(stage_ids.size()):
 		var known := encountered_stages.has(stage_ids[i])
 		var profile := DATA.HEROES.get_profile(String(DATA.STAGES.get_stage(stage_ids[i]).get("hero_id","")))
-		list_names[i].text = String(profile.get("display_name","용사")) if known else "?"
+		list_names[i].text = HERO_NAMES.display_name(String(profile.get("id", "")), String(profile.get("display_name","용사")), true_names) if known else "?"
 		list_portraits[i].modulate = Color.WHITE if known else Color(0,0,0,1)
 		selectors[i].tooltip_text = list_names[i].text + " 상세정보" if known else "잠긴 용사"
 	list_scroll.show()
@@ -337,7 +340,7 @@ func select_stage(id: String) -> void:
 	selected_stage = id
 	list_scroll.show()
 	detail_root.show()
-	hero_name.text = String(entry.name)
+	hero_name.text = HERO_NAMES.display_name(String(DATA.STAGES.get_stage(id).get("hero_id", "")), String(entry.name), true_names, true)
 	description.text = String(entry.description)
 	portrait.texture = _portrait_texture(String(entry.portrait))
 	var resource_paths := DATA.resource_paths(id)

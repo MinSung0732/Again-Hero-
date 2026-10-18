@@ -75,7 +75,7 @@ func play_reveal(data: Dictionary) -> void:
 	var unlocked := bool(data.get("true_name_unlocked", false))
 	var true_name := String(data.get("true_name", ""))
 	if unlocked and not true_name.is_empty():
-		true_name_label.text = "진명 : %s" % true_name
+		true_name_label.text = "진명 : %s" % String(data.get("true_name_label", true_name))
 	else:
 		true_name_label.text = "진명 : ???"
 

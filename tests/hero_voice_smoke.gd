@@ -147,7 +147,10 @@ func run():
 		entry_state.seen = true; entry_state.value = reveal.loading_progress.value; entry_state.visible = reveal.visible
 		voice.play_entry())
 	reveal.finished.connect(hooks._on_hero_reveal_finished)
-	reveal.play_reveal({"stage_id": "stage_8", "portrait_path": "res://fixture_texture.tres"})
+	var reveal_data := preload("res://src/data/hero_reveal_catalog.gd").get_reveal_data("summoner_hero", "alias", "res://fixture_texture.tres")
+	reveal_data["stage_id"] = "stage_8"; reveal_data["true_name_unlocked"] = true
+	reveal.play_reveal(reveal_data)
+	check(reveal.true_name_label.text == "진명 : 데쿠스 (Decus)", "actual reveal shows canonical bilingual identity")
 	await reveal.finished
 	check(entry_state.seen and entry_state.value == 100.0 and entry_state.visible and voice.player.playing, "entry after loading and across reveal outro")
 	check(hooks.battle_started and hooks._stage_intro_stage_id.is_empty() and entry_cues.count == 1, "actual Main handoff never replays entry")

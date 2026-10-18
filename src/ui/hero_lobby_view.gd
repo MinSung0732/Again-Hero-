@@ -1,4 +1,7 @@
 extends RefCounted
+const NAME_PROGRESS := preload("res://src/systems/stage_progress.gd")
+const HERO_NAMES := preload("res://src/data/hero_reveal_catalog.gd")
+var roster_names: Dictionary = {}
 const STORE := preload("res://src/systems/hero_mode_store.gd")
 const DATA := preload("res://src/data/hero_mode_catalog.gd")
 const CHARACTERS := preload("res://src/data/hero_character_catalog.gd")
@@ -182,18 +185,22 @@ func _build_formation(body: VBoxContainer,id: String) -> void:
 	_label(bottom,"용사 목록 · 10종",30)
 	var scroll := ScrollContainer.new(); scroll.name = "RosterScroll"; scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL; scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED; bottom.add_child(scroll)
 	var grid := GridContainer.new(); grid.name = "HeroRosterGrid"; grid.columns = 3; grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL; grid.add_theme_constant_override("h_separation",12); grid.add_theme_constant_override("v_separation",12); scroll.add_child(grid)
+	roster_names.clear()
 	for hero_id in CHARACTERS.ORDER:
 		var data: Dictionary = CHARACTERS.get_character(hero_id)
 		var card := _button(grid,"",_select_character.bind(hero_id),hero_id == id)
 		card.custom_minimum_size = Vector2(230,244); card.size_flags_horizontal = Control.SIZE_EXPAND_FILL; hero_cards[hero_id] = card
 		var card_rows := VBoxContainer.new(); card.add_child(card_rows); card_rows.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); card_rows.offset_left = 12; card_rows.offset_right = -12; card_rows.offset_top = 12; card_rows.offset_bottom = -12; card_rows.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		_portrait(card_rows,hero_id,Vector2(164,154))
-		var name_label := _label(card_rows,String(data.name),22); name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		var name_label := _label(card_rows,String(data.name),22); roster_names[hero_id] = name_label; name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		var state := _label(card_rows,"",19); state.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; roster_states[hero_id] = state
 	_refresh_formation(id)
 
 func _refresh_formation(id: String) -> void:
-	selected_hero_label.text = String(CHARACTERS.get_character(id).name)
+	var names := NAME_PROGRESS.get_true_name_unlocks()
+	selected_hero_label.text = HERO_NAMES.display_name(id, String(CHARACTERS.get_character(id).name), names)
+	for hero_id in roster_names:
+		roster_names[hero_id].text = HERO_NAMES.display_name(hero_id, String(CHARACTERS.get_character(hero_id).name), names)
 	selected_style.text = String(CHARACTERS.get_character(id).style)
 	var path := String(STAGES.get_stage(CHARACTERS.stage_for_hero(id)).get("portrait_path",""))
 	selected_portrait.texture = lobby._portrait_texture_cache.get(path)

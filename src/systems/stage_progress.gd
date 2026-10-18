@@ -1,5 +1,6 @@
 extends RefCounted
 class_name StageProgress
+const HERO_NAMES := preload("res://src/data/hero_reveal_catalog.gd")
 const RESPEC := preload("res://src/systems/research_respec_store.gd")
 const ACCOUNT_SCOPE := preload("res://src/systems/account_save_scope.gd")
 
@@ -60,6 +61,7 @@ static func complete_stage(
 	var reward_claimed := bool(config.get_value("reward_claimed", stage_id, false))
 	var granted_reward := 0
 
+	_record_hero_clear(config, stage_id, false)
 	config.set_value("cleared", stage_id, true)
 
 	if not reward_claimed and first_clear_reward > 0:
@@ -238,7 +240,7 @@ static func record_hero_encounter(
 	return {
 		"stage_encounters": stage_count,
 		"unique_stage_encounters": stages.size(),
-		"true_name_unlocked": stage_count >= 100 or stages.size() >= 3,
+		"true_name_unlocked": bool(_true_names_from_config(config).get(identity_id, false)),
 	}
 
 
@@ -246,41 +248,70 @@ static func reveal_hero_true_name(identity_id: String) -> bool:
 	if identity_id.is_empty():
 		return false
 	var config := ConfigFile.new()
-	ACCOUNT_SCOPE.load_config(config, SAVE_PATH)
+	var error := ACCOUNT_SCOPE.load_config(config, SAVE_PATH)
+	if error not in [OK, ERR_FILE_NOT_FOUND]: return false
 	config.set_value("hero_true_names", identity_id, true)
 	return ACCOUNT_SCOPE.save_config(config, SAVE_PATH) == OK
 
 
 static func is_hero_true_name_unlocked(
-	stage_id: String,
+	_stage_id: String,
 	identity_id: String
 ) -> bool:
-	if identity_id.is_empty():
-		return false
+	if identity_id.is_empty(): return false
+	return bool(get_true_name_unlocks().get(identity_id, false))
+
+
+static func get_true_name_unlocks() -> Dictionary:
 	var config := ConfigFile.new()
-	if ACCOUNT_SCOPE.load_config(config, SAVE_PATH) != OK:
-		return false
+	if ACCOUNT_SCOPE.load_config(config, SAVE_PATH) != OK: return {}
+	return _true_names_from_config(config)
 
-	if bool(config.get_value("hero_true_names", identity_id, false)):
-		return true
-	if identity_id == "returning_magic_hero":
-		return false
-	if stage_id.is_empty():
-		return false
 
-	var stage_count := int(
-		config.get_value("hero_stage_encounters", stage_id, 0)
-	)
-	var raw_stages = config.get_value(
-		"hero_identity_stages",
-		identity_id,
-		PackedStringArray()
-	)
-	var unique_count := 0
-	if raw_stages is PackedStringArray or raw_stages is Array:
-		unique_count = raw_stages.size()
+static func hero_display_name(hero_id: String, fallback: String, include_latin: bool = false) -> String:
+	return HERO_NAMES.display_name(hero_id, fallback, get_true_name_unlocks(), include_latin)
 
-	return stage_count >= 100 or unique_count >= 3
+
+static func _true_names_from_config(config: ConfigFile) -> Dictionary:
+	var result := {}
+	if config.has_section("hero_true_names"):
+		for identity in config.get_section_keys("hero_true_names"):
+			if bool(config.get_value("hero_true_names", identity, false)): result[identity] = true
+	var totals := {}
+	# Single pass over stage metadata; no runtime ID branches or per-frame reads.
+	for stage_id in STAGE_CATALOG.get_ordered_stage_ids():
+		var hero_id := String(STAGE_CATALOG.STAGES[stage_id].get("hero_id", ""))
+		var identity := HERO_NAMES.identity_for(hero_id)
+		var entry: Dictionary = HERO_NAMES.DATA.get(hero_id, HERO_NAMES.EMPTY)
+		if entry.is_empty(): continue
+		if not totals.has(identity): totals[identity] = {"clears": 0, "hard_clears": 0}
+		var counts: Dictionary = totals[identity]
+		counts.clears += _known_clear_count(config, stage_id, false)
+		counts.hard_clears += _known_clear_count(config, stage_id, true)
+		var rule: Dictionary = entry.get("unlock_rule", HERO_NAMES.CLEAR_UNLOCK)
+		var unlocked := bool(config.get_value("hero_true_names", identity, false))
+		if not bool(rule.get("story_only", false)):
+			unlocked = unlocked or int(counts.clears) >= int(rule["clears"]) or int(counts.hard_clears) >= int(rule["hard_clears"])
+		result[identity] = bool(result.get(identity, false)) or unlocked
+	return result
+
+
+static func _known_clear_count(config: ConfigFile, stage_id: String, hard: bool) -> int:
+	var flag_section := "hard_cleared" if hard else "cleared"
+	var count_section := "hero_hard_clear_counts" if hard else "hero_clear_counts"
+	# Older saves retained only a flag: one proven clear, never invented history.
+	var known_minimum := 1 if bool(config.get_value(flag_section, stage_id, false)) else 0
+	return maxi(maxi(int(config.get_value(count_section, stage_id, 0)), 0), known_minimum)
+
+
+static func _record_hero_clear(config: ConfigFile, stage_id: String, hard: bool) -> void:
+	if not STAGE_CATALOG.STAGES.has(stage_id): return
+	var section := "hero_hard_clear_counts" if hard else "hero_clear_counts"
+	config.set_value(section, stage_id, _known_clear_count(config, stage_id, hard) + 1)
+	var unlocked := _true_names_from_config(config)
+	for identity in unlocked:
+		if bool(unlocked[identity]):
+			config.set_value("hero_true_names", identity, true)
 
 
 static func get_research_points() -> int:
@@ -488,6 +519,7 @@ static func complete_hard_stage(stage_id: String) -> Dictionary:
 	var config := ConfigFile.new()
 	if ACCOUNT_SCOPE.load_config(config,SAVE_PATH) != OK: return {"success":false,"reward":0}
 	var first := not bool(config.get_value("hard_cleared",stage_id,false))
+	_record_hero_clear(config, stage_id, true)
 	config.set_value("hard_cleared",stage_id,true)
 	var points := 30 if first else 0
 	config.set_value("meta","research_points",int(config.get_value("meta","research_points",0))+points)

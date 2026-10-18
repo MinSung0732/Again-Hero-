@@ -1008,6 +1008,8 @@ func _start_battle() -> void:
 	if hero_player_mode: hero.set("player_controlled",true)
 	if practice_mode:
 		hero.set_script(PRACTICE_HERO)
+	if not online_match_mode and not practice_mode and not tutorial_mode:
+		current_hero_profile["display_name"] = STAGE_PROGRESS.hero_display_name(hero_id, String(current_hero_profile.get("display_name", "용사")))
 	if hero.has_method("configure_profile"):
 		hero.call("configure_profile", current_hero_profile)
 	if hero.has_method("configure_battlefield"):

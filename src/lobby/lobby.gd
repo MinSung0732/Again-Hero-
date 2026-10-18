@@ -4758,7 +4758,7 @@ func _refresh_stage_card() -> void:
 	var hero_profile := HERO_PROFILES.get_profile(
 		String(stage.get("hero_id", ""))
 	)
-	var hero_name := String(hero_profile.get("display_name", "정체불명의 용사"))
+	var hero_name := STAGE_PROGRESS.hero_display_name(String(stage.get("hero_id", "")), String(hero_profile.get("display_name", "정체불명의 용사")))
 	var unlocked := _stage_unlocked(stage_number)
 	var cleared := _stage_cleared(stage_id)
 	var reward_claimed := STAGE_PROGRESS.is_reward_claimed(stage_id)
