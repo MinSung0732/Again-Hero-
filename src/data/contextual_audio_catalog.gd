@@ -25,3 +25,12 @@ const UI_CUES := {
 }
 # Rejected-action marimba and redundant augment-open jingles are intentionally silent.
 const SILENT_UI := ["denied"]
+
+
+const EMPTY_PROFILE := {}
+const MAGIC_BLOCK_PREPARATION := {"player": &"magic_block_audio", "file": "magic_block.wav", "db": MAGIC_BLOCK_DB}
+const BLOCK_PREPARATION := {
+	"sword_shield": {"player": &"fighter_block_audio", "file": "fighter_block.wav", "db": BLOCK_DB},
+	"ranged_kiter": MAGIC_BLOCK_PREPARATION,
+	"archmage_elementalist": MAGIC_BLOCK_PREPARATION,
+}

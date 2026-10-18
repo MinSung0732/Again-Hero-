@@ -68,3 +68,17 @@ const ACTION_BINDINGS := {
 	"summoner_gatekeeper": {"physics": &"_physics_process_summoner", "pose": &"_update_summoner_pose_visual"},
 	"archmage_elementalist": {"common_runtime": &"_update_archmage_skill_runtime"},
 }
+
+const PROJECTILE_OVERRIDES := {
+	"archmage_elementalist": &"_fire_archmage_projectile",
+	"grand_sage_astra": &"_fire_sage_projectile",
+}
+const DEFAULT_BOUNDARY_STEERING := &"_apply_ranged_boundary_escape"
+const BOUNDARY_STEERING := {"archmage_elementalist": &"_apply_archmage_boundary_steering"}
+const LEVEL_UP_BINDINGS := {
+	"summoner_gatekeeper": {"pool_interval": 5, "pool_method": &"_ensure_summoner_pool_capacity", "ai_settings_method": &"_get_summoner_augment_ai_settings"},
+}
+const AUGMENT_STACK_HOOKS := {
+	"summoner_gatekeeper": [{"id": "summoner_watcher_network", "method": &"_ensure_summoner_pool_capacity", "pass_id": false}],
+	"cleric_purifier": [{"prefix": "purifier_", "method": &"_on_purifier_augment_stack_changed", "pass_id": true}],
+}

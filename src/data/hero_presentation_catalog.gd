@@ -640,14 +640,22 @@ const EVENT_AUDIO := {
 	"ranged_kiter": {
 		&"death": {"method": &"_play_stage1_audio", "arguments": [&"death"]},
 		&"level_up": {"method": &"_play_stage1_audio", "arguments": [&"level_up"]},
+		&"basic": {"method": &"_play_stage1_audio", "arguments": [&"basic"]},
+		&"channel": {"method": &"_play_stage1_audio", "arguments": [&"arcane_field"]},
+		&"shield": {"method": &"_play_stage1_audio", "arguments": [&"barrier"]},
+		&"piercing": {"method": &"_play_stage1_audio", "arguments": [&"arcane_piercer"]},
 	},
 	"rogue_combo": {&"death": {"method": &"_play_rogue_death_audio", "arguments": EMPTY_METHODS}},
 	"sword_shield": {&"death": {"method": &"_play_fighter_death_audio", "arguments": EMPTY_METHODS}},
 	"pistol_gunner": {&"death": {"method": &"_play_gunner_death_audio", "arguments": EMPTY_METHODS}},
 	"archmage_elementalist": {&"death": {"method": &"_play_archmage_death_audio", "arguments": EMPTY_METHODS}},
 	"berserker_madness": {&"death": {"method": &"_play_berserker_death_audio", "arguments": EMPTY_METHODS}},
+	"cleric_purifier": {&"basic_followup": {"method": &"_play_purifier_basic_audio", "arguments": EMPTY_METHODS}},
 }
 
 static func get_event_audio(archetype: String, event: StringName) -> Dictionary:
 	var events: Dictionary = EVENT_AUDIO.get(archetype, EMPTY_PROFILE)
 	return events.get(event, EMPTY_PROFILE)
+
+
+const ORDERED_EVENT_AUDIO := {&"basic": [&"basic", &"basic_followup"]}

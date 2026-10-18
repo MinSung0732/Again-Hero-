@@ -332,6 +332,7 @@ var _hero_action_binding_valid := false
 var _hero_pose_tick: Callable
 var _hero_action_tick: Callable
 var _hero_common_runtime_tick: Callable
+var _hero_boundary_steering: Callable
 var sprite_frame_dir: String = ""
 var ground_shadow_config: Dictionary = {}
 var augment_pool_ids: Array[String] = []
@@ -1997,10 +1998,8 @@ func _prepare_ranged_ai_intent(delta: float, distance: float) -> void:
 	move_direction = _apply_heal_item_steering(move_direction, delta)
 	move_direction = _apply_chest_steering(move_direction, delta)
 	move_direction = _apply_magnet_item_steering(move_direction, delta)
-	if hero_archetype == "archmage_elementalist":
-		move_direction = _apply_archmage_boundary_steering(move_direction)
-	else:
-		move_direction = _apply_ranged_boundary_escape(move_direction)
+	_refresh_hero_action_bindings()
+	move_direction = _hero_boundary_steering.call(move_direction)
 	var movement_velocity := (
 		move_direction
 		* move_speed
@@ -2008,7 +2007,6 @@ func _prepare_ranged_ai_intent(delta: float, distance: float) -> void:
 		* _get_purifier_move_speed_multiplier()
 	)
 	action_intent.prepare_ranged(movement_velocity, distance)
-
 
 func _get_summoner_slot_capacity() -> int:
 	if player_controlled and player_weapons != null and player_weapons.native_skills != null:
@@ -8536,11 +8534,9 @@ func _fire_projectile(current_target: Node2D) -> void:
 		return
 	if not is_instance_valid(current_target):
 		return
-	if hero_archetype == "archmage_elementalist":
-		_fire_archmage_projectile(current_target)
-		return
-	if hero_archetype == "grand_sage_astra":
-		_fire_sage_projectile(current_target)
+	var override: StringName = HERO_RUNTIME_BINDINGS.PROJECTILE_OVERRIDES.get(hero_archetype, &"")
+	if override != &"":
+		call(override, current_target)
 		return
 
 	var shot_direction := global_position.direction_to(current_target.global_position)
@@ -8551,10 +8547,7 @@ func _fire_projectile(current_target: Node2D) -> void:
 	attack_pose_timer = 0.34
 	_face_attack_direction(shot_direction.x)
 	_restart_stage1_animation("attack")
-	if hero_archetype == "ranged_kiter":
-		_play_stage1_audio(&"basic")
-	if hero_archetype == "cleric_purifier":
-		_play_purifier_basic_audio()
+	_play_ordered_hero_audio(&"basic")
 
 	var projectile_count := 1 + clampi(projectile_count_bonus, 0, 4)
 	var volley := PROJECTILE_VOLLEY.new() if projectile_count > 1 else null
@@ -8585,7 +8578,6 @@ func _fire_projectile(current_target: Node2D) -> void:
 	_add_ultimate_charge(
 		float(ultimate_config.get("charge_on_attack", 0.0))
 	)
-
 
 func _get_sage_augment_stacks(augment_id: String) -> int:
 	if hero_archetype != "grand_sage_astra":
@@ -12412,8 +12404,7 @@ func _activate_channel_skill() -> void:
 	if channel_effect.sprite_frames != null:
 		channel_effect.visible = true
 		channel_effect.play(&"channel")
-	if hero_archetype == "ranged_kiter":
-		_play_stage1_audio(&"arcane_field")
+	_play_bound_hero_audio(&"channel")
 
 	_apply_channel_damage()
 	channel_tick_timer = maxf(
@@ -12548,8 +12539,7 @@ func _activate_shield() -> void:
 	if shield_effect.sprite_frames != null:
 		shield_effect.visible = true
 		shield_effect.play(&"shield")
-	if hero_archetype == "ranged_kiter":
-		_play_stage1_audio(&"barrier")
+	_play_bound_hero_audio(&"shield")
 
 	queue_redraw()
 
@@ -14795,8 +14785,7 @@ func _use_piercing_projectile_ultimate() -> void:
 		speed,
 		max_range
 	)
-	if hero_archetype == "ranged_kiter":
-		_play_stage1_audio(&"arcane_piercer")
+	_play_bound_hero_audio(&"piercing")
 
 func _find_best_piercing_direction() -> Vector2:
 	var max_range := maxf(
@@ -15973,10 +15962,9 @@ func _level_up() -> void:
 	level_flash_timer = 0.45
 	_play_level_up_feedback()
 	_apply_level_growth()
-	if hero_archetype == "summoner_gatekeeper" and level % 5 == 0:
-		# Stage 8 gains one shared summon slot every five levels. Expand the
-		# fixed pools only at the milestone instead of instantiating during combat.
-		_ensure_summoner_pool_capacity()
+	var milestone: Dictionary = HERO_RUNTIME_BINDINGS.LEVEL_UP_BINDINGS.get(hero_archetype, HERO_RUNTIME_BINDINGS.EMPTY_PROFILE)
+	if milestone.has("pool_interval") and level % int(milestone["pool_interval"]) == 0:
+		call(milestone["pool_method"])
 
 	var candidates: Array = player_weapons.candidates() if player_controlled and player_weapons != null else AUGMENT_CATALOG.roll_candidates(
 		3,
@@ -16005,11 +15993,8 @@ func _level_up() -> void:
 		return
 
 	var ai_context: Dictionary = _get_ai_decision_context()
-	var augment_ai_settings := (
-		_get_summoner_augment_ai_settings()
-		if hero_archetype == "summoner_gatekeeper"
-		else ai_settings
-	)
+	var ai_binding: Dictionary = HERO_RUNTIME_BINDINGS.LEVEL_UP_BINDINGS.get(hero_archetype, HERO_RUNTIME_BINDINGS.EMPTY_PROFILE)
+	var augment_ai_settings: Dictionary = call(ai_binding["ai_settings_method"]) if ai_binding.has("ai_settings_method") else ai_settings
 	var chosen: Dictionary = BUILD_AI.choose_candidate(
 		candidates,
 		ai_context,
@@ -16361,17 +16346,7 @@ func _apply_augment(augment: Dictionary) -> void:
 
 	if not augment_id.is_empty():
 		build_counts[augment_id] = current_stack + 1
-		if (
-			hero_archetype == "summoner_gatekeeper"
-			and augment_id == "summoner_watcher_network"
-		):
-			_ensure_summoner_pool_capacity()
-		elif (
-			hero_archetype == "cleric_purifier"
-			and augment_id.begins_with("purifier_")
-		):
-			_on_purifier_augment_stack_changed(augment_id)
-
+		_dispatch_augment_stack_hook(augment_id)
 
 func _on_purifier_augment_stack_changed(augment_id: String) -> void:
 	if hero_archetype != "cleric_purifier":
@@ -17025,9 +17000,11 @@ func _tick_charm_timers(delta: float) -> bool:
 
 func _tick_charm_state(delta: float) -> void:
 	attack_timer = maxf(attack_timer - delta * get_paralysis_attack_multiplier(), 0.0)
-	if hero_archetype == "archmage_elementalist":
-		for key in ARCHMAGE_SKILL_KEYS:
-			archmage_skill_cooldowns[key] = maxf(float(archmage_skill_cooldowns.get(key, 0.0)) - delta, 0.0)
+	var dictionary_rule: Dictionary = HERO_RUNTIME_BINDINGS.DICTIONARY_COOLDOWNS.get(hero_archetype, HERO_RUNTIME_BINDINGS.EMPTY_PROFILE)
+	if not dictionary_rule.is_empty():
+		var cooldowns: Dictionary = get(dictionary_rule["timers_property"])
+		for key in dictionary_rule["keys"]:
+			cooldowns[key] = maxf(float(cooldowns.get(key, 0.0)) - delta, 0.0)
 	else:
 		for property_name in charm_cooldown_properties:
 			var value = get(property_name)
@@ -20320,11 +20297,9 @@ func _prepare_contextual_damage_audio() -> void:
 	if not CONTEXT_AUDIO.HITS.has(hero_archetype):
 		return
 	call(String(CONTEXT_AUDIO.HITS[hero_archetype].ensure))
-	if hero_archetype == "sword_shield" and not is_instance_valid(fighter_block_audio):
-		fighter_block_audio = _create_hero_sfx_player(CONTEXT_AUDIO.ROOT+"fighter_block.wav", CONTEXT_AUDIO.BLOCK_DB)
-	elif hero_archetype in ["ranged_kiter", "archmage_elementalist"] and not is_instance_valid(magic_block_audio):
-		magic_block_audio = _create_hero_sfx_player(CONTEXT_AUDIO.ROOT+"magic_block.wav", CONTEXT_AUDIO.MAGIC_BLOCK_DB)
-
+	var rule: Dictionary = CONTEXT_AUDIO.BLOCK_PREPARATION.get(hero_archetype, CONTEXT_AUDIO.EMPTY_PROFILE)
+	if not rule.is_empty() and not is_instance_valid(get(rule["player"])):
+		set(rule["player"], _create_hero_sfx_player(CONTEXT_AUDIO.ROOT + String(rule["file"]), float(rule["db"])))
 
 func _play_contextual_damage_audio(physical_block: bool, magical_block: bool) -> void:
 	if COMBAT_DELAY.now_msec(self) < contextual_hit_next_ms or not CONTEXT_AUDIO.HITS.has(hero_archetype):
@@ -20857,5 +20832,25 @@ func _refresh_hero_action_bindings() -> void:
 	_hero_pose_tick = Callable(self, profile.get("pose", HERO_RUNTIME_BINDINGS.DEFAULT_POSE_TICK))
 	_hero_action_tick = Callable(self, profile["physics"]) if profile.has("physics") else Callable()
 	_hero_common_runtime_tick = Callable(self, profile["common_runtime"]) if profile.has("common_runtime") else Callable()
+	_hero_boundary_steering = Callable(self, HERO_RUNTIME_BINDINGS.BOUNDARY_STEERING.get(hero_archetype, HERO_RUNTIME_BINDINGS.DEFAULT_BOUNDARY_STEERING))
 	_hero_action_binding_key = hero_archetype
 	_hero_action_binding_valid = true
+
+
+func _play_ordered_hero_audio(event: StringName) -> void:
+	# Re-read archetype for each step, preserving two independent legacy checks.
+	for step in HERO_PRESENTATION.ORDERED_EVENT_AUDIO.get(event, HERO_PRESENTATION.EMPTY_METHODS):
+		_play_bound_hero_audio(step)
+
+
+func _dispatch_augment_stack_hook(augment_id: String) -> void:
+	for rule in HERO_RUNTIME_BINDINGS.AUGMENT_STACK_HOOKS.get(hero_archetype, HERO_RUNTIME_BINDINGS.EMPTY_PROPERTIES):
+		if rule.has("id") and augment_id != rule["id"]:
+			continue
+		if rule.has("prefix") and not augment_id.begins_with(rule["prefix"]):
+			continue
+		if bool(rule["pass_id"]):
+			call(rule["method"], augment_id)
+		else:
+			call(rule["method"])
+		break

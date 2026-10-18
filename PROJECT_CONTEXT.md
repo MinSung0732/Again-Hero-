@@ -1,3 +1,9 @@
+## 2026-10-18 — 하드코딩 정리19차: 남은 반복 연결 14곳
+
+- 18차 연결 검토 후보14곳 모두 데이터화: 경계 steering/투사체 override/순차 기본·기술 오디오/레벨업 풀·AI 공급자/증강 후크/매혹 dictionary 쿨다운/방어음 준비. 원래 선택 시점·snapshot·기본 ai_settings 참조·고유 기술/전투/AI 의미 유지. 안정 상태 매프레임 컬렉션/Callable 생성 추가 없음.
+- Godot 격리6517+action 회귀43637=50154검사·import/정적 PASS. 하위 기술/오디오/성장/AI 등 어댑터, 실제전체전투/음원/실기/FPS 미검증. 나머지 Hero653함수/Main/Battle·기존 Catalog 설정 동일. 합성 action CPU6.376575→6.395600µs/호출(+0.019025), FPS 개선 주장 없음.
+- 같은 좁은 조사94→80. 해결14/보존80(소유권54·AI관측6·고유규칙20) 검토 JSON과 docs/HERO_REMAINING_BINDING_POLICY_PHASE19_20261018.md 기록. 전체 하드코딩 완료/추가 차수 확정 아님. 다음 우선은 실제 플레이 검증. main 병합 없음.
+
 ## 2026-10-18 — 하드코딩 정리18차: 전투·포즈 실행 연결
 
 - hero_runtime_binding_catalog에 특수 physics6/pose6·공용 runtime 연결 선언. 직접 비교7곳과 pose match arm6개 제거. Callable은 최초/성향 변경 시에만 갱신하고 원래 선택 지점에서 캐시 확인. 기존 gate/순서/조기 return/고유 기술·AI 불변, 매프레임 컬렉션/Callable 생성 추가 없음.
