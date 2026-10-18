@@ -4,6 +4,7 @@ class_name MonsterCatalog
 const FRONTIER := preload("res://src/data/frontier_monster_catalog.gd")
 const BALANCE := preload("res://src/data/monster_balance_catalog.gd")
 static var balanced_stats_cache: Dictionary = {}
+const EMPTY_SUMMON_FUSION := {}
 const EMPTY_RUNTIME_SCALING := {}
 const EMPTY_SECONDARY_SPAWN := {}
 const EMPTY_DEATH_REACTIONS := {}
@@ -782,6 +783,16 @@ const MONSTERS := {
 	},
 	"kobolt": {
 		"id": "kobolt",
+		"summon_fusion": {
+			"monster_id": "kobolt",
+			"augment_id": &"kobolt_giant_fusion",
+			"count_key": &"required_count", "default_count": 4, "minimum_count": 2,
+			"radius_key": &"radius", "default_radius": 180.0, "minimum_radius": 1.0,
+			"excluded_visual_variant": "elite",
+			"fusion_marker": &"kobolt_fusion", "spawn_source": "kobolt_fusion",
+			"default_size_multiplier": 1.0, "maximum_normal_size": 1.001,
+			"result_modifiers": {"giant_monster": true},
+		},
 		"giant_scaling": {"basic_attack": true, "ranged_attack": true},
 		"elite_spawn": {"position_policy": EliteSpawnPosition.FARTHEST_ATTACK_RANGE},
 		"name": "코볼트",
@@ -1489,3 +1500,9 @@ static func get_death_reaction_profile(monster_id: String) -> Dictionary:
 	if not MONSTERS.has(monster_id):
 		return EMPTY_DEATH_REACTIONS
 	return MONSTERS[monster_id].get("death_reactions", EMPTY_DEATH_REACTIONS)
+
+# Shared opt-in policy; no temporary Dictionary for unregistered content.
+static func get_summon_fusion_profile(monster_id: String) -> Dictionary:
+	if not MONSTERS.has(monster_id):
+		return EMPTY_SUMMON_FUSION
+	return MONSTERS[monster_id].get("summon_fusion", EMPTY_SUMMON_FUSION)

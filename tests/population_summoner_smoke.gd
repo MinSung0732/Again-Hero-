@@ -1,4 +1,5 @@
 extends SceneTree
+const C := preload("res://src/data/monster_catalog.gd")
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
 const COMMON := preload("res://src/monsters/monster_runtime_common.gd")
 const POLICY := preload("res://src/systems/hero_target_policy.gd")
@@ -100,7 +101,7 @@ func run() -> void:
 	for i in range(3):
 		var extra = battle._spawn_monster("kobolt", Vector2(1200 + i * 5, 1200))
 		extra.set_physics_process(false)
-	var fused = battle._try_fuse_nearby_kobolts(paid_kobolt)
+	var fused = battle._try_fuse_nearby_monsters(paid_kobolt, C.get_summon_fusion_profile("kobolt"))
 	check(is_instance_valid(fused) and bool(fused.get_meta("kobolt_fusion", false)) and battle.get_population_count() == 4, "mixed paid/extra fusion retains one population slot")
 	battle._unregister_monster(fused.get_instance_id())
 	check(battle.get_population_count() == 3, "fused actor releases inherited slot once")

@@ -211,8 +211,8 @@ var monster_spatial_grid_physics_frame: int = -1
 var monster_spatial_snapshot_revision := 0
 var monster_query_registration_order := 0
 var monster_local_grid = MONSTER_LOCAL_GRID.new()
-var kobolt_fusion_scratch: Array = []
-var kobolt_fusion_candidates: Array = []
+var fusion_scratch: Array = []
+var fusion_candidates: Array = []
 var ghost_shared_hit_count: int = 0
 var ghost_death_buff_candidates: Array = []
 var exp_orb_pool: Array[Node2D] = []
@@ -870,8 +870,8 @@ func _start_battle() -> void:
 	monster_local_grid.clear()
 	monster_spatial_used_cells.clear()
 	monster_spatial_stale_ids.clear()
-	kobolt_fusion_scratch.clear()
-	kobolt_fusion_candidates.clear()
+	fusion_scratch.clear()
+	fusion_candidates.clear()
 	ghost_shared_hit_count = 0
 	ghost_death_buff_candidates.clear()
 	monster_spatial_grid_physics_frame = -1
@@ -1496,8 +1496,9 @@ func _perform_summon(monster_type: String, spawn_position: Vector2, cost: float,
 		transcendence.consume()
 		transcendence_changed.emit(transcendence.monster_id, false, true)
 		transcendent_summoned.emit(monster_type, primary_monster)
-	if monster_type == "kobolt" and is_instance_valid(primary_monster):
-		primary_monster = _try_fuse_nearby_kobolts(primary_monster)
+	var fusion_profile := MONSTER_CATALOG.get_summon_fusion_profile(monster_type)
+	if not fusion_profile.is_empty() and is_instance_valid(primary_monster):
+		primary_monster = _try_fuse_nearby_monsters(primary_monster, fusion_profile)
 	run_metrics.record_summon(monster_type, cost)
 
 	if is_instance_valid(hero) and hero.has_method("record_offensive_event"):
@@ -2632,47 +2633,53 @@ func get_stationary_spawn_position(monster_id: String, origin: Vector2, preferre
 			break
 	return best
 
-func _try_fuse_nearby_kobolts(primary_monster: Node2D) -> Node2D:
-	if not _is_normal_kobolt_fusion_candidate(primary_monster):
+func _try_fuse_nearby_monsters(primary_monster: Node2D, profile: Dictionary) -> Node2D:
+	if not _is_normal_fusion_candidate(primary_monster, profile):
 		return primary_monster
 
 	var config: Dictionary = _get_special_augment_config(
-		"kobolt"
-	).get("kobolt_giant_fusion", {})
+		profile["monster_id"]
+	).get(profile["augment_id"], MONSTER_CATALOG.EMPTY_SUMMON_FUSION)
 	if config.is_empty():
 		return primary_monster
 
-	var required_count := maxi(int(config.get("required_count", 4)), 2)
-	var radius := maxf(float(config.get("radius", 180.0)), 1.0)
-	kobolt_fusion_scratch.clear()
-	kobolt_fusion_candidates.clear()
+	var required_count := maxi(
+		int(config.get(profile["count_key"], profile["default_count"])),
+		int(profile["minimum_count"])
+	)
+	var radius := maxf(
+		float(config.get(profile["radius_key"], profile["default_radius"])),
+		float(profile["minimum_radius"])
+	)
+	fusion_scratch.clear()
+	fusion_candidates.clear()
 	fill_monsters_near(
 		primary_monster.global_position,
 		radius,
-		kobolt_fusion_scratch
+		fusion_scratch
 	)
 	var radius_sq := radius * radius
-	for raw_monster in kobolt_fusion_scratch:
+	for raw_monster in fusion_scratch:
 		var candidate := raw_monster as Node2D
-		if not _is_normal_kobolt_fusion_candidate(candidate):
+		if not _is_normal_fusion_candidate(candidate, profile):
 			continue
 		if candidate.global_position.distance_squared_to(
 			primary_monster.global_position
 		) > radius_sq:
 			continue
-		kobolt_fusion_candidates.append(candidate)
-		if kobolt_fusion_candidates.size() >= required_count:
+		fusion_candidates.append(candidate)
+		if fusion_candidates.size() >= required_count:
 			break
 
-	if kobolt_fusion_candidates.size() < required_count:
-		kobolt_fusion_scratch.clear()
-		kobolt_fusion_candidates.clear()
+	if fusion_candidates.size() < required_count:
+		fusion_scratch.clear()
+		fusion_candidates.clear()
 		return primary_monster
 
 	var fusion_position := Vector2.ZERO
 	var fused_summon_cost := 0.0
 	var fused_counts_population := false
-	for raw_candidate in kobolt_fusion_candidates:
+	for raw_candidate in fusion_candidates:
 		var candidate := raw_candidate as Node2D
 		if not is_instance_valid(candidate):
 			continue
@@ -2683,42 +2690,47 @@ func _try_fuse_nearby_kobolts(primary_monster: Node2D) -> Node2D:
 		)
 	fusion_position /= float(required_count)
 
-	for raw_candidate in kobolt_fusion_candidates:
+	for raw_candidate in fusion_candidates:
 		var candidate := raw_candidate as Node2D
 		_consume_monster_for_fusion(candidate)
-	kobolt_fusion_scratch.clear()
-	kobolt_fusion_candidates.clear()
+	fusion_scratch.clear()
+	fusion_candidates.clear()
 
+	var result_modifiers: Dictionary = profile["result_modifiers"].duplicate()
+	result_modifiers["counts_population"] = fused_counts_population
 	var fused := _spawn_monster(
-		"kobolt",
+		profile["monster_id"],
 		_clamp_manual_spawn_position(fusion_position),
 		fused_summon_cost,
 		false,
-		{"giant_monster": true, "counts_population": fused_counts_population}
+		result_modifiers
 	) as Node2D
 	if is_instance_valid(fused):
-		fused.set_meta("kobolt_fusion", true)
-		fused.set_meta("spawn_source", "kobolt_fusion")
+		fused.set_meta(profile["fusion_marker"], true)
+		fused.set_meta("spawn_source", profile["spawn_source"])
 		return fused
 	return null
 
 
-func _is_normal_kobolt_fusion_candidate(monster: Node2D) -> bool:
+func _is_normal_fusion_candidate(monster: Node2D, profile: Dictionary) -> bool:
 	if not is_instance_valid(monster) or monster.is_queued_for_deletion():
 		return false
-	if String(monster.get("monster_type")) != "kobolt":
+	if String(monster.get("monster_type")) != String(profile["monster_id"]):
 		return false
 	if int(monster.get("current_hp")) <= 0:
 		return false
-	if String(monster.get_meta("visual_variant", "")) == "elite":
+	if String(monster.get_meta("visual_variant", "")) == String(profile["excluded_visual_variant"]):
 		return false
 	if bool(monster.get_meta("giant_monster", false)):
 		return false
-	if bool(monster.get_meta("kobolt_fusion", false)):
+	if bool(monster.get_meta(profile["fusion_marker"], false)):
 		return false
-	if String(monster.get_meta("spawn_source", "")) == "kobolt_fusion":
+	if String(monster.get_meta("spawn_source", "")) == String(profile["spawn_source"]):
 		return false
-	if float(monster.get_meta("giant_size_multiplier", 1.0)) > 1.001:
+	if (
+		float(monster.get_meta("giant_size_multiplier", profile["default_size_multiplier"]))
+		> float(profile["maximum_normal_size"])
+	):
 		return false
 	return true
 

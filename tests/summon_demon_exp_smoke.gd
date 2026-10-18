@@ -56,7 +56,7 @@ func _spawn_monster(_id: String,_point: Vector2,_cost: float,_split: bool,_modif
  add_child(unit)
  return unit
 func _spawn_extra_normal_summon_monsters(_id: String,_point: Vector2) -> void: extras += 1
-func _try_fuse_nearby_kobolts(unit: Node2D) -> Node2D: return unit
+func _try_fuse_nearby_monsters(unit: Node2D, _profile: Dictionary) -> Node2D: return unit
 func _emit_stats() -> void: pass
 func _get_monster_name(id: String) -> String: return id
 func _add_demon_ultimate_charge(_amount: float) -> void: pass
