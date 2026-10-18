@@ -516,3 +516,46 @@ const COMBAT_EFFECT_PROFILES := {
 static func get_combat_effect_profile(archetype: String, event: StringName) -> Dictionary:
 	var rules: Dictionary = COMBAT_EFFECT_PROFILES.get(archetype, EMPTY_PROFILE)
 	return rules.get(event, EMPTY_PROFILE)
+
+
+# Fixed canvas scale for shield; maximum loaded texture extent for channel.
+const STAGE1_SHIELD_EFFECT_BASE_PATH := "res://assets/art/heroes/stage1_mage/frames/effect_02"
+const STAGE1_SHIELD_EFFECT_FRAME_COUNT := 6
+const STAGE1_SHIELD_EFFECT_FRAME_SIZE := Vector2(512, 512)
+const STAGE1_SHIELD_EFFECT_TARGET_SIZE := 180.0
+const STAGE1_CHANNEL_EFFECT_BASE_PATH := "res://assets/art/heroes/stage1_mage/frames/effect_03"
+const STAGE1_CHANNEL_EFFECT_FRAME_COUNT := 6
+const STAGE1_CHANNEL_EFFECT_TARGET_SIZE := 300.0
+
+const SCALED_EFFECT_PROFILES := {
+	&"rookie_shield": {
+		"target": &"shield_effect",
+		"hero_ids": {"ranged_rookie": true},
+		"reset_before_filter": true,
+		"reset_properties": {"visible": false, "sprite_frames": null, "texture_filter": CanvasItem.TEXTURE_FILTER_NEAREST},
+		"animation": &"shield", "fps": 10.0, "loop": true,
+		"path_pattern": STAGE1_SHIELD_EFFECT_BASE_PATH + "/frame_%02d.png",
+		"first": 1, "last": STAGE1_SHIELD_EFFECT_FRAME_COUNT,
+		"missing_warning": "Stage 1 shield effect frame load failed: %s",
+		"measure_source_extent": false,
+		"source_extent": STAGE1_SHIELD_EFFECT_FRAME_SIZE.x,
+		"target_extent": STAGE1_SHIELD_EFFECT_TARGET_SIZE,
+	},
+	&"rookie_channel": {
+		"target": &"channel_effect",
+		"hero_ids": {"ranged_rookie": true},
+		"reset_before_filter": false,
+		"reset_properties": {"visible": false, "sprite_frames": null, "texture_filter": CanvasItem.TEXTURE_FILTER_NEAREST},
+		"animation": &"channel", "fps": 10.0, "loop": true,
+		"path_pattern": STAGE1_CHANNEL_EFFECT_BASE_PATH + "/frame_%02d.png",
+		"first": 1, "last": STAGE1_CHANNEL_EFFECT_FRAME_COUNT,
+		"missing_warning": "Stage 1 channel effect frame load failed: %s",
+		"measure_source_extent": true,
+		"source_extent": 0.0,
+		"target_extent": STAGE1_CHANNEL_EFFECT_TARGET_SIZE,
+		"invalid_extent_warning": "Stage 1 channel effect: invalid source frame size.",
+	},
+}
+
+static func get_scaled_effect_profile(event: StringName) -> Dictionary:
+	return SCALED_EFFECT_PROFILES.get(event, EMPTY_PROFILE)

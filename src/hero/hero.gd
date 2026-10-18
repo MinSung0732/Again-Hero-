@@ -107,13 +107,6 @@ const HERO_WORLD_QUERY_RUNTIME := preload("res://src/hero/hero_world_query_runti
 const HERO_SUMMONER_RUNTIME := preload("res://src/hero/hero_summoner_runtime.gd")
 const HERO_FIGHTER_RUNTIME := preload("res://src/hero/hero_fighter_runtime.gd")
 const STAGE1_FRAME_DIR := HERO_PRESENTATION.STAGE1_FRAME_DIR
-const STAGE1_SHIELD_EFFECT_BASE_PATH := "res://assets/art/heroes/stage1_mage/frames/effect_02"
-const STAGE1_SHIELD_EFFECT_FRAME_COUNT := 6
-const STAGE1_SHIELD_EFFECT_FRAME_SIZE := Vector2(512, 512)
-const STAGE1_SHIELD_EFFECT_TARGET_SIZE := 180.0
-const STAGE1_CHANNEL_EFFECT_BASE_PATH := "res://assets/art/heroes/stage1_mage/frames/effect_03"
-const STAGE1_CHANNEL_EFFECT_FRAME_COUNT := 6
-const STAGE1_CHANNEL_EFFECT_TARGET_SIZE := 300.0
 const STAGE2_FRAME_DIR := HERO_PRESENTATION.STAGE2_FRAME_DIR
 const STAGE3_FRAME_DIR := HERO_PRESENTATION.STAGE3_FRAME_DIR
 const STAGE4_FRAME_DIR := HERO_PRESENTATION.STAGE4_FRAME_DIR
@@ -7041,88 +7034,10 @@ func _apply_stage2_rogue_effect_visuals() -> void:
 	_configure_combat_effect_profile(HERO_PRESENTATION.get_combat_effect_profile(hero_archetype, &"rogue"))
 
 func _apply_stage1_shield_visual() -> void:
-	shield_effect.visible = false
-	shield_effect.sprite_frames = null
-	shield_effect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-
-	if hero_id != "ranged_rookie":
-		return
-
-	var frames := SpriteFrames.new()
-	if frames.has_animation(&"default"):
-		frames.remove_animation(&"default")
-
-	frames.add_animation(&"shield")
-	frames.set_animation_speed(&"shield", 10.0)
-	frames.set_animation_loop(&"shield", true)
-
-	for index in range(1, STAGE1_SHIELD_EFFECT_FRAME_COUNT + 1):
-		var path := "%s/frame_%02d.png" % [
-			STAGE1_SHIELD_EFFECT_BASE_PATH,
-			index,
-		]
-		var texture := _load_stage1_texture(path)
-		if texture == null:
-			push_warning("Stage 1 shield effect frame load failed: %s" % path)
-			shield_effect.sprite_frames = null
-			return
-		frames.add_frame(&"shield", texture)
-
-	shield_effect.sprite_frames = frames
-	var uniform_scale := (
-		STAGE1_SHIELD_EFFECT_TARGET_SIZE
-		/ STAGE1_SHIELD_EFFECT_FRAME_SIZE.x
-	)
-	shield_effect.scale = Vector2(uniform_scale, uniform_scale)
+	_configure_scaled_effect_profile(HERO_PRESENTATION.get_scaled_effect_profile(&"rookie_shield"))
 
 func _apply_stage1_channel_visual() -> void:
-	# Non-Stage-1 heroes can already have their own ChannelEffect configured
-	# by _apply_profile_visual(). Do not erase those frames here.
-	if hero_id != "ranged_rookie":
-		return
-
-	channel_effect.visible = false
-	channel_effect.sprite_frames = null
-	channel_effect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-
-	var frames := SpriteFrames.new()
-	if frames.has_animation(&"default"):
-		frames.remove_animation(&"default")
-
-	frames.add_animation(&"channel")
-	frames.set_animation_speed(&"channel", 10.0)
-	frames.set_animation_loop(&"channel", true)
-
-	var source_extent := 0.0
-	for index in range(1, STAGE1_CHANNEL_EFFECT_FRAME_COUNT + 1):
-		var path := "%s/frame_%02d.png" % [
-			STAGE1_CHANNEL_EFFECT_BASE_PATH,
-			index,
-		]
-		var texture := _load_stage1_texture(path)
-		if texture == null:
-			push_warning("Stage 1 channel effect frame load failed: %s" % path)
-			channel_effect.sprite_frames = null
-			return
-
-		var texture_size := texture.get_size()
-		source_extent = maxf(
-			source_extent,
-			maxf(texture_size.x, texture_size.y)
-		)
-		frames.add_frame(&"channel", texture)
-
-	if source_extent <= 0.0:
-		push_warning("Stage 1 channel effect: invalid source frame size.")
-		channel_effect.sprite_frames = null
-		return
-
-	channel_effect.sprite_frames = frames
-	var uniform_scale := (
-		STAGE1_CHANNEL_EFFECT_TARGET_SIZE
-		/ source_extent
-	)
-	channel_effect.scale = Vector2(uniform_scale, uniform_scale)
+	_configure_scaled_effect_profile(HERO_PRESENTATION.get_scaled_effect_profile(&"rookie_channel"))
 
 func _load_stage1_texture(path: String) -> Texture2D:
 	if path.is_empty():
@@ -21044,3 +20959,50 @@ func _build_bound_effect_frames(profile: Dictionary) -> SpriteFrames:
 				continue
 			frames.add_frame(animation, texture)
 	return frames
+
+
+func _configure_scaled_effect_profile(profile: Dictionary) -> void:
+	if profile.is_empty():
+		return
+	var target: AnimatedSprite2D = get(profile["target"])
+	var reset_before_filter := bool(profile["reset_before_filter"])
+	if reset_before_filter:
+		_reset_scaled_effect_visual(target, profile["reset_properties"])
+	# Some effects reset unconditionally; others must preserve another hero's effect.
+	var hero_ids: Dictionary = profile["hero_ids"]
+	if not hero_ids.has(hero_id):
+		return
+	if not reset_before_filter:
+		_reset_scaled_effect_visual(target, profile["reset_properties"])
+	var frames := SpriteFrames.new()
+	if frames.has_animation(&"default"):
+		frames.remove_animation(&"default")
+	var animation: StringName = profile["animation"]
+	frames.add_animation(animation)
+	frames.set_animation_speed(animation, float(profile["fps"]))
+	frames.set_animation_loop(animation, bool(profile["loop"]))
+	var measure_extent := bool(profile["measure_source_extent"])
+	var source_extent := float(profile["source_extent"])
+	for index in range(int(profile["first"]), int(profile["last"]) + 1):
+		var path := String(profile["path_pattern"]) % index
+		var texture := _load_stage1_texture(path)
+		if texture == null:
+			push_warning(String(profile["missing_warning"]) % path)
+			target.sprite_frames = null
+			return
+		if measure_extent:
+			var texture_size := texture.get_size()
+			source_extent = maxf(source_extent, maxf(texture_size.x, texture_size.y))
+		frames.add_frame(animation, texture)
+	if measure_extent and source_extent <= 0.0:
+		push_warning(String(profile["invalid_extent_warning"]))
+		target.sprite_frames = null
+		return
+	target.sprite_frames = frames
+	var uniform_scale := float(profile["target_extent"]) / source_extent
+	target.scale = Vector2(uniform_scale, uniform_scale)
+
+
+func _reset_scaled_effect_visual(target: AnimatedSprite2D, properties: Dictionary) -> void:
+	for property in properties:
+		target.set(property, properties[property])

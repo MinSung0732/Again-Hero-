@@ -1,3 +1,9 @@
+## 2026-10-18 — 하드코딩 정리15차: 견습마도사 쉴드·채널 효과
+
+- hero_presentation_catalog에 효과 경로/프레임/FPS/loop·대상/초기화 순서·고정 canvas/실제 texture extent 배율·경고 정책 선언. 직접 ID 비교2곳/상수7개 이동, 공통 setup으로 기존 reset/신호/누락 순서 보존. 전투/AI/수치/앵커/아트 불변, 매프레임 작업 추가 없음.
+- Godot 전후1154+14차 효과 회귀376=1530검사 PASS. 의도한 경고 각234/회귀212개 일치·정상 import/정적 통과, 나머지 Hero654함수/Main/Battle·기존 Catalog 동일. 합성 texture/무효 크기 어댑터 검증이며 실제PNG/전체ready/전투/실기/FPS 미검증.
+- 같은 좁은 조사 패턴 후보122→120(고유기술 포함). docs/HERO_SCALED_EFFECT_POLICY_PHASE15_20261018.md 및 위치 JSON. main 병합 없음.
+
 ## 2026-10-18 — 하드코딩 정리14차: 도적·검방패·권총 효과 초기화
 
 - hero_presentation_catalog에 3종 효과의 경로/프레임/FPS/loop·노드/속성·누락/로드·할당 순서 선언. 공통 setup 처리, 직접 archetype 비교3곳 및 미사용 빌더2개 제거. 공격/AI/수치/앵커/아트 불변, 매프레임 작업 추가 없음.
