@@ -1,3 +1,9 @@
+## 2026-10-18 — 하드코딩 정리13차: 크기 정규화·채널 효과
+
+- hero_presentation_catalog에 참조 이미지/크기/배율·rookie 고정 높이 정책, 방패/권총 효과 종료, 광전사/연금술사 채널 초기화의 프레임/FPS/누락/좌표·크기/속성 순서 선언. 직접 ID/성향 선택5곳 제거. 실제 used_rect 계산·동적FPS·신호/stop/할당 순서·수치/AI/PNG 유지, 신규 프레임 작업/스캔 없음.
+- Godot 실제 정규화·채널 효과/종료·외형 owner1666검사 PASS, 나머지 Hero651함수/Main/Battle·기존 presentation 데이터 동일·정적 통과. 합성 이미지/일부 anchor 어댑터 검증이며 실제PNG·전체ready/전투·실기/FPS 미검증.
+- 같은 좁은 조사 패턴 잔여130→125(Hero125/Main0), 고유기술 포함·전역 제거율 아님. docs/HERO_EFFECT_POLICY_PHASE13_20261018.md 및 위치 JSON. main 병합 없음.
+
 ## 2026-10-18 — 하드코딩 정리12차: 용사 외형·정보 UI
 
 - hero_presentation_catalog에10종 외형 경로/프레임 수·fps·필수 여부·특수indices·그리기/anchor 후크·UI 능력 문구 바인딩 선언. Hero 공통 초기화·Main 포맷터 연결로 직접 ID/성향 선택11곳 제거. 기존 우선순위·누락 처리·공격 순서·정규화/후크/문구 유지, 기술·AI/수치·아트 변경 없음.

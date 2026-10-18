@@ -160,3 +160,65 @@ static func format_ability_lines(archetype: String, snapshot: Dictionary) -> Pac
 			text = text % (float(snapshot.get(rule["snapshot_key"], rule["default"])) * float(rule["multiplier"]))
 		lines.append(text)
 	return lines
+
+# Body scale is computed from opaque pixels. The remade rookie uses its fixed
+# reference height even when the legacy sheet can still be read.
+const HERO_REFERENCE_SHEET_PATH := "res://assets/art/heroes/stage1_mage/stage1_mage_spritesheet.png"
+const HERO_REFERENCE_FRAME_SIZE := Vector2i(64, 64)
+const HERO_REFERENCE_RENDER_SCALE := 3.0
+const STAGE1_TARGET_VISIBLE_HEIGHT := 108.0
+const FIXED_HEIGHT_HERO_IDS := {"ranged_rookie": true}
+
+static func resolve_target_height(hero_id: String, reference_height: float) -> float:
+	if FIXED_HEIGHT_HERO_IDS.has(hero_id) or reference_height <= 0.0:
+		return STAGE1_TARGET_VISIBLE_HEIGHT
+	return reference_height
+
+const RELEASE_EFFECT_COMPLETION := {
+	"sword_shield": {"properties": {"visible": false, "position": Vector2.ZERO}},
+	"pistol_gunner": {
+		"animation": &"cylinder_dust",
+		"properties": {"visible": false, "position": Vector2.ZERO, "modulate": Color.WHITE},
+	},
+}
+
+static func get_release_effect_completion(archetype: String) -> Dictionary:
+	return RELEASE_EFFECT_COMPLETION.get(archetype, EMPTY_PROFILE)
+
+# Separate events preserve the old no-op when the wrong setup method is called.
+const CHANNEL_EFFECT_PROFILES := {
+	"berserker_madness": {
+		"persistent": {
+			"before_build": {"visible": false, "sprite_frames": null, "texture_filter": CanvasItem.TEXTURE_FILTER_NEAREST},
+			"animation": &"madness", "fps": 1.0, "loop": true,
+			"frame_groups": [
+				{"path_pattern": STAGE6_FRAME_DIR + "/effect7/special_%02d.png", "first": 8, "last": 8, "required": true},
+			],
+			"properties": {
+				"animation": &"madness", "position": Vector2(0.0, -126.0),
+				"scale": Vector2(0.48, 0.48), "z_index": 9, "modulate": Color.WHITE,
+			},
+		},
+	},
+	"alchemist_chemical": {
+		"channelled": {
+			"animation": &"philosopher_stone", "fps": 8.0, "loop": false,
+			"config_property": &"alchemist_philosopher_config", "fps_key": &"channel_fps", "minimum_fps": 1.0,
+			"frame_groups": [
+				{"path_pattern": STAGE7_FRAME_DIR + "/effect7/brew_%02d.png", "first": 1, "last": 8, "required": false},
+				{"path_pattern": STAGE7_FRAME_DIR + "/effect7/cast_%02d.png", "first": 1, "last": 4, "required": false},
+			],
+			"stop_before_assign": true,
+			"properties": {
+				"animation": &"philosopher_stone", "visible": false, "texture_filter": CanvasItem.TEXTURE_FILTER_NEAREST,
+				# effect7 manifest anchor (192,336) in a 512x384 frame.
+				"offset": Vector2(64.0, -144.0), "position": Vector2.ZERO,
+				"scale": Vector2(0.50, 0.50), "z_index": 10, "modulate": Color.WHITE,
+			},
+		},
+	},
+}
+
+static func get_channel_effect_profile(archetype: String, event: StringName) -> Dictionary:
+	var rules: Dictionary = CHANNEL_EFFECT_PROFILES.get(archetype, EMPTY_PROFILE)
+	return rules.get(event, EMPTY_PROFILE)

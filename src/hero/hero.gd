@@ -280,13 +280,13 @@ const HEAL_ITEM_SCENE := preload("res://src/battle/HealItem.tscn")
 # 모든 용사 도트의 화면상 체급 기준은 Stage 1 견습 마법용사다.
 # 원본 PNG 캔버스 크기가 아니라 투명 여백을 제외한 실제 도트 높이를
 # 기준으로 자동 정규화한다.
-const HERO_REFERENCE_SHEET_PATH := "res://assets/art/heroes/stage1_mage/stage1_mage_spritesheet.png"
-const HERO_REFERENCE_FRAME_SIZE := Vector2i(64, 64)
-const HERO_REFERENCE_RENDER_SCALE := 3.0
+const HERO_REFERENCE_SHEET_PATH := HERO_PRESENTATION.HERO_REFERENCE_SHEET_PATH
+const HERO_REFERENCE_FRAME_SIZE := HERO_PRESENTATION.HERO_REFERENCE_FRAME_SIZE
+const HERO_REFERENCE_RENDER_SCALE := HERO_PRESENTATION.HERO_REFERENCE_RENDER_SCALE
 # Stage 1 is now built from 256x256 standalone frames, so do not fall back to
 # scale=3 when the legacy sheet reference cannot provide a valid used rect.
 # Keep the on-screen body height close to the old in-battle mage size instead.
-const STAGE1_TARGET_VISIBLE_HEIGHT := 108.0
+const STAGE1_TARGET_VISIBLE_HEIGHT := HERO_PRESENTATION.STAGE1_TARGET_VISIBLE_HEIGHT
 
 const APPROACH_DISTANCE_RATIO := 0.86
 const FIELD_MARGIN := 72.0
@@ -6812,89 +6812,55 @@ func _update_rogue_pose_visual(delta: float) -> void:
 		_play_stage1_animation("idle", 1.0)
 
 func _on_fighter_guard_release_effect_finished() -> void:
-	if hero_archetype == "sword_shield":
-		channel_effect.visible = false
-		channel_effect.position = Vector2.ZERO
-	elif (
-		hero_archetype == "pistol_gunner"
-		and channel_effect.animation == &"cylinder_dust"
-	):
-		channel_effect.visible = false
-		channel_effect.position = Vector2.ZERO
-		channel_effect.modulate = Color.WHITE
+	var rule := HERO_PRESENTATION.get_release_effect_completion(hero_archetype)
+	if rule.is_empty():
+		return
+	if rule.has("animation") and channel_effect.animation != rule["animation"]:
+		return
+	var properties: Dictionary = rule["properties"]
+	for property in properties:
+		channel_effect.set(property, properties[property])
 
 
 func _apply_stage6_berserker_effect_visuals() -> void:
-	if hero_archetype != "berserker_madness":
-		return
-
-	channel_effect.visible = false
-	channel_effect.sprite_frames = null
-	channel_effect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-
-	var frames := SpriteFrames.new()
-	if frames.has_animation("default"):
-		frames.remove_animation("default")
-	frames.add_animation("madness")
-	frames.set_animation_speed("madness", 1.0)
-	frames.set_animation_loop("madness", true)
-
-	var texture := _load_stage1_texture(
-		"%s/effect7/special_08.png" % STAGE6_FRAME_DIR
-	)
-	if texture == null:
-		return
-
-	frames.add_frame("madness", texture)
-	channel_effect.sprite_frames = frames
-	channel_effect.animation = &"madness"
-	channel_effect.position = Vector2(0.0, -126.0)
-	channel_effect.scale = Vector2(0.48, 0.48)
-	channel_effect.z_index = 9
-	channel_effect.modulate = Color.WHITE
+	_configure_channel_effect_profile(HERO_PRESENTATION.get_channel_effect_profile(hero_archetype, &"persistent"))
 
 
 func _apply_alchemist_philosopher_effect_visuals() -> void:
-	if hero_archetype != "alchemist_chemical":
-		return
+	_configure_channel_effect_profile(HERO_PRESENTATION.get_channel_effect_profile(hero_archetype, &"channelled"))
 
+
+func _configure_channel_effect_profile(profile: Dictionary) -> void:
+	if profile.is_empty():
+		return
+	var before_build: Dictionary = profile.get("before_build", HERO_PRESENTATION.EMPTY_PROFILE)
+	for property in before_build:
+		channel_effect.set(property, before_build[property])
 	var frames := SpriteFrames.new()
 	if frames.has_animation("default"):
 		frames.remove_animation("default")
-	frames.add_animation("philosopher_stone")
-	frames.set_animation_speed(
-		"philosopher_stone",
-		maxf(
-			float(alchemist_philosopher_config.get("channel_fps", 8.0)),
-			1.0
-		)
-	)
-	frames.set_animation_loop("philosopher_stone", false)
-
-	for index in range(1, 9):
-		var brew := _load_stage1_texture(
-			"%s/effect7/brew_%02d.png" % [STAGE7_FRAME_DIR, index]
-		)
-		if brew != null:
-			frames.add_frame("philosopher_stone", brew)
-	for index in range(1, 5):
-		var cast := _load_stage1_texture(
-			"%s/effect7/cast_%02d.png" % [STAGE7_FRAME_DIR, index]
-		)
-		if cast != null:
-			frames.add_frame("philosopher_stone", cast)
-
-	channel_effect.stop()
+	var animation: StringName = profile["animation"]
+	frames.add_animation(animation)
+	var fps := float(profile["fps"])
+	if profile.has("config_property"):
+		var config: Dictionary = get(profile["config_property"])
+		fps = maxf(float(config.get(profile["fps_key"], fps)), float(profile["minimum_fps"]))
+	frames.set_animation_speed(animation, fps)
+	frames.set_animation_loop(animation, bool(profile["loop"]))
+	for group in profile["frame_groups"]:
+		for index in range(int(group["first"]), int(group["last"]) + 1):
+			var texture := _load_stage1_texture(String(group["path_pattern"]) % index)
+			if texture == null:
+				if bool(group["required"]):
+					return
+				continue
+			frames.add_frame(animation, texture)
+	if bool(profile.get("stop_before_assign", false)):
+		channel_effect.stop()
 	channel_effect.sprite_frames = frames
-	channel_effect.animation = &"philosopher_stone"
-	channel_effect.visible = false
-	channel_effect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	# effect7 manifest anchor is (192,336) in a 512x384 frame.
-	channel_effect.offset = Vector2(64.0, -144.0)
-	channel_effect.position = Vector2.ZERO
-	channel_effect.scale = Vector2(0.50, 0.50)
-	channel_effect.z_index = 10
-	channel_effect.modulate = Color.WHITE
+	var properties: Dictionary = profile["properties"]
+	for property in properties:
+		channel_effect.set(property, properties[property])
 
 
 func _apply_profile_visual() -> void:
@@ -6985,14 +6951,9 @@ func _apply_normalized_hero_visual_scale() -> void:
 	if used_rect.size.y <= 0:
 		return
 
-	var target_height := _get_stage1_reference_render_height()
-	if hero_id == "ranged_rookie":
-		# The remade Stage 1 mage uses standalone 256x256 frames. The legacy
-		# sheet can be empty/invalid for the old 64x64 reference crop, which
-		# previously triggered scale=3 and made the new mage enormous.
-		target_height = STAGE1_TARGET_VISIBLE_HEIGHT
-	elif target_height <= 0.0:
-		target_height = STAGE1_TARGET_VISIBLE_HEIGHT
+	var target_height := HERO_PRESENTATION.resolve_target_height(
+		hero_id, _get_stage1_reference_render_height()
+	)
 
 	var normalized_scale := target_height / float(
 		used_rect.size.y
