@@ -1733,8 +1733,7 @@ func get_monster_run_detail(monster_id: String) -> Dictionary:
 			* monster_hp_multiplier
 			* _get_monster_augment_multiplier(monster_id, "hp")
 		)
-		if monster_id == "orc":
-			hp_value *= orc_hp_multiplier
+		hp_value *= _get_monster_hp_upgrade_multiplier(monster_id)
 		detail["max_hp"] = maxi(
 			1,
 			int(round(
@@ -2412,8 +2411,7 @@ func _spawn_monster(
 			* monster_hp_multiplier
 			* _get_monster_augment_multiplier(monster_type, "hp")
 		)
-		if monster_type == "orc":
-			level_base_hp *= orc_hp_multiplier
+		level_base_hp *= _get_monster_hp_upgrade_multiplier(monster_type)
 		level_base_hp *= maxf(
 			float(spawn_modifiers.get("hp_multiplier", 1.0)),
 			0.01
@@ -4557,11 +4555,13 @@ func _apply_special_monster_modifiers(
 			)
 		)
 
-	if monster_id == "bomb_rat":
-		var fuse_value = monster.get("self_destruct_fuse")
+	var scaling_profile := MONSTER_CATALOG.get_runtime_scaling_profile(monster_id)
+	var fuse_property: StringName = scaling_profile.get("fuse_property", &"")
+	if not fuse_property.is_empty():
+		var fuse_value = monster.get(fuse_property)
 		if fuse_value != null:
 			monster.set(
-				"self_destruct_fuse",
+				fuse_property,
 				maxf(
 					0.10,
 					float(fuse_value)
@@ -4592,11 +4592,12 @@ func _apply_special_monster_modifiers(
 			)
 		)
 
-	if monster_id == "bomb_rat":
-		var explosion_damage_value = monster.get("explosion_damage")
+	var explosion_property: StringName = scaling_profile.get("explosion_property", &"")
+	if not explosion_property.is_empty():
+		var explosion_damage_value = monster.get(explosion_property)
 		if explosion_damage_value != null:
 			monster.set(
-				"explosion_damage",
+				explosion_property,
 				maxi(
 					1,
 					int(round(
@@ -5153,6 +5154,12 @@ func _refresh_alive_monsters_for_augments(affected_ids: Array[String] = []) -> v
 		_apply_special_augments_to_monster(node, monster_id)
 
 
+func _get_monster_hp_upgrade_multiplier(monster_id: String) -> float:
+	var profile := MONSTER_CATALOG.get_runtime_scaling_profile(monster_id)
+	var property: StringName = profile.get("hp_upgrade_property", &"")
+	return float(get(property)) if not property.is_empty() else 1.0
+
+
 func _get_augment_refresh_profile(monster_id: String) -> Dictionary:
 	return {
 		"rarity": MONSTER_CATALOG.get_rarity_combat_profile(monster_id),
@@ -5227,8 +5234,7 @@ func _apply_normal_augments_to_existing_monster(
 			* _get_monster_augment_multiplier(monster_id, "hp")
 			* float(runtime_variant.get("hp", 1.0))
 		)
-		if monster_id == "orc":
-			base_hp *= orc_hp_multiplier
+		base_hp *= _get_monster_hp_upgrade_multiplier(monster_id)
 		monster.set_meta(
 			"demon_level_base_max_hp",
 			maxf(base_hp, 1.0)
@@ -5251,14 +5257,16 @@ func _apply_normal_augments_to_existing_monster(
 			)
 		)
 
-	if monster_id == "bomb_rat":
+	var scaling_profile := MONSTER_CATALOG.get_runtime_scaling_profile(monster_id)
+	var fuse_property: StringName = scaling_profile.get("fuse_property", &"")
+	if not fuse_property.is_empty():
 		var raw_fuse = monster.get_meta(
-			"augment_raw_self_destruct_fuse",
+			"augment_raw_%s" % fuse_property,
 			null
 		)
 		if raw_fuse != null:
 			monster.set(
-				"self_destruct_fuse",
+				fuse_property,
 				maxf(
 					0.10,
 					float(raw_fuse)
@@ -5270,14 +5278,16 @@ func _apply_normal_augments_to_existing_monster(
 					)
 				)
 			)
+	var explosion_property: StringName = scaling_profile.get("explosion_property", &"")
+	if not explosion_property.is_empty():
 		var raw_explosion = monster.get_meta(
-			"augment_raw_explosion_damage",
+			"augment_raw_%s" % explosion_property,
 			null
 		)
 		if raw_explosion != null:
 			var survival_damage := _hero_survival_multiplier("damage",float(monster.get_meta("hero_survival_spawn_seconds",0.0))) if hero_player_mode else 1.0
 			monster.set(
-				"explosion_damage",
+				explosion_property,
 				maxi(
 					1,
 					int(round(

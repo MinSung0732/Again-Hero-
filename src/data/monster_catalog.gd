@@ -4,6 +4,7 @@ class_name MonsterCatalog
 const FRONTIER := preload("res://src/data/frontier_monster_catalog.gd")
 const BALANCE := preload("res://src/data/monster_balance_catalog.gd")
 static var balanced_stats_cache: Dictionary = {}
+const EMPTY_RUNTIME_SCALING := {}
 
 const ORDER := [
 	"iron_beetle",
@@ -555,6 +556,7 @@ const MONSTERS := {
 	},
 	"orc": {
 		"id": "orc",
+		"runtime_scaling": {"hp_upgrade_property": &"orc_hp_multiplier"},
 		"name": "오크",
 		"role": "tank",
 		"species": "beast",
@@ -1032,6 +1034,7 @@ const MONSTERS := {
 	},
 	"bomb_rat": {
 		"id": "bomb_rat",
+		"runtime_scaling": {"fuse_property": &"self_destruct_fuse", "explosion_property": &"explosion_damage"},
 		"name": "폭탄쥐",
 		"role": "burst",
 		"species": "beast",
@@ -1369,3 +1372,9 @@ static func get_ui_icon_path(monster_id: String) -> String:
 	if get_rarity(monster_id) == "transcendent":
 		return String(data.get("card_icon_path",""))
 	return String(data.get("display_icon_path",data.get("card_icon_path","")))
+
+# Immutable content bindings; callers must not modify the shared profile.
+static func get_runtime_scaling_profile(monster_id: String) -> Dictionary:
+	if not MONSTERS.has(monster_id):
+		return EMPTY_RUNTIME_SCALING
+	return MONSTERS[monster_id].get("runtime_scaling", EMPTY_RUNTIME_SCALING)

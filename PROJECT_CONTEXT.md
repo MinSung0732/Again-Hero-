@@ -1,3 +1,8 @@
+## 2026-10-18 — 단계별 하드코딩 정리4차 후속: 몬스터 배율
+
+- 몬스터 runtime_scaling은 MonsterCatalog 소유의 공유 metadata. Battle은 HP upgrade property와 fuse/explosion property를 읽어 처리하며 특정 ID 판별을 반복하지 않음. 기존 증강 상태 이름/수치·소환/정예/강화 순서 유지.
+- Godot before/after 정상732+raw누락732=1464검사 PASS, 나머지 Battle228함수 동일·밸런스 감사0·정적 통과. 누락 raw의 기존 get_meta 진단 before/after 동일. 전체Battle/풀복귀/AI·실기/FPS 미검증. docs/MONSTER_SCALING_POLICY_PHASE4_20261018.md.
+
 ## 2026-10-18 — 단계별 하드코딩 정리4차: 기본 투사체
 
 - 공용 기본탄의 content ID 분기를 hero_basic_projectile_catalog의 impact/holy method·frame metadata로 변경. source ID 변경 시 캐시 갱신하고 프레임은 프로필별 공유. 기존 피해·광역/반사·다발·풀·그룹/공간조회·초기값·성장/AI/보상 유지.

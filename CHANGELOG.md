@@ -1,3 +1,8 @@
+## 2026-10-18 — 하드코딩 정리4차 후속: 몬스터 추가 배율
+
+- 오크 HP 배율3곳과 폭탄쥐 도화선/폭발4곳의 ID 분기를 MonsterCatalog runtime_scaling metadata로 전환. 기존 배율 상태·적용 순서/최소값/반올림·정예/반복강화·게임 규칙 유지. 신규 프레임 작업/스캔/할당 루프 없음.
+- Godot before/after 정상732+raw누락732=1464검사 PASS, 나머지 Battle228함수 동일·밸런스 감사0·정적 통과. 누락 raw의 기존 get_meta 진단 before/after 동일. 전체Battle/풀복귀/AI·실기/FPS 미검증. docs/MONSTER_SCALING_POLICY_PHASE4_20261018.md.
+
 ## 2026-10-18 — 하드코딩 정리4차: 공용 기본 투사체
 
 - hero_basic_projectile_catalog에 견습/정화 기본탄의 frame·fps/scale·impact/holy method 및 기존 초기값/상자 반경/pool key 통합. runtime content ID 분기 제거, source ID 변경 시 정책 캐시 갱신·공유 SpriteFrames 캐시 일반화. 피해/배수 결과·source/HP는 원래 시점 판독, 공격/성장·AI·공간조회/풀·서버 의미 유지.
