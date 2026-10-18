@@ -2,6 +2,7 @@ extends CanvasLayer
 class_name HeroRevealCutscene
 
 signal bgm_start_requested(stage_id: String)
+signal battle_ready
 signal finished
 
 const EFFECT_FRAME_COUNT := 30
@@ -220,6 +221,8 @@ func _play_fake_loading() -> void:
 		loading_text.text = "전투 준비 중%s" % ".".repeat(dot_count)
 		loading_progress.value = float(index + 1) / float(total_steps) * 100.0
 		await get_tree().create_timer(LOADING_FRAME_SECONDS).timeout
+
+	battle_ready.emit()
 
 
 func _load_reveal_stinger() -> AudioStreamOggVorbis:

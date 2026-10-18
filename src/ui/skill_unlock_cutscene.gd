@@ -1,6 +1,7 @@
 extends CanvasLayer
 class_name SkillUnlockCutscene
 
+signal artwork_revealed(data: Dictionary)
 signal finished
 
 const DEFAULT_HOLD_SECONDS := 1.05
@@ -72,6 +73,8 @@ func _run_sequence(data: Dictionary) -> void:
 	await intro.finished
 	if not _active:
 		return
+
+	artwork_revealed.emit(data)
 
 	var flash_out := create_tween()
 	flash_out.tween_property(flash, "color:a", 0.0, 0.16)

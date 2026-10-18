@@ -18,6 +18,7 @@ const LOADING := preload("res://src/ui/startup_loading_view.gd")
 const RESULT_VIEW := preload("res://src/ui/hero_result_view.gd")
 const PAUSE_VIEW := preload("res://src/ui/hero_pause_view.gd")
 const INVENTORY_DETAIL := preload("res://src/ui/hero_inventory_detail.gd")
+var hero_voice: Node
 var inventory_dim: ColorRect
 var overlay_default_style: StyleBox
 signal presentation_prepared
@@ -137,6 +138,7 @@ func _begin_prepared_entry() -> void:
 		loading_view.set_progress(1.0)
 		local_loading.queue_free()
 	if not is_inside_tree() or not presentation_ready or not is_instance_valid(battle): return
+	hero_voice.play_entry()
 	entry_ready = true
 	entry_started_ms = Time.get_ticks_msec(); entry_started_unix = Time.get_unix_time_from_system()
 	pad.enabled = true
@@ -163,6 +165,10 @@ func _create_battle() -> void:
 	viewport.add_child(battle)
 	battle.set_external_pause(true)
 	_install_battle_settings()
+	hero_voice = preload("res://src/audio/hero_voice_player.gd").new()
+	add_child(hero_voice)
+	hero_voice.install(battle)
+	hero_voice.prepare()
 	GameAudio.attach_battle(battle)
 	$HeroBGMManager.start_hero_loop(player_hero_id)
 	$HeroBGMManager.set_user_bgm_level(AudioSettings.bgm_level)

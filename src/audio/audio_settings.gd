@@ -5,6 +5,8 @@ signal settings_changed
 const CONFIG_PATH := "user://audio_settings.cfg"
 const BGM_BUS := &"BGM"
 const SFX_BUS := &"SFX"
+# Voice follows SFX settings but bypasses temporary combat-effect ducking.
+const VOICE_BUS := &"HeroVoice"
 
 const DEFAULT_LEVEL := 5
 const MIN_LEVEL := 1
@@ -43,7 +45,7 @@ func set_bgm_level(value: int) -> void:
 
 func set_sfx_level(value: int) -> void:
 	sfx_level = clampi(value, MIN_LEVEL, MAX_LEVEL)
-	_apply_bus(SFX_BUS, sfx_level, sfx_muted, SFX_LEVEL_DB)
+	_apply_sfx_bus_state()
 	_save_and_emit()
 
 
@@ -55,13 +57,13 @@ func set_bgm_muted(value: bool) -> void:
 
 func set_sfx_muted(value: bool) -> void:
 	sfx_muted = value
-	_apply_bus(SFX_BUS, sfx_level, sfx_muted, SFX_LEVEL_DB)
+	_apply_sfx_bus_state()
 	_save_and_emit()
 
 
 func apply_settings() -> void:
 	_apply_bgm_bus_state()
-	_apply_bus(SFX_BUS, sfx_level, sfx_muted, SFX_LEVEL_DB)
+	_apply_sfx_bus_state()
 
 
 func load_settings() -> void:
@@ -86,6 +88,7 @@ func load_settings() -> void:
 func _ensure_audio_buses() -> void:
 	_ensure_bus(BGM_BUS)
 	_ensure_bus(SFX_BUS)
+	_ensure_bus(VOICE_BUS)
 
 
 func _ensure_bus(bus_name: StringName) -> void:
@@ -149,3 +152,8 @@ func _save_and_emit() -> void:
 	config.set_value("audio", "sfx_muted", sfx_muted)
 	config.save(config_path)
 	settings_changed.emit()
+
+
+func _apply_sfx_bus_state() -> void:
+	_apply_bus(SFX_BUS, sfx_level, sfx_muted, SFX_LEVEL_DB)
+	_apply_bus(VOICE_BUS, sfx_level, sfx_muted, SFX_LEVEL_DB)

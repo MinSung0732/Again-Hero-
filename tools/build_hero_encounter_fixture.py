@@ -46,7 +46,7 @@ var active_monsters := {}
 var max_command := 100.0
 var finish_count := 0
 var won := false
-func _finish_battle(_text: String, victory: bool) -> void:
+func _finish_battle(_text: String, victory: bool, _hero_outcome: StringName = &"") -> void:
     if battle_over: return
     battle_over = true; won = victory; finish_count += 1
 func _clamp_manual_spawn_position(point: Vector2) -> Vector2: return point

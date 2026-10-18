@@ -1,3 +1,9 @@
+## 2026-10-18 — 용사 음성33개 이벤트 연결
+
+- hero_voice_catalog에 10종 pack·진입/승리/패배 및 8/9/10 해금·우선순위/지연/믹스 선언. 공용 player1/실시간Timer1·현재 pack최대4캐시, 기존 로딩100%/확정승패/채워진 컷신 신호로 연결. 전투·결과·컷신 전환을 음성 때문에 기다리지 않음.
+- 마왕/용사 승패 관점 분리, 중도포기 무음·첫 확정 결과1회·중복/겹침 방지. Voice는 SFX 설정 연동, BGM/SFX effect duck·소유권 cleanup. 슬로우 정상 속도, 실제 pause/background 처리. AI/보상/수치·원본WAV/project 설정 불변.
+- Godot 격리161검사/WAV33개 실제 로딩·재생 시작, 보스 종료 회귀12검사=173 PASS·import/정적 통과. UI artwork/일부 게임 의존성 어댑터. 전체실기플레이/실제청취/모바일/GPU 미검증. docs/HERO_VOICE_EVENTS_20261018.md. main 병합 없음.
+
 ## 2026-10-18 — 하드코딩 정리19차: 남은 반복 연결 14곳
 
 - 18차 연결 검토 후보14곳 모두 데이터화: 경계 steering/투사체 override/순차 기본·기술 오디오/레벨업 풀·AI 공급자/증강 후크/매혹 dictionary 쿨다운/방어음 준비. 원래 선택 시점·snapshot·기본 ai_settings 참조·고유 기술/전투/AI 의미 유지. 안정 상태 매프레임 컬렉션/Callable 생성 추가 없음.

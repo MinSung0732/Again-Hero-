@@ -68,6 +68,8 @@ signal mutation_selected(event_type: String, mutation_name: String)
 signal mutation_spawn_result(success: bool, message: String)
 signal run_time_changed(elapsed_seconds: float, remaining_seconds: float)
 signal battle_finished(message: String, player_won: bool)
+# Presentation only: hero perspective, independent of the player role.
+signal hero_outcome_confirmed(outcome: StringName)
 
 const HERO_SCENE := preload("res://src/hero/Hero.tscn")
 const SCORPION_SWAMP_RUNTIME := preload("res://src/systems/scorpion_swamp_runtime.gd")
@@ -5460,14 +5462,14 @@ func _on_hero_died() -> void:
 	if is_instance_valid(hero):
 		battle_entity_registry.retire_instance(hero.get_instance_id())
 	if online_match_mode:
-		if not battle_over: _finish_battle("마왕 승리 · 용사 처치",true)
+		if not battle_over: _finish_battle("마왕 승리 · 용사 처치",true,&"defeat")
 		return
 	if practice_mode or tutorial_mode:
 		return
 	if battle_over:
 		return
 	if hero_player_mode:
-		_finish_battle("용사 패배 · 군단의 포위를 뚫지 못했습니다.",false)
+		_finish_battle("용사 패배 · 군단의 포위를 뚫지 못했습니다.",false,&"defeat")
 		return
 
 	_emit_stats(0)
@@ -5516,11 +5518,11 @@ func _on_hero_died() -> void:
 		elif int(campaign_reward.get("research",0)) > 0: result_text += "\n군단 보상 · %s → 연구 포인트 +%d" % [String(campaign_reward.name),int(campaign_reward.research)]
 		else: result_text += "\n군단 보상 · %s 조각 +%d" % [String(campaign_reward.name),int(campaign_reward.get("shards",0))]
 	result_text += _grant_run_research_reward(true)
-	_finish_battle(result_text, true)
+	_finish_battle(result_text, true, &"defeat")
 
 func _on_run_time_up() -> void:
 	if online_match_mode:
-		if not battle_over: _finish_battle("용사 승리 · 제한시간 생존",false)
+		if not battle_over: _finish_battle("용사 승리 · 제한시간 생존",false,&"victory")
 		return
 	if practice_mode or tutorial_mode:
 		return
@@ -5533,7 +5535,7 @@ func _on_run_time_up() -> void:
 	var hero_name := String(current_hero_profile.get("display_name", "용사"))
 	var result_text := "시간 초과!\n%s가 제한시간을 버텨냈습니다." % hero_name
 	result_text += _grant_run_research_reward(false)
-	_finish_battle(result_text, false)
+	_finish_battle(result_text, false, &"victory")
 
 func finish_abandoned_run() -> bool:
 	if battle_over:
@@ -5652,13 +5654,16 @@ func get_run_analysis_summary() -> String:
 
 	return "\n".join(lines)
 
-func _finish_battle(message: String, player_won: bool) -> void:
+func _finish_battle(message: String, player_won: bool, hero_outcome: StringName = &"") -> void:
+	if battle_over: return
 	if _mission_service != null:
 		_mission_service.flush()
 	battle_over = true
 	demon_augment_selection_active = false
 	flow_pause_manager.reset()
 	_sync_combat_pause_state()
+	if hero_outcome != &"":
+		hero_outcome_confirmed.emit(hero_outcome)
 	battle_finished.emit(message, player_won)
 
 func _record_mission_action(event: String, amount: float) -> void:
@@ -6249,8 +6254,8 @@ func spawn_hero_encounter(id: String, point: Vector2, modifiers: Dictionary) -> 
 	return monster
 func _finish_hero_boss_victory() -> void:
 	if hero_player_mode and run_metrics.elapsed_seconds >= HERO_SURVIVAL.DURATION and not battle_over and is_instance_valid(hero) and hero.current_hp > 0:
-		_finish_battle("용사 승리 · 최종 보스를 처치했습니다!",true)
+		_finish_battle("용사 승리 · 최종 보스를 처치했습니다!",true,&"victory")
 
 func finish_hero_boss_timeout() -> void:
 	if not hero_player_mode or battle_over: return
-	_finish_battle("패배 · 최종 보스 제한시간 5분을 초과했습니다.",false)
+	_finish_battle("패배 · 최종 보스 제한시간 5분을 초과했습니다.",false,&"defeat")

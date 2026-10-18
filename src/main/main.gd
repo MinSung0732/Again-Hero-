@@ -255,7 +255,13 @@ var _pending_manual_spawn_pointer_id: int = -1
 var current_stage_hero_name: String = "용사"
 var _battle_toast_timer: float = 0.0
 
+var hero_voice = preload("res://src/audio/hero_voice_player.gd").new()
+
 func _ready() -> void:
+	add_child(hero_voice)
+	hero_voice.install(battle)
+	hero_reveal_cutscene.battle_ready.connect(hero_voice.play_entry)
+	skill_unlock_cutscene.artwork_revealed.connect(_on_skill_artwork_revealed)
 	GameAudio.attach_battle(battle)
 	_cache_demon_ultimate_ui_data()
 	_ensure_demon_action_choice_capacity(5)
@@ -434,6 +440,7 @@ func prepare_presentation() -> void:
 	await PresentationWarmup.prepare_common()
 	await PresentationWarmup.prepare_scene("res://src/main/Main.tscn")
 	await _warm_touch_hold_frames()
+	hero_voice.prepare()
 	await battle.prepare_spawn_resources()
 	var snapshot: Dictionary = battle.get_snapshot()
 	var reveal := HERO_REVEAL_CATALOG.get_reveal_data(
@@ -895,6 +902,7 @@ func _on_hero_reveal_bgm_start_requested(stage_id: String) -> void:
 
 
 func _on_hero_reveal_finished() -> void:
+	hero_voice.play_entry() # Missing portrait fallback; the entry receipt prevents replay.
 	var stage_id := _stage_intro_stage_id
 	_stage_intro_stage_id = ""
 	_start_battle_after_intro(stage_id)
@@ -3619,3 +3627,7 @@ func _on_result_formation_pressed() -> void:
 	get_tree().set_meta("campaign_team_return",String(battle.current_stage_data.get("next_stage_id","")) if _result_won else String(battle.current_stage_id))
 	_on_lobby_pressed()
 	if not _scene_load_pending: get_tree().remove_meta("campaign_team_return")
+
+
+func _on_skill_artwork_revealed(data: Dictionary) -> void:
+	hero_voice.play_unlock(String(data.get("skill_id", "")))
