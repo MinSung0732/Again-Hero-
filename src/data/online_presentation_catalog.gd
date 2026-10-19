@@ -2,7 +2,9 @@ extends RefCounted
 ## Wire-only presentation policy; combat sizes/anchors come from live visuals.
 const MAX_COMMANDS := 128
 const MAX_TEXTURES := 512
-const COMMAND_SIZE := 21
+const COMMAND_SIZE := 22
+const BACKGROUND_Z := -100
+const MAX_WORLD_EXTENT := 8192.0
 const EMPTY := []
 const ART_ROOT := "res://assets/art/"
 const MAX_PATH_LENGTH := 256
@@ -20,4 +22,11 @@ static func valid(command: Variant) -> bool:
 	if command[4] <= 0 or command[5] <= 0 or command[14] <= 0 or command[15] <= 0: return false
 	for index in range(16,20):
 		if command[index] < 0 or command[index] > 1: return false
+	return true
+static func battlefield_valid(value: Variant) -> bool:
+	if not value is Dictionary or value.size() != 2 or not value.get("stage",null) is String or not value.get("bounds",null) is Array or value.bounds.size() != 2: return false
+	var stages := preload("res://src/data/stage_catalog.gd")
+	if not stages.STAGES.has(value.stage): return false
+	for size in value.bounds:
+		if not (size is float or size is int) or not is_finite(float(size)) or size < 500 or size > MAX_WORLD_EXTENT: return false
 	return true

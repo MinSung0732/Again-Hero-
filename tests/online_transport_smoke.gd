@@ -29,7 +29,12 @@ func run() -> void:
 	await pump(0.3)
 	check(server.rooms.is_empty(),"one player cannot start")
 	check(demon.join("ws://127.0.0.1:24842","fixture_demon","demon") == OK,"demon joins")
-	await pump(2)
+	# Cold original-art room preparation can consume the polling time budget.
+	# Wait for the observed ready transition, bounded independently of its cost.
+	var ready_deadline := Time.get_ticks_msec()+8000
+	while Time.get_ticks_msec()<ready_deadline:
+		if not hero.match_id.is_empty() and server.rooms.has(hero.match_id) and server.rooms[hero.match_id].node.running: break
+		await process_frame
 	check(server.rooms.size() == 1,"network pair creates room")
 	check(not hero.match_id.is_empty() and hero.match_id == demon.match_id,"same match ID")
 	var room = server.rooms[hero.match_id].node

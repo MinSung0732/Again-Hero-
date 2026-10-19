@@ -5,6 +5,7 @@ const PNG_SOURCE := preload("res://src/ui/png_texture_source.gd")
 const GEOMETRY := preload("res://src/hero_mode/hero_weapon_geometry.gd")
 var node_cache := {}
 var texture_cache := {}
+var coordinate_space := Transform2D.IDENTITY
 func forget_node(instance: int) -> void:
 	node_cache.erase(instance)
 func _collect(node: Node,output: Array) -> void:
@@ -41,7 +42,7 @@ func append_tree(root: Node2D,owner: int,output: Array) -> void:
 		else: texture = sprite.texture
 		if texture == null: continue
 		var rect := Rect2(sprite.offset-texture.get_size()*0.5 if sprite.centered else sprite.offset,texture.get_size())
-		var transform: Transform2D = sprite.global_transform
+		var transform: Transform2D = coordinate_space*sprite.global_transform
 		if sprite.flip_h: transform.x = -transform.x
 		if sprite.flip_v: transform.y = -transform.y
 		var z: int = sprite.z_index
@@ -49,12 +50,14 @@ func append_tree(root: Node2D,owner: int,output: Array) -> void:
 		var relative: bool = sprite.z_as_relative
 		while relative and parent is Node2D:
 			z += parent.z_index; relative = parent.z_as_relative; parent = parent.get_parent()
-		append_texture(texture,owner,transform,rect,sprite.modulate*sprite.self_modulate,output,z)
-func append_texture(texture: Texture2D,owner: int,transform: Transform2D,rect: Rect2,color: Color,output: Array,z: int = 0) -> void:
+		append_texture(texture,owner,transform,rect,sprite.modulate*sprite.self_modulate,output,z,(coordinate_space*root.global_position).y)
+func append_texture(texture: Texture2D,owner: int,transform: Transform2D,rect: Rect2,color: Color,output: Array,z: int = 0,sort_y: float = NAN) -> void:
 	if output.size() >= DATA.MAX_COMMANDS: return
 	var source := _texture(texture)
 	if source.is_empty(): return
-	output.append([owner,source[0],source[1],source[2],source[3],source[4],transform.x.x,transform.x.y,transform.y.x,transform.y.y,transform.origin.x,transform.origin.y,rect.position.x,rect.position.y,rect.size.x,rect.size.y,clampf(color.r,0,1),clampf(color.g,0,1),clampf(color.b,0,1),clampf(color.a,0,1),z])
+	output.append([owner,source[0],source[1],source[2],source[3],source[4],transform.x.x,transform.x.y,transform.y.x,transform.y.y,transform.origin.x,transform.origin.y,rect.position.x,rect.position.y,rect.size.x,rect.size.y,clampf(color.r,0,1),clampf(color.g,0,1),clampf(color.b,0,1),clampf(color.a,0,1),z,transform.origin.y if is_nan(sort_y) else sort_y])
+static func visual_order(a: Array,b: Array) -> bool:
+	return a[20] < b[20] or (a[20] == b[20] and a[21] < b[21])
 func append_weapon_areas(weapons,output: Array) -> void:
 	var z: int = weapons.hero.z_index
 	for field in weapons.fields:
@@ -75,8 +78,25 @@ func append_weapon_areas(weapons,output: Array) -> void:
 		if effect.pattern == "chain":
 			pose = Transform2D((b-a).angle(),a)
 			rect = Rect2(0,-GEOMETRY.CHAIN_DRAW_WIDTH*0.5,a.distance_to(b),GEOMETRY.CHAIN_DRAW_WIDTH)
-		elif effect.pattern in ["beam","slash","capsule","combo","bolt","orbit"]:
-			continue # Their procedural/geometry presentation is a separate adapter.
+		elif effect.pattern in ["beam","slash","capsule"]:
+			pose = Transform2D((b-a).angle(),a)
+			rect = GEOMETRY.effect_texture_rect(effect.pattern,a.distance_to(b),effect.radius)
+			if not rect.has_area(): continue
+			alpha *= GEOMETRY.BEAM_TEXTURE_ALPHA
+		elif effect.pattern == "combo":
+			pose = Transform2D((b-a).angle(),b)
+			rect = Rect2(Vector2.ONE*-float(effect.radius),Vector2.ONE*float(effect.radius)*2)
+		elif effect.pattern == "orbit":
+			var inner := GEOMETRY.orbit_inner(float(effect.radius),float(effect.orbit_ratio),float(effect.get("area_scale",1.0)))
+			var outer := GEOMETRY.orbit_outer(float(effect.radius),float(effect.orbit_ratio),float(effect.get("area_scale",1.0)))
+			var extent := GEOMETRY.orbit_texture_extent(inner,outer)
+			var count: int = mini(int(effect.orbit_count),DATA.MAX_COMMANDS-output.size())
+			for index in count:
+				var angle: float = weapons.visual_clock*float(effect.orbit_speed)+index*TAU/float(effect.orbit_count)
+				var position := a+Vector2.from_angle(angle)*(inner+outer)*0.5
+				append_texture(weapons._loop_frame(frames,weapons.visual_clock),-1,Transform2D(angle+PI*0.5,position),Rect2(Vector2.ONE*-extent,Vector2.ONE*extent*2),Color(1,1,1,alpha),output,z)
+			continue
+		elif effect.pattern == "bolt": continue # Existing procedural bolt lines need no PNG.
 		else:
 			var diameter: float = effect.radius*sqrt(2.0)
 			rect = Rect2(Vector2.ONE*-diameter*0.5,Vector2.ONE*diameter); alpha *= GEOMETRY.AREA_TEXTURE_ALPHA

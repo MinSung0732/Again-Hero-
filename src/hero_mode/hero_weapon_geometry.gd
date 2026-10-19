@@ -1,6 +1,13 @@
 extends RefCounted
 const CHAIN_DRAW_WIDTH := 32.0
 const AREA_TEXTURE_ALPHA := 0.75
+const BEAM_TEXTURE_ALPHA := 0.85
+const ORBIT_TEXTURE_MAX_EXTENT := 18.0
+static func effect_texture_rect(pattern: String,length: float,radius: float) -> Rect2:
+	if pattern == "slash": return Rect2(Vector2(length*0.2,-length*0.3),Vector2.ONE*length*0.6)
+	return Rect2(Vector2(0,-radius),Vector2(sqrt(maxf(0,length*length-radius*radius)),radius*2))
+static func orbit_texture_extent(inner: float,outer: float) -> float:
+	return minf(ORBIT_TEXTURE_MAX_EXTENT,(outer-inner)*0.5/sqrt(2.0))
 ## Shared by detection, hit filtering and render outlines. Radii are world units.
 const SLASH_DOT := 0.35
 const ORBIT_HALF_WIDTH := 100.0

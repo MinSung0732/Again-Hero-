@@ -1,3 +1,10 @@
+## 2026-10-19 — 온라인 마왕성·적 투사체·추가 공격 PNG
+
+- 기존 마왕성 배치/카펫/벽/장식을 표현 전용으로 재사용, 클라이언트 충돌체 생성만 생략. 접지점 깊이 정렬·UI 오프셋 제거·같은 descriptor 재사용. 온라인 활성 투사체 레지스트리로 거미줄/화살 PNG 연결, acquire/풀 복귀/퇴장 정리와 고유 풀 중복 방지.
+- beam/capsule/slash/combo/orbit PNG 어댑터 추가. 기존 렌더 수식을 공유 함수/상수로만 치환, 전투/판정/증강/AI·원본 PNG 불변. protocol4(22필드/전장 descriptor), 서버·양쪽 함께 갱신 후 서버 재시작. 반복 전장 생성/전체 그룹 검색 없음.
+- Godot4.5.1 headless 새146+기존570+솔로제어456=1172검사 PASS, 별도3프로세스 동일 경기/승자·양쪽 상태30회 PASS. 원본 마왕성 PNG114개 byte 일치/최종 import/정적 통과. 실행 ERROR0, 격리 아트 누락 경고 있음. transport의 고정2초 대기는 원본 아트 초기화 비용에 영향받아 ready 관측/8초 제한으로 수정 후 통과. 대표 포화 snapshot22843bytes, FPS 개선율 미측정.
+- 실제 Windows4.7.2/Android/GPU/WSS·전체아트 시각 검증 없음. 절차 도형/링·모든 고유 VFX/사망 잔상·오디오/보간은 후속. feature/stage10-astra만, main4e7d1ccc 유지. docs/ONLINE_CASTLE_EFFECTS_20261019.md.
+
 ## 2026-10-19 — main fast-forward 후 온라인 PNG 표현
 
 - 사용자 양쪽 끊기/복귀·무효 실기 정상 보고 기록. 요청대로 main 6f22053f→4e7d1ccc fast-forward: 충돌/병합 커밋/강제 덮어쓰기 없이 기존 작업 전부 반영, 원격 확인 후 feature/stage10-astra 복귀. 아래 새 표현 변경은 작업 브랜치에만 추가.

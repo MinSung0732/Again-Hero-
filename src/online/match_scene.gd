@@ -110,6 +110,8 @@ func _event(event: Dictionary) -> void:
 			last_tick = -1; revision = -1
 			_refresh_connection_test_controls()
 			status.text = "기존 경기로 복귀했습니다." if event.get("resumed",false) else "매칭 완료 · 전투 준비 중..."
+			if event.has("battlefield") and not view.prepare_battlefield(event.battlefield):
+				client.close(); ended = true; status.text = "전장 정보를 준비하지 못했습니다."; _set_controls(false); return
 			client.send({"op":"ready","match":client.match_id})
 		"connection":
 			if event.get("match","") != client.match_id or ended or not event.get("paused",null) is bool or not RULES.number(event.get("remaining",null),RULES.RECONNECT_GRACE): return

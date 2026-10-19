@@ -41,7 +41,7 @@ func run() -> void:
 	var requests: int = view.texture_requests
 	for index in 10: check(view.update_state(snapshot),"repeat snapshot accepted")
 	check(view.texture_requests == requests and view.pending_textures.is_empty(),"cache prevents repeated loading and idle polling")
-	check(view.get_child_count() == 0,"client creates no Hero/monster/physics nodes")
+	check(view.find_children("*","CollisionObject2D",true,false).is_empty(),"client creates no Hero/monster/physics nodes")
 	var uncached_path := "res://assets/art/heroes/item/heal_frames/float_01.png"
 	check(not ResourceLoader.has_cached(uncached_path),"async fixture PNG is initially uncached")
 	var async_command: Array = hero_command.duplicate()

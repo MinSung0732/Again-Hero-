@@ -745,8 +745,8 @@ func draw() -> void:
 				if not frames.is_empty():
 					var texture: Texture2D = frames[mini(int((1-ratio)*frames.size()),frames.size()-1)]
 					var length := a.distance_to(b)
-					var rect := Rect2(Vector2(length*0.2,-length*0.3),Vector2.ONE*length*0.6) if effect.pattern == "slash" else Rect2(Vector2(0,-radius),Vector2(sqrt(maxf(0,length*length-radius*radius)),radius*2))
-					hero.draw_texture_rect(texture,rect,false,Color(1,1,1,ratio*0.85))
+					var rect := GEOMETRY.effect_texture_rect(String(effect.pattern),length,radius)
+					hero.draw_texture_rect(texture,rect,false,Color(1,1,1,ratio*GEOMETRY.BEAM_TEXTURE_ALPHA))
 				hero.draw_set_transform(Vector2.ZERO)
 			"combo":
 				if not frames.is_empty():
@@ -772,7 +772,7 @@ func draw() -> void:
 				for index in int(effect.orbit_count):
 					var angle := visual_clock*float(effect.orbit_speed)+index*TAU/float(effect.orbit_count)
 					var position := a+Vector2.from_angle(angle)*(inner+outer)*0.5
-					var extent := minf(18,(outer-inner)*0.5/sqrt(2.0))
+					var extent := GEOMETRY.orbit_texture_extent(inner,outer)
 					if not frames.is_empty():
 						hero.draw_set_transform(position,angle+PI*0.5)
 						hero.draw_texture_rect(_loop_frame(frames,visual_clock),Rect2(Vector2.ONE*-extent,Vector2.ONE*extent*2),false,Color(1,1,1,ratio))

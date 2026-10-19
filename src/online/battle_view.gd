@@ -5,6 +5,10 @@ const RULES := preload("res://src/online/match_rules.gd")
 const ART := preload("res://src/data/online_presentation_catalog.gd")
 const HERO_ART := preload("res://src/data/hero_presentation_catalog.gd")
 const LOAD_DRAIN := preload("res://src/online/texture_load_drain.gd")
+const FIELD := preload("res://src/online/battlefield_presentation.gd")
+const SAMPLE := preload("res://src/online/presentation_snapshot.gd")
+var battlefield
+var render_visuals: Array = []
 var art_textures := {}
 var pending_textures: Array[String] = []
 var painted_owners := {}
@@ -36,6 +40,7 @@ func update_state(value: Dictionary) -> bool:
 	for number in value.hero:
 		if not RULES.number(number): return false
 	if float(value.bounds[0]) < 500 or float(value.bounds[1]) < 500: return false
+	if float(value.bounds[0]) > ART.MAX_WORLD_EXTENT or float(value.bounds[1]) > ART.MAX_WORLD_EXTENT: return false
 	for actor in value.actors:
 		if not actor is Array or actor.size() != 6 or not actor[1] is String or actor[1] not in RULES.ROSTER: return false
 		for index in [0,2,3,4,5]:
@@ -44,9 +49,25 @@ func update_state(value: Dictionary) -> bool:
 	if not commands is Array or commands.size() > ART.MAX_COMMANDS: return false
 	for command in commands:
 		if not ART.valid(command): return false
+	if value.has("battlefield") and not ART.battlefield_valid(value.battlefield): return false
+	if value.has("battlefield") and value.battlefield.bounds != value.bounds: return false
+	if value.has("battlefield") and not prepare_battlefield(value.battlefield): return false
 	state = value; bounds = Vector2(value.bounds[0],value.bounds[1])
-	for command in commands: _request_texture(command[1])
+	_merge_visuals()
 	_resolve_owners(); queue_redraw(); return true
+func prepare_battlefield(value: Dictionary) -> bool:
+	if not ART.battlefield_valid(value): return false
+	if battlefield != null and battlefield.visible and battlefield.descriptor == value: return true
+	if battlefield == null: battlefield = FIELD.new(); add_child(battlefield)
+	if not battlefield.prepare(value): return false
+	bounds = Vector2(value.bounds[0],value.bounds[1])
+	_merge_visuals(); _layout_map(); queue_redraw(); return true
+func _merge_visuals() -> void:
+	render_visuals.clear()
+	if battlefield != null and battlefield.visible: render_visuals.append_array(battlefield.prop_commands)
+	render_visuals.append_array(state.get("visuals",ART.EMPTY))
+	render_visuals.sort_custom(SAMPLE.visual_order)
+	for command in render_visuals: _request_texture(command[1])
 func _request_texture(path: String) -> void:
 	if art_textures.has(path) or art_textures.size() >= ART.MAX_TEXTURES: return
 	art_textures[path] = null
@@ -70,16 +91,18 @@ func _process(_delta: float) -> void:
 	if pending_textures.is_empty(): set_process(false)
 func _resolve_owners() -> void:
 	painted_owners.clear()
-	for command in state.get("visuals",ART.EMPTY):
+	for command in render_visuals:
 		var texture: Texture2D = art_textures.get(command[1])
 		if texture != null and command[2]+command[4] <= texture.get_width() and command[3]+command[5] <= texture.get_height(): painted_owners[int(command[0])] = true
 func clear_state() -> void:
-	state = {}; painted_owners.clear(); queue_redraw()
+	state = {}; painted_owners.clear(); render_visuals.clear()
+	if battlefield != null: battlefield.visible = false
+	queue_redraw()
 func _exit_tree() -> void:
 	if is_instance_valid(load_drain): load_drain.set_process(true)
 func _draw_visuals() -> void:
 	var map_transform := Transform2D(Vector2(scale_ratio,0),Vector2(0,scale_ratio),map_offset)
-	for command in state.get("visuals",ART.EMPTY):
+	for command in render_visuals:
 		var texture: Texture2D = art_textures.get(command[1])
 		if texture == null: continue
 		var source := Rect2(command[2],command[3],command[4],command[5])
@@ -91,14 +114,17 @@ func _draw_visuals() -> void:
 func _layout_map() -> void:
 	scale_ratio = minf(size.x/bounds.x,size.y/bounds.y)
 	map_offset = (size-bounds*scale_ratio)*0.5
+	if battlefield != null:
+		battlefield.position = map_offset; battlefield.scale = Vector2.ONE*scale_ratio
 func _draw() -> void:
 	_layout_map()
-	draw_rect(Rect2(Vector2.ZERO,size),Color("101b28"))
-	draw_rect(Rect2(map_offset,bounds*scale_ratio),Color("283847"))
-	for x in range(0,int(bounds.x),300): draw_line(map_offset+Vector2(x,0)*scale_ratio,map_offset+Vector2(x,bounds.y)*scale_ratio,Color("354654"))
-	for y in range(0,int(bounds.y),300): draw_line(map_offset+Vector2(0,y)*scale_ratio,map_offset+Vector2(bounds.x,y)*scale_ratio,Color("354654"))
-	if state.is_empty(): return
+	if battlefield == null or not battlefield.visible:
+		draw_rect(Rect2(Vector2.ZERO,size),Color("101b28"))
+		draw_rect(Rect2(map_offset,bounds*scale_ratio),Color("283847"))
+		for x in range(0,int(bounds.x),300): draw_line(map_offset+Vector2(x,0)*scale_ratio,map_offset+Vector2(x,bounds.y)*scale_ratio,Color("354654"))
+		for y in range(0,int(bounds.y),300): draw_line(map_offset+Vector2(0,y)*scale_ratio,map_offset+Vector2(bounds.x,y)*scale_ratio,Color("354654"))
 	_draw_visuals()
+	if state.is_empty(): return
 	var hp: Array = state.hero
 	_actor(Vector2(hp[0],hp[1]),hero_texture,Color("73deff"),float(hp[2])/maxf(1,float(hp[3])),true,not painted_owners.has(0))
 	for actor in state.actors: _actor(Vector2(actor[2],actor[3]),textures.get(actor[1]),Color("d56d67"),float(actor[4])/maxf(1,float(actor[5])),false,not painted_owners.has(int(actor[0])))

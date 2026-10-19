@@ -167,7 +167,7 @@ func _match_waiters() -> void:
 		_send_matched(id,key,false)
 func _send_matched(id: int,key: String,resumed: bool) -> void:
 	var role: String = peers[id].role
-	_send(id,{"op":"matched","match":key,"role":role,"rules":RULES.ID,"hero":RULES.HERO,"roster":RULES.ROSTER,"duration":RULES.DURATION,"resume_token":rooms[key].seats[role].resume_token,"resumed":resumed})
+	_send(id,{"op":"matched","match":key,"role":role,"rules":RULES.ID,"hero":RULES.HERO,"roster":RULES.ROSTER,"duration":RULES.DURATION,"resume_token":rooms[key].seats[role].resume_token,"resumed":resumed,"battlefield":rooms[key].node.battlefield_info})
 func _resume(id: int,message: Dictionary) -> void:
 	if message.get("version",null) != RULES.VERSION or message.get("rules","") != RULES.ID: _reject(id,"version_mismatch"); return
 	var token_value: Variant = message.get("resume_token",null)

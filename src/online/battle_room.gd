@@ -3,6 +3,7 @@ extends Node
 const RULES := preload("res://src/online/match_rules.gd")
 const PRESENTATION := preload("res://src/online/presentation_snapshot.gd")
 var presentation = PRESENTATION.new()
+var battlefield_info := {}
 signal completed(winner: String,reason: String)
 var battle
 var world: SubViewport
@@ -38,6 +39,8 @@ func prepare() -> void:
 	battle.run_metrics.reset(RULES.DURATION,int(battle.hero.current_hp),int(battle.hero.max_hp))
 	battle.command_power = RULES.OPENING_MANA; battle.command_regen_per_second = RULES.MANA_PER_SECOND
 	battle.set_allowed_monster_ids(RULES.ROSTER)
+	battlefield_info = {"stage":battle.current_stage_id,"bounds":[battle.current_map_size.x,battle.current_map_size.y]}
+	battle.online_visual_entity_exited.connect(presentation.forget_node)
 	battle.battle_finished.connect(func(_message: String,demon_won: bool): finish("demon" if demon_won else "hero",_message))
 	battle.hero.player_augment_requested.connect(_choice)
 	battle.summon_result.connect(func(_id: String,_accepted: bool,message: String): last_action_message = message)
@@ -115,6 +118,7 @@ func _build_snapshot() -> Dictionary:
 		else: ids[instance].seen = snapshot_revision
 		actors.append([ids[instance].wire,String(actor.get("monster_type")),snappedf(actor.position.x,0.1),snappedf(actor.position.y,0.1),int(actor.get("current_hp")),int(actor.get("max_hp"))])
 		presentation.append_tree(actor,int(ids[instance].wire),visuals)
+	for id in battle.online_visual_projectiles: presentation.append_tree(battle.online_visual_projectiles[id],-1,visuals)
 	if is_instance_valid(battle.hero) and battle.hero.player_weapons != null:
 		var weapons = battle.hero.player_weapons
 		for shot in weapons.projectiles:
@@ -126,7 +130,8 @@ func _build_snapshot() -> Dictionary:
 		presentation.append_weapon_areas(weapons,visuals)
 		if weapons.native_skills != null:
 			for pattern in weapons.native_skills.actors_by_pattern:
-				for actor in weapons.native_skills.actors_by_pattern[pattern]: presentation.append_tree(actor,-1,visuals)
+				for actor in weapons.native_skills.actors_by_pattern[pattern]:
+					if is_instance_valid(actor) and not battle.online_visual_projectiles.has(actor.get_instance_id()): presentation.append_tree(actor,-1,visuals)
 	visuals.sort_custom(_visual_order)
 	stale_wire_ids.clear()
 	for instance in ids:
@@ -134,7 +139,7 @@ func _build_snapshot() -> Dictionary:
 	for instance in stale_wire_ids:
 		ids.erase(instance); presentation.forget_node(instance)
 	# Bounded snapshot serialization and presentation sort at10Hz, not physics Hz.
-	return {"op":"state","tick":tick,"hero":[hero_last.x,hero_last.y,hp,maximum,level],"bounds":[battle.current_map_size.x,battle.current_map_size.y],"seconds":battle.run_metrics.elapsed_seconds,"mana":battle.command_power,"actors":actors,"shots":shots,"visuals":visuals,"choice_revision":choice_revision,"choices":choice,"winner":winner,"reason":reason}
+	return {"op":"state","tick":tick,"hero":[hero_last.x,hero_last.y,hp,maximum,level],"bounds":[battle.current_map_size.x,battle.current_map_size.y],"battlefield":battlefield_info,"seconds":battle.run_metrics.elapsed_seconds,"mana":battle.command_power,"actors":actors,"shots":shots,"visuals":visuals,"choice_revision":choice_revision,"choices":choice,"winner":winner,"reason":reason}
 
 func _visual_order(a: Array,b: Array) -> bool:
-	return a[20] < b[20] or (a[20] == b[20] and a[11] < b[11])
+	return PRESENTATION.visual_order(a,b)

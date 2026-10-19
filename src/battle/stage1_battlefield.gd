@@ -79,6 +79,7 @@ const TEXTURE_PATHS := {
 
 var battlefield_size := Vector2(3200.0, 3200.0)
 var stage_active := false
+var render_only := false
 var current_stage_number := 1
 var textures: Dictionary = {}
 var background_decor_layer: Node2D
@@ -406,6 +407,7 @@ func _add_collision(
 	size: Vector2,
 	collision_layer_value: int = DECOR_COLLISION_LAYER
 ) -> void:
+	if render_only: return
 	if size.x <= 0.0 or size.y <= 0.0:
 		return
 

@@ -41,6 +41,8 @@ signal hero_augment_selected(level: int, candidates: Array, chosen_name: String,
 signal conditional_skill_unlocked(skill_id: String, skill_name: String, payload: Dictionary)
 signal command_changed(current_value: float, max_value: float)
 signal summon_result(monster_type: String, success: bool, message: String)
+signal online_visual_entity_exited(instance_id: int)
+var online_visual_projectiles := {}
 signal transcendent_summoned(monster_id: String, actor: Node2D)
 signal transcendent_died(monster_id: String, actor: Node2D)
 signal transcendence_changed(monster_id: String, ready: bool, used: bool)
@@ -858,6 +860,7 @@ func _start_battle() -> void:
 			valid_orb_pool.append(pooled_orb)
 	exp_orb_pool = valid_orb_pool
 	active_monsters.clear()
+	online_visual_projectiles.clear()
 	hero_control_spawns.reset()
 	hero_control_roster.clear()
 	monster_query_registration_order = 0
@@ -1365,6 +1368,9 @@ func _activate_battle_entity(node: Node) -> Vector3i:
 
 func _on_battle_entity_tree_exited(instance_id: int) -> void:
 	battle_entity_registry.retire_instance(instance_id)
+	if online_match_mode:
+		online_visual_projectiles.erase(instance_id)
+		online_visual_entity_exited.emit(instance_id)
 
 func get_battle_entity_handle(node: Node) -> Vector3i:
 	return battle_entity_registry.get_handle(node)
@@ -3644,6 +3650,7 @@ func acquire_projectile(scene: PackedScene, pool_key: String) -> Node:
 		add_child(projectile)
 
 	_activate_battle_entity(projectile)
+	if online_match_mode: online_visual_projectiles[projectile.get_instance_id()] = projectile
 	return projectile
 
 
@@ -3656,6 +3663,7 @@ func recycle_projectile(projectile: Node, pool_key: String) -> void:
 		return
 
 	# Invalidate the old life before deactivation callbacks can schedule work.
+	online_visual_projectiles.erase(projectile.get_instance_id())
 	battle_entity_registry.retire_instance(projectile.get_instance_id())
 	if projectile.has_method("deactivate_for_pool"):
 		projectile.call("deactivate_for_pool")
