@@ -2158,9 +2158,12 @@ func _spawn_monster(
 ):
 	var reserved_boss := _is_reserved_hero_boss_request(monster_type,spawn_modifiers)
 	if online_match_mode and (active_monsters.size() >= get_population_limit() or monster_type not in online_match_rules.get("roster",[])): return null
-	if hero_player_mode and run_metrics.elapsed_seconds >= HERO_SURVIVAL.DURATION and not reserved_boss: return null
-	if hero_player_mode and (active_monsters.size() >= HERO_SURVIVAL.monster_limit(int(current_stage_data.get("number",1)))+(1 if reserved_boss else 0) or not HERO_SURVIVAL.monster_allowed(monster_type,int(current_stage_data.get("number",1)),campaign_difficulty)): return null
-	if hero_player_mode and not reserved_boss and not hero_control_spawns.allows(monster_type,bool(spawn_modifiers.get("elite_variant",false)),int(current_stage_data.get("number",1)),float(run_metrics.elapsed_seconds),active_monsters.size()): return null
+	# Online uses its explicit roster/population; solo survival supply pacing
+	# must not block the opposing player's paid summons (notably controllers).
+	var solo_hero_spawn := hero_player_mode and not online_match_mode
+	if solo_hero_spawn and run_metrics.elapsed_seconds >= HERO_SURVIVAL.DURATION and not reserved_boss: return null
+	if solo_hero_spawn and (active_monsters.size() >= HERO_SURVIVAL.monster_limit(int(current_stage_data.get("number",1)))+(1 if reserved_boss else 0) or not HERO_SURVIVAL.monster_allowed(monster_type,int(current_stage_data.get("number",1)),campaign_difficulty)): return null
+	if solo_hero_spawn and not reserved_boss and not hero_control_spawns.allows(monster_type,bool(spawn_modifiers.get("elite_variant",false)),int(current_stage_data.get("number",1)),float(run_metrics.elapsed_seconds),active_monsters.size()): return null
 	if not reserved_boss and bool(spawn_modifiers.get("counts_population", false)) and is_population_full():
 		return null
 	if not bool(MONSTER_CATALOG.MONSTERS.get(monster_type, {}).get("combat_enabled", true)):
@@ -2487,7 +2490,7 @@ func _spawn_monster(
 	var monster_instance_id := monster.get_instance_id()
 	monster_summon_costs[monster_instance_id] = summon_cost
 	active_monsters[monster_instance_id] = monster
-	if hero_player_mode: hero_control_spawns.register(monster_instance_id,monster_type,bool(spawn_modifiers.get("elite_variant",false)),int(current_stage_data.get("number",1)),float(run_metrics.elapsed_seconds))
+	if solo_hero_spawn: hero_control_spawns.register(monster_instance_id,monster_type,bool(spawn_modifiers.get("elite_variant",false)),int(current_stage_data.get("number",1)),float(run_metrics.elapsed_seconds))
 	_activate_battle_entity(monster)
 	monster.set_meta("query_registration_order", monster_query_registration_order)
 	monster_query_registration_order += 1

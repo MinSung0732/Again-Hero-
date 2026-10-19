@@ -56,6 +56,17 @@
 
 - 버튼 추가 후 Godot4.5.1 headless 새 통합45 + UI51 + 기존 자동 복귀66 + localtest32 + transport18 = **212검사 PASS**. 최종 import 오류/경고0, 모든 실행 ERROR0. fixture 누락 아트 경고: 버튼50/UI0/복귀214/localtest50/transport50. 실제 Windows4.7.2/Android/WSS·전체 아트 시각 검증은 별도다.
 
+## 실기 피드백과 온라인 소환 모드 분리 (2026-10-19)
+
+- 사용자가 localtest 연결 끊기·재접속 정상 동작 및 유예 만료 상대 승리를 실기 확인했다고 보고했다. 새롭게 거미 배치가 `사용할 수 없는 행동입니다`로 거부되는 문제를 보고했다. 기기/연결 조합의 전체 검증 완료로 확대 해석하지 않는다.
+- 수정 시작 feature/stage10-astra `dafa28dab9a0b9be45532034b19ee28fcd52b166`, main `6f22053f462e1176ec2ecde131d589d5491791b2`, 작업 트리 clean. main 병합 없음.
+- 원인: 온라인도 직접 조작 용사를 위해 hero_player_mode=true를 사용하므로 Battle 최하위 factory가 솔로 제어 몬스터 등장 시점/간격/종별·비율 제한까지 적용했다. 거미 생성이 반환 null → 비용 환급 → 구체적인 summon_result 없이 거부되어 공통 오류 안내가 남았다. 수정 전 실제 Battle 테스트에서 시작 직후 거미 소환 실패를 재현했다.
+- factory의 솔로 생존 시간·희귀도/전체 개체·제어 공급 gate와 제어 예산 등록을 `hero_player_mode && !online_match_mode` 범위로 묶었다. 온라인은 기존 match rules 로스터/인구 및 공통 지휘력/배치 거리/경계/개체 제한을 유지한다. 특정 거미 ID 예외, 스탯/비용/스킬 수치 변경 없이 모드 경계를 수정했다. 프레임 스캔/임시 배열/추가 생성 없음.
+- `online_roster_spawn_smoke`: 실제 Battle/Room에서 시작 즉시 전체 룰 로스터·반복 거미 배치, 비용1회 차감/안내/실제 생성, 온라인의 솔로 예산 미소비, 지휘력·거리·영역·로스터·인구 거부 및 실패 시 비용/개체 보존, 같은 factory의 솔로 거미 초기 차단 검사. 동기 생성 경로를 고립하려고 이 테스트 안에서만 Battle 자동 process와 마왕 EXP를 정지한다.
+- 기존 버튼 통합 테스트에는 실제 거미 카드 선택 → 전장 placement → WebSocket → 서버 factory → 성공 안내 경로도 추가했다. 서버의 Battle 코드가 바뀌었으므로 최신 코드를 받은 뒤 기존 서버를 종료하고 다시 실행해야 적용된다.
+
+- 수정 후 Godot4.5.1 headless 룰 소환35 + 버튼/실제 거미 소켓48 + 솔로 제어456 + 온라인전투44 + 자동 재접속66 = **649검사 PASS**. 최종 import 오류/경고0, 실행 ERROR0. fixture 누락 아트 경고 각각50/50/41/91/214. Python AST/git diff --check 통과. 실제 Windows4.7.2/Android/WSS의 이번 거미 수정 적용 후 검증은 별도다.
+
 ## 검증과 한계
 
 - Godot4.5.1 headless에서 실제 TCP/WebSocket/Client/Server/Battle/Hero/선택5종 몬스터 경로를 사용한다. fixture의 누락된 아트/음원은 대체하거나 누락 경고를 유지한다. 전체 GPU/시각 검증이 아니다.

@@ -36,6 +36,13 @@ func run() -> void:
 	var key: String = hero.client.match_id
 	var room = server.rooms[key].node
 	var instance: int = room.get_instance_id()
+	# Exercise the reported spider selection/placement through the real UI/socket.
+	demon.action_row.get_child(RULES.ROSTER.find("spider")).pressed.emit()
+	check(demon.selected_monster == "spider","spider card selects network subject")
+	var spawn: Vector2 = room.battle.hero.position + Vector2(300,0)
+	demon.view.placement.emit(spawn)
+	check(await until(func(): return not room.battle.active_monsters.is_empty()),"opening spider placement reaches actual server factory")
+	check(await until(func(): return demon.action_notice.text.contains("수동 배치")),"accepted summon feedback reaches demon UI")
 	for scene in screens:
 		check(not scene.disconnect_button.disabled and scene.reconnect_button.disabled,"only disconnect available while connected")
 		local.active = false
