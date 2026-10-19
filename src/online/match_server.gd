@@ -209,7 +209,7 @@ func _expire_disconnections(key: String,now: int) -> void:
 	for role in match_data.seats:
 		var seat: Dictionary = match_data.seats[role]
 		if int(seat.deadline) > 0 and now >= int(seat.deadline): expired = true
-		if peers.has(seat.peer) and int(seat.deadline) == 0: connected_role = role
+		if peers.has(seat.peer) and peers[seat.peer].ready and int(seat.deadline) == 0: connected_role = role
 	if expired: match_data.node.finish(connected_role,"both_disconnected" if connected_role.is_empty() else "reconnect_timeout")
 func _send_result(id: int,key: String) -> void:
 	var room = rooms[key].node
