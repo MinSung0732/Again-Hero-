@@ -1,3 +1,9 @@
+## 2026-10-19 — localtest 온라인 매칭 권한
+
+- 격리 localtest 쿠폰 모드가 Google/카카오 토큰 없이 온라인 연결 테스트에 참가하도록 추가. 일반 서버 인증 유지, -- --localtest 명시 서버만 실행마다 생성한 48자리 입장코드로 허용. 기기별 무작위 ID로 중복 계정 충돌 방지, 일반 게스트/튜토리얼/실계정 scope와 분리.
+- 테스트 화면 코드 입력·접속 후 코드 제거·모드 전환 시 연결 종료. 코드 저장/고정 비밀번호/공용 fixture 인증 개방 없음. 기존 무랭킹·무보상/전투/클라우드 불변. sparse fixture의 간접 texture preload·원본 descriptor 처리 보완.
+- Godot4.5.1 격리125검사 + 기존 3프로세스 + 실제 server_main 기본/옵션2종 PASS. 최종 import/정적 통과. 새 전투 ERROR0/대체 presentation 경고50, UI 경고0. 실제 PC4.7.2·Android/Cloudflare WSS 두기기 미검증. docs/ONLINE_LOCALTEST_ACCESS_20261019.md. feature/stage10-astra만, main 병합 없음.
+
 ## 2026-10-19 — 하드코딩 정리20차: 증강 중첩 제한 정책 통합
 
 - 후보 추첨의 연금술사/민첩한 발놀림 예외와 Catalog 실효 상한의 중복 ID·3중첩 설정을 HERO_STACK_LIMITS 하나로 통합. Hero는 공통 roll snapshot 계산기로 위임, 적용/표시도 같은 정책 사용. 기존 연금술사3·다른 용사10중첩, 후보 가중치/순서/난수·효과/후크 유지.

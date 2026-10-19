@@ -5,6 +5,7 @@ const CLIENT := preload("res://src/online/match_client.gd")
 const VIEW := preload("res://src/online/battle_view.gd")
 const PAD := preload("res://src/hero_mode/hero_move_pad.gd")
 const MONSTERS := preload("res://src/data/monster_catalog.gd")
+const LOCAL_ACCESS := preload("res://src/online/local_test_access.gd")
 var client
 var view
 var status: Label
@@ -13,6 +14,8 @@ var choices: VBoxContainer
 var action_row: HBoxContainer
 var queue_button: Button
 var endpoint: LineEdit
+var test_code: LineEdit
+var initial_local_test := false
 var pad
 var role := "hero"
 var selected_monster := "slime"
@@ -26,6 +29,7 @@ func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var options: Dictionary = SceneTransition.consume_entry_options()
 	role = String(options.get("role","hero")); initial_owner = LoginGateway.user_id
+	initial_local_test = LocalTestMode.is_online_match_allowed()
 	var rows := VBoxContainer.new(); add_child(rows); rows.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	rows.offset_left = 24; rows.offset_right = -24; rows.offset_top = 35; rows.offset_bottom = -30
 	_label(rows,"랭킹 매칭 · 연결 테스트",34)
@@ -34,6 +38,11 @@ func _ready() -> void:
 	action_notice = _label(rows,"용사: WASD/방향키 또는 전장 드래그 · 마왕: 몬스터 선택 후 전장 터치",22)
 	endpoint = LineEdit.new(); endpoint.placeholder_text = "대전 서버 주소 (wss://...)"; endpoint.text = CONFIG.endpoint()
 	endpoint.custom_minimum_size.y = 72; endpoint.add_theme_font_size_override("font_size",25); rows.add_child(endpoint)
+	if initial_local_test:
+		_label(rows,"로컬 테스트 · 서버에 표시된 입장코드를 입력하세요",22)
+		test_code = LineEdit.new(); test_code.secret = true
+		test_code.placeholder_text = "테스트 서버 입장코드"; test_code.max_length = LOCAL_ACCESS.TICKET_BYTES * 2
+		test_code.custom_minimum_size.y = 72; test_code.add_theme_font_size_override("font_size",25); rows.add_child(test_code)
 	queue_button = _button(rows,"매칭 시작",_join)
 	view = VIEW.new(); view.size_flags_vertical = Control.SIZE_EXPAND_FILL; view.custom_minimum_size.y = 400; rows.add_child(view)
 	view.placement.connect(func(point: Vector2):
@@ -63,11 +72,15 @@ func _select_monster(id: String) -> void:
 	selected_monster = id
 	action_notice.text = "소환 선택: %s · 전장 터치로 배치" % String(MONSTERS.get_monster(id).get("name",id))
 func _join() -> void:
-	if LoginGateway.user_id.is_empty() or LoginGateway.access_token.is_empty(): status.text = "Google 또는 카카오 로그인이 필요합니다."; return
+	if LocalTestMode.is_online_match_allowed() != initial_local_test: status.text = "테스트 모드가 변경되었습니다. 로비에서 다시 입장하세요."; return
+	if initial_local_test:
+		if not LOCAL_ACCESS.valid_hex(test_code.text.strip_edges(),LOCAL_ACCESS.TICKET_BYTES): status.text = "서버에 표시된 테스트 입장코드를 입력하세요."; return
+	elif LoginGateway.user_id.is_empty() or LoginGateway.access_token.is_empty(): status.text = "Google 또는 카카오 로그인이 필요합니다."; return
 	if not RULES.endpoint_valid(endpoint.text.strip_edges()): status.text = "공용 대전 서버 주소(wss://)를 입력해 주세요."; return
 	ended = false; last_tick = -1; revision = -1
 	if pad != null: pad.enabled = true; pad.reset()
-	var error: int = client.join(endpoint.text.strip_edges(),LoginGateway.access_token,role)
+	var error: int = client.join_local_test(endpoint.text.strip_edges(),test_code.text.strip_edges(),role) if initial_local_test else client.join(endpoint.text.strip_edges(),LoginGateway.access_token,role)
+	if test_code != null and error == OK: test_code.clear()
 	status.text = "서버에 연결 중..." if error == OK else "서버에 연결하지 못했습니다."
 	queue_button.disabled = error == OK
 func _event(event: Dictionary) -> void:
@@ -103,6 +116,7 @@ func _event(event: Dictionary) -> void:
 func _choose(id: String,choice_revision: int) -> void: client.command("choose",{"id":id,"revision":choice_revision})
 func _process(delta: float) -> void:
 	if client == null: return
+	if not ended and LocalTestMode.is_online_match_allowed() != initial_local_test: client.close(); status.text = "테스트 모드가 변경되어 대전을 종료했습니다."; ended = true
 	if not ended and LoginGateway.user_id != initial_owner: client.close(); status.text = "계정이 변경되어 대전을 종료했습니다."; ended = true
 	if ended or role != "hero" or client.match_id.is_empty(): return
 	input_left -= delta

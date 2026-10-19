@@ -20,6 +20,7 @@ const JOIN_TIMEOUT := 15.0
 const READY_TIMEOUT := 20.0
 const QUEUE_TIMEOUT := 180.0
 const ERROR_MESSAGES := {
+	"local_test_denied":"테스트 서버 입장코드를 확인하세요. 서버를 --localtest 옵션으로 실행해야 합니다.",
 	"server_busy":"인증 요청이 많습니다. 잠시 후 다시 시도해 주세요.",
 	"authentication_failed":"로그인 확인에 실패했습니다. 다시 로그인한 후 시도해 주세요.",
 	"duplicate_account":"같은 계정이 이미 매칭 또는 대전 중입니다.",

@@ -2,6 +2,7 @@ extends Node
 const RULES := preload("res://src/online/match_rules.gd")
 const QUEUE := preload("res://src/online/match_queue.gd")
 const AUTH := preload("res://src/online/auth_verifier.gd")
+const LOCAL_ACCESS := preload("res://src/online/local_test_access.gd")
 const ROOM := preload("res://src/online/battle_room.gd")
 var listener := TCPServer.new()
 var peers := {}
@@ -12,13 +13,16 @@ var next_peer := 0
 var snapshot_left := 0.0
 var room_factory: Callable
 var test_auth := false
+var local_test_ticket := ""
 var auth_pending := 0
 var bind_address := "127.0.0.1"
 var retire: Array[int] = []
 var remove_rooms: Array[String] = []
-func start(port: int,bind: String = "127.0.0.1",development_auth: bool = false) -> Error:
+func start(port: int,bind: String = "127.0.0.1",development_auth: bool = false,invitation: String = "") -> Error:
 	if development_auth and bind != "127.0.0.1": return ERR_UNAUTHORIZED
+	if not invitation.is_empty() and (bind != "127.0.0.1" or not LOCAL_ACCESS.valid_hex(invitation, LOCAL_ACCESS.TICKET_BYTES) or development_auth): return ERR_UNAUTHORIZED
 	bind_address = bind; test_auth = development_auth
+	local_test_ticket = invitation
 	auth = AUTH.new(); add_child(auth)
 	return listener.listen(port,bind)
 func _process(delta: float) -> void:
@@ -79,7 +83,8 @@ func _receive(id: int,message: Dictionary) -> void:
 		if not message.get("role",null) is String or not message.get("token",null) is String: _reject(id,"invalid_request"); return
 		var role: String = message.role
 		if role not in ["hero","demon"]: _reject(id,"invalid_role"); return
-		peer.authenticating = true; _authenticate(id,message.token,role); return
+		if message.has("local_test") and (not message.local_test is Dictionary or not message.token.is_empty()): _reject(id,"invalid_request"); return
+		peer.authenticating = true; _authenticate(id,message.token,role,message.get("local_test",{})); return
 	if peer.uid.is_empty() or not rooms.has(peer.room): return
 	var match_data: Dictionary = rooms[peer.room]
 	if op == "ready" and message.get("match","") == peer.room:
@@ -97,9 +102,12 @@ func _receive(id: int,message: Dictionary) -> void:
 		if message.get("kind",null) is String:
 			var accepted: bool = match_data.node.apply(peer.role,message.kind,message.get("argument",null))
 			if message.kind == "summon": _send(id,{"op":"action","match":peer.room,"accepted":accepted,"message":match_data.node.last_action_message})
-func _authenticate(id: int,token: String,role: String) -> void:
+func _authenticate(id: int,token: String,role: String,local_credentials: Dictionary = {}) -> void:
 	var uid := ""
-	if test_auth:
+	if not local_credentials.is_empty():
+		uid = LOCAL_ACCESS.session_uid(local_credentials,local_test_ticket)
+		if uid.is_empty(): _reject(id,"local_test_denied"); return
+	elif test_auth:
 		if token in ["fixture_hero","fixture_demon","fixture_third"]: uid = token
 	else:
 		if auth_pending >= RULES.MAX_AUTH_REQUESTS: _reject(id,"server_busy"); return

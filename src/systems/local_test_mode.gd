@@ -217,6 +217,10 @@ func has_all_heroes_unlocked() -> bool:
 	return coupons_enabled() and has_all_monsters_unlocked()
 
 
+func is_online_match_allowed() -> bool:
+	return has_all_heroes_unlocked()
+
+
 # Revalidate at draw time: a stale UI selection must never affect real saves.
 func forced_gacha_monster(selected_id: String) -> String:
 	if not has_all_monsters_unlocked():

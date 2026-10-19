@@ -1,4 +1,5 @@
 extends SceneTree
+const SCOPE := preload("res://src/systems/account_save_scope.gd")
 var checks := 0
 func check(ok: bool,message: String) -> void:
 	checks += 1
@@ -19,7 +20,41 @@ func run() -> void:
 		else: check(scene.action_row.get_child_count() == 5,"five roster choices")
 		scene._join()
 		check(scene.client.socket == null,"guest without token never queues")
+		check(scene.test_code == null,"ordinary account screen has no test invitation field")
 		root.size = Vector2i(1536,1920); await process_frame; await process_frame
 		check(scene.view.size.x > 1200,"tablet width expands")
 		scene.queue_free(); await process_frame
+	var local = root.get_node("LocalTestMode")
+	var old_active: bool = local.active
+	var old_preview: bool = local.tutorial_preview
+	var old_owner: String = SCOPE.user_id
+	var old_directory: String = SCOPE.guest_directory
+	local.active = true; local.tutorial_preview = false; SCOPE.user_id = ""; SCOPE.guest_directory = local.test_directory
+	check(local.is_online_match_allowed(),"isolated localtest has online permission")
+	check(preload("res://src/systems/mode_unlock_store.gd").unlocked("rank","stage_1"),"localtest existing rank unlock reaches entry")
+	local.tutorial_preview = true
+	check(not local.is_online_match_allowed(),"tutorial preview has no online permission")
+	local.tutorial_preview = false; SCOPE.user_id = "ordinary-account"
+	check(not local.is_online_match_allowed(),"real account cannot borrow stale test flag")
+	SCOPE.user_id = ""; SCOPE.guest_directory = "user://"
+	check(not local.is_online_match_allowed(),"normal guest directory has no test permission")
+	SCOPE.guest_directory = local.test_directory
+	for role in ["hero","demon"]:
+		root.get_node("SceneTransition")._entry_options = {"role":role}
+		var scene = load("res://src/online/OnlineMatch.tscn").instantiate(); root.add_child(scene)
+		await process_frame
+		check(scene.initial_local_test and scene.test_code != null and scene.test_code.secret,"localtest invitation UI for both roles")
+		scene.endpoint.text = "ws://127.0.0.1:24844"
+		scene._join()
+		check(scene.client.socket == null and scene.status.text.contains("입장코드"),"missing code stays disconnected")
+		scene.test_code.text = preload("res://src/online/local_test_access.gd").new_ticket()
+		scene._join()
+		check(scene.client.socket != null and scene.client.token.is_empty() and scene.test_code.text.is_empty(),"localtest queues without social token; field cleared")
+		local.active = false; scene._process(0.01)
+		check(scene.ended and scene.client.socket == null and scene.status.text.contains("테스트 모드"),"leaving test scope closes connection")
+		scene._join()
+		check(scene.client.socket == null,"stale test scene cannot rejoin after scope change")
+		local.active = true
+		scene.queue_free(); await process_frame
+	local.active = old_active; local.tutorial_preview = old_preview; SCOPE.user_id = old_owner; SCOPE.guest_directory = old_directory
 	print("ONLINE_UI_PASS checks=",checks); quit()

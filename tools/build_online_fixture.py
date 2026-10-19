@@ -47,9 +47,17 @@ while queue:
    dest.write_text('<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64"/>');placeholders.append(path)
   elif dest.suffix.lower() in ['.wav','.ogg','.mp3']:
    subprocess.run(['ffmpeg','-loglevel','error','-y','-f','lavfi','-i','anullsrc=r=44100:cl=mono','-t','0.1',str(dest)],check=True);placeholders.append(path)
-  else:raise SystemExit('Missing nonvisual dependency: '+path)
+  else:
+   # Sparse checkouts may omit tracked resource descriptors. Borrow their exact
+   # committed bytes; never synthesize gameplay/configuration resources.
+   tracked=subprocess.run(['git','show','HEAD:'+path],cwd=r,capture_output=True)
+   if tracked.returncode != 0:raise SystemExit('Missing nonvisual dependency: '+path)
+   dest.write_bytes(tracked.stdout)
  if dest.suffix in ['.gd','.tscn','.tres']:
-  content=dest.read_text();queue+=re.findall(r'path="res://([^"]+)"',content)+re.findall(r'preload\("res://([^\"]+)"\)',content)
+  content=dest.read_text();queue+=re.findall(r'path="res://([^"]+)"',content)+re.findall(r'preload\(\s*"res://([^\"]+)"\s*\)',content)
+  # Texture constants can themselves be passed to preload (for example gender
+  # portraits). Include literal texture paths as well as direct preload calls.
+  queue += [path for path in re.findall(r'"res://([^"\n]+\.(?:png|webp|jpg))"',content) if '%' not in path]
 previous=(out/'omitted_art.txt').read_text().splitlines() if (out/'omitted_art.txt').exists() else []
 (out/'omitted_art.txt').write_text('\n'.join(sorted(set(previous+placeholders))))
 print('Resource closure:',len(seen),'placeholder presentation:',len(placeholders))

@@ -1,9 +1,12 @@
 extends Node
 const RULES := preload("res://src/online/match_rules.gd")
+const LOCAL_ACCESS := preload("res://src/online/local_test_access.gd")
 signal event_received(event: Dictionary)
 signal connection_closed(message: String)
 var socket: WebSocketPeer
 var token := ""
+var local_ticket := ""
+var local_session := ""
 var role := "hero"
 var sequence := 0
 var match_id := ""
@@ -16,9 +19,16 @@ func join(endpoint: String,access_token: String,requested_role: String) -> Error
 	var error := socket.connect_to_url(endpoint)
 	if error != OK: socket = null; token = ""; return error
 	last_message = Time.get_ticks_msec(); set_process(true); return OK
+func join_local_test(endpoint: String,invitation: String,requested_role: String) -> Error:
+	if not LOCAL_ACCESS.valid_hex(invitation,LOCAL_ACCESS.TICKET_BYTES): close(); return ERR_INVALID_PARAMETER
+	var error := join(endpoint,"",requested_role)
+	if error == OK:
+		local_ticket = invitation
+		if local_session.is_empty(): local_session = LOCAL_ACCESS.new_session()
+	return error
 func close() -> void:
 	if socket != null: socket.close()
-	socket = null; token = ""; greeted = false; match_id = ""; sequence = 0; set_process(false)
+	socket = null; token = ""; local_ticket = ""; greeted = false; match_id = ""; sequence = 0; set_process(false)
 func send(data: Dictionary) -> bool:
 	return socket != null and socket.get_ready_state() == WebSocketPeer.STATE_OPEN and socket.send_text(JSON.stringify(data)) == OK
 func command(kind: String,argument: Variant) -> bool:
@@ -31,7 +41,9 @@ func _process(_delta: float) -> void:
 	var state := socket.get_ready_state()
 	if state == WebSocketPeer.STATE_OPEN and not greeted:
 		greeted = true
-		send({"op":"join","version":RULES.VERSION,"rules":RULES.ID,"role":role,"token":token}); token = ""
+		var request := {"op":"join","version":RULES.VERSION,"rules":RULES.ID,"role":role,"token":token}
+		if not local_ticket.is_empty(): request["local_test"] = {"ticket":local_ticket,"session":local_session}
+		send(request); token = ""; local_ticket = ""
 	# Drain error/result packets even if a close frame arrived in the same poll.
 	var budget := 8
 	while socket != null and socket.get_available_packet_count() > 0 and budget > 0:
