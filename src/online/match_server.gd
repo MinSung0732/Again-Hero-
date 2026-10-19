@@ -75,7 +75,7 @@ func _process(delta: float) -> void:
 		snapshot_left = RULES.SNAPSHOT_INTERVAL
 		for key in rooms:
 			var room = rooms[key].node
-			if not room.is_prepared or room.connection_paused or room.finished: continue
+			if not room.is_prepared or not room.running or room.connection_paused or room.finished: continue
 			var state: Dictionary = room.snapshot(); state["match"] = key
 			var encoded := _encode(state)
 			for id in rooms[key].members: _send_encoded(id,encoded)
@@ -104,7 +104,7 @@ func _receive(id: int,message: Dictionary) -> void:
 	if peer.uid.is_empty() or not rooms.has(peer.room): return
 	var match_data: Dictionary = rooms[peer.room]
 	if op == "leave" and message.get("match","") == peer.room:
-		match_data.node.finish("hero" if peer.role == "demon" else "demon","opponent_left")
+		match_data.node.finish(("hero" if peer.role == "demon" else "demon") if match_data.node.running else "","opponent_left" if match_data.node.running else "preparation_cancelled")
 	elif op == "ready" and message.get("match","") == peer.room:
 		_expire_disconnections(peer.room,Time.get_ticks_msec())
 		if match_data.node.finished: return

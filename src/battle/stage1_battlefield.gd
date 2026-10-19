@@ -80,6 +80,7 @@ const TEXTURE_PATHS := {
 var battlefield_size := Vector2(3200.0, 3200.0)
 var stage_active := false
 var render_only := false
+var async_textures_complete := false
 var current_stage_number := 1
 var textures: Dictionary = {}
 var background_decor_layer: Node2D
@@ -112,7 +113,7 @@ func _stable_roll(a: int, b: int, salt: int = 0) -> int:
 	return posmod(a * 37 + b * 61 + a * b * 13 + salt * 17, 100)
 
 
-func configure(stage_id: String, map_size: Vector2) -> void:
+func _begin_configuration(stage_id: String, map_size: Vector2) -> void:
 	current_stage_number = _stage_number_from_id(stage_id)
 	stage_active = (
 		current_stage_number >= CASTLE_STAGE_MIN
@@ -133,10 +134,73 @@ func configure(stage_id: String, map_size: Vector2) -> void:
 		maxf(map_size.x, 800.0),
 		maxf(map_size.y, 800.0)
 	)
+
+
+func configure(stage_id: String, map_size: Vector2) -> void:
+	_begin_configuration(stage_id,map_size)
+	if not stage_active: return
 	_ensure_textures()
+	_finish_configuration()
+
+func _finish_configuration() -> void:
 	_build_floor_damage_paths()
 	_build_castle_decor()
 	queue_redraw()
+
+func configure_async(stage_id: String,map_size: Vector2,current: Callable,progress: Callable) -> bool:
+	_begin_configuration(stage_id,map_size)
+	if not stage_active: return true
+	var policy := preload("res://src/data/online_loading_catalog.gd")
+	if not async_textures_complete:
+		textures.clear()
+		var total := TEXTURE_PATHS.size()+policy.CARPETS.size()
+		var completed := 0
+		for key in TEXTURE_PATHS:
+			if not current.is_valid() or not current.call(): return false
+			var path: String = TEXTURE_PATHS[key]
+			var resource: Texture2D
+			var warmup := get_node_or_null("/root/PresentationWarmup")
+			if warmup != null: resource = warmup.get_texture(path)
+			if resource == null and ResourceLoader.exists(path):
+				if ResourceLoader.has_cached(path): resource = load(path) as Texture2D
+				elif ResourceLoader.load_threaded_request(path,"Texture2D") == OK:
+					var drain = preload("res://src/online/texture_load_drain.gd").new()
+					drain.paths.append(path); drain.view_ref = weakref(self); get_tree().root.add_child(drain)
+					while ResourceLoader.load_threaded_get_status(path) == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+						await get_tree().process_frame
+						if not current.is_valid() or not current.call():
+							# Keep a drain alive independently of the outgoing scene.
+							drain.view_ref = null; drain.set_process(true); return false
+					if ResourceLoader.load_threaded_get_status(path) == ResourceLoader.THREAD_LOAD_LOADED: resource = ResourceLoader.load_threaded_get(path) as Texture2D
+					drain.paths.clear(); drain.queue_free()
+			if resource != null: textures[key] = resource
+			completed += 1; progress.call(float(completed)/total)
+			await get_tree().process_frame
+		for key in policy.CARPETS:
+			if not current.is_valid() or not current.call(): return false
+			var carpet := _texture(key)
+			if carpet != null:
+				var image := carpet.get_image()
+				if image != null and not image.is_empty():
+					image.convert(Image.FORMAT_RGBA8)
+					var slice := Time.get_ticks_usec()
+					for y in image.get_height():
+						_strip_carpet_row(image,y)
+						if Time.get_ticks_usec()-slice >= policy.PREPARE_BUDGET_US:
+							await get_tree().process_frame
+							if not current.is_valid() or not current.call(): return false
+							slice = Time.get_ticks_usec()
+					textures[key] = ImageTexture.create_from_image(image)
+			completed += 1; progress.call(float(completed)/total)
+	if not current.is_valid() or not current.call(): return false
+	async_textures_complete = true
+	_finish_configuration(); return true
+
+func _strip_carpet_row(image: Image,y: int) -> void:
+	for x in image.get_width():
+		var pixel := image.get_pixel(x,y)
+		pixel.a = 0.0 if pixel.a == 0.0 or pixel.s < 0.18 or pixel.r <= pixel.b*1.15 or pixel.r < pixel.g*0.95 else 1.0
+		image.set_pixel(x,y,pixel)
 
 
 func _ensure_layers() -> void:
@@ -191,7 +255,7 @@ func _ensure_textures() -> void:
 	# Original carpet tiles include a grey stone backing. Strip that backing
 	# once during covered scene preparation, not during drawing/combat, so
 	# torn holes reveal the actual floor rather than a mismatched square tile.
-	for key in ["rug_long", "rug_torn_1", "rug_torn_2", "rug_torn_3", "rug_torn_4"]:
+	for key in preload("res://src/data/online_loading_catalog.gd").CARPETS:
 		var carpet := _texture(key)
 		if carpet == null:
 			continue
@@ -199,14 +263,7 @@ func _ensure_textures() -> void:
 		if image == null or image.is_empty():
 			continue
 		image.convert(Image.FORMAT_RGBA8)
-		for y in range(image.get_height()):
-			for x in range(image.get_width()):
-				var pixel := image.get_pixel(x, y)
-				if pixel.a == 0.0 or pixel.s < 0.18 or pixel.r <= pixel.b * 1.15 or pixel.r < pixel.g * 0.95:
-					pixel.a = 0.0
-				else:
-					pixel.a = 1.0
-				image.set_pixel(x, y, pixel)
+		for y in image.get_height(): _strip_carpet_row(image,y)
 		textures[key] = ImageTexture.create_from_image(image)
 
 

@@ -62,6 +62,13 @@ func prepare_battlefield(value: Dictionary) -> bool:
 	if not battlefield.prepare(value): return false
 	bounds = Vector2(value.bounds[0],value.bounds[1])
 	_merge_visuals(); _layout_map(); queue_redraw(); return true
+func prepare_battlefield_async(value: Dictionary,current: Callable,progress: Callable) -> bool:
+	if not ART.battlefield_valid(value): return false
+	if battlefield == null: battlefield = FIELD.new(); add_child(battlefield)
+	if not await battlefield.prepare_async(value,current,progress): return false
+	if not current.is_valid() or not current.call(): return false
+	bounds = Vector2(value.bounds[0],value.bounds[1])
+	_merge_visuals(); _layout_map(); queue_redraw(); return true
 func _merge_visuals() -> void:
 	render_visuals.clear()
 	if battlefield != null and battlefield.visible: render_visuals.append_array(battlefield.prop_commands)

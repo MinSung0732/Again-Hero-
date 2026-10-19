@@ -32,7 +32,7 @@ func run() -> void:
 		scene.endpoint.text = "ws://127.0.0.1:24847"; scene.test_code.text = ticket
 		scene.queue_button.pressed.emit()
 	var hero = screens[0]; var demon = screens[1]
-	check(await until(func(): return not hero.client.match_id.is_empty() and server.rooms.has(hero.client.match_id) and server.rooms[hero.client.match_id].node.running),"both UI ready on real room")
+	check(await until(func(): return not hero.client.match_id.is_empty() and server.rooms.has(hero.client.match_id) and server.rooms[hero.client.match_id].node.running and not hero.waiting_for_start and not demon.waiting_for_start),"both UI ready on real room")
 	var key: String = hero.client.match_id
 	var room = server.rooms[key].node
 	var instance: int = room.get_instance_id()
@@ -66,7 +66,7 @@ func run() -> void:
 		check(not scene.client.set_local_test_disconnected(true),"repeated disconnect rejected")
 		scene.reconnect_button.pressed.emit()
 		check(not scene.client.test_transport_paused and scene.reconnect_button.disabled,"resume button releases hold once")
-		check(await until(func(): return not scene.client.reconnecting and not room.connection_paused),"same seat ready resumes actual battle")
+		check(await until(func(): return not scene.client.reconnecting and not room.connection_paused and not scene.waiting_for_start),"same seat ready resumes actual battle")
 		check(scene.client.match_id == key and room.get_instance_id() == instance and scene.client.resume_token == token,"same match instance and capability")
 		check(not scene.disconnect_button.disabled and scene.reconnect_button.disabled,"buttons reset after resume")
 		check(not room.choice.is_empty() and hero.choices.get_child_count() > 0,"pending augment UI restored")
