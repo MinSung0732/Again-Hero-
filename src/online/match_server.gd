@@ -40,9 +40,6 @@ func _process(delta: float) -> void:
 	for id in peers:
 		var peer: Dictionary = peers[id]; var socket: WebSocketPeer = peer.socket
 		socket.poll()
-		var age := (Time.get_ticks_msec()-int(peer.created))/1000.0
-		var closed := socket.get_ready_state() == WebSocketPeer.STATE_CLOSED
-		if (closed and socket.get_available_packet_count() == 0) or (peer.uid.is_empty() and age > RULES.JOIN_TIMEOUT) or (peer.room.is_empty() and age > RULES.QUEUE_TIMEOUT) or (not peer.uid.is_empty() and (Time.get_ticks_msec()-int(peer.last))/1000.0 > RULES.PEER_IDLE_TIMEOUT): retire.append(id); continue
 		var budget := 8
 		while socket.get_available_packet_count() > 0 and budget > 0:
 			budget -= 1
@@ -52,7 +49,13 @@ func _process(delta: float) -> void:
 			if message.is_empty() or int(peer.rate) > 60: retire.append(id); break
 			peer.last = Time.get_ticks_msec(); _receive(id,message)
 			if socket.get_ready_state() == WebSocketPeer.STATE_CLOSING: break
-		if closed: retire.append(id)
+		# Consume buffered ready/heartbeat packets before evaluating silence.
+		# Cold map preparation has its existing bounded ready budget, not the
+		# running match heartbeat budget. Disconnect grace remains unchanged.
+		var now := Time.get_ticks_msec()
+		var age := (now-int(peer.created))/1000.0
+		var idle_limit: float = RULES.READY_TIMEOUT if rooms.has(peer.room) and not peer.ready else RULES.PEER_IDLE_TIMEOUT
+		if socket.get_ready_state() == WebSocketPeer.STATE_CLOSED or (peer.uid.is_empty() and age > RULES.JOIN_TIMEOUT) or (peer.room.is_empty() and age > RULES.QUEUE_TIMEOUT) or (not peer.uid.is_empty() and (now-int(peer.last))/1000.0 > idle_limit): retire.append(id)
 	for id in retire: _drop(id)
 	remove_rooms.clear()
 	for key in rooms:
@@ -161,9 +164,12 @@ func _match_waiters() -> void:
 	if room.finished:
 		for id in pair: _reject(id,"battle_load_failed")
 		return
+	# Server-side resource loading must not consume either client's ready time.
+	var prepared_at := Time.get_ticks_msec()
+	rooms[key].created = prepared_at
 	for id in pair:
 		if not peers.has(id): room.finish("","peer_left"); return
-		peers[id].room = key; peers[id].ready = false
+		peers[id].room = key; peers[id].ready = false; peers[id].last = prepared_at
 		_send_matched(id,key,false)
 func _send_matched(id: int,key: String,resumed: bool) -> void:
 	var role: String = peers[id].role

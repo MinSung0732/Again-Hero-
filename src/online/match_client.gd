@@ -125,7 +125,13 @@ func _process(delta: float) -> void:
 			if event.get("match","") != match_id or result_received: continue
 			result_received = true; resume_token = ""; reconnecting = false; reconnect_deadline = 0
 		if op == "error": resume_token = ""; reconnecting = false; reconnect_deadline = 0
-		if op != "pong": event_received.emit(event)
+		if op != "pong":
+			var receiving_socket := socket
+			event_received.emit(event)
+			# A synchronous scene preparation callback is local work, not server
+			# silence. Never apply its timing/packets to a replacement transport.
+			if socket != receiving_socket: return
+			last_message = Time.get_ticks_msec()
 	if socket == null: return
 	if state == WebSocketPeer.STATE_CLOSED:
 		var reason := socket.get_close_reason()
