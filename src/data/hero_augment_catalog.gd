@@ -39,6 +39,13 @@ const TAG_LABELS := {
 	"single_target": "단일 대상",
 }
 
+# Per-hero limits share one policy across application, display and AI rolls.
+# Entries are positive caps for existing augment IDs; omitted heroes borrow defaults.
+const EMPTY_STACK_LIMITS := {}
+const HERO_STACK_LIMITS := {
+	"alchemist_chemical": {"pursuit": 3},
+}
+
 const AUGMENTS = [
 	{
 		"id": "projectile_power",
@@ -1398,9 +1405,28 @@ static func get_effective_max_stack(
 	var max_stack := catalog_max_stack
 	if max_stack < 0:
 		max_stack = int(get_augment(augment_id).get("max_stack", 0))
-	if hero_archetype == "alchemist_chemical" and augment_id == "pursuit":
-		return 3
-	return max_stack
+	var limits: Dictionary = HERO_STACK_LIMITS.get(hero_archetype, EMPTY_STACK_LIMITS)
+	return int(limits.get(augment_id, max_stack))
+
+
+static func get_roll_build_counts(
+	build_counts: Dictionary,
+	hero_archetype: String
+) -> Dictionary:
+	# Preserve the original build/reference unless a cap needs masking. The roll
+	# pool still uses shared catalog maxima, so mask only this selection snapshot.
+	var limits: Dictionary = HERO_STACK_LIMITS.get(hero_archetype, EMPTY_STACK_LIMITS)
+	var roll_counts := build_counts
+	for raw_id in limits:
+		var augment_id := String(raw_id)
+		var limit := int(limits[raw_id])
+		if int(build_counts.get(augment_id, 0)) < limit:
+			continue
+		if is_same(roll_counts, build_counts):
+			roll_counts = build_counts.duplicate()
+		var augment := get_augment(augment_id)
+		roll_counts[augment_id] = maxi(limit, int(augment.get("max_stack", limit)))
+	return roll_counts
 
 
 static func roll_candidates(

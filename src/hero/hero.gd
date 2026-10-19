@@ -16301,21 +16301,7 @@ func _build_ai_context() -> Dictionary:
 	}
 
 func _get_augment_roll_build_counts() -> Dictionary:
-	if (
-		hero_archetype != "alchemist_chemical"
-		or int(build_counts.get("pursuit", 0)) < 3
-	):
-		return build_counts
-
-	# Only the alchemist caps Agile Footwork at 3 stacks. The catalog stays
-	# unchanged so every other hero keeps the shared augment's normal limit.
-	var roll_counts := build_counts.duplicate()
-	var pursuit_augment := AUGMENT_CATALOG.get_augment("pursuit")
-	roll_counts["pursuit"] = maxi(
-		3,
-		int(pursuit_augment.get("max_stack", 3))
-	)
-	return roll_counts
+	return AUGMENT_CATALOG.get_roll_build_counts(build_counts, hero_archetype)
 
 
 func _get_effective_augment_max_stack(
