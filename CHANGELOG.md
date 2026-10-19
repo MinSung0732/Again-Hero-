@@ -1,3 +1,8 @@
+## 2026-10-19 — 회복 아이템 export 이미지 로딩 경고 수정
+
+- heal_item의 원본 PNG Image.load 우선 경로를 제거하고 imported Texture2D 리소스 로딩 사용. 회복 PNG4장의 fix_alpha_border만 비활성화해 기존 직접 읽기와 RGBA 픽셀/54px 크기 유지. PNG·회복량/줍기·애니메이션/캐시 불변.
+- Godot4.5.1 실제 PNG/actor47+원본 PNG 없는 PCK47=94검사 PASS, 최종 경고/오류0·정적 통과. 실제PC4.7.2/Android·전체전투·native APK/EXE export 미검증. docs/HEAL_ITEM_RESOURCE_LOADING_20261019.md. feature/stage10-astra만, main 병합 없음.
+
 ## 2026-10-19 — localtest 온라인 매칭 권한
 
 - 격리 localtest 쿠폰 모드가 Google/카카오 토큰 없이 온라인 연결 테스트에 참가하도록 추가. 일반 서버 인증 유지, -- --localtest 명시 서버만 실행마다 생성한 48자리 입장코드로 허용. 기기별 무작위 ID로 중복 계정 충돌 방지, 일반 게스트/튜토리얼/실계정 scope와 분리.

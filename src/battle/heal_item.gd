@@ -119,10 +119,6 @@ func _apply_visual() -> void:
 
 
 func _load_texture(path: String) -> Texture2D:
-	if FileAccess.file_exists(path):
-		var image := Image.new()
-		if image.load(path) == OK:
-			return ImageTexture.create_from_image(image)
 	if ResourceLoader.exists(path):
 		var loaded = load(path)
 		if loaded is Texture2D:
