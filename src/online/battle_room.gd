@@ -1,6 +1,8 @@
 extends Node
 ## Authoritative adapter over the shipped Battle/Hero/monster/weapon code.
 const RULES := preload("res://src/online/match_rules.gd")
+const PRESENTATION := preload("res://src/online/presentation_snapshot.gd")
+var presentation = PRESENTATION.new()
 signal completed(winner: String,reason: String)
 var battle
 var world: SubViewport
@@ -96,13 +98,11 @@ func snapshot() -> Dictionary:
 
 func _build_snapshot() -> Dictionary:
 	var actors: Array = []; var shots: Array = []
+	var visuals: Array = []
 	var hp := 0; var maximum := 1; var level := 1
 	if is_instance_valid(battle.hero):
 		hero_last = battle.hero.position; hp = battle.hero.current_hp; maximum = battle.hero.max_hp; level = battle.hero.level
-		var weapons = battle.hero.player_weapons
-		if weapons != null:
-			for shot in weapons.projectiles:
-				if shot.active: shots.append([snappedf(shot.position.x,0.1),snappedf(shot.position.y,0.1)])
+		presentation.append_tree(battle.hero,0,visuals)
 	snapshot_revision += 1
 	for raw_id in battle.active_monsters:
 		var raw = battle.active_monsters[raw_id]
@@ -114,9 +114,27 @@ func _build_snapshot() -> Dictionary:
 			next_id += 1; ids[instance] = {"wire":next_id,"generation":generation,"seen":snapshot_revision}
 		else: ids[instance].seen = snapshot_revision
 		actors.append([ids[instance].wire,String(actor.get("monster_type")),snappedf(actor.position.x,0.1),snappedf(actor.position.y,0.1),int(actor.get("current_hp")),int(actor.get("max_hp"))])
+		presentation.append_tree(actor,int(ids[instance].wire),visuals)
+	if is_instance_valid(battle.hero) and battle.hero.player_weapons != null:
+		var weapons = battle.hero.player_weapons
+		for shot in weapons.projectiles:
+			if not shot.active or shot.melee or shot.delay > 0.0: continue
+			if shot.frames.is_empty() or not shot.has("visual_radius"):
+				shots.append([snappedf(shot.position.x,0.1),snappedf(shot.position.y,0.1)]); continue
+			var radius: float = shot.visual_radius
+			presentation.append_texture(weapons._loop_frame(shot.frames,float(shot.age)),-1,Transform2D(Vector2(shot.direction).angle(),shot.position),Rect2(Vector2.ONE*-radius,Vector2.ONE*radius*2),Color.WHITE,visuals,battle.hero.z_index)
+		presentation.append_weapon_areas(weapons,visuals)
+		if weapons.native_skills != null:
+			for pattern in weapons.native_skills.actors_by_pattern:
+				for actor in weapons.native_skills.actors_by_pattern[pattern]: presentation.append_tree(actor,-1,visuals)
+	visuals.sort_custom(_visual_order)
 	stale_wire_ids.clear()
 	for instance in ids:
 		if int(ids[instance].seen) != snapshot_revision: stale_wire_ids.append(instance)
-	for instance in stale_wire_ids: ids.erase(instance)
-	# Bounded O(n) serialization at10Hz, outside the combat hot frame.
-	return {"op":"state","tick":tick,"hero":[hero_last.x,hero_last.y,hp,maximum,level],"bounds":[battle.current_map_size.x,battle.current_map_size.y],"seconds":battle.run_metrics.elapsed_seconds,"mana":battle.command_power,"actors":actors,"shots":shots,"choice_revision":choice_revision,"choices":choice,"winner":winner,"reason":reason}
+	for instance in stale_wire_ids:
+		ids.erase(instance); presentation.forget_node(instance)
+	# Bounded snapshot serialization and presentation sort at10Hz, not physics Hz.
+	return {"op":"state","tick":tick,"hero":[hero_last.x,hero_last.y,hp,maximum,level],"bounds":[battle.current_map_size.x,battle.current_map_size.y],"seconds":battle.run_metrics.elapsed_seconds,"mana":battle.command_power,"actors":actors,"shots":shots,"visuals":visuals,"choice_revision":choice_revision,"choices":choice,"winner":winner,"reason":reason}
+
+func _visual_order(a: Array,b: Array) -> bool:
+	return a[20] < b[20] or (a[20] == b[20] and a[11] < b[11])

@@ -1,4 +1,5 @@
 extends Area2D
+const PNG_SOURCE := preload("res://src/ui/png_texture_source.gd")
 
 const EFFECT_FRAME_COUNT := 6
 const EFFECT_TARGET_HEIGHT := 128.0
@@ -152,9 +153,9 @@ func _load_texture(path: String) -> Texture2D:
 	# Prefer the current source PNG over a possibly stale imported .ctex.
 	if FileAccess.file_exists(path):
 		var image := Image.new()
-		var error := image.load(path)
+		var error := image.load_png_from_buffer(FileAccess.get_file_as_bytes(path))
 		if error == OK:
-			return ImageTexture.create_from_image(image)
+			return PNG_SOURCE.annotate(ImageTexture.create_from_image(image),path)
 
 	if ResourceLoader.exists(path):
 		var imported_texture = load(path)

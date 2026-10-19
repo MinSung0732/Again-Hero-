@@ -758,7 +758,7 @@ func draw() -> void:
 				hero.draw_line(a,b,Color(color,ratio*0.25),3.0)
 				if not frames.is_empty():
 					hero.draw_set_transform(a,(b-a).angle())
-					hero.draw_texture_rect(_frame(frames,1.0-ratio),Rect2(Vector2(0,-16),Vector2(a.distance_to(b),32)),false,Color(1,1,1,ratio))
+					hero.draw_texture_rect(_frame(frames,1.0-ratio),Rect2(Vector2(0,-GEOMETRY.CHAIN_DRAW_WIDTH*0.5),Vector2(a.distance_to(b),GEOMETRY.CHAIN_DRAW_WIDTH)),false,Color(1,1,1,ratio))
 					hero.draw_set_transform(Vector2.ZERO)
 				else: hero.draw_line(a,b,color,5.0)
 			"bolt":
@@ -800,7 +800,7 @@ func _draw_area(center: Vector2, radius: float, color: Color, frames: Array, pro
 	if not frames.is_empty():
 		var texture: Texture2D = frames[mini(int(progress*frames.size()),frames.size()-1)]
 		var diameter := radius*sqrt(2.0)
-		hero.draw_texture_rect(texture,Rect2(center-Vector2.ONE*diameter*0.5,Vector2.ONE*diameter),false,Color(1,1,1,color.a*0.75))
+		hero.draw_texture_rect(texture,Rect2(center-Vector2.ONE*diameter*0.5,Vector2.ONE*diameter),false,Color(1,1,1,color.a*GEOMETRY.AREA_TEXTURE_ALPHA))
 	hero.draw_circle(center,radius,Color(color,color.a*0.10))
 	hero.draw_arc(center,radius,0.0,TAU,48,color,3.0)
 

@@ -97,6 +97,7 @@ func _join() -> void:
 	elif LoginGateway.user_id.is_empty() or LoginGateway.access_token.is_empty(): status.text = "Google 또는 카카오 로그인이 필요합니다."; return
 	if not RULES.endpoint_valid(endpoint.text.strip_edges()): status.text = "공용 대전 서버 주소(wss://)를 입력해 주세요."; return
 	ended = false; last_tick = -1; revision = -1; connection_waiting = false
+	view.clear_state()
 	if pad != null: pad.enabled = true; pad.reset()
 	var error: int = client.join_local_test(endpoint.text.strip_edges(),test_code.text.strip_edges(),role) if initial_local_test else client.join(endpoint.text.strip_edges(),LoginGateway.access_token,role)
 	if test_code != null and error == OK: test_code.clear()

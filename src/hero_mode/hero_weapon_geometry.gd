@@ -1,4 +1,6 @@
 extends RefCounted
+const CHAIN_DRAW_WIDTH := 32.0
+const AREA_TEXTURE_ALPHA := 0.75
 ## Shared by detection, hit filtering and render outlines. Radii are world units.
 const SLASH_DOT := 0.35
 const ORBIT_HALF_WIDTH := 100.0

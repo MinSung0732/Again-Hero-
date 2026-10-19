@@ -2,7 +2,9 @@
 from pathlib import Path
 import re,shutil,subprocess,argparse
 from PIL import Image
-p=argparse.ArgumentParser();p.add_argument('destination',type=Path);a=p.parse_args()
+p=argparse.ArgumentParser();p.add_argument('destination',type=Path)
+p.add_argument('--art-directory',action='append',default=[],help='Overlay checked-out PNG/import files, replacing old fixture placeholders')
+a=p.parse_args()
 r=Path(__file__).resolve().parents[1];out=a.destination.resolve()
 if out==r or r in out.parents:raise SystemExit('Use a directory outside the repository')
 out.mkdir(parents=True,exist_ok=True)
@@ -61,3 +63,14 @@ while queue:
 previous=(out/'omitted_art.txt').read_text().splitlines() if (out/'omitted_art.txt').exists() else []
 (out/'omitted_art.txt').write_text('\n'.join(sorted(set(previous+placeholders))))
 print('Resource closure:',len(seen),'placeholder presentation:',len(placeholders))
+
+# Optional real-art overlays are explicit CLI inputs, independent of content IDs.
+original_pngs=0
+for relative in a.art_directory:
+ source=(r/relative).resolve()
+ if r not in source.parents or not source.is_dir():raise SystemExit('Invalid art directory: '+relative)
+ for file in source.rglob('*'):
+  if not file.is_file() or not (file.name.endswith('.png') or file.name.endswith('.png.import')):continue
+  dest=out/file.relative_to(r);dest.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(file,dest)
+  original_pngs+=file.suffix=='.png'
+if a.art_directory:print('Original PNG overlay:',original_pngs)
