@@ -23,6 +23,25 @@ func run() -> void:
 		check(scene.test_code == null,"ordinary account screen has no test invitation field")
 		root.size = Vector2i(1536,1920); await process_frame; await process_frame
 		check(scene.view.size.x > 1200,"tablet width expands")
+		scene.client.match_id = "ui-recovery"
+		scene._event({"op":"connection","match":"ui-recovery","paused":true,"remaining":15.0})
+		scene._process(0.01)
+		check(scene.connection_waiting and scene.status.text.contains("일시정지"),"server grace countdown displayed")
+		if role == "hero": check(not scene.pad.enabled,"grace disables touch movement")
+		else:
+			for button in scene.action_row.get_children(): check(button.disabled,"grace disables summon buttons")
+		scene._event({"op":"connection","match":"ui-recovery","paused":false,"remaining":0.0})
+		check(not scene.connection_waiting,"server resume clears pause")
+		scene.client.reconnecting = true; scene.client.connection_recovering.emit(true,20.0)
+		check(not scene.ended and scene.status.text.contains("연결 복구"),"local transport loss keeps scene alive")
+		scene.client.reconnecting = false; scene.client.connection_recovering.emit(false,0.0)
+		scene.last_tick = 99; scene.revision = 7
+		scene._event({"op":"matched","match":"ui-recovery","resumed":true})
+		check(scene.last_tick == -1 and scene.revision == -1,"resume forces snapshot/choice refresh even at same tick")
+		scene._event({"op":"result","match":"ui-recovery","winner":role})
+		var result_text: String = scene.status.text
+		scene._event({"op":"result","match":"ui-recovery","winner":""})
+		check(scene.ended and scene.status.text == result_text,"terminal UI is idempotent")
 		scene.queue_free(); await process_frame
 	var local = root.get_node("LocalTestMode")
 	var old_active: bool = local.active

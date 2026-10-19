@@ -25,6 +25,9 @@ var last_tick := -1
 var revision := -1
 var initial_owner := ""
 var ended := false
+var connection_waiting := false
+var wait_deadline := 0
+var wait_seconds := -1
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var options: Dictionary = SceneTransition.consume_entry_options()
@@ -46,7 +49,7 @@ func _ready() -> void:
 	queue_button = _button(rows,"매칭 시작",_join)
 	view = VIEW.new(); view.size_flags_vertical = Control.SIZE_EXPAND_FILL; view.custom_minimum_size.y = 400; rows.add_child(view)
 	view.placement.connect(func(point: Vector2):
-		if role == "demon" and not ended: client.command("summon",{"id":selected_monster,"point":[point.x,point.y]}))
+		if role == "demon" and not ended and not connection_waiting and not client.reconnecting: client.command("summon",{"id":selected_monster,"point":[point.x,point.y]}))
 	action_row = HBoxContainer.new(); rows.add_child(action_row)
 	if role == "demon":
 		for id in RULES.ROSTER:
@@ -58,9 +61,16 @@ func _ready() -> void:
 	choices = VBoxContainer.new(); rows.add_child(choices)
 	_button(rows,"매칭 취소 · 로비로",_leave)
 	client = CLIENT.new(); add_child(client); client.event_received.connect(_event)
+	client.connection_recovering.connect(func(active: bool,remaining: float):
+		if ended: return
+		movement = Vector2.ZERO
+		_set_controls(not active and not connection_waiting)
+		if active:
+			status.text = "연결 복구 중… 잠시 기다려 주세요."
+			queue_button.disabled = true)
 	client.connection_closed.connect(func(message: String):
 		if not ended: status.text = message
-		queue_button.disabled = false; ended = true)
+		queue_button.disabled = false; ended = true; _set_controls(false))
 func _label(parent: Node,value: String,font: int) -> Label:
 	var label := Label.new(); label.text = value; label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.add_theme_font_size_override("font_size",font); parent.add_child(label); return label
@@ -77,7 +87,7 @@ func _join() -> void:
 		if not LOCAL_ACCESS.valid_hex(test_code.text.strip_edges(),LOCAL_ACCESS.TICKET_BYTES): status.text = "서버에 표시된 테스트 입장코드를 입력하세요."; return
 	elif LoginGateway.user_id.is_empty() or LoginGateway.access_token.is_empty(): status.text = "Google 또는 카카오 로그인이 필요합니다."; return
 	if not RULES.endpoint_valid(endpoint.text.strip_edges()): status.text = "공용 대전 서버 주소(wss://)를 입력해 주세요."; return
-	ended = false; last_tick = -1; revision = -1
+	ended = false; last_tick = -1; revision = -1; connection_waiting = false
 	if pad != null: pad.enabled = true; pad.reset()
 	var error: int = client.join_local_test(endpoint.text.strip_edges(),test_code.text.strip_edges(),role) if initial_local_test else client.join(endpoint.text.strip_edges(),LoginGateway.access_token,role)
 	if test_code != null and error == OK: test_code.clear()
@@ -87,8 +97,15 @@ func _event(event: Dictionary) -> void:
 	match String(event.get("op","")):
 		"queued": status.text = "상대 역할 플레이어를 찾는 중..."
 		"matched":
-			status.text = "매칭 완료 · 전투 준비 중..."
+			last_tick = -1; revision = -1
+			status.text = "기존 경기로 복귀했습니다." if event.get("resumed",false) else "매칭 완료 · 전투 준비 중..."
 			client.send({"op":"ready","match":client.match_id})
+		"connection":
+			if event.get("match","") != client.match_id or ended or not event.get("paused",null) is bool or not RULES.number(event.get("remaining",null),RULES.RECONNECT_GRACE): return
+			connection_waiting = event.paused
+			wait_deadline = Time.get_ticks_msec() + int(maxf(0.0,float(event.remaining))*1000.0); wait_seconds = -1
+			_set_controls(not connection_waiting and not client.reconnecting)
+			if not connection_waiting: status.text = "연결이 복구되어 전투를 재개합니다."
 		"state":
 			if ended or event.get("match","") != client.match_id or not RULES.number(event.get("tick",null)): return
 			if not RULES.number(event.get("seconds",null)) or not RULES.number(event.get("mana",null)) or not RULES.number(event.get("choice_revision",null)): return
@@ -97,14 +114,16 @@ func _event(event: Dictionary) -> void:
 				if not option is Dictionary or not option.get("id",null) is String or not option.get("name",null) is String: return
 			if int(event.tick) <= last_tick or not view.update_state(event): return
 			last_tick = int(event.tick)
-			status.text = "%s · %.0f초 · 용사 HP %d/%d · 지휘력 %.0f" % ["마왕" if role == "demon" else "용사",maxf(0,RULES.DURATION-float(event.seconds)),int(event.hero[2]),int(event.hero[3]),float(event.mana)]
+			if not connection_waiting: status.text = "%s · %.0f초 · 용사 HP %d/%d · 지휘력 %.0f" % ["마왕" if role == "demon" else "용사",maxf(0,RULES.DURATION-float(event.seconds)),int(event.hero[2]),int(event.hero[3]),float(event.mana)]
 			if role == "hero" and int(event.choice_revision) != revision:
 				revision = int(event.choice_revision)
 				for child in choices.get_children(): choices.remove_child(child); child.queue_free()
 				for option in event.choices: _button(choices,String(option.name),_choose.bind(String(option.id),revision))
+				_set_controls(not connection_waiting and not client.reconnecting)
 		"result":
-			if event.get("match","") != client.match_id: return
-			ended = true; movement = Vector2.ZERO
+			if event.get("match","") != client.match_id or ended: return
+			ended = true; movement = Vector2.ZERO; connection_waiting = false; queue_button.disabled = false
+			_set_controls(false)
 			for child in choices.get_children(): child.queue_free()
 			status.text = "대전 종료 · "+("무효 경기" if String(event.get("winner","")).is_empty() else "승리" if event.winner == role else "패배")+"\n테스트 경기 · 점수/보상 변동 없음"
 			if pad != null: pad.enabled = false; pad.reset()
@@ -112,13 +131,27 @@ func _event(event: Dictionary) -> void:
 			if event.get("match","") == client.match_id and event.get("message",null) is String: action_notice.text = event.message
 		"error":
 			ended = true
+			_set_controls(false)
 			status.text = String(RULES.ERROR_MESSAGES.get(event.get("reason","unknown"),"매칭 요청을 처리하지 못했습니다."))
-func _choose(id: String,choice_revision: int) -> void: client.command("choose",{"id":id,"revision":choice_revision})
+func _set_controls(enabled: bool) -> void:
+	if not enabled: movement = Vector2.ZERO
+	if pad != null:
+		pad.enabled = enabled
+		if not enabled: pad.reset()
+	for button in action_row.get_children(): button.disabled = not enabled
+	for button in choices.get_children(): button.disabled = not enabled
+func _choose(id: String,choice_revision: int) -> void:
+	if not ended and not connection_waiting and not client.reconnecting: client.command("choose",{"id":id,"revision":choice_revision})
 func _process(delta: float) -> void:
 	if client == null: return
-	if not ended and LocalTestMode.is_online_match_allowed() != initial_local_test: client.close(); status.text = "테스트 모드가 변경되어 대전을 종료했습니다."; ended = true
-	if not ended and LoginGateway.user_id != initial_owner: client.close(); status.text = "계정이 변경되어 대전을 종료했습니다."; ended = true
-	if ended or role != "hero" or client.match_id.is_empty(): return
+	if not ended and LocalTestMode.is_online_match_allowed() != initial_local_test: client.close(); status.text = "테스트 모드가 변경되어 대전을 종료했습니다."; ended = true; _set_controls(false)
+	if not ended and LoginGateway.user_id != initial_owner: client.close(); status.text = "계정이 변경되어 대전을 종료했습니다."; ended = true; _set_controls(false)
+	if connection_waiting and not ended and not client.reconnecting:
+		var seconds := maxi(0,int(ceil(float(wait_deadline-Time.get_ticks_msec())/1000.0)))
+		if seconds != wait_seconds:
+			wait_seconds = seconds
+			status.text = "상대 연결 복구 대기 · %d초 · 전투 일시정지" % seconds if seconds > 0 else "재접속 결과를 확인하고 있습니다…"
+	if ended or connection_waiting or client.reconnecting or role != "hero" or client.match_id.is_empty(): return
 	input_left -= delta
 	if input_left > 0: return
 	input_left = 0.05

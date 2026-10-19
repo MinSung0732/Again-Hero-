@@ -7,6 +7,8 @@ var world: SubViewport
 var is_prepared := false
 var running := false
 var finished := false
+var connection_paused := false
+var input_suspended_before_disconnect := false
 var winner := ""
 var reason := ""
 var move_age := 0.0
@@ -40,12 +42,20 @@ func prepare() -> void:
 	is_prepared = true
 func start() -> void:
 	if not is_prepared or finished: return
-	running = true; battle.set_external_pause(false); battle.hero.player_input_suspended = false
+	running = true; battle.set_external_pause(connection_paused); battle.hero.player_input_suspended = connection_paused
+func set_connection_paused(value: bool) -> void:
+	if connection_paused == value: return
+	connection_paused = value
+	if not is_prepared or finished: return
+	if value: input_suspended_before_disconnect = battle.hero.player_input_suspended
+	battle.hero.set_player_move_input(Vector2.ZERO)
+	battle.hero.player_input_suspended = true if value else input_suspended_before_disconnect
+	battle.set_external_pause(value or not running)
 func _choice(candidates: Array) -> void:
 	choice_revision += 1; choice = candidates; choice_age = 0.0
 func apply(role: String,kind: String,argument: Variant) -> bool:
 	last_action_message = "사용할 수 없는 행동입니다."
-	if not running or finished or not is_instance_valid(battle.hero): return false
+	if not running or finished or connection_paused or not is_instance_valid(battle.hero): return false
 	if role == "hero" and kind == "move" and RULES.point(argument,1.0):
 		var direction := Vector2(float(argument[0]),float(argument[1]))
 		if direction.length_squared() > 1.001: return false
@@ -62,7 +72,7 @@ func apply(role: String,kind: String,argument: Variant) -> bool:
 		return battle.try_summon_at_position(id,Vector2(point[0],point[1]))
 	return false
 func step(delta: float) -> void:
-	if not running or finished: return
+	if not running or finished or connection_paused: return
 	tick += 1; move_age += delta
 	if move_age > RULES.INPUT_TIMEOUT and is_instance_valid(battle.hero): battle.hero.set_player_move_input(Vector2.ZERO)
 	if not choice.is_empty():

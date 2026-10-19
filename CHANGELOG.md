@@ -1,3 +1,9 @@
+## 2026-10-19 — 온라인 재접속·이탈 유예
+
+- wire protocol2. 서버/양쪽 함께 갱신 필요. 서버 감지 후15초 전투 일시정지, 경기별 무작위 좌석 토큰·UID 예약으로 같은 Battle/역할·상태 복귀, snapshot/증강 재표시·ready 응답 후 재개. 일반/초대 인증 및 무랭킹·무보상 룰 유지.
+- heartbeat·1초 재시도/최대30초, 유예 만료 상대 승리/양쪽 부재 무효, 명시적 나가기 별도 처리, 종료 결과10초 복구·중복 방지·레지스트리 정리. 토큰 메모리만 보관·scope 전환 폐기. 일시정지/종료 방의 반복 snapshot 생략. 전투/AI·계정 저장 수식 불변.
+- Godot4.5.1 실제 loopback 복귀66+UI47+localtest32+전투44+transport18=207검사, 기존3프로세스 동일 결과(양쪽상태30회) PASS. 최종 import/정적 통과, runtime ERROR0/대체 아트 누락 경고 있음. 실제PC4.7.2↔Android WSS 끊김/OS 복귀·GPU 미검증. 앱 강제종료/서버 재시작 복원·보간·랭킹은 후속. docs/ONLINE_RECONNECT_20261019.md. main 병합 없음.
+
 ## 2026-10-19 — 회복 아이템 export 이미지 로딩 경고 수정
 
 - heal_item의 원본 PNG Image.load 우선 경로를 제거하고 imported Texture2D 리소스 로딩 사용. 회복 PNG4장의 fix_alpha_border만 비활성화해 기존 직접 읽기와 RGBA 픽셀/54px 크기 유지. PNG·회복량/줍기·애니메이션/캐시 불변.

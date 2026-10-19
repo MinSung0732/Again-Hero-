@@ -1,6 +1,6 @@
 extends RefCounted
 ## Separate versioned experiment; no rating or account-reward writer.
-const VERSION := 1
+const VERSION := 2
 const ID := "duel_smoke_v1"
 const HERO := "ranged_rookie"
 const ROSTER := ["slime","spider","orc","bomb_rat","skeleton_archer"]
@@ -19,7 +19,18 @@ const MAX_SNAPSHOT := 98304
 const JOIN_TIMEOUT := 15.0
 const READY_TIMEOUT := 20.0
 const QUEUE_TIMEOUT := 180.0
+const RECONNECT_GRACE := 15.0
+const RECONNECT_RETRY := 1.0
+const RECONNECT_WINDOW := 30.0
+const HEARTBEAT_INTERVAL := 2.0
+const PEER_IDLE_TIMEOUT := 8.0
+const RESPONSE_TIMEOUT := 6.0
+const RESULT_RETENTION := 10.0
+const RESUME_TOKEN_BYTES := 24
+const CLOSE_DRAIN_TIMEOUT := 2.0
 const ERROR_MESSAGES := {
+	"resume_unavailable":"경기 복귀 시간이 지났거나 서버가 재시작되었습니다. 로비에서 다시 입장하세요.",
+	"resume_busy":"기존 연결의 종료를 확인하고 있습니다.",
 	"local_test_denied":"테스트 서버 입장코드를 확인하세요. 서버를 --localtest 옵션으로 실행해야 합니다.",
 	"server_busy":"인증 요청이 많습니다. 잠시 후 다시 시도해 주세요.",
 	"authentication_failed":"로그인 확인에 실패했습니다. 다시 로그인한 후 시도해 주세요.",
@@ -30,6 +41,8 @@ const ERROR_MESSAGES := {
 }
 static func endpoint_valid(url: String) -> bool:
 	return url.begins_with("wss://") or url.begins_with("ws://127.0.0.1:") or url.begins_with("ws://localhost:")
+static func resume_token_valid(value: Variant) -> bool:
+	return value is String and value.length() == RESUME_TOKEN_BYTES * 2 and value.is_valid_hex_number(false)
 static func number(value: Variant,limit: float = 1000000.0) -> bool:
 	return (value is int or value is float) and is_finite(float(value)) and absf(float(value)) <= limit
 static func point(value: Variant,limit: float = 1000000.0) -> bool:
