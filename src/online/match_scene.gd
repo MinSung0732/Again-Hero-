@@ -15,6 +15,8 @@ var action_row: HBoxContainer
 var queue_button: Button
 var endpoint: LineEdit
 var test_code: LineEdit
+var disconnect_button: Button
+var reconnect_button: Button
 var initial_local_test := false
 var pad
 var role := "hero"
@@ -47,6 +49,13 @@ func _ready() -> void:
 		test_code.placeholder_text = "테스트 서버 입장코드"; test_code.max_length = LOCAL_ACCESS.TICKET_BYTES * 2
 		test_code.custom_minimum_size.y = 72; test_code.add_theme_font_size_override("font_size",25); rows.add_child(test_code)
 	queue_button = _button(rows,"매칭 시작",_join)
+	if initial_local_test:
+		var connection_tests := HBoxContainer.new(); rows.add_child(connection_tests)
+		disconnect_button = _button(connection_tests,"연결 끊기 (테스트)",_test_connection.bind(true))
+		reconnect_button = _button(connection_tests,"재접속",_test_connection.bind(false))
+		disconnect_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		reconnect_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		disconnect_button.disabled = true; reconnect_button.disabled = true
 	view = VIEW.new(); view.size_flags_vertical = Control.SIZE_EXPAND_FILL; view.custom_minimum_size.y = 400; rows.add_child(view)
 	view.placement.connect(func(point: Vector2):
 		if role == "demon" and not ended and not connection_waiting and not client.reconnecting: client.command("summon",{"id":selected_monster,"point":[point.x,point.y]}))
@@ -66,7 +75,7 @@ func _ready() -> void:
 		movement = Vector2.ZERO
 		_set_controls(not active and not connection_waiting)
 		if active:
-			status.text = "연결 복구 중… 잠시 기다려 주세요."
+			status.text = "테스트 연결 끊김 · 재접속 버튼을 누르세요. 상대의 유예 시간 내에 복귀하세요." if client.test_transport_paused else "연결 복구 중… 잠시 기다려 주세요."
 			queue_button.disabled = true)
 	client.connection_closed.connect(func(message: String):
 		if not ended: status.text = message
@@ -98,6 +107,7 @@ func _event(event: Dictionary) -> void:
 		"queued": status.text = "상대 역할 플레이어를 찾는 중..."
 		"matched":
 			last_tick = -1; revision = -1
+			_refresh_connection_test_controls()
 			status.text = "기존 경기로 복귀했습니다." if event.get("resumed",false) else "매칭 완료 · 전투 준비 중..."
 			client.send({"op":"ready","match":client.match_id})
 		"connection":
@@ -134,12 +144,21 @@ func _event(event: Dictionary) -> void:
 			_set_controls(false)
 			status.text = String(RULES.ERROR_MESSAGES.get(event.get("reason","unknown"),"매칭 요청을 처리하지 못했습니다."))
 func _set_controls(enabled: bool) -> void:
+	_refresh_connection_test_controls()
 	if not enabled: movement = Vector2.ZERO
 	if pad != null:
 		pad.enabled = enabled
 		if not enabled: pad.reset()
 	for button in action_row.get_children(): button.disabled = not enabled
 	for button in choices.get_children(): button.disabled = not enabled
+func _refresh_connection_test_controls() -> void:
+	if disconnect_button == null: return
+	var allowed: bool = not ended and LocalTestMode.is_online_match_allowed() and client.local_test_connection and not client.match_id.is_empty() and not client.resume_token.is_empty() and not client.result_received
+	disconnect_button.disabled = not allowed or client.reconnecting or client.socket == null or client.socket.get_ready_state() != WebSocketPeer.STATE_OPEN
+	reconnect_button.disabled = not allowed or not client.test_transport_paused
+func _test_connection(disconnected: bool) -> void:
+	if initial_local_test and not ended and client.set_local_test_disconnected(disconnected):
+		_refresh_connection_test_controls()
 func _choose(id: String,choice_revision: int) -> void:
 	if not ended and not connection_waiting and not client.reconnecting: client.command("choose",{"id":id,"revision":choice_revision})
 func _process(delta: float) -> void:

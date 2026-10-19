@@ -21,6 +21,8 @@ var reconnect_deadline := 0
 var next_retry := 0
 var heartbeat_left := 0.0
 var result_received := false
+var local_test_connection := false
+var test_transport_paused := false
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 func _notification(what: int) -> void:
@@ -41,9 +43,24 @@ func join_local_test(endpoint: String,invitation: String,requested_role: String)
 	if not LOCAL_ACCESS.valid_hex(invitation,LOCAL_ACCESS.TICKET_BYTES): close(); return ERR_INVALID_PARAMETER
 	var error := join(endpoint,"",requested_role)
 	if error == OK:
+		local_test_connection = true
 		local_ticket = invitation
 		if local_session.is_empty(): local_session = LOCAL_ACCESS.new_session()
 	return error
+func set_local_test_disconnected(disconnected: bool) -> bool:
+	# Exercise real socket loss without sending leave or changing server deadlines.
+	var local_mode = get_node_or_null("/root/LocalTestMode") if is_inside_tree() else null
+	if local_mode == null or not local_mode.is_online_match_allowed() or not local_test_connection or match_id.is_empty() or resume_token.is_empty() or result_received: return false
+	if disconnected:
+		if reconnecting or socket == null or socket.get_ready_state() != WebSocketPeer.STATE_OPEN: return false
+		test_transport_paused = true
+		_network_lost("로컬 테스트 연결을 끊었습니다.")
+	else:
+		if not test_transport_paused or not reconnecting: return false
+		test_transport_paused = false
+		next_retry = Time.get_ticks_msec()
+		connection_recovering.emit(true,maxf(0.0,float(reconnect_deadline-next_retry)/1000.0))
+	return true
 func _reset_transport() -> void:
 	if socket != null: socket.close()
 	socket = null; token = ""; local_ticket = ""; greeted = false
@@ -54,6 +71,7 @@ func close() -> void:
 		get_tree().root.add_child(drain); socket = null
 	_reset_transport()
 	match_id = ""; resume_token = ""; endpoint_url = ""; sequence = 0; result_received = false
+	local_test_connection = false; test_transport_paused = false
 	reconnecting = false; reconnect_deadline = 0; next_retry = 0; set_process(false)
 func send(data: Dictionary) -> bool:
 	return socket != null and socket.get_ready_state() == WebSocketPeer.STATE_OPEN and socket.send_text(JSON.stringify(data)) == OK
@@ -75,7 +93,7 @@ func _process(delta: float) -> void:
 	if reconnecting and now >= reconnect_deadline:
 		close(); connection_closed.emit("연결을 복구하지 못했습니다. 로비로 돌아가 주세요."); return
 	if socket == null:
-		if reconnecting and now >= next_retry:
+		if reconnecting and not test_transport_paused and now >= next_retry:
 			if _connect_transport() != OK: _network_lost("서버에 연결할 수 없습니다.")
 		return
 	socket.poll()

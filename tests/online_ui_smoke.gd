@@ -21,6 +21,7 @@ func run() -> void:
 		scene._join()
 		check(scene.client.socket == null,"guest without token never queues")
 		check(scene.test_code == null,"ordinary account screen has no test invitation field")
+		check(scene.disconnect_button == null and scene.reconnect_button == null,"ordinary screen has no connection test buttons")
 		root.size = Vector2i(1536,1920); await process_frame; await process_frame
 		check(scene.view.size.x > 1200,"tablet width expands")
 		scene.client.match_id = "ui-recovery"
@@ -63,6 +64,7 @@ func run() -> void:
 		var scene = load("res://src/online/OnlineMatch.tscn").instantiate(); root.add_child(scene)
 		await process_frame
 		check(scene.initial_local_test and scene.test_code != null and scene.test_code.secret,"localtest invitation UI for both roles")
+		check(scene.disconnect_button.disabled and scene.reconnect_button.disabled,"test buttons disabled before match")
 		scene.endpoint.text = "ws://127.0.0.1:24844"
 		scene._join()
 		check(scene.client.socket == null and scene.status.text.contains("입장코드"),"missing code stays disconnected")

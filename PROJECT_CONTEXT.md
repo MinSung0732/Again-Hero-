@@ -1,3 +1,9 @@
+## 2026-10-19 — localtest 연결 끊기·재접속 버튼
+
+- 격리 localtest 매칭 화면에 실제 WebSocket 연결 끊기/수동 재접속 버튼 추가. 끊기는 자동 재시도만 보류하고 재접속은 기존 resume/ready 경로로 같은 경기·좌석을 복구. 15초 서버 유예/30초 클라이언트 한도·인증·무보상 룰 유지, 콘텐츠/서버/계정 저장 변경 없음.
+- 일반 계정/게스트/튜토리얼 버튼 미생성, API 현재 권한·localtest 연결 재검사. 매칭 전·종료 후·복구 시 중복 클릭 차단, 나가기/실패 시 보류 초기화. 권한은 버튼 호출 시 autoload 노드를 조회해 CLI preload 의존성 방지. 프레임별 배열/그룹 스캔 추가 없음.
+- Godot4.5.1 실제 loopback 서버·양쪽 UI 버튼45+UI51+자동 복귀66+localtest32+transport18=212검사 PASS, 최종 import/정적 통과. 실행 ERROR0, 격리 아트 누락 경고 있음. Windows4.7.2/Android·실제WSS/전체아트·앱 재실행 복귀 미검증. docs/ONLINE_RECONNECT_20261019.md. feature/stage10-astra만, main 병합 없음.
+
 ## 2026-10-19 — 온라인 재접속·이탈 유예
 
 - wire protocol2. 서버/양쪽 함께 갱신 필요. 서버 감지 후15초 전투 일시정지, 경기별 무작위 좌석 토큰·UID 예약으로 같은 Battle/역할·상태 복귀, snapshot/증강 재표시·ready 응답 후 재개. 일반/초대 인증 및 무랭킹·무보상 룰 유지.
