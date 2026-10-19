@@ -1,4 +1,13 @@
 extends RefCounted
+const AREA_FILL_ALPHA := 0.10
+const EFFECT_ALPHA := 0.8
+const SHAPE_FILL_ALPHA := 0.13
+const ORBIT_FILL_ALPHA := 0.14
+const OUTLINE_WIDTH := 3.0
+const CHAIN_LINE_ALPHA := 0.25
+const CHAIN_FALLBACK_WIDTH := 5.0
+const BOLT_LINE_ALPHA := 0.3
+const BOLT_RADIUS := 12.0
 const CHAIN_DRAW_WIDTH := 32.0
 const AREA_TEXTURE_ALPHA := 0.75
 const BEAM_TEXTURE_ALPHA := 0.85

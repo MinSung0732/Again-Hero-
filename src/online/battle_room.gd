@@ -4,6 +4,8 @@ const RULES := preload("res://src/online/match_rules.gd")
 const PRESENTATION := preload("res://src/online/presentation_snapshot.gd")
 var presentation = PRESENTATION.new()
 var battlefield_info := {}
+const PRIMITIVES := preload("res://src/online/primitive_mirror.gd")
+var feedback = preload("res://src/online/feedback_buffer.gd").new()
 signal completed(winner: String,reason: String)
 var battle
 var world: SubViewport
@@ -41,6 +43,10 @@ func prepare() -> void:
 	battle.set_allowed_monster_ids(RULES.ROSTER)
 	battlefield_info = {"stage":battle.current_stage_id,"bounds":[battle.current_map_size.x,battle.current_map_size.y]}
 	battle.online_visual_entity_exited.connect(presentation.forget_node)
+	battle.online_combat_feedback.connect(_feedback)
+	battle.online_cast_feedback.connect(func(cue: String,point: Vector2):
+		if running and not finished and not connection_paused: feedback.publish(cue,point,0,Color.WHITE,tick))
+
 	battle.battle_finished.connect(func(_message: String,demon_won: bool): finish("demon" if demon_won else "hero",_message))
 	battle.hero.player_augment_requested.connect(_choice)
 	battle.summon_result.connect(func(_id: String,_accepted: bool,message: String): last_action_message = message)
@@ -74,7 +80,9 @@ func apply(role: String,kind: String,argument: Variant) -> bool:
 		if not argument.get("id",null) is String: return false
 		var id: String = argument.id; var point: Variant = argument.get("point",null)
 		if id not in RULES.ROSTER or not RULES.point(point): return false
-		return battle.try_summon_at_position(id,Vector2(point[0],point[1]))
+		var accepted: bool = battle.try_summon_at_position(id,Vector2(point[0],point[1]))
+		if accepted: feedback.publish("summon",Vector2(point[0],point[1]),0,Color(0.8,0.5,1.0),tick)
+		return accepted
 	return false
 func step(delta: float) -> void:
 	if not running or finished or connection_paused: return
@@ -99,9 +107,14 @@ func snapshot() -> Dictionary:
 	if started: profile.record(profile.Scope.NETWORK_SNAPSHOT,started)
 	return state
 
+func _feedback(target: Node2D,amount: int,color: Color,healing: bool) -> void:
+	if not running or finished or connection_paused: return
+	var kind := "heal" if healing else "hero_hit" if target == battle.hero else "monster_hit"
+	feedback.publish(kind,target.global_position,amount,Color(1.0,0.45,0.4) if kind=="hero_hit" else color,tick)
 func _build_snapshot() -> Dictionary:
 	var actors: Array = []; var shots: Array = []
 	var visuals: Array = []
+	var primitives: Array = []
 	var hp := 0; var maximum := 1; var level := 1
 	if is_instance_valid(battle.hero):
 		hero_last = battle.hero.position; hp = battle.hero.current_hp; maximum = battle.hero.max_hp; level = battle.hero.level
@@ -128,6 +141,7 @@ func _build_snapshot() -> Dictionary:
 			var radius: float = shot.visual_radius
 			presentation.append_texture(weapons._loop_frame(shot.frames,float(shot.age)),-1,Transform2D(Vector2(shot.direction).angle(),shot.position),Rect2(Vector2.ONE*-radius,Vector2.ONE*radius*2),Color.WHITE,visuals,battle.hero.z_index)
 		presentation.append_weapon_areas(weapons,visuals)
+		primitives = PRIMITIVES.capture(weapons)
 		if weapons.native_skills != null:
 			for pattern in weapons.native_skills.actors_by_pattern:
 				for actor in weapons.native_skills.actors_by_pattern[pattern]:
@@ -139,7 +153,7 @@ func _build_snapshot() -> Dictionary:
 	for instance in stale_wire_ids:
 		ids.erase(instance); presentation.forget_node(instance)
 	# Bounded snapshot serialization and presentation sort at10Hz, not physics Hz.
-	return {"op":"state","tick":tick,"hero":[hero_last.x,hero_last.y,hp,maximum,level],"bounds":[battle.current_map_size.x,battle.current_map_size.y],"battlefield":battlefield_info,"seconds":battle.run_metrics.elapsed_seconds,"mana":battle.command_power,"actors":actors,"shots":shots,"visuals":visuals,"choice_revision":choice_revision,"choices":choice,"winner":winner,"reason":reason}
+	return {"op":"state","tick":tick,"hero":[hero_last.x,hero_last.y,hp,maximum,level],"bounds":[battle.current_map_size.x,battle.current_map_size.y],"battlefield":battlefield_info,"seconds":battle.run_metrics.elapsed_seconds,"mana":battle.command_power,"actors":actors,"shots":shots,"visuals":visuals,"primitives":primitives,"feedback":feedback.snapshot(),"feedback_cursor":feedback.sequence,"choice_revision":choice_revision,"choices":choice,"winner":winner,"reason":reason}
 
 func _visual_order(a: Array,b: Array) -> bool:
 	return PRESENTATION.visual_order(a,b)

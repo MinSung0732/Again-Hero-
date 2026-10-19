@@ -79,12 +79,14 @@ func _ready() -> void:
 	client.connection_recovering.connect(func(active: bool,remaining: float):
 		if ended: return
 		movement = Vector2.ZERO
+		if active: view.feedback.pause_feedback()
 		_set_controls(not active and not connection_waiting)
 		if active:
 			status.text = "테스트 연결 끊김 · 재접속 버튼을 누르세요. 상대의 유예 시간 내에 복귀하세요." if client.test_transport_paused else "연결 복구 중… 잠시 기다려 주세요."
 			queue_button.disabled = true)
 	client.connection_closed.connect(func(message: String):
 		if not ended: status.text = message
+		view.feedback.pause_feedback()
 		queue_button.disabled = false; ended = true; load_revision += 1; loading.finish(); _set_controls(false))
 func _label(parent: Node,value: String,font: int) -> Label:
 	var label := Label.new(); label.text = value; label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -117,6 +119,8 @@ func _event(event: Dictionary) -> void:
 			last_tick = -1; revision = -1
 			_refresh_connection_test_controls()
 			status.text = "기존 경기로 복귀했습니다." if event.get("resumed",false) else "매칭 완료 · 전투 준비 중..."
+			if event.has("feedback_cursor") and not view.FEEDBACK_DATA.valid_cursor(event.feedback_cursor): return
+			view.feedback.reset(int(event.get("feedback_cursor",0)))
 			load_revision += 1
 			local_preparing = true; waiting_for_start = true; _set_controls(false)
 			loading.begin(role); loading.show_phase("loading")
@@ -124,6 +128,7 @@ func _event(event: Dictionary) -> void:
 		"connection":
 			if event.get("match","") != client.match_id or ended or not event.get("paused",null) is bool or not RULES.number(event.get("remaining",null),RULES.RECONNECT_GRACE): return
 			connection_waiting = event.paused
+			if connection_waiting: view.feedback.pause_feedback()
 			wait_deadline = Time.get_ticks_msec() + int(maxf(0.0,float(event.remaining))*1000.0); wait_seconds = -1
 			_set_controls(not connection_waiting and not client.reconnecting)
 			if not connection_waiting: status.text = "연결이 복구되어 전투를 재개합니다."
@@ -136,8 +141,10 @@ func _event(event: Dictionary) -> void:
 				if not option is Dictionary or not option.get("id",null) is String or not option.get("name",null) is String: return
 			if int(event.tick) <= last_tick or not view.update_state(event): return
 			last_tick = int(event.tick)
+			view.feedback.suspended = waiting_for_start or connection_waiting or client.reconnecting
 			if waiting_for_start and last_tick > 0 and not connection_waiting and not client.reconnecting:
-				waiting_for_start = false; loading.finish(); _set_controls(true)
+				waiting_for_start = false; view.feedback.suspended = false; loading.finish(); _set_controls(true)
+			if event.has("feedback"): view.feedback.consume(event.feedback,event.feedback_cursor,event.tick)
 			if not connection_waiting: status.text = "%s · %.0f초 · 용사 HP %d/%d · 지휘력 %.0f" % ["마왕" if role == "demon" else "용사",maxf(0,RULES.DURATION-float(event.seconds)),int(event.hero[2]),int(event.hero[3]),float(event.mana)]
 			if role == "hero" and int(event.choice_revision) != revision:
 				revision = int(event.choice_revision)
@@ -146,6 +153,8 @@ func _event(event: Dictionary) -> void:
 				_set_controls(not connection_waiting and not client.reconnecting)
 		"result":
 			if event.get("match","") != client.match_id or ended: return
+			if event.has("feedback"): view.feedback.consume(event.feedback,event.get("feedback_cursor",null),event.get("tick",null))
+			view.feedback.result(String(event.get("winner","")),role)
 			load_revision += 1; local_preparing = false; waiting_for_start = false; loading.finish()
 			ended = true; movement = Vector2.ZERO; connection_waiting = false; queue_button.disabled = false
 			_set_controls(false)
@@ -155,6 +164,7 @@ func _event(event: Dictionary) -> void:
 		"action":
 			if event.get("match","") == client.match_id and event.get("message",null) is String: action_notice.text = event.message
 		"error":
+			view.feedback.pause_feedback()
 			load_revision += 1; local_preparing = false; waiting_for_start = false; loading.finish()
 			ended = true
 			_set_controls(false)
@@ -194,8 +204,8 @@ func _choose(id: String,choice_revision: int) -> void:
 	if not ended and not connection_waiting and not client.reconnecting: client.command("choose",{"id":id,"revision":choice_revision})
 func _process(delta: float) -> void:
 	if client == null: return
-	if not ended and LocalTestMode.is_online_match_allowed() != initial_local_test: client.close(); status.text = "테스트 모드가 변경되어 대전을 종료했습니다."; ended = true; _set_controls(false)
-	if not ended and LoginGateway.user_id != initial_owner: client.close(); status.text = "계정이 변경되어 대전을 종료했습니다."; ended = true; _set_controls(false)
+	if not ended and LocalTestMode.is_online_match_allowed() != initial_local_test: client.close(); view.feedback.pause_feedback(); status.text = "테스트 모드가 변경되어 대전을 종료했습니다."; ended = true; _set_controls(false)
+	if not ended and LoginGateway.user_id != initial_owner: client.close(); view.feedback.pause_feedback(); status.text = "계정이 변경되어 대전을 종료했습니다."; ended = true; _set_controls(false)
 	if connection_waiting and not ended and not client.reconnecting:
 		var seconds := maxi(0,int(ceil(float(wait_deadline-Time.get_ticks_msec())/1000.0)))
 		if seconds != wait_seconds:
@@ -211,7 +221,7 @@ func _process(delta: float) -> void:
 	var direction := keyboard.limit_length(1.0) if keyboard.length_squared() > 0 else movement
 	client.command("move",[direction.x,direction.y])
 func _leave() -> void:
-	load_revision += 1; ended = true; loading.finish()
+	load_revision += 1; ended = true; view.feedback.pause_feedback(); loading.finish()
 	if client != null: client.close()
 	if role == "hero": get_tree().set_meta("hero_lobby_return",true)
 	SceneTransition.change_scene("res://src/lobby/Lobby.tscn","로비 준비 중...")

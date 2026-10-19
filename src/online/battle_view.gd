@@ -7,6 +7,10 @@ const HERO_ART := preload("res://src/data/hero_presentation_catalog.gd")
 const LOAD_DRAIN := preload("res://src/online/texture_load_drain.gd")
 const FIELD := preload("res://src/online/battlefield_presentation.gd")
 const SAMPLE := preload("res://src/online/presentation_snapshot.gd")
+const FEEDBACK_DATA := preload("res://src/data/online_feedback_catalog.gd")
+const PRIMITIVES := preload("res://src/online/primitive_mirror.gd")
+var primitives = PRIMITIVES.new()
+var feedback
 var battlefield
 var render_visuals: Array = []
 var art_textures := {}
@@ -25,6 +29,7 @@ func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	clip_contents = true
 	set_process(false)
+	feedback = preload("res://src/online/combat_feedback.gd").new(); add_child(feedback)
 	load_drain = LOAD_DRAIN.new(); load_drain.paths = pending_textures; load_drain.view_ref = weakref(self)
 	get_tree().root.add_child.call_deferred(load_drain)
 	for id in RULES.ROSTER:
@@ -35,6 +40,8 @@ func _ready() -> void:
 	if ResourceLoader.exists(path): hero_texture = load(path)
 	resized.connect(queue_redraw)
 func update_state(value: Dictionary) -> bool:
+	if not PRIMITIVES.valid(value.get("primitives",ART.EMPTY)): return false
+	if value.has("feedback") and not FEEDBACK_DATA.valid_events(value.feedback,value.get("feedback_cursor",null),value.get("tick",null)): return false
 	if not RULES.point(value.get("bounds",null)) or not value.get("hero",null) is Array: return false
 	if value.hero.size() != 5 or not value.get("actors",null) is Array or value.actors.size() > 216: return false
 	for number in value.hero:
@@ -52,6 +59,7 @@ func update_state(value: Dictionary) -> bool:
 	if value.has("battlefield") and not ART.battlefield_valid(value.battlefield): return false
 	if value.has("battlefield") and value.battlefield.bounds != value.bounds: return false
 	if value.has("battlefield") and not prepare_battlefield(value.battlefield): return false
+	primitives.replace(value.get("primitives",ART.EMPTY))
 	state = value; bounds = Vector2(value.bounds[0],value.bounds[1])
 	_merge_visuals()
 	_resolve_owners(); queue_redraw(); return true
@@ -103,6 +111,8 @@ func _resolve_owners() -> void:
 		if texture != null and command[2]+command[4] <= texture.get_width() and command[3]+command[5] <= texture.get_height(): painted_owners[int(command[0])] = true
 func clear_state() -> void:
 	state = {}; painted_owners.clear(); render_visuals.clear()
+	if feedback != null: feedback.reset()
+	primitives.parsed.clear()
 	if battlefield != null: battlefield.visible = false
 	queue_redraw()
 func _exit_tree() -> void:
@@ -130,6 +140,7 @@ func _draw() -> void:
 		draw_rect(Rect2(map_offset,bounds*scale_ratio),Color("283847"))
 		for x in range(0,int(bounds.x),300): draw_line(map_offset+Vector2(x,0)*scale_ratio,map_offset+Vector2(x,bounds.y)*scale_ratio,Color("354654"))
 		for y in range(0,int(bounds.y),300): draw_line(map_offset+Vector2(0,y)*scale_ratio,map_offset+Vector2(bounds.x,y)*scale_ratio,Color("354654"))
+	primitives.draw(self)
 	_draw_visuals()
 	if state.is_empty(): return
 	var hp: Array = state.hero

@@ -173,7 +173,7 @@ func _match_waiters() -> void:
 		_send_matched(id,key,false)
 func _send_matched(id: int,key: String,resumed: bool) -> void:
 	var role: String = peers[id].role
-	_send(id,{"op":"matched","match":key,"role":role,"rules":RULES.ID,"hero":RULES.HERO,"roster":RULES.ROSTER,"duration":RULES.DURATION,"resume_token":rooms[key].seats[role].resume_token,"resumed":resumed,"battlefield":rooms[key].node.battlefield_info})
+	_send(id,{"op":"matched","match":key,"role":role,"rules":RULES.ID,"hero":RULES.HERO,"roster":RULES.ROSTER,"duration":RULES.DURATION,"resume_token":rooms[key].seats[role].resume_token,"resumed":resumed,"feedback_cursor":rooms[key].node.feedback.sequence,"battlefield":rooms[key].node.battlefield_info})
 func _resume(id: int,message: Dictionary) -> void:
 	if message.get("version",null) != RULES.VERSION or message.get("rules","") != RULES.ID: _reject(id,"version_mismatch"); return
 	var token_value: Variant = message.get("resume_token",null)
@@ -219,13 +219,13 @@ func _expire_disconnections(key: String,now: int) -> void:
 	if expired: match_data.node.finish(connected_role,"both_disconnected" if connected_role.is_empty() else "reconnect_timeout")
 func _send_result(id: int,key: String) -> void:
 	var room = rooms[key].node
-	_send(id,{"op":"result","match":key,"winner":room.winner,"reason":room.reason,"rated":false})
+	_send(id,{"op":"result","match":key,"winner":room.winner,"reason":room.reason,"rated":false,"tick":room.tick,"feedback":room.feedback.snapshot(),"feedback_cursor":room.feedback.sequence})
 func _completed(winner: String,reason: String,key: String) -> void:
 	if not rooms.has(key): return
 	rooms[key].ended = Time.get_ticks_msec()
 	for seat in rooms[key].seats.values():
 		if reserved_uids.get(seat.uid,"") == key: reserved_uids.erase(seat.uid)
-	for id in rooms[key].members: _send(id,{"op":"result","match":key,"winner":winner,"reason":reason,"rated":false})
+	for id in rooms[key].members: _send_result(id,key)
 static func _encode(message: Dictionary) -> String:
 	var encoded := JSON.stringify(message)
 	return encoded if encoded.to_utf8_buffer().size() <= RULES.MAX_SNAPSHOT else ""

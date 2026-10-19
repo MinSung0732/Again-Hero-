@@ -46,8 +46,15 @@ func _process(delta: float) -> bool:
 				room.set_meta("short_test_clock",true); room.battle.run_metrics.elapsed_seconds = RULES.DURATION-3
 			if room.finished:
 				ended_age += delta
-				if ended_age > 0.6: print("ONLINE_PROCESS_SERVER_PASS"); quit()
+				if ended_age > 0.6: _shutdown_server()
 	elif mode == "hero" and client != null and not client.match_id.is_empty():
 		input_left -= delta
 		if input_left <= 0: input_left = 0.05; client.command("move",[0,1])
 	return false
+
+func _shutdown_server() -> void:
+	# Let child worlds/audio callbacks retire before the process tears down.
+	var retiring = server; server = null
+	retiring.queue_free()
+	await process_frame; await create_timer(0.2).timeout
+	print("ONLINE_PROCESS_SERVER_PASS"); quit()

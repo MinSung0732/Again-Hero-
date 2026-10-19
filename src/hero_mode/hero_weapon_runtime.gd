@@ -734,14 +734,14 @@ func draw() -> void:
 		var a: Vector2 = hero.to_local(effect.a)
 		if bool(effect.get("follow",false)): a = Vector2.ZERO
 		var b: Vector2 = hero.to_local(effect.b)
-		var color: Color = effect.color; color.a = ratio*0.8
+		var color: Color = effect.color; color.a = ratio*GEOMETRY.EFFECT_ALPHA
 		var radius: float = effect.radius
 		var frames: Array = effect.get("frames",EMPTY_ART)
 		match String(effect.pattern):
 			"beam","slash","capsule":
 				hero.draw_set_transform(a,(b-a).angle())
-				hero.draw_colored_polygon(effect.shape,Color(color,ratio*0.13))
-				hero.draw_polyline(effect.shape,color,3.0)
+				hero.draw_colored_polygon(effect.shape,Color(color,ratio*GEOMETRY.SHAPE_FILL_ALPHA))
+				hero.draw_polyline(effect.shape,color,GEOMETRY.OUTLINE_WIDTH)
 				if not frames.is_empty():
 					var texture: Texture2D = frames[mini(int((1-ratio)*frames.size()),frames.size()-1)]
 					var length := a.distance_to(b)
@@ -753,22 +753,22 @@ func draw() -> void:
 					hero.draw_set_transform(b,(b-a).angle())
 					hero.draw_texture_rect(_frame(frames,1.0-ratio),Rect2(Vector2.ONE*-radius,Vector2.ONE*radius*2),false,Color(1,1,1,ratio))
 					hero.draw_set_transform(Vector2.ZERO)
-				else: hero.draw_line(a,b,color,3.0)
+				else: hero.draw_line(a,b,color,GEOMETRY.OUTLINE_WIDTH)
 			"chain":
-				hero.draw_line(a,b,Color(color,ratio*0.25),3.0)
+				hero.draw_line(a,b,Color(color,ratio*GEOMETRY.CHAIN_LINE_ALPHA),GEOMETRY.OUTLINE_WIDTH)
 				if not frames.is_empty():
 					hero.draw_set_transform(a,(b-a).angle())
 					hero.draw_texture_rect(_frame(frames,1.0-ratio),Rect2(Vector2(0,-GEOMETRY.CHAIN_DRAW_WIDTH*0.5),Vector2(a.distance_to(b),GEOMETRY.CHAIN_DRAW_WIDTH)),false,Color(1,1,1,ratio))
 					hero.draw_set_transform(Vector2.ZERO)
-				else: hero.draw_line(a,b,color,5.0)
+				else: hero.draw_line(a,b,color,GEOMETRY.CHAIN_FALLBACK_WIDTH)
 			"bolt":
-				hero.draw_line(a,b,Color(color,ratio*0.3),3.0)
-				hero.draw_circle(a.lerp(b,1.0-ratio),12.0,color)
+				hero.draw_line(a,b,Color(color,ratio*GEOMETRY.BOLT_LINE_ALPHA),GEOMETRY.OUTLINE_WIDTH)
+				hero.draw_circle(a.lerp(b,1.0-ratio),GEOMETRY.BOLT_RADIUS,color)
 			"orbit":
 				var inner := GEOMETRY.orbit_inner(radius,float(effect.orbit_ratio),float(effect.get("area_scale",1.0)))
 				var outer := GEOMETRY.orbit_outer(radius,float(effect.orbit_ratio),float(effect.get("area_scale",1.0)))
-				hero.draw_arc(a,(inner+outer)*0.5,0,TAU,48,Color(color,ratio*0.14),outer-inner)
-				hero.draw_arc(a,inner,0,TAU,48,color,3.0); hero.draw_arc(a,outer,0,TAU,48,color,3.0)
+				hero.draw_arc(a,(inner+outer)*0.5,0,TAU,48,Color(color,ratio*GEOMETRY.ORBIT_FILL_ALPHA),outer-inner)
+				hero.draw_arc(a,inner,0,TAU,48,color,GEOMETRY.OUTLINE_WIDTH); hero.draw_arc(a,outer,0,TAU,48,color,GEOMETRY.OUTLINE_WIDTH)
 				for index in int(effect.orbit_count):
 					var angle := visual_clock*float(effect.orbit_speed)+index*TAU/float(effect.orbit_count)
 					var position := a+Vector2.from_angle(angle)*(inner+outer)*0.5
@@ -801,8 +801,8 @@ func _draw_area(center: Vector2, radius: float, color: Color, frames: Array, pro
 		var texture: Texture2D = frames[mini(int(progress*frames.size()),frames.size()-1)]
 		var diameter := radius*sqrt(2.0)
 		hero.draw_texture_rect(texture,Rect2(center-Vector2.ONE*diameter*0.5,Vector2.ONE*diameter),false,Color(1,1,1,color.a*GEOMETRY.AREA_TEXTURE_ALPHA))
-	hero.draw_circle(center,radius,Color(color,color.a*0.10))
-	hero.draw_arc(center,radius,0.0,TAU,48,color,3.0)
+	hero.draw_circle(center,radius,Color(color,color.a*GEOMETRY.AREA_FILL_ALPHA))
+	hero.draw_arc(center,radius,0.0,TAU,48,color,GEOMETRY.OUTLINE_WIDTH)
 
 func shield_amount(amount: float) -> float:
 	return amount*(1.0+float(research.get("shield",0)))

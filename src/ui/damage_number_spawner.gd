@@ -28,6 +28,10 @@ static func show(
 		)
 		target.remove_meta("damage_number_color_once")
 
+	var feedback_parent := target.get_parent()
+	if feedback_parent != null and feedback_parent.has_signal("online_combat_feedback") and feedback_parent.get("online_match_mode") == true:
+		feedback_parent.emit_signal("online_combat_feedback",target,displayed_damage,text_color,false)
+
 	if target.has_meta("damage_number_popup"):
 		var existing = target.get_meta("damage_number_popup")
 		if (
@@ -65,6 +69,10 @@ static func show_heal(target: Node2D, amount: int) -> void:
 	var displayed_heal := maxi(amount, 0)
 	if displayed_heal <= 0:
 		return
+
+	var feedback_parent := target.get_parent()
+	if feedback_parent != null and feedback_parent.has_signal("online_combat_feedback") and feedback_parent.get("online_match_mode") == true:
+		feedback_parent.emit_signal("online_combat_feedback",target,displayed_heal,Color(0.32,1.0,0.42,1.0),true)
 
 	if target.has_meta("heal_number_popup"):
 		var existing = target.get_meta("heal_number_popup")

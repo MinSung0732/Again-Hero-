@@ -201,6 +201,10 @@ func on_cast(id: String, play_audio: bool = true, charge_attack: bool = true) ->
 	if archetype == "alchemist_chemical": hero._consume_alchemist_gas(float(gas_costs.get(id,0)))
 	if uses_ammo(id) and String(WEAPONS.WEAPONS[id].pattern) != "burst": consume_ammo(1)
 	if not play_audio: return
+	var authority = hero.get_parent()
+	if id == starter and authority.get("online_match_mode") == true:
+		var cue: String = preload("res://src/data/online_feedback_catalog.gd").CAST_BY_ARCHETYPE.get(archetype,"")
+		if not cue.is_empty(): authority.online_cast_feedback.emit(cue,hero.global_position)
 	audio_serial += 1
 	if audio_call.is_valid():
 		if spec.has("arg"): audio_call.call(spec.arg)
