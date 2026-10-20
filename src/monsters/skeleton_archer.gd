@@ -63,7 +63,7 @@ func _ready() -> void:
 	soft_separation_timer = MONSTER_RUNTIME_COMMON.initial_soft_separation_delay()
 	current_hp = max_hp
 	if not is_instance_valid(hero):
-		hero = get_tree().get_first_node_in_group("hero") as Node2D
+		hero = MONSTER_RUNTIME_COMMON.BATTLE_SCOPE.resolve_hero(self)
 	if not is_instance_valid(combat_authority):
 		combat_authority = get_parent()
 	_combat_profile = combat_authority.get("combat_profile") if is_instance_valid(combat_authority) else null

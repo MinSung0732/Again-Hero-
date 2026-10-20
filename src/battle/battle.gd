@@ -343,6 +343,28 @@ func fill_active_treasure_chests(result: Array) -> void:
 		if is_instance_valid(chest) and not chest.is_queued_for_deletion(): result.append(chest)
 
 
+## Battle-owned nodes resolve their hero here instead of the tree-wide group,
+## which spans every online room on a match server.
+func get_scoped_hero() -> Node2D:
+	return hero if is_instance_valid(hero) else null
+
+
+## Same-world members of a tree group. Solo battles keep the tree result as-is;
+## online rooms share one SceneTree and compact out other match worlds in place.
+func fill_scoped_group(group_name: StringName, result: Array) -> void:
+	result.assign(get_tree().get_nodes_in_group(group_name))
+	if not online_match_mode:
+		return
+	var world := get_viewport()
+	var kept := 0
+	for index in range(result.size()):
+		var node = result[index]
+		if is_instance_valid(node) and node.get_viewport() == world:
+			result[kept] = node
+			kept += 1
+	result.resize(kept)
+
+
 func _register_magnet_item(item: Node) -> void:
 	if not is_instance_valid(item):
 		return

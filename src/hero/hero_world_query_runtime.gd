@@ -2,6 +2,7 @@ extends RefCounted
 class_name HeroWorldQueryRuntime
 
 const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
+const BATTLE_SCOPE := preload("res://src/systems/battle_scope.gd")
 
 var owner: Node
 
@@ -10,6 +11,7 @@ var monster_nodes_cache_revision: int = -1
 var monster_nodes_cache_process_frame: int = -1
 var monster_nodes_cache_physics_frame: int = -1
 var aux_group_nodes_cache: Dictionary = {}
+var aux_group_nodes_filled: Dictionary = {}
 var aux_group_nodes_cache_process_frame: int = -1
 var aux_group_nodes_cache_physics_frame: int = -1
 
@@ -55,20 +57,19 @@ func get_aux_group_nodes_cached(group_name: StringName) -> Array:
 		process_frame != aux_group_nodes_cache_process_frame
 		or physics_frame != aux_group_nodes_cache_physics_frame
 	):
-		aux_group_nodes_cache.clear()
+		aux_group_nodes_filled.clear()
 		aux_group_nodes_cache_process_frame = process_frame
 		aux_group_nodes_cache_physics_frame = physics_frame
 
-	if not aux_group_nodes_cache.has(group_name):
-		var tree := owner.get_tree()
-		aux_group_nodes_cache[group_name] = (
-			tree.get_nodes_in_group(group_name)
-			if tree != null
-			else []
-		)
-
-	var cached = aux_group_nodes_cache.get(group_name, null)
-	return cached if cached is Array else []
+	# One reusable Array per group; refilled at most once per frame.
+	var cached = aux_group_nodes_cache.get(group_name)
+	if not cached is Array:
+		cached = []
+		aux_group_nodes_cache[group_name] = cached
+	if not aux_group_nodes_filled.has(group_name):
+		BATTLE_SCOPE.fill_group(owner, group_name, cached)
+		aux_group_nodes_filled[group_name] = true
+	return cached
 
 
 func fill_monster_nodes_near(

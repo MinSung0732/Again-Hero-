@@ -8,6 +8,7 @@ const IMPACT_FPS := 24.0
 const IMPACT_SCALE := Vector2(0.45, 0.45)
 const MAX_ACTIVE_IMPACT_FX := 24
 const DEAD_EYE_RICOCHET_FX := preload("res://src/hero/deadeye_ricochet_fx.gd")
+const BATTLE_SCOPE := preload("res://src/systems/battle_scope.gd")
 const POOL_KEY := "gunner_projectile"
 
 static var _projectile_frames_cache: SpriteFrames
@@ -15,6 +16,7 @@ static var _impact_frames_cache: SpriteFrames
 static var _active_impact_fx_count: int = 0
 static var _chest_nodes_cache: Array = []
 static var _chest_nodes_cache_physics_frame: int = -1
+static var _chest_nodes_cache_owner := 0
 
 var direction := Vector2.RIGHT
 var speed := 920.0
@@ -33,7 +35,7 @@ var active: bool = true
 
 func _ready() -> void:
 	add_to_group("hero_projectiles")
-	source_hero = get_tree().get_first_node_in_group("hero")
+	source_hero = BATTLE_SCOPE.resolve_hero(self)
 	body_entered.connect(_on_body_entered)
 	_apply_visual()
 
@@ -53,7 +55,7 @@ func setup(
 		add_to_group("hero_projectiles")
 	traveled = 0.0
 	hit_ids.clear()
-	source_hero = get_tree().get_first_node_in_group("hero")
+	source_hero = BATTLE_SCOPE.resolve_hero(self)
 	direction = new_direction.normalized()
 	damage = maxi(new_damage, 1)
 	speed = maxf(new_speed, 1.0)
@@ -81,9 +83,13 @@ func _physics_process(delta: float) -> void:
 
 func _get_chest_nodes_cached() -> Array:
 	var physics_frame := Engine.get_physics_frames()
-	if physics_frame != _chest_nodes_cache_physics_frame:
-		_chest_nodes_cache = get_tree().get_nodes_in_group("treasure_chests")
+	var authority := get_parent()
+	# The static cache is shared by every room; key it by the owning Battle.
+	if physics_frame != _chest_nodes_cache_physics_frame or _chest_nodes_cache_owner != authority.get_instance_id():
+		if authority.has_method("fill_active_treasure_chests"): authority.fill_active_treasure_chests(_chest_nodes_cache)
+		else: _chest_nodes_cache = get_tree().get_nodes_in_group("treasure_chests")
 		_chest_nodes_cache_physics_frame = physics_frame
+		_chest_nodes_cache_owner = authority.get_instance_id()
 	return _chest_nodes_cache
 
 

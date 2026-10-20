@@ -60,7 +60,7 @@ func _ready() -> void:
 		MONSTER_RUNTIME_COMMON.initial_soft_separation_delay()
 	)
 	if not is_instance_valid(hero):
-		hero = get_tree().get_first_node_in_group("hero") as Node2D
+		hero = MONSTER_RUNTIME_COMMON.BATTLE_SCOPE.resolve_hero(self)
 	if not is_instance_valid(combat_authority):
 		combat_authority = get_parent()
 	hero_target_refresh_timer = 0.0

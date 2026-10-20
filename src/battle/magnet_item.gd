@@ -1,6 +1,7 @@
 extends Node2D
 
 const PICKUP_PLACEMENT := preload("res://src/systems/pickup_placement.gd")
+const BATTLE_SCOPE := preload("res://src/systems/battle_scope.gd")
 var _placement_pending := true
 
 const FRAME_COUNT := 4
@@ -18,7 +19,7 @@ var picked_up := false
 
 func _ready() -> void:
 	add_to_group("magnet_items")
-	hero = get_tree().get_first_node_in_group("hero") as Node2D
+	hero = BATTLE_SCOPE.resolve_hero(self)
 	_apply_visual()
 
 
@@ -29,7 +30,7 @@ func _physics_process(_delta: float) -> void:
 	if picked_up:
 		return
 	if not is_instance_valid(hero):
-		hero = get_tree().get_first_node_in_group("hero") as Node2D
+		hero = BATTLE_SCOPE.resolve_hero(self)
 		if not is_instance_valid(hero):
 			return
 

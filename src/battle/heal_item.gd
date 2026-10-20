@@ -1,6 +1,7 @@
 extends Node2D
 
 const PICKUP_PLACEMENT := preload("res://src/systems/pickup_placement.gd")
+const BATTLE_SCOPE := preload("res://src/systems/battle_scope.gd")
 var _placement_pending := true
 
 const HEAL_FRAME_DIR := "res://assets/art/heroes/item/heal_frames"
@@ -22,7 +23,7 @@ var temporary_lifetime_enabled: bool = false
 
 func _ready() -> void:
 	add_to_group("heal_items")
-	hero = get_tree().get_first_node_in_group("hero") as Node2D
+	hero = BATTLE_SCOPE.resolve_hero(self)
 	_apply_visual()
 
 func _physics_process(delta: float) -> void:
@@ -55,7 +56,7 @@ func _physics_process(delta: float) -> void:
 		else:
 			visual.visible = true
 	if not is_instance_valid(hero):
-		hero = get_tree().get_first_node_in_group("hero") as Node2D
+		hero = BATTLE_SCOPE.resolve_hero(self)
 		if not is_instance_valid(hero):
 			return
 

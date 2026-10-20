@@ -1,6 +1,7 @@
 extends Node2D
 
 const PICKUP_PLACEMENT := preload("res://src/systems/pickup_placement.gd")
+const BATTLE_SCOPE := preload("res://src/systems/battle_scope.gd")
 var _placement_pending := true
 
 const FRAME_COUNT := 6
@@ -67,7 +68,7 @@ var global_magnet_elapsed: float = 0.0
 
 func _ready() -> void:
 	add_to_group("exp_orbs")
-	hero = get_tree().get_first_node_in_group("hero") as Node2D
+	hero = BATTLE_SCOPE.resolve_hero(self)
 	idle_sense_timer = randf_range(
 		IDLE_SENSE_MIN_INTERVAL,
 		IDLE_SENSE_MAX_INTERVAL
@@ -82,7 +83,7 @@ func setup(value: int, initial_velocity: Vector2 = Vector2.ZERO, pickup_delay: f
 		add_to_group("exp_orbs")
 	visible = true
 	set_physics_process(true)
-	hero = get_tree().get_first_node_in_group("hero") as Node2D
+	hero = BATTLE_SCOPE.resolve_hero(self)
 	pulse_time = 0.0
 	exp_value = maxi(value, 0)
 	pickup_delay_left = maxf(pickup_delay, 0.0)
@@ -122,7 +123,7 @@ func _physics_process(delta: float) -> void:
 			return
 
 	if not is_instance_valid(hero):
-		hero = get_tree().get_first_node_in_group("hero") as Node2D
+		hero = BATTLE_SCOPE.resolve_hero(self)
 		if not is_instance_valid(hero):
 			return
 

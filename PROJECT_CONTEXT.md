@@ -1,3 +1,11 @@
+## 2026-10-20 — 온라인 다중 방 Battle 소유 노드 격리
+
+- 매치 서버는 최대8방을 한 SceneTree에서 실행한다. 경험치 구슬/회복/자석 아이템과 기본·총잡이 투사체가 트리 전체 첫 `hero`를 주인으로 잡아, 두 번째 방부터 다른 방 용사를 따라가거나 경험치·회복·피해 조회가 섞일 수 있었다. 용사의 경험치/회복/상자/자석 탐색도 다른 방 노드를 후보로 봤다. 수정 전 실제 BattleRoom2개 재현에서 12검사 실패로 확인.
+- 공용 `src/systems/battle_scope.gd` 추가: 부모 Battle의 `get_scoped_hero()`/`fill_scoped_group()`을 우선 사용하고, Battle 없는 격리 장면/테스트만 기존 트리 그룹 fallback. 아이템3종·투사체2종·몬스터11종/공통 런타임의 용사 해석을 이 경로로 통일. 콘텐츠 ID 분기 없음.
+- 용사 보조 그룹 캐시는 그룹별 Array를 재사용하고 프레임당1회만 채운다(기존: 매 프레임 새 Array). 솔로는 기존 트리 그룹 결과 그대로, 온라인만 같은 world로 제자리 압축. 기본·총잡이 투사체 상자 캐시는 아크메이지/현자와 같은 Battle 소유자 키·`fill_active_treasure_chests` 경로 사용.
+- 전투 수치/AI/보상/프로토콜 불변(protocol7 유지). 서버 재시작만 필요, 클라이언트 프로토콜 변경 없음.
+- Windows Godot4.7.2 headless: 신규 `tests/battle_scope_isolation_smoke.gd` 48검사 PASS(수정 전 코드 축약본12실패), 관련 기존 회귀 온라인 실제Battle44/로스터35/transport18/lifecycle53/재접속66/코덱44·별도3프로세스(양쪽29상태/동일 승자)·관련 기존 스모크9종 PASS. banshee/berserker skill3/bulgasal/combat_phase3_online(80) 실패는 수정 전 코드에서도 동일(기존 실패). Linux fixture 의존 테스트(BasicBefore/expected.json 등)는 로컬 미실행. `git diff --check` 통과. 실제 서버에 2경기 이상 동시 접속한 실기/Android는 미검증. feature/stage10-astra.
+
 ## 2026-10-20 — 온라인 상태 패킷 PNG 경로 중복 제거
 
 - 사용자 이전 보간 빌드 정상 동작 보고. 서버가 실제 생성한 visual22필드 중 PNG 경로만 패킷별 목록/번호로 표현, 클라이언트 전체 검증 후 원래 문자열로 복원. 동일 상태보다 커지면 원형 문자열 전송. 패킷마다 목록을 포함해 최초 입장/틱 폐기/새 소켓 복귀가 이전 목록에 의존하지 않음. 특정 콘텐츠 ID/경로 복사본 없음. 방당128행 고정 캐시·재사용 사전/목록, 양쪽 한 번 인코딩 공유, 정기/복귀 모두 공통 경로.
@@ -4009,3 +4017,6 @@ Build AI는 전체/주변 몬스터 수, 최근 공세, 역할 비율, 거리, �
 
 CloudStore 직렬화 대기는 operation_released 신호로 한다. 정상 완료는 revision/conflict 적용 후 deferred 재개, stop은 즉시 깨워 이전 세대를 취소한다. 대기 전 owner/generation 캡처와 재개 후 검사를 유지한다. 서버 revision/read 타입 및 로컬 persist 결과를 검증한다. 일반 SupabaseClient는20초/2MB·one-shot·세션세대·transport/JSON 방어를 갖추지만 실제 LoginGateway transport와 별개다. 배포 서버/저장 스키마·RLS는 이번 패치에서 바꾸지 않았다.
 
+## Battle 소유 노드 해석 (2026-10-20)
+
+온라인 서버는 여러 방을 한 SceneTree에서 돌린다. Battle 자식 노드(아이템/투사체/몬스터/용사 보조 탐색)는 `get_tree().get_first_node_in_group("hero")`나 `get_nodes_in_group()`를 직접 쓰지 않고 `battle_scope.gd`(`resolve_hero`/`fill_group`)를 거친다. 트리 그룹은 Battle 없는 격리 장면/테스트 fallback 전용이다. 새 그룹 기반 탐색을 추가하면 같은 경로를 쓴다.

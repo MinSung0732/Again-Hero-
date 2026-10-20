@@ -2,6 +2,7 @@ extends RefCounted
 class_name MonsterRuntimeCommon
 const PERFORMANCE_PROBE := preload("res://src/systems/combat_performance_probe.gd")
 const COMBAT_DELAY := preload("res://src/systems/combat_delay.gd")
+const BATTLE_SCOPE := preload("res://src/systems/battle_scope.gd")
 
 const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
 
@@ -66,10 +67,7 @@ static func resolve_combat_target(
 	if is_instance_valid(current_target):
 		return current_target
 
-	var tree := owner.get_tree()
-	if tree == null:
-		return null
-	return tree.get_first_node_in_group("hero") as Node2D
+	return BATTLE_SCOPE.resolve_hero(owner)
 
 
 static func initial_far_navigation_delay() -> float:

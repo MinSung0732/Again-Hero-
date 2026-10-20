@@ -1,12 +1,14 @@
 extends Area2D
 
 const DATA := preload("res://src/data/hero_basic_projectile_catalog.gd")
+const BATTLE_SCOPE := preload("res://src/systems/battle_scope.gd")
 const POOL_KEY := DATA.POOL_KEY
 const VOLLEY := preload("res://src/hero/projectile_volley.gd")
 
 static var _frames_cache: Dictionary = {}
 static var _chest_nodes_cache: Array = []
 static var _chest_nodes_cache_physics_frame: int = -1
+static var _chest_nodes_cache_owner := 0
 
 var direction: Vector2 = Vector2.RIGHT
 var speed: float = DATA.DEFAULT_SPEED
@@ -34,7 +36,7 @@ var volley: VOLLEY
 
 func _ready() -> void:
 	add_to_group("hero_projectiles")
-	source_hero = get_tree().get_first_node_in_group("hero")
+	source_hero = BATTLE_SCOPE.resolve_hero(self)
 	body_entered.connect(_on_body_entered)
 	projectile_sprite.animation_finished.connect(
 		Callable(self, "_on_projectile_animation_finished")
@@ -59,7 +61,7 @@ func setup(
 	traveled_distance = 0.0
 	has_impacted = false
 	volley = new_volley
-	source_hero = get_tree().get_first_node_in_group("hero")
+	source_hero = BATTLE_SCOPE.resolve_hero(self)
 	direction = new_direction.normalized()
 	damage = new_damage
 	speed = new_speed
@@ -85,9 +87,13 @@ func _physics_process(delta: float) -> void:
 
 func _get_chest_nodes_cached() -> Array:
 	var physics_frame := Engine.get_physics_frames()
-	if physics_frame != _chest_nodes_cache_physics_frame:
-		_chest_nodes_cache = get_tree().get_nodes_in_group("treasure_chests")
+	var authority := get_parent()
+	# The static cache is shared by every room; key it by the owning Battle.
+	if physics_frame != _chest_nodes_cache_physics_frame or _chest_nodes_cache_owner != authority.get_instance_id():
+		if authority.has_method("fill_active_treasure_chests"): authority.fill_active_treasure_chests(_chest_nodes_cache)
+		else: _chest_nodes_cache = get_tree().get_nodes_in_group("treasure_chests")
 		_chest_nodes_cache_physics_frame = physics_frame
+		_chest_nodes_cache_owner = authority.get_instance_id()
 	return _chest_nodes_cache
 
 

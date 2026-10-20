@@ -51,7 +51,7 @@ func _ready() -> void:
 	current_hp = max_hp
 	attack_timer = randf_range(0.15, 0.75)
 	if not is_instance_valid(hero):
-		hero = get_tree().get_first_node_in_group("hero") as Node2D
+		hero = MONSTER_RUNTIME_COMMON.BATTLE_SCOPE.resolve_hero(self)
 	if not is_instance_valid(combat_authority):
 		combat_authority = get_parent()
 	set_meta("forced_movement_immune", true)
