@@ -9,6 +9,14 @@ const FIELD := preload("res://src/online/battlefield_presentation.gd")
 const SAMPLE := preload("res://src/online/presentation_snapshot.gd")
 const FEEDBACK_DATA := preload("res://src/data/online_feedback_catalog.gd")
 const PRIMITIVES := preload("res://src/online/primitive_mirror.gd")
+var motion = preload("res://src/online/actor_motion.gd").new()
+var visual_order: Array[int] = []
+var visual_slots := PackedInt32Array()
+var visual_depths := PackedFloat64Array()
+var display_sort := Callable(self,"_display_before")
+var actor_ids := {}
+var motion_paused := false
+var motion_received_us := 0
 var primitives = PRIMITIVES.new()
 var feedback
 var battlefield
@@ -43,15 +51,19 @@ func update_state(value: Dictionary) -> bool:
 	if not PRIMITIVES.valid(value.get("primitives",ART.EMPTY)): return false
 	if value.has("feedback") and not FEEDBACK_DATA.valid_events(value.feedback,value.get("feedback_cursor",null),value.get("tick",null)): return false
 	if not RULES.point(value.get("bounds",null)) or not value.get("hero",null) is Array: return false
-	if value.hero.size() != 5 or not value.get("actors",null) is Array or value.actors.size() > 216: return false
+	if value.hero.size() != 5 or not value.get("actors",null) is Array or value.actors.size() > ART.MAX_ACTORS: return false
 	for number in value.hero:
 		if not RULES.number(number): return false
 	if float(value.bounds[0]) < 500 or float(value.bounds[1]) < 500: return false
 	if float(value.bounds[0]) > ART.MAX_WORLD_EXTENT or float(value.bounds[1]) > ART.MAX_WORLD_EXTENT: return false
+	actor_ids.clear()
 	for actor in value.actors:
 		if not actor is Array or actor.size() != 6 or not actor[1] is String or actor[1] not in RULES.ROSTER: return false
 		for index in [0,2,3,4,5]:
 			if not RULES.number(actor[index]): return false
+		var id := int(actor[0])
+		if id <= 0 or float(id) != float(actor[0]) or actor_ids.has(id): return false
+		actor_ids[id] = true
 	var commands: Variant = value.get("visuals",ART.EMPTY)
 	if not commands is Array or commands.size() > ART.MAX_COMMANDS: return false
 	for command in commands:
@@ -60,6 +72,11 @@ func update_state(value: Dictionary) -> bool:
 	if value.has("battlefield") and value.battlefield.bounds != value.bounds: return false
 	if value.has("battlefield") and not prepare_battlefield(value.battlefield): return false
 	primitives.replace(value.get("primitives",ART.EMPTY))
+	if not motion_paused:
+		var now := Time.get_ticks_usec()
+		if motion_received_us > 0 and now-motion_received_us >= int(ART.MOTION_RESET_SECONDS*1000000.0): motion.clear()
+		motion.replace(value.hero,value.actors); motion_received_us = now
+		if motion.active: set_process(true)
 	state = value; bounds = Vector2(value.bounds[0],value.bounds[1])
 	_merge_visuals()
 	_resolve_owners(); queue_redraw(); return true
@@ -82,7 +99,31 @@ func _merge_visuals() -> void:
 	if battlefield != null and battlefield.visible: render_visuals.append_array(battlefield.prop_commands)
 	render_visuals.append_array(state.get("visuals",ART.EMPTY))
 	render_visuals.sort_custom(SAMPLE.visual_order)
+	visual_order.resize(render_visuals.size()); visual_slots.resize(render_visuals.size()); visual_depths.resize(render_visuals.size())
+	for index in render_visuals.size():
+		visual_order[index] = index
+		visual_slots[index] = motion.slots.get(int(render_visuals[index][0]),-1)
+	_sort_display_depth(true)
 	for command in render_visuals: _request_texture(command[1])
+func _sort_display_depth(force_sort: bool = false) -> void:
+	var changed := force_sort
+	for index in render_visuals.size():
+		var slot := visual_slots[index]
+		var depth: float = float(render_visuals[index][21])+(motion.offsets[slot].y if slot >= 0 else 0.0)
+		if visual_depths[index] != depth: changed = true; visual_depths[index] = depth
+	if changed: visual_order.sort_custom(display_sort)
+func _display_before(a: int,b: int) -> bool:
+	var az: float = render_visuals[a][20]; var bz: float = render_visuals[b][20]
+	if az != bz: return az < bz
+	if visual_depths[a] != visual_depths[b]: return visual_depths[a] < visual_depths[b]
+	return a < b
+func pause_motion() -> void:
+	motion_paused = true
+	set_process(not pending_textures.is_empty())
+	# Freeze the displayed point; the first resumed state establishes a new baseline.
+func resume_motion() -> void:
+	motion.clear(); motion_paused = false; motion_received_us = 0
+	visual_slots.fill(-1)
 func _request_texture(path: String) -> void:
 	if art_textures.has(path) or art_textures.size() >= ART.MAX_TEXTURES: return
 	art_textures[path] = null
@@ -92,7 +133,8 @@ func _request_texture(path: String) -> void:
 		art_textures[path] = load(path) as Texture2D
 	elif ResourceLoader.load_threaded_request(path,"Texture2D") == OK:
 		pending_textures.append(path); set_process(true); load_drain.set_process(true)
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+	advance_motion(delta)
 	var changed := false
 	var index := pending_textures.size()
 	while index > 0:
@@ -103,7 +145,10 @@ func _process(_delta: float) -> void:
 		if status == ResourceLoader.THREAD_LOAD_LOADED: art_textures[path] = ResourceLoader.load_threaded_get(path) as Texture2D
 		pending_textures[index] = pending_textures[-1]; pending_textures.pop_back(); changed = true
 	if changed: _resolve_owners(); queue_redraw()
-	if pending_textures.is_empty(): set_process(false)
+	if pending_textures.is_empty() and (motion_paused or not motion.active): set_process(false)
+func advance_motion(delta: float) -> void:
+	if motion_paused or not motion.advance(delta): return
+	_sort_display_depth(); queue_redraw()
 func _resolve_owners() -> void:
 	painted_owners.clear()
 	for command in render_visuals:
@@ -111,6 +156,7 @@ func _resolve_owners() -> void:
 		if texture != null and command[2]+command[4] <= texture.get_width() and command[3]+command[5] <= texture.get_height(): painted_owners[int(command[0])] = true
 func clear_state() -> void:
 	state = {}; painted_owners.clear(); render_visuals.clear()
+	visual_order.clear(); visual_slots.clear(); visual_depths.clear(); actor_ids.clear(); resume_motion()
 	if feedback != null: feedback.reset()
 	primitives.parsed.clear()
 	if battlefield != null: battlefield.visible = false
@@ -119,12 +165,15 @@ func _exit_tree() -> void:
 	if is_instance_valid(load_drain): load_drain.set_process(true)
 func _draw_visuals() -> void:
 	var map_transform := Transform2D(Vector2(scale_ratio,0),Vector2(0,scale_ratio),map_offset)
-	for command in render_visuals:
+	for index in visual_order:
+		var command: Array = render_visuals[index]
 		var texture: Texture2D = art_textures.get(command[1])
 		if texture == null: continue
 		var source := Rect2(command[2],command[3],command[4],command[5])
 		if source.end.x > texture.get_width() or source.end.y > texture.get_height(): continue
 		var pose := Transform2D(Vector2(command[6],command[7]),Vector2(command[8],command[9]),Vector2(command[10],command[11]))
+		var slot := visual_slots[index]
+		if slot >= 0: pose.origin += motion.offsets[slot]
 		draw_set_transform_matrix(map_transform*pose)
 		draw_texture_rect_region(texture,Rect2(command[12],command[13],command[14],command[15]),source,Color(command[16],command[17],command[18],command[19]))
 	draw_set_transform_matrix(Transform2D.IDENTITY)
@@ -144,8 +193,8 @@ func _draw() -> void:
 	_draw_visuals()
 	if state.is_empty(): return
 	var hp: Array = state.hero
-	_actor(Vector2(hp[0],hp[1]),hero_texture,Color("73deff"),float(hp[2])/maxf(1,float(hp[3])),true,not painted_owners.has(0))
-	for actor in state.actors: _actor(Vector2(actor[2],actor[3]),textures.get(actor[1]),Color("d56d67"),float(actor[4])/maxf(1,float(actor[5])),false,not painted_owners.has(int(actor[0])))
+	_actor(motion.position(0,Vector2(hp[0],hp[1])),hero_texture,Color("73deff"),float(hp[2])/maxf(1,float(hp[3])),true,not painted_owners.has(0))
+	for actor in state.actors: _actor(motion.position(int(actor[0]),Vector2(actor[2],actor[3])),textures.get(actor[1]),Color("d56d67"),float(actor[4])/maxf(1,float(actor[5])),false,not painted_owners.has(int(actor[0])))
 	for point in state.get("shots",ART.EMPTY):
 		if RULES.point(point): draw_circle(map_offset+Vector2(point[0],point[1])*scale_ratio,4,Color("d6f5ff"))
 func _actor(point: Vector2,texture: Texture2D,color: Color,hp: float,is_hero: bool,draw_body: bool = true) -> void:

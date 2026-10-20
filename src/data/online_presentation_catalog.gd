@@ -1,6 +1,11 @@
 extends RefCounted
 ## Wire-only presentation policy; combat sizes/anchors come from live visuals.
 const MAX_COMMANDS := 128
+const MAX_ACTORS := 216
+# Display policy only; no movement speed or combat rule is inferred here.
+const MOTION_SECONDS := preload("res://src/online/match_rules.gd").SNAPSHOT_INTERVAL
+const MOTION_RESET_SECONDS := MOTION_SECONDS * 3.0
+const MOTION_SNAP_DISTANCE := 256.0
 const MAX_TEXTURES := 512
 const COMMAND_SIZE := 22
 const BACKGROUND_Z := -100
