@@ -1,3 +1,11 @@
+## 2026-10-20 — 용사 아이템 탐색 수치·AI 상황 문구 Catalog 이전
+
+- `hero.gd`의 회복/상자/자석 아이템 탐색 목표 선택·조향에 직접 박혀 있던 수치49종(81곳)을 신규 `src/data/hero_pickup_seek_catalog.gd`로 이전. 회복 욕구 HP 구간 곡선은 데이터 밴드(`HEAL_DESIRE_BANDS`)+공통 평가 함수로 대체. 성향 배율(`ai_settings`의 heal_item_desire/heal_risk_tolerance/heal_detour_weight)은 기존 그대로 프로필에서 적용.
+- `hero_build_ai.gd`의 정화사/대현자 전용 상황 키8종 설명 문구 match를 `hero_augment_catalog.gd`의 `CONTEXT_LABELS`+`describe_context()`로 이전. 라벨 없는 키는 기존 "전용 상황 …" 문구 유지. 범용 AI 코드에 직업별 분기 없음.
+- 동작/수치/문구 불변: Catalog 상수를 원래 숫자로 되돌려 펼친 hero.gd가 이전 코드와 토큰 단위로 동일(욕구 함수 제외), 욕구 곡선은 0.001 간격+경계 1013표본 비트 일치. 상수는 컴파일 타임 상수라 매 프레임 Dictionary 조회 추가 없음.
+- Windows Godot4.7.2 headless: 신규 `tests/hero_ai_catalog_migration_smoke.gd` 79검사, battle_scope 48, 실제 온라인 Battle44, optimization_20261010/arthur/augment_refresh/first_minute PASS. `hero_movement_port_smoke`는 저장소에 없는 이동 fixture가 필요해 미실행. 실기 전투 체감 검증 없음. feature/stage10-astra.
+- 후속 후보: 총잡이/광전사 상황 키(gunner_reload_state 등)는 라벨이 없어 "전용 상황 키 수치"로 표시됨 — 문구 확정 후 `CONTEXT_LABELS`에 추가만 하면 됨.
+
 ## 2026-10-20 — 온라인 다중 방 Battle 소유 노드 격리
 
 - 매치 서버는 최대8방을 한 SceneTree에서 실행한다. 경험치 구슬/회복/자석 아이템과 기본·총잡이 투사체가 트리 전체 첫 `hero`를 주인으로 잡아, 두 번째 방부터 다른 방 용사를 따라가거나 경험치·회복·피해 조회가 섞일 수 있었다. 용사의 경험치/회복/상자/자석 탐색도 다른 방 노드를 후보로 봤다. 수정 전 실제 BattleRoom2개 재현에서 12검사 실패로 확인.
@@ -4020,3 +4028,7 @@ CloudStore 직렬화 대기는 operation_released 신호로 한다. 정상 완�
 ## Battle 소유 노드 해석 (2026-10-20)
 
 온라인 서버는 여러 방을 한 SceneTree에서 돌린다. Battle 자식 노드(아이템/투사체/몬스터/용사 보조 탐색)는 `get_tree().get_first_node_in_group("hero")`나 `get_nodes_in_group()`를 직접 쓰지 않고 `battle_scope.gd`(`resolve_hero`/`fill_group`)를 거친다. 트리 그룹은 Battle 없는 격리 장면/테스트 fallback 전용이다. 새 그룹 기반 탐색을 추가하면 같은 경로를 쓴다.
+
+## 용사 아이템 탐색·AI 문구 데이터 위치 (2026-10-20)
+
+용사의 회복/상자/자석 탐색 튜닝 값은 `hero_pickup_seek_catalog.gd`, 용사별 성향 배율은 프로필 `ai_settings`에 둔다. `context_*` ai_rules 키의 설명 문구는 `hero_augment_catalog.gd`의 `CONTEXT_LABELS`에 추가한다. 로직 파일에 새 숫자/키별 문구 분기를 넣지 않는다.

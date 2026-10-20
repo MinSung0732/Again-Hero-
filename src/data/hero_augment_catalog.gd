@@ -39,6 +39,19 @@ const TAG_LABELS := {
 	"single_target": "단일 대상",
 }
 
+# Reason text for hero-specific `context_*` ai_rules keys. `count` prints the
+# integer value; `percent` clamps 0..1 and prints a whole percentage.
+const CONTEXT_LABELS := {
+	"purifier_link_count": {"format": "count", "text": "현재 정화의 구체 연결선 %d개"},
+	"purifier_active_orb_count": {"format": "count", "text": "현재 설치된 정화의 구체 %d개"},
+	"purifier_cleansing_progress_ratio": {"format": "percent", "text": "정화 누적 진행 %.0f%%"},
+	"purifier_cleansing_target_count": {"format": "count", "text": "현재 정화 대상 %d명"},
+	"purifier_crown_stacks": {"format": "count", "text": "용기의 왕관 %d스택"},
+	"purifier_crown_stack_ratio": {"format": "percent", "text": "용기의 왕관 누적 %.0f%%"},
+	"purifier_protection_break_count": {"format": "count", "text": "이번 전투 신성보호 파괴 %d회"},
+	"sage_condensation_ratio": {"format": "percent", "text": "마력응축 누적 %.0f%%"},
+}
+
 # Per-hero limits share one policy across application, display and AI rolls.
 # Entries are positive caps for existing augment IDs; omitted heroes borrow defaults.
 const EMPTY_STACK_LIMITS := {}
@@ -1510,6 +1523,15 @@ static func get_augment(augment_id: String) -> Dictionary:
 
 static func get_tag_label(tag_id: String) -> String:
 	return String(TAG_LABELS.get(tag_id, tag_id))
+
+## Empty when the key has no catalog label; callers keep their generic text.
+static func describe_context(context_key: String, value: float) -> String:
+	var label: Dictionary = CONTEXT_LABELS.get(context_key, {})
+	if label.is_empty():
+		return ""
+	if String(label.get("format", "")) == "percent":
+		return String(label.text) % (clampf(value, 0.0, 1.0) * 100.0)
+	return String(label.text) % int(value)
 
 static func get_build_tag_counts(build_counts: Dictionary) -> Dictionary:
 	var tag_counts := {}

@@ -19,6 +19,7 @@ const TIMED_EVENT_BUFFER := preload("res://src/systems/timed_event_buffer.gd")
 const LOCAL_GRID_MOVEMENT := preload("res://src/monsters/monster_runtime_common.gd")
 
 const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
+const PICKUP_SEEK := preload("res://src/data/hero_pickup_seek_catalog.gd")
 
 signal died
 signal death_started
@@ -8029,7 +8030,7 @@ func _update_heal_item_goal(delta: float) -> void:
 		return
 
 	var hp_ratio: float = clampf(float(current_hp) / float(max_hp), 0.0, 1.0)
-	if hp_ratio >= 0.60:
+	if hp_ratio >= PICKUP_SEEK.HEAL_CLEAR_HP_RATIO:
 		heal_item_target = null
 		heal_item_steering_direction = Vector2.ZERO
 		return
@@ -8037,7 +8038,7 @@ func _update_heal_item_goal(delta: float) -> void:
 	# Low-HP heroes commit to a valid potion instead of periodically
 	# retargeting and oscillating around it.
 	if (
-		hp_ratio <= 0.40
+		hp_ratio <= PICKUP_SEEK.HEAL_COMMIT_HP_RATIO
 		and is_instance_valid(heal_item_target)
 		and not heal_item_target.is_queued_for_deletion()
 	):
@@ -8050,7 +8051,10 @@ func _update_heal_item_goal(delta: float) -> void:
 	):
 		return
 
-	heal_item_retarget_timer = randf_range(0.22, 0.38)
+	heal_item_retarget_timer = randf_range(
+		PICKUP_SEEK.HEAL_RETARGET_INTERVAL_MIN,
+		PICKUP_SEEK.HEAL_RETARGET_INTERVAL_MAX
+	)
 	heal_item_target = null
 
 	var desire: float = _heal_item_desire_for_hp(hp_ratio)
@@ -8063,7 +8067,11 @@ func _update_heal_item_goal(delta: float) -> void:
 		0.0,
 		1.0
 	)
-	var critical_factor: float = clampf((0.45 - hp_ratio) / 0.35, 0.0, 1.0)
+	var critical_factor: float = clampf(
+		(PICKUP_SEEK.HEAL_GOAL_CRITICAL_HP_RATIO - hp_ratio) / PICKUP_SEEK.HEAL_GOAL_CRITICAL_SPAN,
+		0.0,
+		1.0
+	)
 	var best_score: float = -INF
 	for node in _get_aux_group_nodes_cached(&"heal_items"):
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
@@ -8075,24 +8083,24 @@ func _update_heal_item_goal(delta: float) -> void:
 		var distance: float = global_position.distance_to(item.global_position)
 		# Moderate HP only justifies a nearby detour. Critical HP may cross
 		# the field to secure healing.
-		if hp_ratio > 0.40 and distance > 520.0:
+		if hp_ratio > PICKUP_SEEK.HEAL_COMMIT_HP_RATIO and distance > PICKUP_SEEK.HEAL_DETOUR_MAX_DISTANCE:
 			continue
 
 		var path_midpoint: Vector2 = global_position.lerp(item.global_position, 0.5)
-		var path_danger: float = _estimate_monster_danger(path_midpoint, 260.0)
-		var item_danger: float = _estimate_monster_danger(item.global_position, 220.0)
-		var distance_penalty: float = clampf(distance / 1050.0, 0.0, 2.2)
-		var danger_scale: float = lerpf(1.0, 0.22, critical_factor)
+		var path_danger: float = _estimate_monster_danger(path_midpoint, PICKUP_SEEK.HEAL_PATH_DANGER_RADIUS)
+		var item_danger: float = _estimate_monster_danger(item.global_position, PICKUP_SEEK.HEAL_ITEM_DANGER_RADIUS)
+		var distance_penalty: float = clampf(distance / PICKUP_SEEK.HEAL_DISTANCE_PENALTY_DIVISOR, 0.0, PICKUP_SEEK.HEAL_DISTANCE_PENALTY_CAP)
+		var danger_scale: float = lerpf(PICKUP_SEEK.HEAL_DANGER_SCALE_FROM, PICKUP_SEEK.HEAL_DANGER_SCALE_TO, critical_factor)
 		var danger_penalty: float = (
-			(path_danger * 0.70 + item_danger)
-			* lerpf(1.30, 0.50, risk_tolerance)
+			(path_danger * PICKUP_SEEK.HEAL_PATH_DANGER_WEIGHT + item_danger)
+			* lerpf(PICKUP_SEEK.HEAL_RISK_SCALE_FROM, PICKUP_SEEK.HEAL_RISK_SCALE_TO, risk_tolerance)
 			* danger_scale
 		)
-		var score: float = desire * lerpf(4.2, 7.2, critical_factor)
+		var score: float = desire * lerpf(PICKUP_SEEK.HEAL_SCORE_FROM, PICKUP_SEEK.HEAL_SCORE_TO, critical_factor)
 		score -= distance_penalty
 		score -= danger_penalty
 
-		if score > best_score and score > 0.05:
+		if score > best_score and score > PICKUP_SEEK.HEAL_MIN_SCORE:
 			best_score = score
 			heal_item_target = item
 
@@ -8101,15 +8109,7 @@ func _update_heal_item_goal(delta: float) -> void:
 
 
 func _heal_item_desire_for_hp(hp_ratio: float) -> float:
-	if hp_ratio >= 0.60:
-		return 0.0
-	if hp_ratio >= 0.45:
-		return lerpf(0.20, 0.48, (0.60 - hp_ratio) / 0.15)
-	if hp_ratio >= 0.30:
-		return lerpf(0.62, 0.88, (0.45 - hp_ratio) / 0.15)
-	if hp_ratio >= 0.15:
-		return lerpf(1.00, 1.18, (0.30 - hp_ratio) / 0.15)
-	return 1.30
+	return PICKUP_SEEK.heal_desire_for_hp(hp_ratio)
 
 
 func _estimate_monster_danger(at_position: Vector2, radius: float) -> float:
@@ -8170,7 +8170,7 @@ func _update_chest_goal(delta: float) -> void:
 		return
 
 	chest_target = null
-	chest_retarget_timer = 0.45
+	chest_retarget_timer = PICKUP_SEEK.CHEST_RETARGET_INTERVAL
 	var best_distance := INF
 	for node in _get_aux_group_nodes_cached(&"treasure_chests"):
 		if not is_instance_valid(node) or node.is_queued_for_deletion():
@@ -8188,7 +8188,7 @@ func _apply_chest_steering(base_direction: Vector2, delta: float) -> Vector2:
 	if (
 		is_instance_valid(heal_item_target)
 		and max_hp > 0
-		and float(current_hp) / float(max_hp) <= 0.45
+		and float(current_hp) / float(max_hp) <= PICKUP_SEEK.HEAL_PRIORITY_HP_RATIO
 	):
 		return base_direction.normalized() if base_direction.length_squared() > 0.01 else Vector2.ZERO
 
@@ -8200,7 +8200,11 @@ func _apply_chest_steering(base_direction: Vector2, delta: float) -> Vector2:
 	var distance := global_position.distance_to(chest_target.global_position)
 	var chest_direction := global_position.direction_to(chest_target.global_position)
 	# 상자는 행동을 취소하는 목표가 아니라 장기적인 이동 편향이다.
-	var chest_weight := lerpf(0.22, 0.42, clampf(1.0 - distance / 1100.0, 0.0, 1.0))
+	var chest_weight := lerpf(
+		PICKUP_SEEK.CHEST_WEIGHT_FROM,
+		PICKUP_SEEK.CHEST_WEIGHT_TO,
+		clampf(1.0 - distance / PICKUP_SEEK.CHEST_WEIGHT_DISTANCE, 0.0, 1.0)
+	)
 	var combat_weight := 1.0
 	var desired := base_direction * combat_weight + chest_direction * chest_weight
 	if desired.length_squared() <= 0.01:
@@ -8212,7 +8216,7 @@ func _apply_chest_steering(base_direction: Vector2, delta: float) -> Vector2:
 	else:
 		chest_steering_direction = chest_steering_direction.lerp(
 			desired,
-			clampf(delta * 2.4, 0.0, 1.0)
+			clampf(delta * PICKUP_SEEK.CHEST_TURN_SPEED, 0.0, 1.0)
 		).normalized()
 	return chest_steering_direction
 
@@ -8248,7 +8252,7 @@ func _update_magnet_item_goal(delta: float) -> void:
 		return
 
 	magnet_item_target = null
-	magnet_item_retarget_timer = 0.30
+	magnet_item_retarget_timer = PICKUP_SEEK.MAGNET_RETARGET_INTERVAL
 	var best_distance := INF
 	for node in _get_aux_group_nodes_cached(&"magnet_items"):
 		if (
@@ -8280,7 +8284,7 @@ func _apply_magnet_item_steering(
 	if (
 		is_instance_valid(heal_item_target)
 		and max_hp > 0
-		and float(current_hp) / float(max_hp) <= 0.45
+		and float(current_hp) / float(max_hp) <= PICKUP_SEEK.HEAL_PRIORITY_HP_RATIO
 	):
 		return base_direction.normalized() if base_direction.length_squared() > 0.01 else Vector2.ZERO
 
@@ -8308,15 +8312,15 @@ func _apply_magnet_item_steering(
 
 	# Visible magnets are tempting, but combat movement remains dominant.
 	var magnet_weight := lerpf(
-		0.24,
-		0.38,
-		clampf(1.0 - distance / 720.0, 0.0, 1.0)
+		PICKUP_SEEK.MAGNET_WEIGHT_FROM,
+		PICKUP_SEEK.MAGNET_WEIGHT_TO,
+		clampf(1.0 - distance / PICKUP_SEEK.MAGNET_WEIGHT_DISTANCE, 0.0, 1.0)
 	)
 	var local_danger := _estimate_monster_danger(
 		global_position,
-		210.0
+		PICKUP_SEEK.MAGNET_DANGER_RADIUS
 	)
-	magnet_weight /= 1.0 + local_danger * 0.22
+	magnet_weight /= 1.0 + local_danger * PICKUP_SEEK.MAGNET_DANGER_DAMPING
 
 	var desired := (
 		base_direction
@@ -8332,7 +8336,7 @@ func _apply_magnet_item_steering(
 		magnet_item_steering_direction = (
 			magnet_item_steering_direction.lerp(
 				desired,
-				clampf(delta * 3.2, 0.0, 1.0)
+				clampf(delta * PICKUP_SEEK.MAGNET_TURN_SPEED, 0.0, 1.0)
 			).normalized()
 		)
 	return magnet_item_steering_direction
@@ -8381,37 +8385,41 @@ func _apply_heal_item_steering(base_direction: Vector2, delta: float) -> Vector2
 	var distance_to_heal: float = global_position.distance_to(
 		heal_item_target.global_position
 	)
-	var avoidance: Vector2 = _get_crowd_avoidance_direction(240.0)
-	var local_danger: float = _estimate_monster_danger(global_position, 210.0)
-	var critical_factor: float = clampf((0.50 - hp_ratio) / 0.20, 0.0, 1.0)
+	var avoidance: Vector2 = _get_crowd_avoidance_direction(PICKUP_SEEK.HEAL_STEER_CROWD_RADIUS)
+	var local_danger: float = _estimate_monster_danger(global_position, PICKUP_SEEK.HEAL_STEER_DANGER_RADIUS)
+	var critical_factor: float = clampf(
+		(PICKUP_SEEK.HEAL_STEER_CRITICAL_HP_RATIO - hp_ratio) / PICKUP_SEEK.HEAL_STEER_CRITICAL_SPAN,
+		0.0,
+		1.0
+	)
 
 	# Human-like potion behavior:
 	# from far away, drift toward the potion while still fighting / avoiding;
 	# once close enough, progressively commit so the hero actually finishes
 	# the pickup instead of circling just outside the collection radius.
 	var close_commit: float = clampf(
-		(220.0 - distance_to_heal) / 150.0,
+		(PICKUP_SEEK.HEAL_CLOSE_COMMIT_DISTANCE - distance_to_heal) / PICKUP_SEEK.HEAL_CLOSE_COMMIT_SPAN,
 		0.0,
 		1.0
 	)
 	var heal_weight: float = clampf(
 		desire
-		* lerpf(1.10, 1.75, critical_factor)
-		* lerpf(1.0, 1.65, close_commit),
+		* lerpf(PICKUP_SEEK.HEAL_WEIGHT_CRITICAL_FROM, PICKUP_SEEK.HEAL_WEIGHT_CRITICAL_TO, critical_factor)
+		* lerpf(PICKUP_SEEK.HEAL_WEIGHT_CLOSE_FROM, PICKUP_SEEK.HEAL_WEIGHT_CLOSE_TO, close_commit),
 		0.0,
-		2.60
+		PICKUP_SEEK.HEAL_WEIGHT_CAP
 	)
 	var combat_weight: float = lerpf(
-		maxf(0.38, 1.0 - heal_weight * 0.45),
-		0.16,
-		close_commit * lerpf(0.55, 1.0, critical_factor)
+		maxf(PICKUP_SEEK.HEAL_COMBAT_WEIGHT_FLOOR, 1.0 - heal_weight * PICKUP_SEEK.HEAL_COMBAT_WEIGHT_REDUCTION),
+		PICKUP_SEEK.HEAL_COMBAT_WEIGHT_COMMITTED,
+		close_commit * lerpf(PICKUP_SEEK.HEAL_COMMIT_CRITICAL_FROM, PICKUP_SEEK.HEAL_COMMIT_CRITICAL_TO, critical_factor)
 	)
 	var avoidance_weight: float = (
-		(0.55 + local_danger * 0.28)
-		* lerpf(1.12, 0.68, risk_tolerance)
+		(PICKUP_SEEK.HEAL_AVOID_BASE + local_danger * PICKUP_SEEK.HEAL_AVOID_DANGER_WEIGHT)
+		* lerpf(PICKUP_SEEK.HEAL_AVOID_RISK_FROM, PICKUP_SEEK.HEAL_AVOID_RISK_TO, risk_tolerance)
 		* detour_weight
-		* lerpf(1.0, 0.35, critical_factor)
-		* lerpf(1.0, 0.18, close_commit)
+		* lerpf(PICKUP_SEEK.HEAL_AVOID_CRITICAL_FROM, PICKUP_SEEK.HEAL_AVOID_CRITICAL_TO, critical_factor)
+		* lerpf(PICKUP_SEEK.HEAL_AVOID_CLOSE_FROM, PICKUP_SEEK.HEAL_AVOID_CLOSE_TO, close_commit)
 	)
 
 	var desired: Vector2 = (
@@ -8423,10 +8431,10 @@ func _apply_heal_item_steering(base_direction: Vector2, delta: float) -> Vector2
 
 	# Inside the final approach, keep a small amount of natural movement but
 	# bias strongly enough toward the potion to cross the pickup threshold.
-	if distance_to_heal <= 95.0:
+	if distance_to_heal <= PICKUP_SEEK.HEAL_FINAL_APPROACH_DISTANCE:
 		desired = (
-			desired * 0.28
-			+ heal_direction * 1.45
+			desired * PICKUP_SEEK.HEAL_FINAL_APPROACH_KEEP
+			+ heal_direction * PICKUP_SEEK.HEAL_FINAL_APPROACH_PULL
 		)
 
 	if desired.length_squared() <= 0.01:
@@ -8437,8 +8445,8 @@ func _apply_heal_item_steering(base_direction: Vector2, delta: float) -> Vector2
 		heal_item_steering_direction = desired
 	else:
 		var turn_speed: float = lerpf(
-			4.2,
-			8.5,
+			PICKUP_SEEK.HEAL_TURN_SPEED_FROM,
+			PICKUP_SEEK.HEAL_TURN_SPEED_TO,
 			maxf(critical_factor, close_commit)
 		)
 		heal_item_steering_direction = heal_item_steering_direction.lerp(
