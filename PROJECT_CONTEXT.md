@@ -1,3 +1,10 @@
+## 2026-10-20 — hero.gd 직업 분리 1단계: 권총 용사(거너)
+
+- `hero.gd`의 거너 함수39개(823줄)를 `src/hero/archetypes/hero_gunner_archetype.gd`로 이동. hero.gd 20,850→20,125줄. 상태 변수는 hero에 유지(바인딩 Catalog·HUD·연출·테스트가 직접 읽음)하고 런타임은 행동만 담당, `hero: HERO_SCRIPT` 정적 타입 참조로 기존 `:=` 추론·정적 멤버 접근 유지.
+- hero.gd에는 같은 시그니처 전달 함수만 남겨 `ACTION_BINDINGS` 메서드명/Callable/문자열 호출/외부 테스트 경로 불변. 런타임은 hero당 1개 지연 생성(매 프레임 할당 없음).
+- 동작 불변 증명: 이동 함수39개가 원본과 토큰 단위 동일(허용 변경은 `hero.` 접두406곳·`self`→`hero`만), hero.gd 나머지 블록 무변경·전달 함수 인자 순서 검사. 재사용 도구 `tools/extract_hero_archetype.py`/`verify_hero_archetype.py`/`dump_body_members.gd` 추가.
+- Windows Godot4.7.2 headless: 신규 `tests/hero_gunner_archetype_live_smoke.gd`(실제 4스테이지 거너 AI 사격·재장전 12검사) PASS, hero_attack_paths1130/weapon_extension2193/weapon_remake2469/survival_variety1092/monster_balance411/izanami/battle_scope48/catalog_migration79 PASS. `hero_balance_smoke`는 hero.gd 함수 소스를 잘라 쓰던 거너 검사를 런타임 파일 기준으로 갱신해 수정 전과 동일(191검사, 기존 1실패). contextual_audio/zeus/holy_power/hero_action_port/survival_identity·revision/weapon_growth 실패·시간초과는 수정 전 코드에서도 동일. fixture 의존 테스트 일부 미실행, 실기 미검증. feature/stage10-astra.
+
 ## 2026-10-20 — 용사 아이템 탐색 수치·AI 상황 문구 Catalog 이전
 
 - `hero.gd`의 회복/상자/자석 아이템 탐색 목표 선택·조향에 직접 박혀 있던 수치49종(81곳)을 신규 `src/data/hero_pickup_seek_catalog.gd`로 이전. 회복 욕구 HP 구간 곡선은 데이터 밴드(`HEAL_DESIRE_BANDS`)+공통 평가 함수로 대체. 성향 배율(`ai_settings`의 heal_item_desire/heal_risk_tolerance/heal_detour_weight)은 기존 그대로 프로필에서 적용.
@@ -4032,3 +4039,7 @@ CloudStore 직렬화 대기는 operation_released 신호로 한다. 정상 완�
 ## 용사 아이템 탐색·AI 문구 데이터 위치 (2026-10-20)
 
 용사의 회복/상자/자석 탐색 튜닝 값은 `hero_pickup_seek_catalog.gd`, 용사별 성향 배율은 프로필 `ai_settings`에 둔다. `context_*` ai_rules 키의 설명 문구는 `hero_augment_catalog.gd`의 `CONTEXT_LABELS`에 추가한다. 로직 파일에 새 숫자/키별 문구 분기를 넣지 않는다.
+
+## 용사 직업 런타임 분리 (2026-10-20)
+
+직업 전용 행동은 `src/hero/archetypes/hero_<직업>_archetype.gd`에 두고 hero 상태는 hero.gd에 유지한다. hero.gd는 같은 시그니처 전달 함수만 가진다(메서드명 바인딩/테스트 호환). 분리는 `tools/extract_hero_archetype.py`로 기계 변환 후 `tools/verify_hero_archetype.py`로 토큰 동일성을 증명하고, 함수 소스를 잘라 쓰는 테스트는 런타임 파일 기준으로 갱신한다. 1단계 거너 완료, 나머지 직업은 같은 절차로 하나씩.

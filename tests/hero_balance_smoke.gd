@@ -210,7 +210,9 @@ func _finish_battle(message,won):
 func _test_swarm_response(hero:String)->void:
  # Production decision gates: density changes eligibility, not guaranteed accuracy.
  var g:Dictionary=P.get_profile("pistol_hero").gunner
- var gunner=shell("extends RefCounted\nvar silence_timer=0.0\nvar gunner_reloading=false\nvar gunner_deadeye_cooldown=0.0\nvar gunner_ammo=12\nvar gunner_config={}\nvar gunner_deadeye_analysis_score:=0.0\nfunc _update_gunner_deadeye_aim_analysis():pass\n"+function_source(hero,"_gunner_should_start_deadeye")).new()
+ # Gunner logic lives in its archetype runtime; this shell holds the hero state itself.
+ var archetype:=FileAccess.get_file_as_string("res://src/hero/archetypes/hero_gunner_archetype.gd")
+ var gunner=shell("extends RefCounted\nvar silence_timer=0.0\nvar gunner_reloading=false\nvar gunner_deadeye_cooldown=0.0\nvar gunner_ammo=12\nvar gunner_config={}\nvar gunner_deadeye_analysis_score:=0.0\nfunc _update_gunner_deadeye_aim_analysis():pass\n"+function_source(archetype,"_gunner_should_start_deadeye").replace("hero.","")).new()
  gunner.gunner_config=g
  gunner.gunner_deadeye_analysis_score=4.6
  check(gunner._gunner_should_start_deadeye(),"dense corridor reaches decisive fire threshold")
