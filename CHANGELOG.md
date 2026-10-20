@@ -1,3 +1,10 @@
+## 2026-10-20 — hero.gd 직업 분리 2단계: 도적·전사·광전사·소환사
+
+- 거너와 같은 절차로 도적28/전사36/광전사40/소환사42 함수(총146개, 4,809줄)를 `src/hero/archetypes/hero_{rogue,fighter,berserker,summoner}_archetype.gd`로 이동. hero.gd 20,125→15,706줄. 상태 변수·메서드명 전달 함수 유지, 런타임은 hero당 지연 1개.
+- 동작 불변 증명: 4개 직업 모두 이동 함수가 원본과 토큰 단위 동일(`hero.` 접두 375/486/523/436곳·self→hero만), hero.gd 나머지 블록 무변경·전달 함수146개 인자 순서 검사, 6개 스크립트 컴파일 확인.
+- Windows Godot4.7.2 headless: 관련 테스트57개 중 23개 PASS. 실패·시간초과34개는 수정 전 hero.gd로 다시 실행한 결과와 종료코드·요약 줄까지 34/34 동일(fixture 누락, 10/14 시그니처 변경 뒤 갱신 안 된 dark_elf/lizardman 스텁, ROW_HEIGHT 파싱 오류 등 기존 문제). 실기 미검증. feature/stage10-astra.
+- 남은 직업: 연금술사·정화사·대마법사·대현자는 지역 변수가 hero 멤버명(position/material/ready/move_multiplier)을 가려 변환기가 거부함. 해당 함수만 지역 변수명 정리 후 같은 절차로 진행 예정.
+
 ## 2026-10-20 — hero.gd 직업 분리 1단계: 권총 용사(거너)
 
 - `hero.gd`의 거너 함수39개(823줄)를 `src/hero/archetypes/hero_gunner_archetype.gd`로 이동. hero.gd 20,850→20,125줄. 상태 변수는 hero에 유지(바인딩 Catalog·HUD·연출·테스트가 직접 읽음)하고 런타임은 행동만 담당, `hero: HERO_SCRIPT` 정적 타입 참조로 기존 `:=` 추론·정적 멤버 접근 유지.

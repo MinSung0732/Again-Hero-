@@ -107,6 +107,10 @@ const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
 const COMBAT_STATUS_EFFECT_VISUAL := preload("res://src/ui/combat_status_effect_visual.gd")
 const HERO_WORLD_QUERY_RUNTIME := preload("res://src/hero/hero_world_query_runtime.gd")
 const HERO_SUMMONER_RUNTIME := preload("res://src/hero/hero_summoner_runtime.gd")
+const HERO_SUMMONER_ARCHETYPE := preload("res://src/hero/archetypes/hero_summoner_archetype.gd")
+const HERO_BERSERKER_ARCHETYPE := preload("res://src/hero/archetypes/hero_berserker_archetype.gd")
+const HERO_FIGHTER_ARCHETYPE := preload("res://src/hero/archetypes/hero_fighter_archetype.gd")
+const HERO_ROGUE_ARCHETYPE := preload("res://src/hero/archetypes/hero_rogue_archetype.gd")
 const HERO_GUNNER_ARCHETYPE := preload("res://src/hero/archetypes/hero_gunner_archetype.gd")
 const HERO_FIGHTER_RUNTIME := preload("res://src/hero/hero_fighter_runtime.gd")
 const STAGE1_FRAME_DIR := HERO_PRESENTATION.STAGE1_FRAME_DIR
@@ -333,6 +337,10 @@ var _hero_action_binding_key: String = ""
 var _hero_action_binding_valid := false
 var _hero_pose_tick: Callable
 var _gunner_archetype_runtime: RefCounted
+var _rogue_archetype_runtime: RefCounted
+var _fighter_archetype_runtime: RefCounted
+var _berserker_archetype_runtime: RefCounted
+var _summoner_archetype_runtime: RefCounted
 var _hero_action_tick: Callable
 var _hero_common_runtime_tick: Callable
 var _hero_boundary_steering: Callable
@@ -2012,13 +2020,7 @@ func _prepare_ranged_ai_intent(delta: float, distance: float) -> void:
 	action_intent.prepare_ranged(movement_velocity, distance)
 
 func _get_summoner_slot_capacity() -> int:
-	if player_controlled and player_weapons != null and player_weapons.native_skills != null:
-		return player_weapons.native_skills.summon_capacity()
-	return HERO_SUMMONER_RUNTIME.get_slot_capacity(
-		summoner_slot_base,
-		summoner_slot_bonus,
-		level
-	)
+	return _summoner_archetype()._get_summoner_slot_capacity()
 
 
 func _get_active_summon_count() -> int:
@@ -2026,58 +2028,22 @@ func _get_active_summon_count() -> int:
 
 
 func _get_active_summoner_watcher_count() -> int:
-	return summoner_active_watchers
+	return _summoner_archetype()._get_active_summoner_watcher_count()
 
 
 func _adjust_summoner_active_count(
 	summon_kind: StringName,
 	delta: int
 ) -> void:
-	if delta == 0:
-		return
-	match summon_kind:
-		&"gatekeeper":
-			summoner_active_gatekeepers = maxi(
-				summoner_active_gatekeepers + delta,
-				0
-			)
-		&"scout":
-			summoner_active_scouts = maxi(
-				summoner_active_scouts + delta,
-				0
-			)
-		&"hound":
-			summoner_active_hounds = maxi(
-				summoner_active_hounds + delta,
-				0
-			)
-		&"watcher":
-			summoner_active_watchers = maxi(
-				summoner_active_watchers + delta,
-				0
-			)
-		_:
-			return
-	summoner_active_regular_count = (
-		summoner_active_gatekeepers
-		+ summoner_active_scouts
-		+ summoner_active_hounds
-		+ summoner_active_watchers
-	)
+	_summoner_archetype()._adjust_summoner_active_count(summon_kind, delta)
 
 
 func _get_summoner_watcher_max_active() -> int:
-	return HERO_SUMMONER_RUNTIME.get_watcher_max_active(
-		summoner_watcher_config,
-		_get_summoner_augment_stacks("summoner_watcher_network")
-	)
+	return _summoner_archetype()._get_summoner_watcher_max_active()
 
 
 func _get_next_summoner_watcher_follow_slot() -> int:
-	return HERO_SUMMONER_RUNTIME.get_next_watcher_follow_slot(
-		summoner_watcher_pool,
-		_get_summoner_watcher_max_active()
-	)
+	return _summoner_archetype()._get_next_summoner_watcher_follow_slot()
 
 
 func _set_summon_registry_active(
@@ -2097,576 +2063,82 @@ func _set_summon_registry_active(
 
 
 func _ensure_summoner_pool_capacity() -> void:
-	if hero_archetype != "summoner_gatekeeper":
-		return
-	var world_parent := get_parent()
-	if not is_instance_valid(world_parent):
-		return
-
-	var pool_size := (
-		_get_summoner_slot_capacity()
-		+ SUMMONER_POOL_HEADROOM
-	)
-	HERO_SUMMONER_RUNTIME.ensure_pool_capacity(
-		world_parent,
-		summoner_gatekeeper_pool,
-		SUMMONER_GATEKEEPER_SCENE,
-		pool_size,
-		Callable(
-			self,
-			"_on_summoner_gatekeeper_released"
-		)
-	)
-	HERO_SUMMONER_RUNTIME.ensure_pool_capacity(
-		world_parent,
-		summoner_scout_pool,
-		SUMMONER_SCOUT_SCENE,
-		pool_size,
-		Callable(
-			self,
-			"_on_summoner_scout_released"
-		)
-	)
-	HERO_SUMMONER_RUNTIME.ensure_pool_capacity(
-		world_parent,
-		summoner_hound_pool,
-		SUMMONER_HOUND_SCENE,
-		pool_size,
-		Callable(
-			self,
-			"_on_summoner_hound_released"
-		)
-	)
-
-	HERO_SUMMONER_RUNTIME.ensure_pool_capacity(
-		world_parent,
-		summoner_watcher_pool,
-		SUMMONER_WATCHER_SCENE,
-		_get_summoner_watcher_max_active(),
-		Callable(
-			self,
-			"_on_summoner_watcher_released"
-		)
-	)
-
-	var open_gate_pool_size := maxi(
-		int(
-			summoner_open_gate_config.get(
-				"pool_size",
-				1
-			)
-		),
-		0
-	)
-	HERO_SUMMONER_RUNTIME.ensure_pool_capacity(
-		world_parent,
-		summoner_open_gate_pool,
-		SUMMONER_OPEN_GATE_SCENE,
-		open_gate_pool_size,
-		Callable(
-			self,
-			"_on_summoner_open_gate_released"
-		),
-		&"prepare_pool",
-		summoner_open_gate_config
-	)
+	_summoner_archetype()._ensure_summoner_pool_capacity()
 
 
 func _ensure_summoner_runtime() -> void:
-	if summoner_runtime_ready or hero_archetype != "summoner_gatekeeper":
-		return
-	var world_parent := get_parent()
-	if not is_instance_valid(world_parent):
-		return
-
-	_ensure_summoner_pool_capacity()
-
-	summoner_basic_effect = AnimatedSprite2D.new()
-	var effect_frames := SpriteFrames.new()
-	if effect_frames.has_animation(&"default"):
-		effect_frames.remove_animation(&"default")
-	effect_frames.add_animation(&"cast")
-	effect_frames.set_animation_loop(&"cast", false)
-	effect_frames.set_animation_speed(&"cast", 10.0)
-	var effect_dir := String(
-		summoner_config.get(
-			"basic_effect_dir",
-			"%s/effect2" % STAGE8_FRAME_DIR
-		)
-	)
-	for frame_index in range(1, 3):
-		var texture := _load_stage1_texture(
-			"%s/summon_%02d.png" % [effect_dir, frame_index]
-		)
-		if texture != null:
-			effect_frames.add_frame(&"cast", texture)
-	summoner_basic_effect.sprite_frames = effect_frames
-	summoner_basic_effect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	summoner_basic_effect.scale = Vector2(0.46, 0.46)
-	summoner_basic_effect.position = Vector2(0.0, -18.0)
-	summoner_basic_effect.z_index = 7
-	summoner_basic_effect.visible = false
-	summoner_basic_effect.animation_finished.connect(
-		Callable(self, "_on_summoner_basic_effect_finished")
-	)
-	world_parent.add_child(summoner_basic_effect)
-
-	summoner_basic_audio = AudioStreamPlayer.new()
-	summoner_basic_audio.bus = &"SFX"
-	summoner_basic_audio.volume_db = SUMMONER_AUDIO.BASIC_DB
-	summoner_basic_audio.max_polyphony = 1
-	var audio_path := String(
-		summoner_config.get(
-			"basic_attack_audio_path",
-			SUMMONER_BASIC_ATTACK_AUDIO_PATH
-		)
-	)
-	if ResourceLoader.exists(audio_path):
-		var stream = load(audio_path)
-		if stream is AudioStream:
-			summoner_basic_audio.stream = stream
-	add_child(summoner_basic_audio)
-
-	summoner_runtime_ready = (
-		HERO_SUMMONER_RUNTIME.are_runtime_pools_ready(
-			summoner_gatekeeper_pool,
-			summoner_scout_config,
-			summoner_scout_pool,
-			summoner_hound_config,
-			summoner_hound_pool,
-			summoner_watcher_config,
-			summoner_watcher_pool,
-			summoner_open_gate_config,
-			summoner_open_gate_pool
-		)
-	)
-	if summoner_runtime_ready:
-		# Keep explicit requests alive until a pooled summon is actually acquired.
-		summoner_cast_pending = not summoner_gatekeeper_config.is_empty()
-		summoner_scout_cast_pending = not summoner_scout_config.is_empty()
-		summoner_hound_cast_pending = not summoner_hound_config.is_empty()
-		summoner_watcher_cast_pending = not summoner_watcher_config.is_empty()
-		summoner_open_gate_cast_pending = (
-			not summoner_open_gate_config.is_empty()
-			and summoner_open_gate_unlocked
-		)
-	queue_redraw()
+	_summoner_archetype()._ensure_summoner_runtime()
 
 
 func _physics_process_summoner(delta: float) -> void:
-	_ensure_summoner_runtime()
-
-	ai_memory_clock += delta
-	_prune_offensive_memory()
-	_prune_status_memory()
-	ai_observation_timer = maxf(ai_observation_timer - delta, 0.0)
-	if ai_observation_timer <= 0.0:
-		_refresh_ai_observation()
-
-	attack_timer = maxf(attack_timer - delta * get_paralysis_attack_multiplier(), 0.0)
-	retarget_timer = maxf(retarget_timer - delta, 0.0)
-	wander_timer = maxf(wander_timer - delta, 0.0)
-	attack_pose_timer = maxf(attack_pose_timer - delta, 0.0)
-	hit_pose_timer = maxf(hit_pose_timer - delta, 0.0)
-	summoner_gatekeeper_cooldown = maxf(
-		summoner_gatekeeper_cooldown - delta,
-		0.0
-	)
-	summoner_scout_cooldown = maxf(
-		summoner_scout_cooldown - delta,
-		0.0
-	)
-	summoner_hound_cooldown = maxf(
-		summoner_hound_cooldown - delta,
-		0.0
-	)
-	summoner_watcher_cooldown = maxf(
-		summoner_watcher_cooldown - delta,
-		0.0
-	)
-	summoner_open_gate_cooldown = maxf(
-		summoner_open_gate_cooldown - delta,
-		0.0
-	)
-	summoner_cast_lock_timer = maxf(
-		summoner_cast_lock_timer - delta,
-		0.0
-	)
-	_update_summoner_full_slot_shield(delta)
-	_update_invulnerability(delta)
-
-	if slow_timer > 0.0:
-		slow_timer = maxf(slow_timer - delta, 0.0)
-		if slow_timer <= 0.0:
-			move_multiplier = 1.0
-			queue_redraw()
-
-	if summoner_open_gate_unlocked and summoner_open_gate_cooldown <= 0.0:
-		summoner_open_gate_cast_pending = true
-
-	if _get_active_summon_count() < _get_summoner_slot_capacity():
-		if summoner_gatekeeper_cooldown <= 0.0:
-			summoner_cast_pending = true
-		if summoner_scout_cooldown <= 0.0:
-			summoner_scout_cast_pending = true
-		if summoner_hound_cooldown <= 0.0:
-			summoner_hound_cast_pending = true
-		if (
-			summoner_watcher_cooldown <= 0.0
-			and _get_active_summoner_watcher_count()
-			< _get_summoner_watcher_max_active()
-		):
-			summoner_watcher_cast_pending = true
-
-	if summoner_cast_lock_timer <= 0.0:
-		var selected_summon := _choose_summoner_ai_cast()
-		var summon_casted := _try_cast_summoner_ai_choice(selected_summon)
-		if summon_casted:
-			summoner_ai_last_choice = selected_summon
-			summoner_ai_choice_counts[selected_summon] = (
-				int(summoner_ai_choice_counts.get(selected_summon, 0)) + 1
-			)
-			summoner_cast_lock_timer = summoner_cast_interval
-
-	_update_heal_item_goal(delta)
-	_update_chest_goal(delta)
-	_update_magnet_item_goal(delta)
-
-	if (
-		not is_instance_valid(target)
-		or target.is_queued_for_deletion()
-		or retarget_timer <= 0.0
-	):
-		target = _find_nearest_monster()
-		retarget_timer = 0.12
-
-	if not is_instance_valid(target):
-		_move_summoner_without_monsters_near_open_gate()
-		_update_summoner_pose_visual(delta)
-		return
-
-	var distance := global_position.distance_to(target.global_position)
-	var move_direction := _choose_move_direction(target, distance)
-	move_direction = _apply_summoner_open_gate_tether(move_direction)
-	move_direction = _apply_heal_item_steering(move_direction, delta)
-	move_direction = _apply_chest_steering(move_direction, delta)
-	move_direction = _apply_magnet_item_steering(move_direction, delta)
-	move_direction = _apply_ranged_boundary_escape(move_direction)
-	_execute_ai_movement(move_direction * move_speed * _get_effective_move_multiplier())
-
-	if distance <= attack_range and attack_timer <= 0.0:
-		_execute_ai_basic_attack(HERO_ACTION_INTENT.AttackKind.SUMMONER, target)
-
-	_update_summoner_pose_visual(delta)
+	_summoner_archetype()._physics_process_summoner(delta)
 
 
 func _roll_summoner_ai_personality() -> String:
-	return HERO_SUMMONER_RUNTIME.roll_ai_personality(
-		summoner_ai_config
-	)
+	return _summoner_archetype()._roll_summoner_ai_personality()
 
 
 func _get_summoner_target_hp_ratio() -> float:
-	return HERO_SUMMONER_RUNTIME.get_target_hp_ratio(target)
+	return _summoner_archetype()._get_summoner_target_hp_ratio()
 
 
 func _score_summoner_ai_candidate(
 	skill_id: String,
 	nearby_count: int
 ) -> float:
-	var hero_hp_ratio := clampf(
-		float(current_hp) / float(maxi(max_hp, 1)),
-		0.0,
-		1.0
-	)
-	var gatekeepers := summoner_active_gatekeepers
-	var scouts := summoner_active_scouts
-	var hounds := summoner_active_hounds
-	var watchers := summoner_active_watchers
-	return HERO_SUMMONER_RUNTIME.score_ai_candidate(
-		skill_id,
-		nearby_count,
-		hero_hp_ratio,
-		is_instance_valid(target),
-		_get_summoner_target_hp_ratio(),
-		gatekeepers,
-		scouts,
-		hounds,
-		watchers,
-		_get_active_summon_count(),
-		int(summoner_ai_choice_counts.get(skill_id, 0)),
-		summoner_ai_last_choice,
-		summoner_ai_personality,
-		float(
-			summoner_ai_config.get(
-				"random_score_span",
-				8.0
-			)
-		)
-	)
+	return _summoner_archetype()._score_summoner_ai_candidate(skill_id, nearby_count)
 
 
 func _choose_summoner_ai_cast() -> String:
-	var shared_slot_available := (
-		_get_active_summon_count() < _get_summoner_slot_capacity()
-	)
-	var gatekeeper_available := (
-		shared_slot_available
-		and summoner_cast_pending
-		and summoner_gatekeeper_cooldown <= 0.0
-	)
-	var scout_available := (
-		shared_slot_available
-		and summoner_scout_cast_pending
-		and summoner_scout_cooldown <= 0.0
-	)
-	var hound_available := (
-		shared_slot_available
-		and summoner_hound_cast_pending
-		and summoner_hound_cooldown <= 0.0
-	)
-	var watcher_available := (
-		shared_slot_available
-		and summoner_watcher_cast_pending
-		and summoner_watcher_cooldown <= 0.0
-		and _get_active_summoner_watcher_count() < _get_summoner_watcher_max_active()
-	)
-	var open_gate_available := (
-		summoner_open_gate_cast_pending
-		and summoner_open_gate_unlocked
-		and summoner_open_gate_cooldown <= 0.0
-		and not is_instance_valid(_get_active_summoner_open_gate())
-	)
-	if not (
-		gatekeeper_available
-		or scout_available
-		or hound_available
-		or watcher_available
-		or open_gate_available
-	):
-		return ""
-
-	_fill_monster_nodes_near(
-		global_position,
-		maxf(float(summoner_ai_config.get("observation_radius", 760.0)), 1.0),
-		summoner_ai_query_candidates
-	)
-	var nearby_count := summoner_ai_query_candidates.size()
-	summoner_ai_query_candidates.clear()
-	var gatekeeper_weight := 0.0
-	var scout_weight := 0.0
-	var hound_weight := 0.0
-	var watcher_weight := 0.0
-	var open_gate_weight := 0.0
-	var total_weight := 0.0
-
-	if gatekeeper_available:
-		gatekeeper_weight = pow(
-			maxf(_score_summoner_ai_candidate("gatekeeper", nearby_count) - 25.0, 1.0),
-			1.35
-		)
-		total_weight += gatekeeper_weight
-	if scout_available:
-		scout_weight = pow(
-			maxf(_score_summoner_ai_candidate("scout", nearby_count) - 25.0, 1.0),
-			1.35
-		)
-		total_weight += scout_weight
-	if hound_available:
-		hound_weight = pow(
-			maxf(_score_summoner_ai_candidate("hound", nearby_count) - 25.0, 1.0),
-			1.35
-		)
-		total_weight += hound_weight
-	if watcher_available:
-		watcher_weight = pow(
-			maxf(_score_summoner_ai_candidate("watcher", nearby_count) - 25.0, 1.0),
-			1.35
-		)
-		total_weight += watcher_weight
-	if open_gate_available:
-		open_gate_weight = pow(
-			maxf(_score_summoner_ai_candidate("open_gate", nearby_count) - 25.0, 1.0),
-			1.35
-		)
-		total_weight += open_gate_weight
-
-	var roll := randf() * total_weight
-	if gatekeeper_available:
-		roll -= gatekeeper_weight
-		if roll <= 0.0:
-			return "gatekeeper"
-	if scout_available:
-		roll -= scout_weight
-		if roll <= 0.0:
-			return "scout"
-	if hound_available:
-		roll -= hound_weight
-		if roll <= 0.0:
-			return "hound"
-	if watcher_available:
-		roll -= watcher_weight
-		if roll <= 0.0:
-			return "watcher"
-	if open_gate_available:
-		roll -= open_gate_weight
-		if roll <= 0.0:
-			return "open_gate"
-
-	if open_gate_available:
-		return "open_gate"
-	if watcher_available:
-		return "watcher"
-	if hound_available:
-		return "hound"
-	if scout_available:
-		return "scout"
-	return "gatekeeper"
+	return _summoner_archetype()._choose_summoner_ai_cast()
 
 
 func _try_cast_summoner_ai_choice(skill_id: String) -> bool:
-	if silence_timer > 0.0:
-		return false
-	match skill_id:
-		"gatekeeper":
-			if _try_cast_summoner_gatekeeper():
-				summoner_cast_pending = false
-				return true
-		"scout":
-			if _try_cast_summoner_scout():
-				summoner_scout_cast_pending = false
-				return true
-		"hound":
-			if _try_cast_summoner_hound():
-				summoner_hound_cast_pending = false
-				return true
-		"watcher":
-			if _try_cast_summoner_watcher():
-				summoner_watcher_cast_pending = false
-				return true
-		"open_gate":
-			if _try_cast_summoner_open_gate():
-				summoner_open_gate_cast_pending = false
-				return true
-	return false
+	return _summoner_archetype()._try_cast_summoner_ai_choice(skill_id)
 
 
 func _get_active_summoner_open_gate() -> Node2D:
-	for open_gate in summoner_open_gate_pool:
-		if is_instance_valid(open_gate) and bool(open_gate.get("active")):
-			return open_gate
-	return null
+	return _summoner_archetype()._get_active_summoner_open_gate()
 
 
 func _apply_summoner_open_gate_tether(move_direction: Vector2) -> Vector2:
-	var open_gate := _get_active_summoner_open_gate()
-	if not is_instance_valid(open_gate):
-		return move_direction
-
-	var preference_radius := maxf(
-		float(summoner_open_gate_config.get("hero_tether_radius", 650.0)),
-		1.0
-	)
-	var influence_radius := maxf(
-		float(summoner_open_gate_config.get("hero_tether_hard_radius", 950.0)),
-		preference_radius + 1.0
-	)
-	var distance := global_position.distance_to(open_gate.global_position)
-	if distance <= preference_radius:
-		return move_direction
-
-	# Gate proximity is only a soft tactical preference. It must never behave
-	# like an invisible wall or override a useful combat target.
-	var return_direction := global_position.direction_to(open_gate.global_position)
-	var distance_factor := clampf(
-		(distance - preference_radius) / (influence_radius - preference_radius),
-		0.0,
-		1.0
-	)
-	var max_strength := clampf(
-		float(summoner_open_gate_config.get("hero_tether_max_strength", 0.28)),
-		0.0,
-		0.45
-	)
-	var strength := distance_factor * max_strength
-	var blended := move_direction.lerp(return_direction, strength)
-	return blended.normalized() if blended.length_squared() > 0.001 else move_direction
+	return _summoner_archetype()._apply_summoner_open_gate_tether(move_direction)
 
 
 func _move_summoner_without_monsters_near_open_gate() -> void:
-	# With no combat target, keep the normal wander behaviour. The open gate
-	# influences combat positioning but never cages the hero around the portal.
-	_move_without_monsters()
+	_summoner_archetype()._move_summoner_without_monsters_near_open_gate()
 
 
 func _get_summoner_augment_stacks(augment_id: String) -> int:
-	return HERO_SUMMONER_RUNTIME.get_augment_stacks(
-		build_counts,
-		augment_id
-	)
+	return _summoner_archetype()._get_summoner_augment_stacks(augment_id)
 
 
 func get_summoner_runtime_attack_speed_multiplier() -> float:
-	return HERO_SUMMONER_RUNTIME.get_runtime_attack_speed_multiplier(
-		shield_hp > 0.0,
-		_get_summoner_augment_stacks(
-			"summoner_shield_resonance"
-		)
-	)
+	return _summoner_archetype().get_summoner_runtime_attack_speed_multiplier()
 
 
 func get_summoner_runtime_move_speed_multiplier() -> float:
-	return HERO_SUMMONER_RUNTIME.get_runtime_move_speed_multiplier(
-		shield_hp > 0.0,
-		_get_summoner_augment_stacks(
-			"summoner_shield_resonance"
-		)
-	)
+	return _summoner_archetype().get_summoner_runtime_move_speed_multiplier()
 
 
 func get_summoner_runtime_speed_multipliers() -> Dictionary:
-	return HERO_SUMMONER_RUNTIME.get_runtime_speed_multipliers(
-		shield_hp > 0.0,
-		_get_summoner_augment_stacks(
-			"summoner_shield_resonance"
-		)
-	)
+	return _summoner_archetype().get_summoner_runtime_speed_multipliers()
 
 
 func get_summoner_scout_attack_speed_multiplier() -> float:
-	return HERO_SUMMONER_RUNTIME.get_scout_swarm_attack_speed_multiplier(
-		_get_summoner_augment_stacks(
-			"summoner_scout_swarm_tactics"
-		),
-		summoner_active_scouts
-	)
+	return _summoner_archetype().get_summoner_scout_attack_speed_multiplier()
 
 
 func get_summoner_scout_damage_multiplier() -> float:
-	return HERO_SUMMONER_RUNTIME.get_scout_swarm_damage_multiplier(
-		_get_summoner_augment_stacks(
-			"summoner_scout_swarm_tactics"
-		),
-		summoner_active_scouts
-	)
+	return _summoner_archetype().get_summoner_scout_damage_multiplier()
 
 
 func get_summoner_scout_move_speed_multiplier() -> float:
-	return HERO_SUMMONER_RUNTIME.get_scout_swarm_move_speed_multiplier(
-		_get_summoner_augment_stacks(
-			"summoner_scout_swarm_tactics"
-		),
-		summoner_active_scouts
-	)
+	return _summoner_archetype().get_summoner_scout_move_speed_multiplier()
 
 
 func get_summoner_scout_swarm_multipliers() -> Dictionary:
-	return HERO_SUMMONER_RUNTIME.get_scout_swarm_multipliers(
-		_get_summoner_augment_stacks(
-			"summoner_scout_swarm_tactics"
-		),
-		summoner_active_scouts
-	)
+	return _summoner_archetype().get_summoner_scout_swarm_multipliers()
 
 
 func _extend_regular_summon_durations(seconds: float) -> void:
@@ -2680,48 +2152,7 @@ func _extend_regular_summon_durations(seconds: float) -> void:
 
 
 func _update_summoner_full_slot_shield(delta: float) -> void:
-	if summoner_full_slot_shield_config.is_empty():
-		return
-
-	summoner_full_slot_shield_cooldown = maxf(
-		summoner_full_slot_shield_cooldown - delta,
-		0.0
-	)
-
-	if shield_duration_timer > 0.0:
-		shield_duration_timer = maxf(shield_duration_timer - delta, 0.0)
-		if shield_duration_timer <= 0.0 and shield_hp > 0.0:
-			_end_shield()
-
-	if summoner_full_slot_shield_cooldown > 0.0:
-		return
-	if _get_active_summon_count() < _get_summoner_slot_capacity():
-		return
-
-	var shield_fortify_stacks := _get_summoner_augment_stacks("summoner_shield_fortify")
-	var shield_ratio := clampf(
-		float(summoner_full_slot_shield_config.get("shield_hp_ratio", 0.15))
-		+ float(shield_fortify_stacks) * 0.014,
-		0.0,
-		1.0
-	)
-	var refreshed_shield := float(max_hp) * shield_ratio
-	if refreshed_shield <= 0.0:
-		return
-
-	# Refresh-type passive: replace remaining shield amount and duration.
-	shield_max_hp = _player_shield_amount(refreshed_shield)
-	shield_hp = shield_max_hp
-	shield_duration_timer = maxf(
-		float(summoner_full_slot_shield_config.get("duration", 8.0))
-		+ float(shield_fortify_stacks) * 0.4,
-		0.0
-	)
-	summoner_full_slot_shield_cooldown = maxf(
-		float(summoner_full_slot_shield_config.get("cooldown", 40.0)),
-		0.0
-	)
-	queue_redraw()
+	_summoner_archetype()._update_summoner_full_slot_shield(delta)
 
 
 func _refresh_regular_summon_pending_after_release(
@@ -2751,375 +2182,63 @@ func _refresh_regular_summon_pending_after_release(
 
 
 func _try_cast_summoner_gatekeeper() -> bool:
-	if silence_timer > 0.0:
-		return false
-	if summoner_gatekeeper_config.is_empty():
-		return false
-	if summoner_gatekeeper_cooldown > 0.0:
-		return false
-	if _get_active_summon_count() >= _get_summoner_slot_capacity():
-		return false
-
-	var summon_to_use := (
-		HERO_SUMMONER_RUNTIME.acquire_inactive_summon(
-			summoner_gatekeeper_pool
-		)
-	)
-	if summon_to_use == null:
-		return false
-
-	var runtime_config := (
-		HERO_SUMMONER_RUNTIME.build_gatekeeper_runtime_config(
-			summoner_gatekeeper_config,
-			attack_damage,
-			_get_summoner_augment_stacks(
-				"summoner_gatekeeper_fortress"
-			),
-			_get_summoner_augment_stacks(
-				"summoner_gatekeeper_barrage"
-			)
-		)
-	)
-	if not HERO_SUMMONER_RUNTIME.activate_summon(
-		summon_to_use,
-		global_position,
-		self,
-		runtime_config
-	):
-		return false
-	_adjust_summoner_active_count(&"gatekeeper", 1)
-	_set_summon_registry_active(summon_to_use, true)
-	summoner_gatekeeper_cooldown = maxf(
-		float(summoner_gatekeeper_config.get("cooldown", 10.0)),
-		0.0
-	)
-	_record_summoner_spawn_for_open_gate_unlock()
-	queue_redraw()
-	return true
+	return _summoner_archetype()._try_cast_summoner_gatekeeper()
 
 
 func _on_summoner_gatekeeper_released(_summon: Node2D) -> void:
-	_adjust_summoner_active_count(&"gatekeeper", -1)
-	_refresh_regular_summon_pending_after_release(_summon)
+	_summoner_archetype()._on_summoner_gatekeeper_released(_summon)
 
 
 func _try_cast_summoner_scout() -> bool:
-	if silence_timer > 0.0:
-		return false
-	if summoner_scout_config.is_empty():
-		return false
-	if summoner_scout_cooldown > 0.0:
-		return false
-	if _get_active_summon_count() >= _get_summoner_slot_capacity():
-		return false
-
-	var summon_to_use := (
-		HERO_SUMMONER_RUNTIME.acquire_inactive_summon(
-			summoner_scout_pool
-		)
-	)
-	if summon_to_use == null:
-		_ensure_summoner_pool_capacity()
-		summon_to_use = (
-			HERO_SUMMONER_RUNTIME.acquire_inactive_summon(
-				summoner_scout_pool
-			)
-		)
-	if summon_to_use == null:
-		return false
-
-	var runtime_config := (
-		HERO_SUMMONER_RUNTIME.build_scout_runtime_config(
-			summoner_scout_config,
-			attack_damage,
-			_get_summoner_augment_stacks(
-				"summoner_scout_reinforcement"
-			)
-		)
-	)
-	if not HERO_SUMMONER_RUNTIME.activate_summon(
-		summon_to_use,
-		global_position,
-		self,
-		runtime_config
-	):
-		return false
-	_adjust_summoner_active_count(&"scout", 1)
-	_set_summon_registry_active(summon_to_use, true)
-	summoner_scout_cooldown = maxf(
-		float(summoner_scout_config.get("cooldown", 20.0)),
-		0.0
-	)
-	_record_summoner_spawn_for_open_gate_unlock()
-	queue_redraw()
-	return true
+	return _summoner_archetype()._try_cast_summoner_scout()
 
 
 func _on_summoner_scout_released(_summon: Node2D) -> void:
-	_adjust_summoner_active_count(&"scout", -1)
-	_refresh_regular_summon_pending_after_release(_summon)
+	_summoner_archetype()._on_summoner_scout_released(_summon)
 
 
 func _try_cast_summoner_hound() -> bool:
-	if silence_timer > 0.0:
-		return false
-	if summoner_hound_config.is_empty():
-		return false
-	if summoner_hound_cooldown > 0.0:
-		return false
-	if _get_active_summon_count() >= _get_summoner_slot_capacity():
-		return false
-
-	var summon_to_use := (
-		HERO_SUMMONER_RUNTIME.acquire_inactive_summon(
-			summoner_hound_pool
-		)
-	)
-	if summon_to_use == null:
-		_ensure_summoner_pool_capacity()
-		summon_to_use = (
-			HERO_SUMMONER_RUNTIME.acquire_inactive_summon(
-				summoner_hound_pool
-			)
-		)
-	if summon_to_use == null:
-		return false
-
-	var runtime_config := (
-		HERO_SUMMONER_RUNTIME.build_hound_runtime_config(
-			summoner_hound_config,
-			attack_damage,
-			_get_summoner_augment_stacks(
-				"summoner_hound_frenzy"
-			),
-			_get_summoner_augment_stacks(
-				"summoner_hound_blood_track"
-			)
-		)
-	)
-	if not HERO_SUMMONER_RUNTIME.activate_summon(
-		summon_to_use,
-		global_position,
-		self,
-		runtime_config
-	):
-		return false
-	_adjust_summoner_active_count(&"hound", 1)
-	_set_summon_registry_active(summon_to_use, true)
-	summoner_hound_cooldown = maxf(
-		float(summoner_hound_config.get("cooldown", 30.0)),
-		0.0
-	)
-	_record_summoner_spawn_for_open_gate_unlock()
-	queue_redraw()
-	return true
+	return _summoner_archetype()._try_cast_summoner_hound()
 
 
 func _on_summoner_hound_released(_summon: Node2D) -> void:
-	_adjust_summoner_active_count(&"hound", -1)
-	_refresh_regular_summon_pending_after_release(_summon)
+	_summoner_archetype()._on_summoner_hound_released(_summon)
 
 
 func _try_cast_summoner_watcher() -> bool:
-	if silence_timer > 0.0:
-		return false
-	if summoner_watcher_config.is_empty():
-		return false
-	if summoner_watcher_cooldown > 0.0:
-		return false
-	if _get_active_summon_count() >= _get_summoner_slot_capacity():
-		return false
-	if (
-		_get_active_summoner_watcher_count()
-		>= _get_summoner_watcher_max_active()
-	):
-		return false
-
-	var follow_slot := _get_next_summoner_watcher_follow_slot()
-	if follow_slot < 0:
-		return false
-
-	var summon_to_use := (
-		HERO_SUMMONER_RUNTIME.acquire_inactive_summon(
-			summoner_watcher_pool
-		)
-	)
-	if summon_to_use == null:
-		return false
-
-	var runtime_config := (
-		HERO_SUMMONER_RUNTIME.build_watcher_runtime_config(
-			summoner_watcher_config,
-			attack_damage,
-			_get_summoner_augment_stacks(
-				"summoner_watcher_focus"
-			),
-			_get_summoner_augment_stacks(
-				"summoner_watcher_network"
-			),
-			follow_slot
-		)
-	)
-	if not HERO_SUMMONER_RUNTIME.activate_summon(
-		summon_to_use,
-		global_position,
-		self,
-		runtime_config
-	):
-		return false
-	_adjust_summoner_active_count(&"watcher", 1)
-	_set_summon_registry_active(summon_to_use, true)
-	summoner_watcher_cooldown = maxf(
-		float(summoner_watcher_config.get("cooldown", 7.0)),
-		0.0
-	)
-	_record_summoner_spawn_for_open_gate_unlock()
-	queue_redraw()
-	return true
+	return _summoner_archetype()._try_cast_summoner_watcher()
 
 
 func _on_summoner_watcher_released(_summon: Node2D) -> void:
-	_adjust_summoner_active_count(&"watcher", -1)
-	_refresh_regular_summon_pending_after_release(_summon)
+	_summoner_archetype()._on_summoner_watcher_released(_summon)
 
 
 func _get_summoner_open_gate_required_summons() -> int:
-	return HERO_SUMMONER_RUNTIME.get_open_gate_required_summons(
-		summoner_open_gate_config
-	)
+	return _summoner_archetype()._get_summoner_open_gate_required_summons()
 
 
 func _record_summoner_spawn_for_open_gate_unlock() -> void:
-	if summoner_open_gate_config.is_empty() or summoner_open_gate_unlocked:
-		return
-	summoner_total_summons += 1
-	var required := _get_summoner_open_gate_required_summons()
-	if not HERO_SUMMONER_RUNTIME.has_reached_open_gate_unlock(
-		summoner_open_gate_config,
-		summoner_open_gate_unlocked,
-		summoner_total_summons
-	):
-		return
-
-	summoner_open_gate_unlocked = true
-	summoner_open_gate_cast_pending = true
-	_unlock_conditional_skill(
-		String(summoner_open_gate_config.get("id", "summoner_open_gate")),
-		String(summoner_open_gate_config.get("name", "이계의 문 - 개방")),
-		"summon_count",
-		summoner_total_summons,
-		required,
-		{
-			"hero_id": hero_id,
-			"archetype": hero_archetype,
-			"source": "summoner_spawn_count",
-			"cutscene_texture_path": String(
-				summoner_open_gate_config.get("cutscene_texture_path", "")
-			),
-			"cutscene_hold_seconds": float(
-				summoner_open_gate_config.get("cutscene_hold_seconds", 1.05)
-			),
-		}
-	)
+	_summoner_archetype()._record_summoner_spawn_for_open_gate_unlock()
 
 
 func _try_cast_summoner_open_gate() -> bool:
-	if silence_timer > 0.0:
-		return false
-	if summoner_open_gate_config.is_empty():
-		return false
-	if not summoner_open_gate_unlocked:
-		return false
-	if summoner_open_gate_cooldown > 0.0:
-		return false
-
-	var gate_to_use := (
-		HERO_SUMMONER_RUNTIME.acquire_inactive_summon(
-			summoner_open_gate_pool
-		)
-	)
-	if gate_to_use == null:
-		return false
-
-	if not HERO_SUMMONER_RUNTIME.activate_summon(
-		gate_to_use,
-		global_position,
-		self,
-		summoner_open_gate_config.duplicate(true)
-	):
-		return false
-	_set_summon_registry_active(gate_to_use, true)
-	summoner_open_gate_cooldown = maxf(
-		float(summoner_open_gate_config.get("cooldown", 100.0)),
-		0.0
-	)
-	queue_redraw()
-	return true
+	return _summoner_archetype()._try_cast_summoner_open_gate()
 
 
 func _on_summoner_open_gate_released(_open_gate: Node2D) -> void:
-	_set_summon_registry_active(_open_gate, false)
-	if summoner_open_gate_cooldown <= 0.0:
-		summoner_open_gate_cast_pending = true
-	queue_redraw()
+	_summoner_archetype()._on_summoner_open_gate_released(_open_gate)
 
 
 func _summoner_basic_attack(current_target: Node2D) -> void:
-	if not is_instance_valid(current_target):
-		return
-	attack_timer = _get_common_attack_interval(attack_cooldown)
-	attack_pose_timer = 0.38
-	_face_attack_direction(
-		current_target.global_position.x - global_position.x
-	)
-	_apply_stage8_sprite_anchor()
-	_restart_stage1_animation("attack", 1.0)
-
-	if is_instance_valid(summoner_basic_effect):
-		# effect2 summon_01~02 is impact feedback for this hitscan attack.
-		# Keep it in world space at the monster's feet/root instead of on caster.
-		summoner_basic_effect.global_position = current_target.global_position
-		summoner_basic_effect.flip_h = false
-		summoner_basic_effect.stop()
-		summoner_basic_effect.frame = 0
-		summoner_basic_effect.visible = true
-		summoner_basic_effect.play(&"cast")
-	if (
-		is_instance_valid(summoner_basic_audio)
-		and summoner_basic_audio.stream != null
-		and not summoner_basic_audio.playing
-		and COMBAT_DELAY.now_msec(self) >= summoner_basic_audio_next_ms
-	):
-		summoner_basic_audio_next_ms = COMBAT_DELAY.now_msec(self)+SUMMONER_AUDIO.BASIC_INTERVAL_MS
-		summoner_basic_audio.play()
-
-	# Hitscan: damage is decided immediately; the summon_01~02 frames are
-	# feedback only, keeping combat state easy to make server-authoritative.
-	if current_target.has_method("take_damage"):
-		preload("res://src/systems/monster_hit_context.gd").hit(current_target, maxi(attack_damage, 1), "ranged", self)
+	_summoner_archetype()._summoner_basic_attack(current_target)
 
 
 func _on_summoner_basic_effect_finished() -> void:
-	if is_instance_valid(summoner_basic_effect):
-		summoner_basic_effect.visible = false
+	_summoner_archetype()._on_summoner_basic_effect_finished()
 
 
 func _update_summoner_pose_visual(delta: float) -> void:
-	if not hero_sprite.visible or is_dying:
-		return
-	if hit_pose_timer > 0.0 or attack_pose_timer > 0.0:
-		return
-
-	_update_facing_from_horizontal(velocity.x, delta)
-	_apply_stage8_sprite_anchor()
-	if velocity.length() > 4.0:
-		var movement_ratio := velocity.length() / maxf(move_speed, 1.0)
-		_play_stage1_animation(
-			"move",
-			clampf(movement_ratio, 0.72, 1.35)
-		)
-	else:
-		_play_stage1_animation("idle", 1.0)
+	_summoner_archetype()._update_summoner_pose_visual(delta)
 
 
 
@@ -5277,947 +4396,87 @@ func _count_monsters_near(
 	return count
 
 func _physics_process_rogue(delta: float) -> void:
-	ai_memory_clock += delta
-	_prune_offensive_memory()
-	_prune_status_memory()
-
-	ai_observation_timer = maxf(ai_observation_timer - delta, 0.0)
-	if ai_observation_timer <= 0.0:
-		_refresh_ai_observation()
-
-	attack_timer = maxf(attack_timer - delta * get_paralysis_attack_multiplier(), 0.0)
-	retarget_timer = maxf(retarget_timer - delta, 0.0)
-	wander_timer = maxf(wander_timer - delta, 0.0)
-	attack_pose_timer = maxf(attack_pose_timer - delta, 0.0)
-	hit_pose_timer = maxf(hit_pose_timer - delta, 0.0)
-	ultimate_flash_timer = maxf(ultimate_flash_timer - delta, 0.0)
-	ultimate_cooldown_timer = maxf(
-		ultimate_cooldown_timer - delta,
-		0.0
-	)
-	rogue_slash_cooldown_timer = maxf(
-		rogue_slash_cooldown_timer - delta * get_paralysis_attack_multiplier(),
-		0.0
-	)
-	_update_rogue_attack_collision_ignore(delta)
-
-	_update_invulnerability(delta)
-	_update_rogue_slash(delta)
-
-	var passive_charge := maxf(
-		float(ultimate_config.get("charge_per_second", 0.0)),
-		0.0
-	)
-	if passive_charge > 0.0 and not rogue_assassination_active:
-		_add_ultimate_charge(passive_charge * delta)
-
-	if level_flash_timer > 0.0:
-		level_flash_timer = maxf(level_flash_timer - delta, 0.0)
-		queue_redraw()
-
-	if slow_timer > 0.0:
-		slow_timer = maxf(slow_timer - delta, 0.0)
-		if slow_timer <= 0.0:
-			move_multiplier = 1.0
-			queue_redraw()
-
-	if rogue_assassination_active:
-		_update_rogue_assassination(delta)
-		return
-
-	if _rogue_can_start_assassination():
-		_start_rogue_assassination()
-		return
-
-	if (
-		not rogue_slash_active
-		and rogue_slash_cooldown_timer <= 0.0
-		and _rogue_should_use_slash()
-	):
-		_start_rogue_slash()
-
-	_update_heal_item_goal(delta)
-	_update_chest_goal(delta)
-	_update_magnet_item_goal(delta)
-
-	if (
-		not is_instance_valid(target)
-		or target.is_queued_for_deletion()
-		or retarget_timer <= 0.0
-	):
-		target = _find_nearest_monster()
-		retarget_timer = 0.10
-
-	if not is_instance_valid(target):
-		rogue_combo_index = 0
-		rogue_combo_direction = Vector2.RIGHT
-		_move_without_monsters()
-		_update_rogue_pose_visual(delta)
-		return
-
-	var distance := global_position.distance_to(target.global_position)
-	var speed_scale := 1.0
-	if rogue_slash_active:
-		speed_scale = clampf(
-			float(
-				rogue_slash_config.get(
-					"move_speed_multiplier",
-					0.48
-				)
-			),
-			0.1,
-			1.0
-		)
-
-	var move_direction := _choose_melee_spacing_direction(
-		target,
-		distance,
-		0.88
-	)
-	move_direction = _apply_heal_item_steering(move_direction, delta)
-	move_direction = _apply_chest_steering(move_direction, delta)
-	move_direction = _apply_magnet_item_steering(move_direction, delta)
-	if move_direction.length_squared() > 0.01:
-		_execute_ai_movement(
-			move_direction
-			* move_speed
-			* _get_effective_move_multiplier()
-			* speed_scale
-		)
-	else:
-		velocity = Vector2.ZERO
-
-	if (
-		not rogue_slash_active
-		and distance <= attack_range
-		and attack_timer <= 0.0
-	):
-		_execute_ai_basic_attack(HERO_ACTION_INTENT.AttackKind.ROGUE_COMBO, target)
-
-	_update_rogue_pose_visual(delta)
+	_rogue_archetype()._physics_process_rogue(delta)
 
 func _rogue_compare_registration_order(a: Node, b: Node) -> bool:
-	return int(a.get_meta("query_registration_order", a.get_instance_id())) < int(b.get_meta("query_registration_order", b.get_instance_id()))
+	return _rogue_archetype()._rogue_compare_registration_order(a, b)
 
 
 func _rogue_combo_attack(current_target: Node2D) -> void:
-	if not is_instance_valid(current_target):
-		return
-
-	var target_direction := global_position.direction_to(
-		current_target.global_position
-	)
-	if target_direction.length_squared() <= 0.0:
-		target_direction = (
-			Vector2.LEFT
-			if hero_sprite.flip_h
-			else Vector2.RIGHT
-		)
-
-	if rogue_combo_index == 0:
-		rogue_combo_direction = target_direction.normalized()
-	elif rogue_combo_direction.length_squared() <= 0.0:
-		rogue_combo_direction = target_direction.normalized()
-
-	var direction := rogue_combo_direction.normalized()
-	_face_attack_direction(direction.x)
-
-	var lunge_distance := maxf(
-		float(rogue_combo_config.get("lunge_distance", 85.0)),
-		0.0
-	)
-	var target_distance := global_position.distance_to(
-		current_target.global_position
-	)
-	var lunge_stop_distance := maxf(
-		float(rogue_combo_config.get("lunge_stop_distance", 26.0)),
-		0.0
-	)
-	lunge_distance = minf(
-		lunge_distance,
-		maxf(target_distance - lunge_stop_distance, 0.0)
-	)
-	var lunge_start := global_position
-	# Player movement stays on the pad; only the AI rogue lunges on attack.
-	if not player_controlled:
-		global_position += direction * lunge_distance
-		_clamp_to_battlefield()
-	var lunge_end := global_position
-
-	_start_rogue_attack_collision_ignore(
-		maxf(
-			float(
-				rogue_combo_config.get(
-					"collision_ignore_duration",
-					0.28
-				)
-			),
-			0.0
-		)
-	)
-
-	var damage_multipliers = rogue_combo_config.get(
-		"damage_multipliers",
-		[0.75, 0.85, 1.10]
-	)
-	var damage_ratio := 1.0
-	if (
-		typeof(damage_multipliers) == TYPE_ARRAY
-		and not damage_multipliers.is_empty()
-	):
-		var damage_index := mini(
-			rogue_combo_index,
-			damage_multipliers.size() - 1
-		)
-		damage_ratio = float(damage_multipliers[damage_index])
-
-	var damage := maxi(
-		1,
-		int(round(
-			float(attack_damage)
-			* damage_ratio
-			* rogue_combo_damage_multiplier
-		))
-	)
-
-	var aoe_radii = rogue_combo_config.get(
-		"aoe_radii",
-		[95.0, 110.0, 130.0]
-	)
-	var aoe_offsets = rogue_combo_config.get(
-		"aoe_forward_offsets",
-		[48.0, 54.0, 62.0]
-	)
-	var aoe_radius := 95.0
-	var aoe_offset := 48.0
-	if typeof(aoe_radii) == TYPE_ARRAY and not aoe_radii.is_empty():
-		var radius_index := mini(
-			rogue_combo_index,
-			aoe_radii.size() - 1
-		)
-		aoe_radius = float(aoe_radii[radius_index])
-	if typeof(aoe_offsets) == TYPE_ARRAY and not aoe_offsets.is_empty():
-		var offset_index := mini(
-			rogue_combo_index,
-			aoe_offsets.size() - 1
-		)
-		aoe_offset = float(aoe_offsets[offset_index])
-
-	var corridor_end := lunge_end + direction * aoe_offset
-	if player_controlled and player_weapons != null:
-		player_weapons._effect(lunge_start,corridor_end,aoe_radius,"capsule",Color("bc9eee"))
-	var corridor_vector := corridor_end - lunge_start
-	var corridor_length_squared := corridor_vector.length_squared()
-	var main_id := current_target.get_instance_id()
-	var knockback_distance := float(
-		rogue_combo_config.get(
-			"knockback_distance",
-			30.0
-		)
-	)
-	var secondary_lifesteal := clampf(
-		float(
-			rogue_combo_config.get(
-				"secondary_lifesteal_efficiency",
-				0.50
-			)
-		),
-		0.0,
-		1.0
-	)
-
-	var corridor_bounds := Rect2(lunge_start, Vector2.ZERO).expand(corridor_end).grow(aoe_radius)
-	var battle := get_parent()
-	if is_instance_valid(battle) and battle.has_method("fill_local_monsters_in_rect"):
-		battle.call("fill_local_monsters_in_rect", corridor_bounds, rogue_combo_candidates)
-		HERO_TARGET_POLICY.filter_detectable(rogue_combo_candidates)
-	else:
-		_fill_monster_nodes_in_rect(corridor_bounds, rogue_combo_candidates)
-	rogue_combo_candidates.sort_custom(_rogue_compare_registration_order)
-	for node in rogue_combo_candidates:
-		if not HERO_TARGET_POLICY.is_detectable(node):
-			continue
-		var monster := node as Node2D
-		if monster == null:
-			continue
-
-		var nearest_point := lunge_start
-		if corridor_length_squared > 0.001:
-			var projection := clampf(
-				(
-					(monster.global_position - lunge_start)
-					.dot(corridor_vector)
-					/ corridor_length_squared
-				),
-				0.0,
-				1.0
-			)
-			nearest_point = (
-				lunge_start
-				+ corridor_vector * projection
-			)
-		if (
-			nearest_point.distance_squared_to(monster.global_position)
-			> aoe_radius * aoe_radius
-		):
-			continue
-
-		var is_main_target := monster.get_instance_id() == main_id
-		var actual_damage := _rogue_damage_target(
-			monster,
-			damage,
-			1.0 if is_main_target else secondary_lifesteal
-		)
-		if actual_damage <= 0 or not is_instance_valid(monster):
-			continue
-
-		_rogue_apply_knockback(
-			monster,
-			direction,
-			knockback_distance
-		)
-
-	rogue_combo_candidates.clear()
-	# Stage 2 rogue deals +200% bonus damage to treasure chests
-	# (300% total) so the fast combo can realistically break them.
-	_damage_treasure_chests(
-		corridor_end,
-		aoe_radius,
-		maxi(1, damage * 3)
-	)
-	attack_pose_timer = 0.26
-	_restart_stage1_animation("attack", 1.0)
-	_play_rogue_effect(
-		rogue_attack_effect,
-		"stab",
-		direction
-	)
-	_play_rogue_combo_audio(rogue_combo_index)
-
-	_add_ultimate_charge(
-		float(ultimate_config.get("charge_on_attack", 0.0))
-	)
-
-	var combo_length := 3 + maxi(rogue_bonus_combo_hits, 0)
-	var hit_intervals = rogue_combo_config.get(
-		"hit_intervals",
-		[0.24, 0.26, 0.28, 0.30]
-	)
-	var interval := attack_cooldown
-	if typeof(hit_intervals) == TYPE_ARRAY and not hit_intervals.is_empty():
-		var interval_index := mini(
-			rogue_combo_index,
-			hit_intervals.size() - 1
-		)
-		interval = float(hit_intervals[interval_index])
-
-	var is_finisher := rogue_combo_index >= combo_length - 1
-	if is_finisher:
-		interval = maxf(
-			float(
-				rogue_combo_config.get(
-					"finisher_recovery",
-					1.05
-				)
-			),
-			0.08
-		)
-		interval *= rogue_combo_recovery_multiplier
-
-	interval = _get_common_attack_interval(interval)
-	attack_timer = maxf(interval, 0.08)
-	rogue_combo_index = (rogue_combo_index + 1) % combo_length
-	if rogue_combo_index == 0:
-		rogue_combo_direction = Vector2.ZERO
+	_rogue_archetype()._rogue_combo_attack(current_target)
 
 func _start_rogue_attack_collision_ignore(duration: float) -> void:
-	if duration <= 0.0 or is_dying:
-		return
-
-	if rogue_saved_collision_mask < 0:
-		rogue_saved_collision_mask = collision_mask
-	collision_mask = 0
-	rogue_attack_collision_ignore_timer = maxf(
-		rogue_attack_collision_ignore_timer,
-		duration
-	)
+	_rogue_archetype()._start_rogue_attack_collision_ignore(duration)
 
 func _update_rogue_attack_collision_ignore(delta: float) -> void:
-	if rogue_attack_collision_ignore_timer <= 0.0:
-		if rogue_saved_collision_mask >= 0 and not is_dying:
-			collision_mask = rogue_saved_collision_mask
-			rogue_saved_collision_mask = -1
-		return
-
-	rogue_attack_collision_ignore_timer = maxf(
-		rogue_attack_collision_ignore_timer - delta,
-		0.0
-	)
-	if (
-		rogue_attack_collision_ignore_timer <= 0.0
-		and rogue_saved_collision_mask >= 0
-		and not is_dying
-	):
-		collision_mask = rogue_saved_collision_mask
-		rogue_saved_collision_mask = -1
+	_rogue_archetype()._update_rogue_attack_collision_ignore(delta)
 
 func _rogue_damage_target(
 	current_target: Node2D,
 	damage: int,
 	lifesteal_efficiency: float = 1.0
 ) -> int:
-	if (
-		not is_instance_valid(current_target)
-		or damage <= 0
-		or not current_target.has_method("take_damage")
-	):
-		return 0
-
-	var hp_before_value = current_target.get("current_hp")
-	var hp_before := 0
-	var can_measure := hp_before_value != null
-	if can_measure:
-		hp_before = maxi(int(hp_before_value), 0)
-
-	preload("res://src/systems/monster_hit_context.gd").hit(current_target, damage, "melee", self)
-
-	if not can_measure:
-		return 0
-
-	var hp_after := 0
-	if is_instance_valid(current_target):
-		var hp_after_value = current_target.get("current_hp")
-		if hp_after_value != null:
-			hp_after = maxi(int(hp_after_value), 0)
-
-	var actual_damage := maxi(hp_before - hp_after, 0)
-	_apply_rogue_lifesteal(
-		actual_damage,
-		lifesteal_efficiency
-	)
-	return actual_damage
+	return _rogue_archetype()._rogue_damage_target(current_target, damage, lifesteal_efficiency)
 
 func _apply_rogue_lifesteal(
 	actual_damage: int,
 	efficiency: float
 ) -> void:
-	if (
-		actual_damage <= 0
-		or rogue_lifesteal_ratio <= 0.0
-		or current_hp <= 0
-		or current_hp >= max_hp
-	):
-		return
-
-	rogue_lifesteal_buffer += (
-		float(actual_damage)
-		* rogue_lifesteal_ratio
-		* clampf(efficiency, 0.0, 1.0)
-	)
-	var heal_amount := int(floor(rogue_lifesteal_buffer))
-	if heal_amount <= 0:
-		return
-
-	rogue_lifesteal_buffer -= float(heal_amount)
-	heal_direct(heal_amount)
+	_rogue_archetype()._apply_rogue_lifesteal(actual_damage, efficiency)
 
 func _rogue_apply_knockback(
 	current_target: Node2D,
 	direction: Vector2,
 	distance: float
 ) -> void:
-	if not is_instance_valid(current_target) or distance <= 0.0:
-		return
-	var hp_value = current_target.get("current_hp")
-	if hp_value != null and int(hp_value) <= 0:
-		return
-
-	current_target.global_position += direction.normalized() * distance
-	LOCAL_GRID_MOVEMENT.notify_forced_position_change(current_target)
+	_rogue_archetype()._rogue_apply_knockback(current_target, direction, distance)
 
 func _rogue_should_use_slash() -> bool:
-	if silence_timer > 0.0:
-		return false
-	if rogue_slash_config.is_empty():
-		return false
-
-	var radius := maxf(
-		float(rogue_slash_config.get("radius", 205.0)),
-		0.0
-	)
-	var required := maxi(
-		int(
-			rogue_slash_config.get(
-				"enemy_count_trigger",
-				3
-			)
-		),
-		1
-	)
-	if radius <= 0.0:
-		return false
-	return _count_monsters_near(
-		global_position,
-		radius,
-		required
-	) >= required
+	return _rogue_archetype()._rogue_should_use_slash()
 
 func _start_rogue_slash() -> void:
-	if silence_timer > 0.0:
-		return
-	rogue_combo_index = 0
-	rogue_slash_active = true
-	rogue_slash_duration_timer = maxf(
-		float(rogue_slash_config.get("duration", 1.20)),
-		0.1
-	)
-	rogue_slash_tick_timer = 0.0
-	rogue_slash_cooldown_timer = maxf(
-		float(rogue_slash_config.get("cooldown", 14.0)),
-		0.0
-	)
-
-	var shield_ratio := maxf(
-		float(
-			rogue_slash_config.get(
-				"shield_hp_ratio",
-				0.18
-			)
-		)
-		+ rogue_slash_shield_ratio_bonus,
-		0.0
-	)
-	shield_max_hp = _player_shield_amount(float(max_hp) * shield_ratio)
-	shield_hp = shield_max_hp
-
-	_play_rogue_blade_storm_audio()
-	_apply_rogue_slash_tick()
-	queue_redraw()
+	_rogue_archetype()._start_rogue_slash()
 
 func _update_rogue_slash(delta: float) -> void:
-	if not rogue_slash_active:
-		return
-
-	rogue_slash_duration_timer = maxf(
-		rogue_slash_duration_timer - delta,
-		0.0
-	)
-	rogue_slash_tick_timer = maxf(
-		rogue_slash_tick_timer - delta,
-		0.0
-	)
-
-	if rogue_slash_tick_timer <= 0.0:
-		_apply_rogue_slash_tick()
-		rogue_slash_tick_timer = maxf(
-			float(
-				rogue_slash_config.get(
-					"tick_interval",
-					0.24
-				)
-			),
-			0.08
-		)
-
-	if rogue_slash_duration_timer <= 0.0:
-		rogue_slash_active = false
-		shield_effect.visible = false
+	_rogue_archetype()._update_rogue_slash(delta)
 
 func _apply_rogue_slash_tick() -> void:
-	var radius := maxf(
-		float(rogue_slash_config.get("radius", 205.0)),
-		0.0
-	)
-	var damage := maxi(
-		1,
-		int(round(
-			float(attack_damage)
-			* maxf(
-				float(
-					rogue_slash_config.get(
-						"damage_ratio",
-						0.50
-					)
-				),
-				0.0
-			)
-		))
-	)
-	var radius_sq := radius * radius
-	_fill_monster_nodes_near(
-		global_position,
-		radius,
-		rogue_query_candidates
-	)
-
-	for node in rogue_query_candidates:
-		if not HERO_TARGET_POLICY.is_detectable(node):
-			continue
-		var monster := node as Node2D
-		if monster == null:
-			continue
-		if (
-			global_position.distance_squared_to(monster.global_position)
-			> radius_sq
-		):
-			continue
-		if monster.has_method("take_damage"):
-			_rogue_damage_target(
-				monster,
-				damage,
-				0.50
-			)
-	rogue_query_candidates.clear()
-
-	if shield_effect.sprite_frames != null:
-		shield_effect.visible = true
-		shield_effect.stop()
-		shield_effect.animation = &"slash"
-		shield_effect.frame = 0
-		shield_effect.play(&"slash")
+	_rogue_archetype()._apply_rogue_slash_tick()
 
 func _rogue_can_start_assassination() -> bool:
-	if silence_timer > 0.0:
-		return false
-	if ultimate_config.is_empty():
-		return false
-	if ultimate_cooldown_timer > 0.0:
-		return false
-
-	var charge_max := maxf(
-		float(ultimate_config.get("charge_max", 100.0)),
-		1.0
-	)
-	if ultimate_charge + 0.001 < charge_max:
-		return false
-
-	return _find_rogue_assassination_target() != null
+	return _rogue_archetype()._rogue_can_start_assassination()
 
 func _start_rogue_assassination() -> void:
-	if silence_timer > 0.0:
-		return
-	rogue_combo_index = 0
-	rogue_assassination_active = true
-	rogue_assassination_hits_left = maxi(
-		int(ultimate_config.get("hit_count", 5))
-		+ rogue_assassination_hit_bonus,
-		1
-	)
-	rogue_assassination_cast_timer = maxf(
-		float(ultimate_config.get("cast_time", 0.35)),
-		0.0
-	)
-	rogue_assassination_timer = 0.0
-	ultimate_charge = 0.0
-	ultimate_cooldown_timer = maxf(
-		float(ultimate_config.get("cooldown", 8.0)),
-		0.0
-	)
-	velocity = Vector2.ZERO
-	modulate.a = 0.18
-	_play_rogue_assassination_start_audio()
-	ultimate_used.emit(
-		String(ultimate_config.get("id", "shadow_assassination")),
-		String(ultimate_config.get("name", "급습-암살"))
-	)
-	queue_redraw()
+	_rogue_archetype()._start_rogue_assassination()
 
 func _update_rogue_assassination(delta: float) -> void:
-	velocity = Vector2.ZERO
-
-	if rogue_assassination_cast_timer > 0.0:
-		rogue_assassination_cast_timer = maxf(
-			rogue_assassination_cast_timer - delta,
-			0.0
-		)
-		return
-
-	rogue_assassination_timer = maxf(
-		rogue_assassination_timer - delta,
-		0.0
-	)
-	if rogue_assassination_timer > 0.0:
-		return
-
-	var current_target := _find_rogue_assassination_target()
-	if current_target == null:
-		_end_rogue_assassination()
-		return
-
-	var approach_direction := global_position.direction_to(
-		current_target.global_position
-	)
-	if approach_direction.length_squared() <= 0.0:
-		approach_direction = Vector2.RIGHT
-
-	var behind_offset := maxf(
-		float(ultimate_config.get("behind_offset", 54.0)),
-		0.0
-	)
-	global_position = (
-		current_target.global_position
-		+ approach_direction * behind_offset
-	)
-	_clamp_to_battlefield()
-	_face_attack_direction(-approach_direction.x)
-
-	var base_damage := maxi(
-		1,
-		int(round(
-			float(attack_damage)
-			* maxf(
-				float(
-					ultimate_config.get(
-						"damage_ratio",
-						0.85
-					)
-				),
-				0.0
-			)
-		))
-	)
-	var damage := base_damage
-	var stage_event_type := String(
-		current_target.get_meta(
-			"stage_event_type",
-			""
-		)
-	)
-	var current_target_hp = current_target.get("current_hp")
-	var max_target_hp = current_target.get("max_hp")
-	var is_special_target := not stage_event_type.is_empty()
-
-	if (
-		not is_special_target
-		and current_target_hp != null
-		and max_target_hp != null
-	):
-		var execute_ratio := clampf(
-			float(
-				ultimate_config.get(
-					"execute_hp_ratio",
-					0.30
-				)
-			)
-			+ rogue_execute_threshold_bonus,
-			0.0,
-			0.20
-		)
-		var hp_ratio := (
-			float(current_target_hp)
-			/ float(maxi(int(max_target_hp), 1))
-		)
-		if hp_ratio <= execute_ratio:
-			damage = maxi(int(current_target_hp), damage)
-	elif is_special_target:
-		damage = maxi(
-			1,
-			int(round(
-				float(damage)
-				* maxf(
-					float(
-						ultimate_config.get(
-							"elite_damage_multiplier",
-							1.75
-						)
-					),
-					1.0
-				)
-			))
-		)
-
-	var main_target_id := current_target.get_instance_id()
-	_rogue_damage_target(
-		current_target,
-		damage,
-		1.0
-	)
-
-	var assassination_aoe_radius := maxf(
-		float(ultimate_config.get("aoe_radius", 120.0)),
-		0.0
-	)
-	var secondary_damage := maxi(
-		1,
-		int(round(
-			float(base_damage)
-			* clampf(
-				float(
-					ultimate_config.get(
-						"secondary_damage_ratio",
-						0.78
-					)
-				),
-				0.0,
-				2.0
-			)
-		))
-	)
-	var secondary_lifesteal := clampf(
-		float(
-			ultimate_config.get(
-				"secondary_lifesteal_efficiency",
-				0.50
-			)
-		),
-		0.0,
-		1.0
-	)
-	var assassination_aoe_radius_sq := (
-		assassination_aoe_radius * assassination_aoe_radius
-	)
-	_fill_monster_nodes_near(
-		current_target.global_position,
-		assassination_aoe_radius,
-		rogue_query_candidates
-	)
-
-	for node in rogue_query_candidates:
-		if not HERO_TARGET_POLICY.is_detectable(node):
-			continue
-		var monster := node as Node2D
-		if monster == null:
-			continue
-		if monster.get_instance_id() == main_target_id:
-			continue
-		if (
-			current_target.global_position.distance_squared_to(
-				monster.global_position
-			)
-			> assassination_aoe_radius_sq
-		):
-			continue
-
-		_rogue_damage_target(
-			monster,
-			secondary_damage,
-			secondary_lifesteal
-		)
-	rogue_query_candidates.clear()
-
-	attack_pose_timer = 0.20
-	_restart_stage1_animation("attack", 1.35)
-	_play_rogue_effect(
-		channel_effect,
-		"assassinate",
-		-approach_direction
-	)
-	_play_rogue_assassination_hit_audio()
-
-	rogue_assassination_hits_left -= 1
-	if rogue_assassination_hits_left <= 0:
-		_end_rogue_assassination()
-		return
-
-	rogue_assassination_timer = maxf(
-		float(ultimate_config.get("hit_interval", 0.18)),
-		0.08
-	)
+	_rogue_archetype()._update_rogue_assassination(delta)
 
 func _find_rogue_assassination_target() -> Node2D:
-	var radius := maxf(
-		float(ultimate_config.get("target_radius", 520.0)),
-		1.0
-	)
-	var best: Node2D = null
-	var best_score := INF
-	var radius_sq := radius * radius
-	_fill_monster_nodes_near(
-		global_position,
-		radius,
-		rogue_query_candidates
-	)
-
-	for node in rogue_query_candidates:
-		if not HERO_TARGET_POLICY.is_detectable(node):
-			continue
-		var monster := node as Node2D
-		if monster == null:
-			continue
-
-		var hp_value = monster.get("current_hp")
-		if hp_value != null and int(hp_value) <= 0:
-			continue
-
-		var distance_sq := global_position.distance_squared_to(
-			monster.global_position
-		)
-		if distance_sq > radius_sq:
-			continue
-		var distance := sqrt(distance_sq)
-
-		var hp_ratio := 1.0
-		var max_hp_value = monster.get("max_hp")
-		if hp_value != null and max_hp_value != null:
-			hp_ratio = (
-				float(hp_value)
-				/ float(maxi(int(max_hp_value), 1))
-			)
-
-		var score := distance + hp_ratio * 120.0
-		if score < best_score:
-			best_score = score
-			best = monster
-
-	rogue_query_candidates.clear()
-	return best
+	return _rogue_archetype()._find_rogue_assassination_target()
 
 func _end_rogue_assassination() -> void:
-	rogue_assassination_active = false
-	rogue_assassination_hits_left = 0
-	rogue_assassination_timer = 0.0
-	rogue_assassination_cast_timer = 0.0
-	modulate.a = 1.0
-	channel_effect.visible = false
-	queue_redraw()
+	_rogue_archetype()._end_rogue_assassination()
 
 func _play_rogue_effect(
 	effect_sprite: AnimatedSprite2D,
 	animation_name: String,
 	direction: Vector2
 ) -> void:
-	if effect_sprite.sprite_frames == null:
-		return
-	if not effect_sprite.sprite_frames.has_animation(animation_name):
-		return
-
-	effect_sprite.visible = true
-	effect_sprite.position = direction.normalized() * 28.0
-	effect_sprite.rotation = direction.angle()
-	effect_sprite.stop()
-	effect_sprite.animation = animation_name
-	effect_sprite.frame = 0
-	effect_sprite.play(animation_name)
+	_rogue_archetype()._play_rogue_effect(effect_sprite, animation_name, direction)
 
 func _on_rogue_attack_effect_finished() -> void:
-	rogue_attack_effect.visible = false
+	_rogue_archetype()._on_rogue_attack_effect_finished()
 
 func _update_rogue_pose_visual(delta: float) -> void:
-	if not hero_sprite.visible or is_dying:
-		return
-	if hit_pose_timer > 0.0 or attack_pose_timer > 0.0:
-		return
-
-	_update_facing_from_horizontal(velocity.x, delta)
-
-	if velocity.length() > 4.0:
-		_play_stage1_animation("move", 1.0)
-	else:
-		_play_stage1_animation("idle", 1.0)
+	_rogue_archetype()._update_rogue_pose_visual(delta)
 
 func _on_fighter_guard_release_effect_finished() -> void:
-	var rule := HERO_PRESENTATION.get_release_effect_completion(hero_archetype)
-	if rule.is_empty():
-		return
-	if rule.has("animation") and channel_effect.animation != rule["animation"]:
-		return
-	var properties: Dictionary = rule["properties"]
-	for property in properties:
-		channel_effect.set(property, properties[property])
+	_fighter_archetype()._on_fighter_guard_release_effect_finished()
 
 
 func _apply_stage6_berserker_effect_visuals() -> void:
-	_configure_channel_effect_profile(HERO_PRESENTATION.get_channel_effect_profile(hero_archetype, &"persistent"))
+	_berserker_archetype()._apply_stage6_berserker_effect_visuals()
 
 
 func _apply_alchemist_philosopher_effect_visuals() -> void:
@@ -6437,10 +4696,7 @@ func _add_sequence_animation(
 	return true
 
 func _apply_stage2_rogue_effect_visuals() -> void:
-	# This reset is unconditional, including calls for another archetype.
-	rogue_attack_effect.visible = false
-	rogue_attack_effect.sprite_frames = null
-	_configure_combat_effect_profile(HERO_PRESENTATION.get_combat_effect_profile(hero_archetype, &"rogue"))
+	_rogue_archetype()._apply_stage2_rogue_effect_visuals()
 
 func _apply_stage1_shield_visual() -> void:
 	_configure_scaled_effect_profile(HERO_PRESENTATION.get_scaled_effect_profile(&"rookie_shield"))
@@ -8306,277 +6562,63 @@ func _create_hero_sfx_player(
 
 
 func _ensure_rogue_audio_runtime() -> void:
-	if hero_archetype != "rogue_combo":
-		return
-
-	if rogue_combo_audio_pool.is_empty():
-		for index in range(3):
-			rogue_combo_audio_pool.append(
-				_create_hero_sfx_player(
-					STAGE2_COMBO_SLASH_AUDIO_PATH,
-					HERO_SFX_DB_PRIMARY_ATTACK - 10.0,
-					1.0
-				)
-			)
-
-	if not is_instance_valid(rogue_blade_storm_audio):
-		rogue_blade_storm_audio = _create_hero_sfx_player(
-			STAGE2_BLADE_STORM_AUDIO_PATH,
-			HERO_SFX_DB_REGULAR_SKILL,
-			1.0
-		)
-
-	if not is_instance_valid(rogue_assassination_start_audio):
-		rogue_assassination_start_audio = _create_hero_sfx_player(
-			STAGE2_ASSASSINATION_START_AUDIO_PATH,
-			HERO_SFX_DB_REGULAR_SKILL,
-			1.0
-		)
-
-	if rogue_assassination_hit_audio_pool.is_empty():
-		for index in range(3):
-			rogue_assassination_hit_audio_pool.append(
-				_create_hero_sfx_player(
-					STAGE2_ASSASSINATION_HIT_AUDIO_PATH,
-					HERO_SFX_DB_HIT - 3.0,
-					1.0
-				)
-			)
-
-	if not is_instance_valid(rogue_hit_audio):
-		rogue_hit_audio = _create_hero_sfx_player(
-			STAGE2_HIT_AUDIO_PATH, CONTEXT_AUDIO.HIT_DB, 1.0
-		)
-
-	if not is_instance_valid(rogue_death_audio):
-		rogue_death_audio = _create_hero_sfx_player(
-			STAGE2_DEATH_AUDIO_PATH,
-			HERO_SFX_DB_DEATH,
-			0.96
-		)
+	_rogue_archetype()._ensure_rogue_audio_runtime()
 
 
 func _play_rogue_combo_audio(_combo_index: int) -> void:
-	if COMBAT_DELAY.now_msec(self) < rogue_combo_audio_next_ms:
-		return
-	_ensure_rogue_audio_runtime()
-	if rogue_combo_audio_pool.is_empty():
-		return
-	var player := rogue_combo_audio_pool[
-		rogue_combo_audio_cursor % rogue_combo_audio_pool.size()
-	]
-	rogue_combo_audio_cursor = (
-		rogue_combo_audio_cursor + 1
-	) % rogue_combo_audio_pool.size()
-	if not is_instance_valid(player) or player.stream == null:
-		return
-	rogue_combo_audio_next_ms = COMBAT_DELAY.now_msec(self)+CONTEXT_AUDIO.ROGUE_ATTACK_INTERVAL_MS
-	player.pitch_scale = 1.0
-	player.stop()
-	player.play()
+	_rogue_archetype()._play_rogue_combo_audio(_combo_index)
 
 
 func _play_rogue_blade_storm_audio() -> void:
-	_ensure_rogue_audio_runtime()
-	if is_instance_valid(rogue_blade_storm_audio) and rogue_blade_storm_audio.stream != null:
-		rogue_blade_storm_audio.stop()
-		rogue_blade_storm_audio.play()
+	_rogue_archetype()._play_rogue_blade_storm_audio()
 
 
 func _play_rogue_assassination_start_audio() -> void:
-	_ensure_rogue_audio_runtime()
-	if (
-		is_instance_valid(rogue_assassination_start_audio)
-		and rogue_assassination_start_audio.stream != null
-	):
-		rogue_assassination_start_audio.stop()
-		rogue_assassination_start_audio.play()
+	_rogue_archetype()._play_rogue_assassination_start_audio()
 
 
 func _play_rogue_assassination_hit_audio() -> void:
-	if COMBAT_DELAY.now_msec(self) < rogue_assassination_audio_next_ms:
-		return
-	_ensure_rogue_audio_runtime()
-	if rogue_assassination_hit_audio_pool.is_empty():
-		return
-	var player := rogue_assassination_hit_audio_pool[
-		rogue_assassination_hit_audio_cursor
-		% rogue_assassination_hit_audio_pool.size()
-	]
-	rogue_assassination_hit_audio_cursor = (
-		rogue_assassination_hit_audio_cursor + 1
-	) % rogue_assassination_hit_audio_pool.size()
-	rogue_assassination_audio_next_ms = COMBAT_DELAY.now_msec(self)+CONTEXT_AUDIO.ROGUE_ASSASSINATION_INTERVAL_MS
-	if not is_instance_valid(player) or player.stream == null:
-		return
-	player.stop()
-	player.play()
+	_rogue_archetype()._play_rogue_assassination_hit_audio()
 
 
 func _play_rogue_hit_audio() -> void:
-	_ensure_rogue_audio_runtime()
-	if is_instance_valid(rogue_hit_audio) and rogue_hit_audio.stream != null:
-		rogue_hit_audio.stop()
-		rogue_hit_audio.play()
+	_rogue_archetype()._play_rogue_hit_audio()
 
 
 func _play_rogue_death_audio() -> void:
-	_ensure_rogue_audio_runtime()
-	if is_instance_valid(rogue_death_audio) and rogue_death_audio.stream != null:
-		rogue_death_audio.stop()
-		rogue_death_audio.play()
+	_rogue_archetype()._play_rogue_death_audio()
 
 
 func _ensure_fighter_audio_runtime() -> void:
-	if hero_archetype != "sword_shield":
-		return
-
-	if fighter_slash_audio_pool.is_empty():
-		for index in range(3):
-			fighter_slash_audio_pool.append(
-				_create_hero_sfx_player(
-					STAGE3_SLASH_AUDIO_PATH,
-					HERO_SFX_DB_PRIMARY_ATTACK - 3.0,
-					0.96
-				)
-			)
-
-	if fighter_thrust_audio_pool.is_empty():
-		for index in range(3):
-			fighter_thrust_audio_pool.append(
-				_create_hero_sfx_player(
-					STAGE3_THRUST_AUDIO_PATH,
-					HERO_SFX_DB_PRIMARY_ATTACK - 2.0,
-					1.08
-				)
-			)
-
-	if not is_instance_valid(fighter_guard_start_audio):
-		fighter_guard_start_audio = _create_hero_sfx_player(
-			STAGE3_GUARD_START_AUDIO_PATH,
-			HERO_SFX_DB_HEAVY_SKILL - 2.0,
-			0.72
-		)
-
-	if not is_instance_valid(fighter_guard_release_audio):
-		fighter_guard_release_audio = _create_hero_sfx_player(
-			STAGE3_GUARD_RELEASE_AUDIO_PATH,
-			HERO_SFX_DB_HEAVY_SKILL - 2.0,
-			0.76
-		)
-
-	if fighter_charge_impact_audio_pool.is_empty():
-		for index in range(3):
-			fighter_charge_impact_audio_pool.append(
-				_create_hero_sfx_player(
-					STAGE3_CHARGE_IMPACT_AUDIO_PATH,
-					HERO_SFX_DB_HEAVY_SKILL - 7.0,
-					0.86
-				)
-			)
-
-	if not is_instance_valid(fighter_hit_audio):
-		fighter_hit_audio = _create_hero_sfx_player(
-			STAGE3_HIT_AUDIO_PATH, CONTEXT_AUDIO.HIT_DB, 1.0
-		)
-
-	if not is_instance_valid(fighter_death_audio):
-		fighter_death_audio = _create_hero_sfx_player(
-			STAGE3_DEATH_AUDIO_PATH,
-			HERO_SFX_DB_DEATH,
-			0.82
-		)
+	_fighter_archetype()._ensure_fighter_audio_runtime()
 
 
 func _play_fighter_slash_audio() -> void:
-	_ensure_fighter_audio_runtime()
-	if fighter_slash_audio_pool.is_empty():
-		return
-	var player := fighter_slash_audio_pool[
-		fighter_slash_audio_cursor % fighter_slash_audio_pool.size()
-	]
-	fighter_slash_audio_cursor = (
-		fighter_slash_audio_cursor + 1
-	) % fighter_slash_audio_pool.size()
-	if not is_instance_valid(player) or player.stream == null:
-		return
-	var pitch_steps: Array[float] = [0.94, 1.00, 0.90]
-	player.pitch_scale = pitch_steps[
-		fighter_slash_audio_cursor % pitch_steps.size()
-	]
-	player.stop()
-	player.play()
+	_fighter_archetype()._play_fighter_slash_audio()
 
 
 func _play_fighter_thrust_audio(is_charge: bool = false) -> void:
-	_ensure_fighter_audio_runtime()
-	if fighter_thrust_audio_pool.is_empty():
-		return
-	var player := fighter_thrust_audio_pool[
-		fighter_thrust_audio_cursor % fighter_thrust_audio_pool.size()
-	]
-	fighter_thrust_audio_cursor = (
-		fighter_thrust_audio_cursor + 1
-	) % fighter_thrust_audio_pool.size()
-	if not is_instance_valid(player) or player.stream == null:
-		return
-	player.pitch_scale = 0.90 if is_charge else 1.12
-	player.stop()
-	player.play()
+	_fighter_archetype()._play_fighter_thrust_audio(is_charge)
 
 
 func _play_fighter_guard_start_audio() -> void:
-	_ensure_fighter_audio_runtime()
-	if (
-		is_instance_valid(fighter_guard_start_audio)
-		and fighter_guard_start_audio.stream != null
-	):
-		fighter_guard_start_audio.stop()
-		fighter_guard_start_audio.play()
+	_fighter_archetype()._play_fighter_guard_start_audio()
 
 
 func _play_fighter_guard_release_audio() -> void:
-	_ensure_fighter_audio_runtime()
-	if (
-		is_instance_valid(fighter_guard_release_audio)
-		and fighter_guard_release_audio.stream != null
-	):
-		fighter_guard_release_audio.stop()
-		fighter_guard_release_audio.play()
+	_fighter_archetype()._play_fighter_guard_release_audio()
 
 
 func _play_fighter_charge_impact_audio() -> void:
-	_ensure_fighter_audio_runtime()
-	if fighter_charge_impact_audio_pool.is_empty():
-		return
-	var player := fighter_charge_impact_audio_pool[
-		fighter_charge_impact_audio_cursor
-		% fighter_charge_impact_audio_pool.size()
-	]
-	fighter_charge_impact_audio_cursor = (
-		fighter_charge_impact_audio_cursor + 1
-	) % fighter_charge_impact_audio_pool.size()
-	if not is_instance_valid(player) or player.stream == null:
-		return
-	player.stop()
-	player.play()
+	_fighter_archetype()._play_fighter_charge_impact_audio()
 
 
 func _play_fighter_hit_audio() -> void:
-	_ensure_fighter_audio_runtime()
-	if is_instance_valid(fighter_hit_audio) and fighter_hit_audio.stream != null:
-		fighter_hit_audio.stop()
-		fighter_hit_audio.play()
+	_fighter_archetype()._play_fighter_hit_audio()
 
 
 func _play_fighter_death_audio() -> void:
-	_ensure_fighter_audio_runtime()
-	if (
-		is_instance_valid(fighter_death_audio)
-		and fighter_death_audio.stream != null
-	):
-		fighter_death_audio.stop()
-		fighter_death_audio.play()
+	_fighter_archetype()._play_fighter_death_audio()
 
 
 func _ensure_gunner_audio_runtime() -> void:
@@ -8815,116 +6857,27 @@ func _play_archmage_death_audio() -> void:
 
 
 func _ensure_berserker_audio_runtime() -> void:
-	if hero_archetype != "berserker_madness":
-		return
-
-	if berserker_basic_audio_pool.is_empty():
-		for index in range(4):
-			berserker_basic_audio_pool.append(
-				_create_hero_sfx_player(
-					STAGE6_BASIC_AUDIO_PATH,
-					HERO_SFX_DB_PRIMARY_ATTACK - 5.0,
-					0.94
-				)
-			)
-
-	if berserker_skill1_audio_pool.is_empty():
-		for index in range(3):
-			berserker_skill1_audio_pool.append(
-				_create_hero_sfx_player(
-					STAGE6_SKILL1_AUDIO_PATH,
-					HERO_SFX_DB_REGULAR_SKILL - 3.0,
-					0.82
-				)
-			)
-
-	if not is_instance_valid(berserker_skill2_audio):
-		berserker_skill2_audio = _create_hero_sfx_player(
-			STAGE6_SKILL2_AUDIO_PATH,
-			HERO_SFX_DB_HEAVY_SKILL - 2.0,
-			0.72
-		)
-	if not is_instance_valid(berserker_skill3_audio):
-		berserker_skill3_audio = _create_hero_sfx_player(
-			STAGE6_SKILL3_AUDIO_PATH,
-			HERO_SFX_DB_REGULAR_SKILL - 2.0,
-			1.18
-		)
-	if not is_instance_valid(berserker_skill4_audio):
-		berserker_skill4_audio = _create_hero_sfx_player(
-			STAGE6_SKILL4_AUDIO_PATH,
-			HERO_SFX_DB_REGULAR_SKILL - 1.0,
-			0.90
-		)
-	if not is_instance_valid(berserker_madness_roar_audio):
-		berserker_madness_roar_audio = _create_hero_sfx_player(
-			STAGE6_MADNESS_ROAR_AUDIO_PATH, HERO_SFX_DB_HEAVY_SKILL - 5.0, 1.0
-		)
-	if not is_instance_valid(berserker_hit_audio):
-		berserker_hit_audio = _create_hero_sfx_player(
-			STAGE6_HIT_AUDIO_PATH, CONTEXT_AUDIO.HIT_DB, 1.0
-		)
-	if not is_instance_valid(berserker_death_audio):
-		berserker_death_audio = _create_hero_sfx_player(
-			STAGE6_DEATH_AUDIO_PATH,
-			HERO_SFX_DB_DEATH,
-			0.82
-		)
+	_berserker_archetype()._ensure_berserker_audio_runtime()
 
 
 func _play_berserker_player(player: AudioStreamPlayer) -> void:
-	if not is_instance_valid(player) or player.stream == null:
-		return
-	player.stop()
-	player.play()
+	_berserker_archetype()._play_berserker_player(player)
 
 
 func _play_berserker_basic_audio() -> void:
-	_ensure_berserker_audio_runtime()
-	if berserker_basic_audio_pool.is_empty():
-		return
-	var player := berserker_basic_audio_pool[
-		berserker_basic_audio_cursor % berserker_basic_audio_pool.size()
-	]
-	berserker_basic_audio_cursor = (
-		berserker_basic_audio_cursor + 1
-	) % berserker_basic_audio_pool.size()
-	if not is_instance_valid(player) or player.stream == null:
-		return
-	player.pitch_scale = (
-		1.02 + 0.04 * float(berserker_basic_audio_cursor % 3)
-		if berserker_madness_active
-		else 0.88 + 0.04 * float(berserker_basic_audio_cursor % 3)
-	)
-	player.stop()
-	player.play()
+	_berserker_archetype()._play_berserker_basic_audio()
 
 
 func _play_berserker_skill1_audio(wave_index: int) -> void:
-	_ensure_berserker_audio_runtime()
-	if berserker_skill1_audio_pool.is_empty():
-		return
-	var player := berserker_skill1_audio_pool[
-		berserker_skill1_audio_cursor % berserker_skill1_audio_pool.size()
-	]
-	berserker_skill1_audio_cursor = (
-		berserker_skill1_audio_cursor + 1
-	) % berserker_skill1_audio_pool.size()
-	if not is_instance_valid(player) or player.stream == null:
-		return
-	player.pitch_scale = 0.78 + 0.07 * float(clampi(wave_index, 0, 2))
-	player.stop()
-	player.play()
+	_berserker_archetype()._play_berserker_skill1_audio(wave_index)
 
 
 func _play_berserker_hit_audio() -> void:
-	_ensure_berserker_audio_runtime()
-	_play_berserker_player(berserker_hit_audio)
+	_berserker_archetype()._play_berserker_hit_audio()
 
 
 func _play_berserker_death_audio() -> void:
-	_ensure_berserker_audio_runtime()
-	_play_berserker_player(berserker_death_audio)
+	_berserker_archetype()._play_berserker_death_audio()
 
 
 func _create_sage_audio_player(audio_path: String, volume_db: float, pitch_scale: float) -> AudioStreamPlayer:
@@ -14968,39 +12921,7 @@ func _append_purifier_gungnir_hud(skills: Array) -> void:
 
 
 func _append_summoner_open_gate_hud(skills: Array) -> void:
-	if summoner_open_gate_config.is_empty():
-		return
-	var required := maxi(_get_summoner_open_gate_required_summons(), 1)
-	var cooldown_total := maxf(
-		float(summoner_open_gate_config.get("cooldown", 100.0)),
-		0.0
-	)
-	var cooldown_remaining := maxf(summoner_open_gate_cooldown, 0.0)
-	var status := "사용 조건 대기"
-	if summoner_open_gate_unlocked:
-		status = (
-			"재사용 대기 중"
-			if cooldown_remaining > 0.01
-			else "사용 가능"
-		)
-	skills.append({
-		"id": String(summoner_open_gate_config.get("id", "summoner_open_gate")),
-		"name": String(summoner_open_gate_config.get("name", "이계의 문 - 개방")),
-		"description": _skill_hud_description(summoner_open_gate_config),
-		"progress_text": (
-			"누적 소환 %d / %d"
-			% [mini(summoner_total_summons, required), required]
-		),
-		"status_text": status,
-		"available": summoner_open_gate_unlocked and cooldown_remaining <= 0.01,
-		"cooldown_total": cooldown_total,
-		"cooldown_remaining": (
-			cooldown_remaining
-			if summoner_open_gate_unlocked
-			else cooldown_total
-		),
-		"icon_path": "res://assets/art/heroes/stage8_summoner/frames/effect5/effect_06.png",
-	})
+	_summoner_archetype()._append_summoner_open_gate_hud(skills)
 
 
 func _append_alchemist_philosopher_hud(skills: Array) -> void:
@@ -15074,26 +12995,7 @@ func _append_berserker_skill_cooldown_hud(
 	remaining: float,
 	icon_path: String
 ) -> void:
-	if config.is_empty():
-		return
-	var cooldown_total: float = _get_berserker_skill_cooldown(
-		config,
-		0.0
-	)
-	if cooldown_total <= 0.0:
-		return
-	var current_remaining := maxf(remaining, 0.0)
-	skills.append({
-		"id": String(config.get("id", "skill")),
-		"name": String(config.get("name", "기술")),
-		"description": _skill_hud_description(config),
-		"resource_text": _skill_hud_resource_text(config),
-		"status_text": "재사용 대기 중" if current_remaining > 0.01 else "사용 가능",
-		"available": current_remaining <= 0.01,
-		"cooldown_total": cooldown_total,
-		"cooldown_remaining": current_remaining,
-		"icon_path": icon_path,
-	})
+	_berserker_archetype()._append_berserker_skill_cooldown_hud(skills, config, remaining, icon_path)
 
 
 func _append_archmage_skill_hud(
@@ -15269,14 +13171,7 @@ func _add_status_resistance(
 	)
 
 func _get_summoner_augment_ai_settings() -> Dictionary:
-	if hero_archetype != "summoner_gatekeeper":
-		return ai_settings.duplicate(true)
-	return HERO_SUMMONER_RUNTIME.build_augment_ai_settings(
-		ai_settings,
-		summoner_ai_choice_counts,
-		_get_active_summon_count(),
-		_get_summoner_slot_capacity()
-	)
+	return _summoner_archetype()._get_summoner_augment_ai_settings()
 
 
 func _level_up() -> void:
@@ -16799,523 +14694,52 @@ func get_build_summary() -> String:
 	return " · ".join(parts)
 
 func _physics_process_berserker(delta: float) -> void:
-	ai_memory_clock += delta
-	_prune_offensive_memory()
-	_prune_status_memory()
-
-	ai_observation_timer = maxf(ai_observation_timer - delta, 0.0)
-	if ai_observation_timer <= 0.0:
-		_refresh_ai_observation()
-
-	attack_timer = maxf(attack_timer - delta * get_paralysis_attack_multiplier(), 0.0)
-	berserker_skill1_cooldown = maxf(
-		berserker_skill1_cooldown - delta,
-		0.0
-	)
-	berserker_skill2_cooldown = maxf(
-		berserker_skill2_cooldown - delta,
-		0.0
-	)
-	berserker_skill3_cooldown = maxf(
-		berserker_skill3_cooldown - delta,
-		0.0
-	)
-	berserker_skill4_cooldown = maxf(
-		berserker_skill4_cooldown - delta,
-		0.0
-	)
-	berserker_skill_global_cooldown = maxf(
-		berserker_skill_global_cooldown - delta,
-		0.0
-	)
-	retarget_timer = maxf(retarget_timer - delta, 0.0)
-	wander_timer = maxf(wander_timer - delta, 0.0)
-	attack_pose_timer = maxf(attack_pose_timer - delta, 0.0)
-	hit_pose_timer = maxf(hit_pose_timer - delta, 0.0)
-	ultimate_flash_timer = maxf(ultimate_flash_timer - delta, 0.0)
-	_update_invulnerability(delta)
-	_update_berserker_madness(delta)
-	_update_berserker_hp_visual()
-
-	if level_flash_timer > 0.0:
-		level_flash_timer = maxf(level_flash_timer - delta, 0.0)
-		queue_redraw()
-
-	if slow_timer > 0.0:
-		slow_timer = maxf(slow_timer - delta, 0.0)
-		if slow_timer <= 0.0:
-			move_multiplier = 1.0
-			queue_redraw()
-
-	if berserker_reviving:
-		velocity = Vector2.ZERO
-		return
-
-	if berserker_skill3_active:
-		velocity = Vector2.ZERO
-		return
-
-	if _update_berserker_skill1(delta):
-		velocity = Vector2.ZERO
-		_update_berserker_pose_visual(delta)
-		return
-
-	_update_heal_item_goal(delta)
-	_update_chest_goal(delta)
-	_update_magnet_item_goal(delta)
-
-	if (
-		not is_instance_valid(target)
-		or target.is_queued_for_deletion()
-		or retarget_timer <= 0.0
-	):
-		target = _find_nearest_monster()
-		retarget_timer = 0.12
-
-	if not is_instance_valid(target):
-		_fighter_move_without_monsters(1.0)
-		_update_berserker_pose_visual(delta)
-		return
-
-	var distance: float = global_position.distance_to(target.global_position)
-	var move_direction: Vector2 = _choose_melee_spacing_direction(
-		target,
-		distance,
-		0.88
-	)
-	move_direction = _apply_heal_item_steering(move_direction, delta)
-	move_direction = _apply_chest_steering(move_direction, delta)
-	move_direction = _apply_magnet_item_steering(move_direction, delta)
-
-	if move_direction.length_squared() > 0.01:
-		_execute_ai_movement(move_direction * move_speed * _get_effective_move_multiplier())
-	else:
-		velocity = Vector2.ZERO
-
-	var attack_trigger_range: float = attack_range
-	if berserker_madness_active:
-		attack_trigger_range = maxf(
-			float(berserker_config.get("madness_target_radius", 375.0)),
-			attack_range
-		)
-	var used_contextual_skill: bool = _try_use_berserker_contextual_skill(
-		target,
-		distance
-	)
-	if (
-		not used_contextual_skill
-		and distance <= attack_trigger_range
-		and attack_timer <= 0.0
-	):
-		_execute_ai_basic_attack(HERO_ACTION_INTENT.AttackKind.BERSERKER, target)
-
-	_update_berserker_pose_visual(delta)
+	_berserker_archetype()._physics_process_berserker(delta)
 
 
 func _try_use_berserker_contextual_skill(
 	current_target: Node2D,
 	distance: float
 ) -> bool:
-	if silence_timer > 0.0:
-		return false
-	if (
-		berserker_skill_global_cooldown > 0.0
-		or not is_instance_valid(current_target)
-	):
-		return false
-
-	var hp_ratio: float = clampf(
-		float(current_hp) / float(maxi(max_hp, 1)),
-		0.0,
-		1.0
-	)
-	var close_count: int = _count_monsters_near(
-		global_position,
-		245.0,
-		6
-	)
-	var recovery_count: int = _count_monsters_near(
-		global_position,
-		330.0,
-		6
-	)
-	var skill1_value = berserker_config.get("skill_1", {})
-	var skill1_range: float = attack_range
-	if typeof(skill1_value) == TYPE_DICTIONARY:
-		var skill1_config: Dictionary = skill1_value
-		skill1_range = maxf(
-			float(skill1_config.get("base_range", 300.0)),
-			attack_range
-		)
-
-	# 3식은 저체력 회복/재배치용. 적이 충분할 때만 사용한다.
-	if (
-		berserker_skill3_cooldown <= 0.0
-		and distance <= 500.0
-		and recovery_count >= 2
-		and (
-			hp_ratio <= 0.62
-			or recovery_count >= 5
-		)
-	):
-		_start_berserker_skill3(current_target)
-		return true
-
-	# 4식은 실제 포위 압력이 있을 때 밀어내기 용도로 보존한다.
-	var spin_required: int = 2 if berserker_madness_active else 3
-	if (
-		berserker_skill4_cooldown <= 0.0
-		and close_count >= spin_required
-		and hp_ratio >= 0.22
-	):
-		_start_berserker_skill4()
-		return true
-
-	# 2식은 적 밀집 또는 체력 회복 가치가 있을 때 우선한다.
-	if (
-		berserker_skill2_cooldown <= 0.0
-		and distance <= 320.0
-		and hp_ratio >= 0.26
-		and (
-			recovery_count >= 4
-			or (
-				hp_ratio <= 0.58
-				and recovery_count >= 2
-			)
-		)
-	):
-		_start_berserker_skill2(current_target)
-		return true
-
-	# 1식은 중거리에서 평타가 닿지 않을 때 주력 견제기로 사용한다.
-	if (
-		berserker_skill1_cooldown <= 0.0
-		and distance <= skill1_range
-		and distance > maxf(attack_range * 0.90, 130.0)
-		and hp_ratio >= 0.30
-	):
-		_start_berserker_skill1(current_target)
-		return true
-
-	return false
+	return _berserker_archetype()._try_use_berserker_contextual_skill(current_target, distance)
 
 
 func _get_berserker_skill_cooldown(
 	skill_config: Dictionary,
 	fallback: float
 ) -> float:
-	var base_cooldown: float = maxf(
-		float(skill_config.get("cooldown", fallback)),
-		0.0
-	)
-	return base_cooldown * (
-		1.0 - clampf(
-			berserker_blood_art_cooldown_reduction,
-			0.0,
-			0.15
-		)
-	)
+	return _berserker_archetype()._get_berserker_skill_cooldown(skill_config, fallback)
 
 
 func _pay_berserker_skill_hp_cost(hp_cost_ratio: float) -> void:
-	var ratio: float = clampf(hp_cost_ratio, 0.0, 0.95)
-	var cost_base: float = float(current_hp)
-	if berserker_blood_art_eighth_stacks > 0:
-		cost_base = float(max_hp)
-	var hp_cost: int = maxi(
-		int(round(cost_base * ratio)),
-		1
-	)
-	current_hp = maxi(current_hp - hp_cost, 1)
-	health_changed.emit(current_hp, max_hp)
+	_berserker_archetype()._pay_berserker_skill_hp_cost(hp_cost_ratio)
 
 
 func _berserker_blood_art_eighth_heal_on_hit() -> void:
-	if berserker_blood_art_eighth_stacks <= 0:
-		return
-	var missing_hp: int = maxi(max_hp - current_hp, 0)
-	if missing_hp <= 0:
-		return
-	var heal_ratio: float = (
-		0.005
-		+ 0.003
-		* float(berserker_blood_art_eighth_stacks - 1)
-	)
-	var heal_amount: int = maxi(
-		int(round(float(missing_hp) * heal_ratio)),
-		1
-	)
-	heal_direct(heal_amount)
+	_berserker_archetype()._berserker_blood_art_eighth_heal_on_hit()
 
 
 func notify_berserker_blood_art_hit() -> void:
-	_berserker_blood_art_eighth_heal_on_hit()
+	_berserker_archetype().notify_berserker_blood_art_hit()
 
 
 func _start_berserker_skill1(current_target: Node2D) -> void:
-	if silence_timer > 0.0:
-		return
-	if berserker_skill1_active or not is_instance_valid(current_target):
-		return
-
-	var skill_config_value = berserker_config.get("skill_1", {})
-	if typeof(skill_config_value) != TYPE_DICTIONARY:
-		return
-	var skill_config: Dictionary = skill_config_value
-	if skill_config.is_empty():
-		return
-
-	var hp_cost_ratio: float = clampf(
-		float(skill_config.get("hp_cost_ratio", 0.05)),
-		0.0,
-		0.95
-	)
-	_pay_berserker_skill_hp_cost(hp_cost_ratio)
-
-	berserker_skill1_direction = global_position.direction_to(
-		current_target.global_position
-	)
-	if berserker_skill1_direction.length_squared() <= 0.0:
-		berserker_skill1_direction = (
-			Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
-		)
-	berserker_skill1_direction = berserker_skill1_direction.normalized()
-
-	berserker_skill1_active = true
-	berserker_skill1_wave_index = 0
-	berserker_skill1_wave_timer = 0.0
-	berserker_skill1_cooldown = _get_berserker_skill_cooldown(
-		skill_config,
-		15.0
-	)
-	berserker_skill_global_cooldown = maxf(
-		berserker_skill_global_cooldown,
-		2.40
-	)
-	attack_timer = maxf(attack_timer, 2.35)
-	attack_pose_timer = 0.0
-	_face_attack_direction(berserker_skill1_direction.x)
-	queue_redraw()
+	_berserker_archetype()._start_berserker_skill1(current_target)
 
 
 func _update_berserker_skill1(delta: float) -> bool:
-	if not berserker_skill1_active:
-		return false
-
-	var skill_config_value = berserker_config.get("skill_1", {})
-	if typeof(skill_config_value) != TYPE_DICTIONARY:
-		berserker_skill1_active = false
-		return false
-	var skill_config: Dictionary = skill_config_value
-
-	berserker_skill1_wave_timer = maxf(
-		berserker_skill1_wave_timer - delta,
-		0.0
-	)
-	if berserker_skill1_wave_timer > 0.0:
-		return true
-
-	var wave_count: int = maxi(
-		int(skill_config.get("wave_count", 3)),
-		1
-	)
-	if berserker_skill1_wave_index >= wave_count:
-		berserker_skill1_active = false
-		return false
-
-	_berserker_emit_skill1_wave(
-		berserker_skill1_wave_index,
-		skill_config
-	)
-	berserker_skill1_wave_index += 1
-	if berserker_skill1_wave_index >= wave_count:
-		berserker_skill1_active = false
-		return false
-
-	berserker_skill1_wave_timer = maxf(
-		float(skill_config.get("wave_interval", 0.75)),
-		0.05
-	)
-	return true
+	return _berserker_archetype()._update_berserker_skill1(delta)
 
 
 func _berserker_emit_skill1_wave(
 	wave_index: int,
 	skill_config: Dictionary
 ) -> void:
-	var direction: Vector2 = berserker_skill1_direction
-	if direction.length_squared() <= 0.0:
-		direction = Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
-	direction = direction.normalized()
-
-	_face_attack_direction(direction.x)
-	_restart_stage1_animation("attack")
-	attack_pose_timer = 0.46
-	_play_berserker_skill1_audio(wave_index)
-
-	var growth: float = maxf(
-		float(skill_config.get("size_growth_per_wave", 0.25)),
-		0.0
-	)
-	var scale_multiplier: float = 1.0 + growth * float(wave_index)
-	var projectile_range: float = (
-		maxf(float(skill_config.get("base_range", 560.0)), 1.0)
-		* scale_multiplier
-	)
-	var half_width: float = (
-		maxf(float(skill_config.get("base_half_width", 64.0)), 1.0)
-		* scale_multiplier
-	)
-	var projectile_speed_value: float = maxf(
-		float(skill_config.get("projectile_speed", 760.0)),
-		1.0
-	)
-
-	var repeat_values = skill_config.get(
-		"repeat_hit_multipliers",
-		[1.0, 0.80, 0.60]
-	)
-	var repeat_multiplier: float = 1.0
-	if typeof(repeat_values) == TYPE_ARRAY:
-		var repeat_array: Array = repeat_values
-		if wave_index >= 0 and wave_index < repeat_array.size():
-			repeat_multiplier = float(repeat_array[wave_index])
-
-	var damage: int = maxi(
-		int(round(
-			float(_get_berserker_effective_attack_damage())
-			* float(skill_config.get("damage_ratio", 1.10))
-			* repeat_multiplier
-		)),
-		1
-	)
-
-	var back_direction: Vector2 = -direction
-	var blood_recoil_fx: AnimatedSprite2D = _spawn_archmage_fx(
-		"%s/effect2" % STAGE6_FRAME_DIR,
-		"blood_effect",
-		1,
-		10,
-		30.0,
-		false,
-		global_position + back_direction * 38.0,
-		Vector2(
-			0.84 * scale_multiplier,
-			0.84 * scale_multiplier
-		)
-	)
-	if is_instance_valid(blood_recoil_fx):
-		blood_recoil_fx.flip_h = back_direction.x < 0.0
-		blood_recoil_fx.rotation = (
-			back_direction.angle()
-			if back_direction.x >= 0.0
-			else back_direction.angle() - PI
-		)
-		blood_recoil_fx.modulate = Color(1.0, 0.72, 0.72, 0.95)
-		blood_recoil_fx.z_index = 7
-		var recoil_fade := blood_recoil_fx.create_tween()
-		recoil_fade.tween_property(
-			blood_recoil_fx,
-			"modulate:a",
-			0.0,
-			0.24
-		).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-
-	var projectile_config: Dictionary = {
-		"hit_radius": half_width,
-		"visual_scale": 0.936 * scale_multiplier,
-	}
-	var projectile := _acquire_projectile(
-		ARCHMAGE_SKILL_PROJECTILE_SCENE,
-		"berserker_wave_projectile"
-	)
-	if projectile == null:
-		return
-
-	projectile.global_position = global_position + direction * 54.0
-	projectile.call(
-		"setup",
-		"berserker_wave",
-		direction,
-		damage,
-		projectile_speed_value,
-		projectile_range,
-		projectile_config,
-		self,
-		false,
-		null
-	)
+	_berserker_archetype()._berserker_emit_skill1_wave(wave_index, skill_config)
 
 
 func _start_berserker_skill2(current_target: Node2D) -> void:
-	if silence_timer > 0.0:
-		return
-	if not is_instance_valid(current_target):
-		return
-
-	var skill_config_value = berserker_config.get("skill_2", {})
-	if typeof(skill_config_value) != TYPE_DICTIONARY:
-		return
-	var skill_config: Dictionary = skill_config_value
-	if skill_config.is_empty():
-		return
-
-	var hp_cost_ratio: float = clampf(
-		float(skill_config.get("hp_cost_ratio", 0.07)),
-		0.0,
-		0.95
-	)
-	_pay_berserker_skill_hp_cost(hp_cost_ratio)
-
-	berserker_skill2_cooldown = _get_berserker_skill_cooldown(
-		skill_config,
-		19.0
-	)
-	berserker_skill_global_cooldown = maxf(
-		berserker_skill_global_cooldown,
-		1.35
-	)
-	attack_timer = maxf(attack_timer, 0.72)
-	attack_pose_timer = 0.58
-	_face_attack_direction(
-		global_position.direction_to(current_target.global_position).x
-	)
-	_restart_stage1_animation("attack")
-	_ensure_berserker_audio_runtime()
-	_play_berserker_player(berserker_skill2_audio)
-
-	var slam_fx: AnimatedSprite2D = _spawn_archmage_fx(
-		"%s/effect3" % STAGE6_FRAME_DIR,
-		"ground_slam",
-		1,
-		11,
-		20.0,
-		false,
-		global_position,
-		Vector2(0.92, 0.92)
-	)
-	if is_instance_valid(slam_fx):
-		slam_fx.z_index = 6
-
-	var wave_count: int = maxi(
-		int(skill_config.get("wave_count", 4)),
-		1
-	)
-	var base_offset: float = randf_range(-0.22, 0.22)
-	for wave_index in range(wave_count):
-		var angle: float = (
-			TAU * float(wave_index) / float(wave_count)
-			+ base_offset
-			+ randf_range(-0.16, 0.16)
-		)
-		var wave_direction: Vector2 = Vector2.RIGHT.rotated(angle)
-		_run_berserker_skill2_wave(
-			global_position,
-			wave_direction,
-			skill_config
-		)
-
-	queue_redraw()
+	_berserker_archetype()._start_berserker_skill2(current_target)
 
 
 func _run_berserker_skill2_wave(
@@ -17323,167 +14747,7 @@ func _run_berserker_skill2_wave(
 	start_direction: Vector2,
 	skill_config: Dictionary
 ) -> void:
-	var world_points: Array[Vector2] = []
-	world_points.append(start_position)
-	var blood_visuals: Array[AnimatedSprite2D] = []
-
-	var hit_ids: Dictionary = {}
-	var healed_ids: Dictionary = {}
-	var current_position: Vector2 = start_position
-	var current_direction: Vector2 = start_direction.normalized()
-	var cell_length: float = maxf(
-		float(skill_config.get("cell_length", 72.0)),
-		8.0
-	)
-	var cell_count: int = maxi(
-		int(skill_config.get("cell_count", 6)),
-		1
-	)
-	var branch_angle: float = deg_to_rad(
-		maxf(float(skill_config.get("branch_angle_degrees", 68.0)), 0.0)
-	)
-	var branch_min_angle: float = deg_to_rad(
-		clampf(
-			float(skill_config.get("branch_min_angle_degrees", 28.0)),
-			0.0,
-			rad_to_deg(branch_angle)
-		)
-	)
-	var turn_sign: float = -1.0 if randf() < 0.5 else 1.0
-	var wave_speed: float = maxf(
-		float(skill_config.get("wave_speed", 620.0)),
-		1.0
-	)
-	var half_width: float = maxf(
-		float(skill_config.get("path_half_width", 30.0)),
-		1.0
-	)
-	var damage: int = maxi(
-		int(round(
-			float(_get_berserker_effective_attack_damage())
-			* float(skill_config.get("damage_ratio", 0.85))
-		)),
-		1
-	)
-
-	for cell_index in range(cell_count):
-		if not is_inside_tree():
-			return
-
-		var turn_amount: float = randf_range(
-			branch_min_angle,
-			branch_angle
-		)
-		if randf() < 0.22:
-			turn_sign *= -1.0
-		var turn: float = turn_amount * turn_sign
-		current_direction = current_direction.rotated(turn).normalized()
-		turn_sign *= -1.0
-		var next_position: Vector2 = (
-			current_position + current_direction * cell_length
-		)
-		next_position = Vector2(
-			clampf(
-				next_position.x,
-				FIELD_MARGIN,
-				battlefield_size.x - FIELD_MARGIN
-			),
-			clampf(
-				next_position.y,
-				FIELD_MARGIN,
-				battlefield_size.y - FIELD_MARGIN
-			)
-		)
-
-		_damage_berserker_skill2_segment(
-			current_position,
-			next_position,
-			half_width,
-			damage,
-			hit_ids
-		)
-
-		var segment: Vector2 = next_position - current_position
-		var blood_position: Vector2 = current_position.lerp(
-			next_position,
-			0.5
-		)
-		var blood_scale_x: float = maxf(
-			segment.length() / 128.0,
-			0.42
-		)
-		var blood_scale_y: float = maxf(
-			half_width / 46.0,
-			0.46
-		)
-		var blood_fx: AnimatedSprite2D = _spawn_archmage_fx(
-			"%s/effect3" % STAGE6_FRAME_DIR,
-			"ground_slam",
-			7,
-			1,
-			1.0,
-			true,
-			blood_position,
-			Vector2(blood_scale_x, blood_scale_y)
-		)
-		if is_instance_valid(blood_fx):
-			blood_fx.rotation = segment.angle()
-			blood_fx.z_index = 4
-			blood_fx.modulate = Color.WHITE
-			blood_visuals.append(blood_fx)
-
-		world_points.append(next_position)
-		current_position = next_position
-
-		var step_time: float = cell_length / wave_speed
-		await COMBAT_DELAY.wait(self,
-			maxf(step_time, 0.03)
-		)
-
-	var blood_duration: float = maxf(
-		float(skill_config.get("blood_duration", 2.0)),
-		0.0
-	)
-	var tick_interval: float = maxf(
-		float(skill_config.get("heal_tick_interval", 0.15)),
-		0.05
-	)
-	var heal_per_touch: int = maxi(
-		int(skill_config.get("heal_per_touch_tick", 10)),
-		1
-	)
-	var elapsed: float = 0.0
-	while elapsed < blood_duration and is_inside_tree():
-		_heal_berserker_from_blood_path(
-			world_points,
-			half_width,
-			heal_per_touch,
-			healed_ids
-		)
-		await COMBAT_DELAY.wait(self,tick_interval)
-		elapsed += tick_interval
-
-	for blood_fx in blood_visuals:
-		if not is_instance_valid(blood_fx):
-			continue
-		var fade_position: Vector2 = blood_fx.global_position
-		var fade_rotation: float = blood_fx.rotation
-		var fade_scale: Vector2 = blood_fx.scale
-		_recycle_archmage_fx(blood_fx)
-
-		var fade_fx: AnimatedSprite2D = _spawn_archmage_fx(
-			"%s/effect3" % STAGE6_FRAME_DIR,
-			"ground_slam",
-			8,
-			4,
-			12.0,
-			false,
-			fade_position,
-			fade_scale
-		)
-		if is_instance_valid(fade_fx):
-			fade_fx.rotation = fade_rotation
-			fade_fx.z_index = 4
+	_berserker_archetype()._run_berserker_skill2_wave(start_position, start_direction, skill_config)
 
 
 func _damage_berserker_skill2_segment(
@@ -17493,63 +14757,7 @@ func _damage_berserker_skill2_segment(
 	damage: int,
 	hit_ids: Dictionary
 ) -> void:
-	var segment: Vector2 = to_position - from_position
-	var length_sq: float = maxf(segment.length_squared(), 0.001)
-	var midpoint: Vector2 = from_position.lerp(to_position, 0.5)
-	var search_radius: float = segment.length() * 0.5 + half_width + 20.0
-	var half_width_sq: float = half_width * half_width
-	_fill_monster_nodes_near(
-		midpoint,
-		search_radius,
-		berserker_query_candidates
-	)
-
-	for node in berserker_query_candidates:
-		if not HERO_TARGET_POLICY.is_detectable(node):
-			continue
-		var monster := node as Node2D
-		if monster == null or not monster.has_method("take_damage"):
-			continue
-
-		var iid: int = monster.get_instance_id()
-		if hit_ids.has(iid):
-			continue
-
-		var t: float = clampf(
-			(monster.global_position - from_position).dot(segment)
-			/ length_sq,
-			0.0,
-			1.0
-		)
-		var closest: Vector2 = from_position + segment * t
-		if (
-			monster.global_position.distance_squared_to(closest)
-			> half_width_sq
-		):
-			continue
-
-		hit_ids[iid] = true
-		var hp_before_value = monster.get("current_hp")
-		var hp_before: int = (
-			int(hp_before_value)
-			if hp_before_value != null
-			else -1
-		)
-		preload("res://src/systems/monster_hit_context.gd").hit(monster, damage, "melee", self)
-		_berserker_blood_art_eighth_heal_on_hit()
-
-		if hp_before <= 0:
-			continue
-		var killed: bool = false
-		if not is_instance_valid(monster):
-			killed = true
-		else:
-			var hp_after_value = monster.get("current_hp")
-			if hp_after_value != null and int(hp_after_value) <= 0:
-				killed = true
-		if killed:
-			notify_berserker_skill_kill()
-	berserker_query_candidates.clear()
+	_berserker_archetype()._damage_berserker_skill2_segment(from_position, to_position, half_width, damage, hit_ids)
 
 
 func _heal_berserker_from_blood_path(
@@ -17558,1837 +14766,186 @@ func _heal_berserker_from_blood_path(
 	heal_per_touch: int,
 	healed_ids: Dictionary
 ) -> void:
-	if current_hp <= 0 or is_dying or world_points.size() < 2:
-		return
-
-	healed_ids.clear()
-	var half_width_sq: float = half_width * half_width
-	for segment_index in range(world_points.size() - 1):
-		var from_position: Vector2 = world_points[segment_index]
-		var to_position: Vector2 = world_points[segment_index + 1]
-		var segment: Vector2 = to_position - from_position
-		var length_sq: float = maxf(segment.length_squared(), 0.001)
-		var midpoint: Vector2 = from_position.lerp(to_position, 0.5)
-		var search_radius: float = (
-			segment.length() * 0.5 + half_width + 20.0
-		)
-		_fill_monster_nodes_near(
-			midpoint,
-			search_radius,
-			berserker_query_candidates
-		)
-
-		for node in berserker_query_candidates:
-			if not HERO_TARGET_POLICY.is_detectable(node):
-				continue
-			var monster := node as Node2D
-			if monster == null:
-				continue
-			var iid: int = monster.get_instance_id()
-			if healed_ids.has(iid):
-				continue
-
-			var t: float = clampf(
-				(monster.global_position - from_position).dot(segment)
-				/ length_sq,
-				0.0,
-				1.0
-			)
-			var closest: Vector2 = from_position + segment * t
-			if (
-				monster.global_position.distance_squared_to(closest)
-				> half_width_sq
-			):
-				continue
-
-			healed_ids[iid] = true
-			heal_direct(heal_per_touch)
-		berserker_query_candidates.clear()
+	_berserker_archetype()._heal_berserker_from_blood_path(world_points, half_width, heal_per_touch, healed_ids)
 
 
 func _start_berserker_skill3(current_target: Node2D) -> void:
-	if silence_timer > 0.0:
-		return
-	if berserker_skill3_active or not is_instance_valid(current_target):
-		return
-
-	var skill_config_value = berserker_config.get("skill_3", {})
-	if typeof(skill_config_value) != TYPE_DICTIONARY:
-		return
-	var skill_config: Dictionary = skill_config_value
-	if skill_config.is_empty():
-		return
-
-	var hp_cost_ratio: float = clampf(
-		float(skill_config.get("hp_cost_ratio", 0.05)),
-		0.0,
-		0.95
-	)
-	_pay_berserker_skill_hp_cost(hp_cost_ratio)
-
-	var dash_direction: Vector2 = global_position.direction_to(
-		current_target.global_position
-	)
-	if dash_direction.length_squared() <= 0.0:
-		dash_direction = (
-			Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
-		)
-	dash_direction = dash_direction.normalized()
-	_face_attack_direction(dash_direction.x)
-
-	berserker_skill3_active = true
-	berserker_skill3_cooldown = _get_berserker_skill_cooldown(
-		skill_config,
-		30.0
-	)
-	berserker_skill_global_cooldown = maxf(
-		berserker_skill_global_cooldown,
-		1.75
-	)
-	attack_timer = maxf(attack_timer, 1.55)
-	attack_pose_timer = 1.55
-	_execute_berserker_skill3(
-		dash_direction,
-		skill_config
-	)
-	queue_redraw()
+	_berserker_archetype()._start_berserker_skill3(current_target)
 
 
 func _execute_berserker_skill3(
 	dash_direction: Vector2,
 	skill_config: Dictionary
 ) -> void:
-	var start_position: Vector2 = global_position
-	var dash_distance: float = maxf(
-		float(skill_config.get("dash_distance", 500.0)),
-		1.0
-	)
-	var destination: Vector2 = (
-		start_position + dash_direction * dash_distance
-	)
-	destination = Vector2(
-		clampf(
-			destination.x,
-			FIELD_MARGIN,
-			battlefield_size.x - FIELD_MARGIN
-		),
-		clampf(
-			destination.y,
-			FIELD_MARGIN,
-			battlefield_size.y - FIELD_MARGIN
-		)
-	)
-
-	var saved_collision_layer: int = collision_layer
-	var saved_collision_mask: int = collision_mask
-	collision_layer = 0
-	collision_mask = 0
-	velocity = Vector2.ZERO
-	_restart_stage1_animation("dash_start")
-	_ensure_berserker_audio_runtime()
-	_play_berserker_player(berserker_skill3_audio)
-
-	if player_controlled and player_weapons != null:
-		player_weapons._effect(start_position,destination,12,"chain",Color(0.82,0.05,0.03,0.82))
-	else:
-		_spawn_berserker_blood_dash_trail(start_position,destination)
-
-	var dash_duration: float = maxf(
-		float(skill_config.get("dash_duration", 0.20)),
-		0.05
-	)
-	var dash_tween := create_tween()
-	dash_tween.tween_property(
-		self,
-		"global_position",
-		destination,
-		dash_duration
-	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	await dash_tween.finished
-
-	if not is_inside_tree() or is_dying:
-		return
-
-	collision_layer = saved_collision_layer
-	collision_mask = saved_collision_mask
-	global_position = destination
-	velocity = Vector2.ZERO
-	_restart_stage1_animation("dash_finish")
-
-	var orb_radius: float = maxf(
-		float(skill_config.get("blood_orb_radius", 330.0)),
-		1.0
-	)
-	var orb_radius_sq: float = orb_radius * orb_radius
-	var orb_count: int = 0
-	_fill_monster_nodes_near(
-		global_position,
-		orb_radius,
-		berserker_query_candidates
-	)
-	for node in berserker_query_candidates:
-		if not HERO_TARGET_POLICY.is_detectable(node):
-			continue
-		var monster := node as Node2D
-		if monster == null:
-			continue
-		if (
-			global_position.distance_squared_to(monster.global_position)
-			> orb_radius_sq
-		):
-			continue
-		_spawn_berserker_blood_orb(
-			monster.global_position,
-			skill_config
-		)
-		_berserker_blood_art_eighth_heal_on_hit()
-		orb_count += 1
-	berserker_query_candidates.clear()
-
-	var pickup_duration: float = maxf(
-		float(skill_config.get("orb_pickup_duration", 0.42)),
-		0.08
-	)
-	if orb_count > 0:
-		await COMBAT_DELAY.wait(self,
-			pickup_duration + 0.10
-		)
-	else:
-		await COMBAT_DELAY.wait(self,0.16)
-
-	if not is_inside_tree():
-		return
-	berserker_skill3_active = false
-	attack_pose_timer = 0.0
-	_play_stage1_animation("idle", 1.0)
+	_berserker_archetype()._execute_berserker_skill3(dash_direction, skill_config)
 
 
 func _spawn_berserker_blood_orb(
 	start_position: Vector2,
 	skill_config: Dictionary
 ) -> void:
-	var orb_scale: float = maxf(
-		float(skill_config.get("orb_visual_scale", 1.18)),
-		0.1
-	)
-	var orb_fx: AnimatedSprite2D = _spawn_archmage_fx(
-		"%s/effect5" % STAGE6_FRAME_DIR,
-		"hit_effect",
-		1,
-		9,
-		18.0,
-		true,
-		start_position,
-		Vector2(orb_scale * 0.82, orb_scale * 0.82)
-	)
-	if not is_instance_valid(orb_fx):
-		return
-
-	orb_fx.z_index = 12
-	orb_fx.modulate = Color(1.0, 0.45, 0.45, 1.0)
-
-	var pickup_duration: float = maxf(
-		float(skill_config.get("orb_pickup_duration", 0.55)),
-		0.08
-	)
-	var destination: Vector2 = global_position + Vector2(0.0, -12.0)
-
-	var orb_tween := orb_fx.create_tween()
-	orb_tween.set_parallel(false)
-
-	orb_tween.tween_property(
-		orb_fx,
-		"scale",
-		Vector2(orb_scale * 1.12, orb_scale * 1.12),
-		0.08
-	).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-
-	orb_tween.tween_property(
-		orb_fx,
-		"global_position",
-		destination,
-		pickup_duration
-	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-
-	orb_tween.parallel().tween_property(
-		orb_fx,
-		"scale",
-		Vector2(0.18, 0.18),
-		pickup_duration
-	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-
-	orb_tween.parallel().tween_property(
-		orb_fx,
-		"modulate:a",
-		0.78,
-		pickup_duration * 0.65
-	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-
-	orb_tween.finished.connect(
-		Callable(self, "_finish_berserker_blood_orb").bind(
-			orb_fx,
-			maxi(int(skill_config.get("heal_per_orb", 70)), 1)
-		),
-		Object.CONNECT_ONE_SHOT
-	)
+	_berserker_archetype()._spawn_berserker_blood_orb(start_position, skill_config)
 
 
 func _finish_berserker_blood_orb(
 	orb_fx: AnimatedSprite2D,
 	heal_amount: int
 ) -> void:
-	if is_instance_valid(orb_fx):
-		_recycle_archmage_fx(orb_fx)
-	if current_hp > 0 and not is_dying:
-		heal_direct(heal_amount)
+	_berserker_archetype()._finish_berserker_blood_orb(orb_fx, heal_amount)
 
 
 func _start_berserker_skill4() -> void:
-	if silence_timer > 0.0:
-		return
-	var skill_config_value = berserker_config.get("skill_4", {})
-	if typeof(skill_config_value) != TYPE_DICTIONARY:
-		return
-	var skill_config: Dictionary = skill_config_value
-	if skill_config.is_empty():
-		return
-
-	var hp_cost_ratio: float = clampf(
-		float(skill_config.get("hp_cost_ratio", 0.04)),
-		0.0,
-		0.95
-	)
-	_pay_berserker_skill_hp_cost(hp_cost_ratio)
-
-	berserker_skill4_cooldown = _get_berserker_skill_cooldown(
-		skill_config,
-		8.0
-	)
-	berserker_skill_global_cooldown = maxf(
-		berserker_skill_global_cooldown,
-		1.15
-	)
-	attack_timer = maxf(attack_timer, 0.72)
-	attack_pose_timer = 0.72
-	_restart_stage1_animation("attack")
-	_ensure_berserker_audio_runtime()
-	_play_berserker_player(berserker_skill4_audio)
-
-	var radius: float = maxf(
-		float(skill_config.get("radius", 245.0)),
-		1.0
-	)
-	var damage: int = maxi(
-		int(round(
-			float(_get_berserker_effective_attack_damage())
-			* float(skill_config.get("damage_ratio", 0.65))
-		)),
-		1
-	)
-	var knockback_distance: float = maxf(
-		float(skill_config.get("knockback_distance", 150.0)),
-		0.0
-	)
-	var effect_scale: float = maxf(
-		float(skill_config.get("effect_scale", 1.05)),
-		0.1
-	)
-
-	var spin_fx: AnimatedSprite2D = _spawn_archmage_fx(
-		"%s/effect8" % STAGE6_FRAME_DIR,
-		"spin_slash",
-		1,
-		10,
-		22.0,
-		false,
-		global_position,
-		Vector2(effect_scale, effect_scale)
-	)
-	if is_instance_valid(spin_fx):
-		spin_fx.z_index = 8
-
-	var radius_sq: float = radius * radius
-	_fill_monster_nodes_near(
-		global_position,
-		radius,
-		berserker_query_candidates
-	)
-	for node in berserker_query_candidates:
-		if not HERO_TARGET_POLICY.is_detectable(node):
-			continue
-		var monster := node as Node2D
-		if monster == null or not monster.has_method("take_damage"):
-			continue
-		if (
-			global_position.distance_squared_to(monster.global_position)
-			> radius_sq
-		):
-			continue
-
-		var hp_before_value = monster.get("current_hp")
-		var hp_before: int = (
-			int(hp_before_value)
-			if hp_before_value != null
-			else -1
-		)
-		preload("res://src/systems/monster_hit_context.gd").hit(monster, damage, "melee", self)
-		_berserker_blood_art_eighth_heal_on_hit()
-
-		if (
-			is_instance_valid(monster)
-			and knockback_distance > 0.0
-		):
-			var knockback_direction: Vector2 = global_position.direction_to(
-				monster.global_position
-			)
-			if knockback_direction.length_squared() <= 0.0:
-				knockback_direction = Vector2.RIGHT
-			var knockback_target: Vector2 = (
-				monster.global_position
-				+ knockback_direction.normalized() * knockback_distance
-			)
-			monster.global_position = Vector2(
-				clampf(
-					knockback_target.x,
-					FIELD_MARGIN,
-					battlefield_size.x - FIELD_MARGIN
-				),
-				clampf(
-					knockback_target.y,
-					FIELD_MARGIN,
-					battlefield_size.y - FIELD_MARGIN
-				)
-			)
-			LOCAL_GRID_MOVEMENT.notify_forced_position_change(monster)
-
-		if hp_before <= 0:
-			continue
-		var killed: bool = false
-		if not is_instance_valid(monster):
-			killed = true
-		else:
-			var hp_after_value = monster.get("current_hp")
-			if hp_after_value != null and int(hp_after_value) <= 0:
-				killed = true
-		if killed:
-			notify_berserker_skill_kill()
-	berserker_query_candidates.clear()
-
-	queue_redraw()
+	_berserker_archetype()._start_berserker_skill4()
 
 
 func notify_berserker_skill_kill() -> void:
-	if berserker_madness_active:
-		if (
-			berserker_killing_urge_bonus > 0.0
-			and int(
-				build_counts.get(
-					"berserker_different_dream",
-					0
-				)
-			) <= 0
-		):
-			var gauge_max: float = maxf(
-				float(berserker_config.get("gauge_max", 100.0)),
-				1.0
-			)
-			ultimate_charge = minf(
-				ultimate_charge + berserker_killing_urge_bonus,
-				gauge_max
-			)
-			queue_redraw()
-		return
-
-	_add_berserker_gauge(
-		maxf(
-			float(berserker_config.get("gauge_per_kill", 1.0)),
-			0.0
-		)
-	)
+	_berserker_archetype().notify_berserker_skill_kill()
 
 
 func _update_berserker_pose_visual(delta: float) -> void:
-	if (
-		hero_archetype != "berserker_madness"
-		or not hero_sprite.visible
-		or is_dying
-		or berserker_reviving
-	):
-		return
-	if hit_pose_timer > 0.0 or attack_pose_timer > 0.0:
-		return
-
-	_update_facing_from_horizontal(velocity.x, delta)
-	if velocity.length() > 4.0:
-		_play_stage1_animation("move", 1.0)
-	else:
-		_play_stage1_animation("idle", 1.0)
+	_berserker_archetype()._update_berserker_pose_visual(delta)
 
 
 func _get_berserker_effective_attack_damage() -> int:
-	if max_hp <= 0:
-		return maxi(attack_damage, 1)
-
-	var missing_ratio: float = clampf(
-		float(max_hp - current_hp) / float(max_hp),
-		0.0,
-		1.0
-	)
-	var missing_percent: float = missing_ratio * 100.0
-	var bonus_per_percent: float = maxf(
-		float(
-			berserker_config.get(
-				"missing_hp_attack_bonus_per_percent",
-				0.02
-			)
-		),
-		0.0
-	)
-	if berserker_missing_hp_bonus_override >= 0.0:
-		bonus_per_percent = berserker_missing_hp_bonus_override
-	var passive_bonus: float = (
-		base_attack_damage_for_level_growth
-		* missing_percent
-		* bonus_per_percent
-	)
-	return maxi(
-		int(round(float(attack_damage) + passive_bonus)),
-		1
-	)
+	return _berserker_archetype()._get_berserker_effective_attack_damage()
 
 
 func _berserker_basic_attack(current_target: Node2D) -> void:
-	if not is_instance_valid(current_target):
-		return
-
-	var direction: Vector2 = global_position.direction_to(
-		current_target.global_position
-	)
-	if direction.length_squared() <= 0.0:
-		direction = Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
-	direction = direction.normalized()
-
-	if berserker_madness_active:
-		var blink_target: Node2D = _find_berserker_madness_target()
-		if is_instance_valid(blink_target):
-			_berserker_madness_blink_to(blink_target)
-			direction = global_position.direction_to(
-				blink_target.global_position
-			)
-			if direction.length_squared() <= 0.0:
-				direction = Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
-			direction = direction.normalized()
-
-	var attack_interval: float = _get_common_attack_interval(
-		attack_cooldown
-	)
-	if berserker_madness_active:
-		var madness_speed_multiplier: float = maxf(
-			float(
-				berserker_config.get(
-					"madness_attack_speed_multiplier",
-					1.50
-				)
-			),
-			0.1
-		)
-		var different_dream_stacks: int = int(
-			build_counts.get(
-				"berserker_different_dream",
-				0
-			)
-		)
-		if different_dream_stacks > 0:
-			madness_speed_multiplier = (
-				1.0 + 0.40 * float(different_dream_stacks)
-			)
-		attack_interval /= madness_speed_multiplier
-	attack_timer = maxf(attack_interval, 0.06)
-	attack_pose_timer = 0.52
-	_face_attack_direction(direction.x)
-	_restart_stage1_animation("attack")
-	_play_berserker_basic_audio()
-
-	if berserker_madness_active:
-		var slash_fx: AnimatedSprite2D = _spawn_archmage_fx(
-			"%s/effect1" % STAGE6_FRAME_DIR,
-			"basic_slash",
-			1,
-			13,
-			24.0,
-			false,
-			global_position + direction * 82.0,
-			Vector2(1.08, 1.08)
-		)
-		if is_instance_valid(slash_fx):
-			slash_fx.flip_h = direction.x < 0.0
-			slash_fx.rotation = direction.angle() if direction.x >= 0.0 else direction.angle() - PI
-			slash_fx.z_index = 8
-
-	var reach: float = maxf(
-		float(berserker_config.get("basic_reach", 190.0)),
-		1.0
-	)
-	var half_width: float = maxf(
-		float(berserker_config.get("basic_half_width", 118.0)),
-		1.0
-	)
-	var damage: int = _get_berserker_effective_attack_damage()
-	var side: Vector2 = Vector2(-direction.y, direction.x)
-	_fill_monster_nodes_near(
-		global_position,
-		reach + half_width,
-		berserker_query_candidates
-	)
-
-	for node in berserker_query_candidates:
-		if not HERO_TARGET_POLICY.is_detectable(node):
-			continue
-		var monster := node as Node2D
-		if monster == null or not monster.has_method("take_damage"):
-			continue
-
-		var offset: Vector2 = monster.global_position - global_position
-		var forward: float = offset.dot(direction)
-		var lateral: float = absf(offset.dot(side))
-		if forward < -32.0 or forward > reach or lateral > half_width:
-			continue
-
-		var hp_before_value = monster.get("current_hp")
-		var hp_before: int = (
-			int(hp_before_value)
-			if hp_before_value != null
-			else -1
-		)
-		preload("res://src/systems/monster_hit_context.gd").hit(monster, damage, "melee", self)
-
-		if hp_before <= 0:
-			continue
-		var killed: bool = false
-		if not is_instance_valid(monster):
-			killed = true
-		else:
-			var hp_after_value = monster.get("current_hp")
-			if hp_after_value != null and int(hp_after_value) <= 0:
-				killed = true
-		if killed:
-			notify_berserker_skill_kill()
-	berserker_query_candidates.clear()
-
-	_damage_treasure_chests(
-		global_position + direction * (reach * 0.55),
-		maxf(half_width, 80.0),
-		damage
-	)
+	_berserker_archetype()._berserker_basic_attack(current_target)
 
 
 func _add_berserker_gauge(amount: float) -> void:
-	if (
-		amount <= 0.0
-		or hero_archetype != "berserker_madness"
-		or berserker_madness_active
-		or int(
-			build_counts.get(
-				"berserker_different_dream",
-				0
-			)
-		) > 0
-	):
-		return
-	var gauge_max: float = maxf(
-		float(berserker_config.get("gauge_max", 100.0)),
-		1.0
-	)
-	ultimate_charge = minf(ultimate_charge + amount, gauge_max)
-	if ultimate_charge + 0.001 >= gauge_max:
-		_start_berserker_madness()
-	queue_redraw()
+	_berserker_archetype()._add_berserker_gauge(amount)
 
 
 func _start_berserker_madness() -> void:
-	if silence_timer > 0.0:
-		return
-	if berserker_madness_active or berserker_reviving or is_dying:
-		return
-	berserker_madness_active = true
-	_ensure_berserker_audio_runtime()
-	_play_berserker_player(berserker_madness_roar_audio)
-	var gauge_max: float = maxf(
-		float(berserker_config.get("gauge_max", 100.0)),
-		1.0
-	)
-	ultimate_charge = gauge_max
-	if channel_effect.sprite_frames != null:
-		channel_effect.visible = true
-		channel_effect.play(&"madness")
-	queue_redraw()
+	_berserker_archetype()._start_berserker_madness()
 
 
 func _end_berserker_madness() -> void:
-	berserker_madness_active = false
-	ultimate_charge = 0.0
-	if (
-		channel_effect.sprite_frames != null
-		and channel_effect.animation == &"madness"
-	):
-		channel_effect.visible = false
-	queue_redraw()
+	_berserker_archetype()._end_berserker_madness()
 
 
 func _update_berserker_madness(delta: float) -> void:
-	if hero_archetype != "berserker_madness":
-		return
-	if not berserker_madness_active:
-		return
-
-	if int(
-		build_counts.get(
-			"berserker_different_dream",
-			0
-		)
-	) > 0:
-		ultimate_charge = maxf(
-			float(berserker_config.get("gauge_max", 100.0)),
-			1.0
-		)
-		queue_redraw()
-		return
-
-	var drain_per_second: float = maxf(
-		float(
-			berserker_config.get(
-				"madness_drain_per_second",
-				10.0
-			)
-		),
-		0.0
-	)
-	ultimate_charge = maxf(
-		ultimate_charge - drain_per_second * delta,
-		0.0
-	)
-	if ultimate_charge <= 0.001:
-		_end_berserker_madness()
-	else:
-		queue_redraw()
+	_berserker_archetype()._update_berserker_madness(delta)
 
 
 func _find_berserker_madness_target() -> Node2D:
-	var radius: float = maxf(
-		float(berserker_config.get("madness_target_radius", 375.0)),
-		1.0
-	)
-	var radius_sq: float = radius * radius
-	var farthest: Node2D = null
-	var farthest_distance_sq: float = -1.0
-	_fill_monster_nodes_near(
-		global_position,
-		radius,
-		berserker_query_candidates
-	)
-	for node in berserker_query_candidates:
-		if not HERO_TARGET_POLICY.is_detectable(node):
-			continue
-		var monster := node as Node2D
-		if monster == null:
-			continue
-		var hp_value = monster.get("current_hp")
-		if hp_value != null and int(hp_value) <= 0:
-			continue
-		var distance_sq: float = global_position.distance_squared_to(
-			monster.global_position
-		)
-		if distance_sq > radius_sq or distance_sq <= farthest_distance_sq:
-			continue
-		farthest = monster
-		farthest_distance_sq = distance_sq
-	berserker_query_candidates.clear()
-	return farthest
+	return _berserker_archetype()._find_berserker_madness_target()
 
 
 func _berserker_madness_blink_to(blink_target: Node2D) -> void:
-	if not is_instance_valid(blink_target):
-		return
-
-	var start_position: Vector2 = global_position
-	var direction: Vector2 = start_position.direction_to(
-		blink_target.global_position
-	)
-	if direction.length_squared() <= 0.0:
-		return
-
-	var stop_distance: float = 48.0
-	var destination: Vector2 = (
-		blink_target.global_position
-		- direction.normalized() * stop_distance
-	)
-	destination = Vector2(
-		clampf(
-			destination.x,
-			FIELD_MARGIN,
-			battlefield_size.x - FIELD_MARGIN
-		),
-		clampf(
-			destination.y,
-			FIELD_MARGIN,
-			battlefield_size.y - FIELD_MARGIN
-		)
-	)
-
-	_spawn_berserker_blood_dash_trail(
-		start_position,
-		destination
-	)
-	global_position = destination
-	velocity = Vector2.ZERO
+	_berserker_archetype()._berserker_madness_blink_to(blink_target)
 
 
 func _spawn_berserker_blood_dash_trail(
 	start_position: Vector2,
 	end_position: Vector2
 ) -> void:
-	var parent := get_parent()
-	if not is_instance_valid(parent):
-		return
-
-	var parent_2d := parent as Node2D
-	var trail: Line2D = null
-	if parent.has_method("acquire_transient_fx"):
-		trail = parent.call(
-			"acquire_transient_fx",
-			"berserker_blood_dash_trail",
-			"line"
-		) as Line2D
-	if trail == null:
-		trail = Line2D.new()
-		parent.add_child(trail)
-
-	trail.clear_points()
-	trail.visible = true
-	trail.modulate = Color.WHITE
-	trail.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	trail.z_index = 6
-	trail.width = 30.0
-	trail.default_color = Color(0.82, 0.05, 0.03, 0.82)
-	trail.begin_cap_mode = Line2D.LINE_CAP_ROUND
-	trail.end_cap_mode = Line2D.LINE_CAP_ROUND
-	trail.joint_mode = Line2D.LINE_JOINT_ROUND
-
-	if parent_2d != null:
-		trail.add_point(parent_2d.to_local(start_position))
-		trail.add_point(parent_2d.to_local(end_position))
-	else:
-		trail.add_point(start_position)
-		trail.add_point(end_position)
-
-	var trail_tween := trail.create_tween()
-	trail_tween.set_parallel(true)
-	trail_tween.tween_property(
-		trail,
-		"modulate:a",
-		0.0,
-		0.34
-	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	trail_tween.tween_property(
-		trail,
-		"width",
-		6.0,
-		0.34
-	).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
-	if parent.has_method("recycle_transient_fx"):
-		trail_tween.finished.connect(
-			Callable(parent, "recycle_transient_fx").bind(
-				trail,
-				"berserker_blood_dash_trail"
-			),
-			Object.CONNECT_ONE_SHOT
-		)
-	else:
-		trail_tween.finished.connect(
-			Callable(trail, "queue_free"),
-			Object.CONNECT_ONE_SHOT
-		)
-
-	var segment: Vector2 = end_position - start_position
-	var segment_length: float = segment.length()
-	if segment_length <= 1.0:
-		return
-
-	var effect_count: int = clampi(
-		int(ceil(segment_length / 68.0)) + 1,
-		3,
-		8
-	)
-	var effect_direction: Vector2 = segment.normalized()
-	for index in range(effect_count):
-		var progress: float = (
-			float(index)
-			/ float(maxi(effect_count - 1, 1))
-		)
-		var effect_position: Vector2 = start_position.lerp(
-			end_position,
-			progress
-		)
-		var blood_fx: AnimatedSprite2D = _spawn_archmage_fx(
-			"%s/effect2" % STAGE6_FRAME_DIR,
-			"blood_effect",
-			1,
-			10,
-			28.0,
-			false,
-			effect_position,
-			Vector2(0.82, 0.82)
-		)
-		if not is_instance_valid(blood_fx):
-			continue
-		blood_fx.rotation = effect_direction.angle()
-		blood_fx.modulate = Color(1.0, 0.72, 0.72, 0.92)
-		blood_fx.z_index = 7
-		var fade_tween := blood_fx.create_tween()
-		fade_tween.tween_property(
-			blood_fx,
-			"modulate:a",
-			0.0,
-			0.30
-		).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_OUT)
+	_berserker_archetype()._spawn_berserker_blood_dash_trail(start_position, end_position)
 
 
 func _update_berserker_hp_visual() -> void:
-	if hero_archetype != "berserker_madness" or not hero_sprite.visible:
-		return
-	var hp_ratio: float = clampf(
-		float(current_hp) / float(maxi(max_hp, 1)),
-		0.0,
-		1.0
-	)
-	var missing_ratio: float = 1.0 - hp_ratio
-	hero_sprite.modulate = Color(
-		1.0,
-		lerpf(1.0, 0.36, missing_ratio),
-		lerpf(1.0, 0.36, missing_ratio),
-		1.0
-	)
+	_berserker_archetype()._update_berserker_hp_visual()
 
 
 func _begin_berserker_revive() -> void:
-	if berserker_revive_used or berserker_reviving:
-		return
-
-	berserker_revive_used = true
-	berserker_reviving = true
-	berserker_saved_collision_layer = collision_layer
-	berserker_saved_collision_mask = collision_mask
-	collision_layer = 0
-	collision_mask = 0
-	velocity = Vector2.ZERO
-	invulnerability_timer = 0.0
-	modulate.a = 0.45
-	_restart_stage1_animation("death", 0.72)
-	queue_redraw()
-
-	var revive_delay: float = maxf(
-		float(berserker_config.get("revive_delay", 3.0)),
-		0.1
-	)
-	if player_controlled and player_weapons != null and player_weapons.identity != null:
-		player_weapons.identity.revive_left = revive_delay
-		return
-	await COMBAT_DELAY.wait(self,revive_delay)
-	if not is_inside_tree() or is_dying:
-		return
-	_finish_berserker_revive()
+	_berserker_archetype()._begin_berserker_revive()
 
 func _finish_berserker_revive() -> void:
-
-	var revive_ratio: float = clampf(
-		float(berserker_config.get("revive_hp_ratio", 0.50)),
-		0.01,
-		1.0
-	)
-	current_hp = maxi(int(round(float(max_hp) * revive_ratio)), 1)
-	collision_layer = berserker_saved_collision_layer
-	collision_mask = berserker_saved_collision_mask
-	berserker_reviving = false
-	modulate.a = 1.0
-	hit_pose_timer = 0.0
-	attack_pose_timer = 0.0
-	_restart_stage1_animation("idle")
-	_update_berserker_hp_visual()
-	health_changed.emit(current_hp, max_hp)
-	queue_redraw()
+	_berserker_archetype()._finish_berserker_revive()
 
 
 func _physics_process_fighter(delta: float) -> void:
-	ai_memory_clock += delta
-	_prune_offensive_memory()
-	_prune_status_memory()
-
-	ai_observation_timer = maxf(ai_observation_timer - delta, 0.0)
-	if ai_observation_timer <= 0.0:
-		_refresh_ai_observation()
-
-	attack_timer = maxf(attack_timer - delta * get_paralysis_attack_multiplier(), 0.0)
-	retarget_timer = maxf(retarget_timer - delta, 0.0)
-	wander_timer = maxf(wander_timer - delta, 0.0)
-	attack_pose_timer = maxf(attack_pose_timer - delta, 0.0)
-	hit_pose_timer = maxf(hit_pose_timer - delta, 0.0)
-	ultimate_flash_timer = maxf(ultimate_flash_timer - delta, 0.0)
-	_update_invulnerability(delta)
-	_update_fighter_guard(delta)
-	fighter_charge_cooldown_timer = maxf(fighter_charge_cooldown_timer - delta, 0.0)
-	if fighter_charge_active:
-		_update_fighter_charge(delta)
-		return
-
-	if _update_fighter_slash_combo(delta):
-		velocity = Vector2.ZERO
-		_update_fighter_pose_visual(delta)
-		return
-
-	if level_flash_timer > 0.0:
-		level_flash_timer = maxf(level_flash_timer - delta, 0.0)
-		queue_redraw()
-
-	if slow_timer > 0.0:
-		slow_timer = maxf(slow_timer - delta, 0.0)
-		if slow_timer <= 0.0:
-			move_multiplier = 1.0
-			queue_redraw()
-
-	_update_heal_item_goal(delta)
-	_update_chest_goal(delta)
-	_update_magnet_item_goal(delta)
-
-	if (
-		not is_instance_valid(target)
-		or target.is_queued_for_deletion()
-		or retarget_timer <= 0.0
-	):
-		target = _find_nearest_monster()
-		retarget_timer = 0.12
-
-	var guard_move_scale := 1.0
-	if fighter_guard_active:
-		guard_move_scale = clampf(
-			float(ultimate_config.get("move_speed_multiplier", 0.62))
-			+ fighter_guard_move_multiplier_bonus,
-			0.25,
-			1.0
-		)
-
-	if not is_instance_valid(target):
-		_fighter_move_without_monsters(guard_move_scale)
-		_update_fighter_pose_visual(delta)
-		return
-
-	var distance := global_position.distance_to(target.global_position)
-	var move_direction := _choose_melee_spacing_direction(
-		target,
-		distance,
-		0.90
-	)
-	move_direction = _apply_heal_item_steering(move_direction, delta)
-	move_direction = _apply_chest_steering(move_direction, delta)
-	move_direction = _apply_magnet_item_steering(move_direction, delta)
-	if move_direction.length_squared() > 0.01:
-		_execute_ai_movement(
-			move_direction
-			* move_speed
-			* _get_effective_move_multiplier()
-			* guard_move_scale
-		)
-	else:
-		velocity = Vector2.ZERO
-
-	if (
-		fighter_charge_cooldown_timer <= 0.0
-		and _fighter_should_start_charge()
-	):
-		_start_fighter_charge()
-		return
-
-	if distance <= attack_range and attack_timer <= 0.0:
-		_execute_ai_basic_attack(HERO_ACTION_INTENT.AttackKind.FIGHTER, target)
-
-	_update_fighter_pose_visual(delta)
+	_fighter_archetype()._physics_process_fighter(delta)
 
 func _fighter_should_start_charge() -> bool:
-	if silence_timer > 0.0:
-		return false
-	if fighter_charge_config.is_empty() or fighter_guard_active:
-		return false
-	var trigger := HERO_FIGHTER_RUNTIME.get_charge_trigger(
-		fighter_charge_config
-	)
-	var radius := trigger.x
-	var required := maxi(int(trigger.y), 1)
-	return _count_monsters_near(
-		global_position,
-		radius,
-		required
-	) >= required
+	return _fighter_archetype()._fighter_should_start_charge()
 
 func _start_fighter_charge() -> void:
-	if silence_timer > 0.0:
-		return
-	var charge_target := _find_fighter_charge_target()
-	if not is_instance_valid(charge_target):
-		return
-	fighter_charge_chain_count = 0
-	_begin_fighter_charge_dash(charge_target)
+	_fighter_archetype()._start_fighter_charge()
 
 func _find_fighter_charge_target(exclude: Node = null) -> Node2D:
-	var max_distance := HERO_FIGHTER_RUNTIME.get_charge_max_target_distance(
-		fighter_charge_config
-	)
-	_fill_monster_nodes_near(
-		global_position,
-		max_distance,
-		fighter_charge_target_candidates
-	)
-	var charge_target := HERO_FIGHTER_RUNTIME.find_farthest_charge_target(
-		fighter_charge_target_candidates,
-		global_position,
-		max_distance,
-		exclude
-	)
-	fighter_charge_target_candidates.clear()
-	return charge_target
+	return _fighter_archetype()._find_fighter_charge_target(exclude)
 
 func _begin_fighter_charge_dash(charge_target: Node2D) -> void:
-	# Capture the life once; a reused Node must not inherit this dash.
-	if not fighter_charge_reference.capture(charge_target, get_parent()):
-		_finish_fighter_charge()
-		return
-
-	fighter_charge_active = true
-	fighter_charge_target = charge_target
-	fighter_charge_start = global_position
-	var direction := global_position.direction_to(charge_target.global_position)
-	if direction.length_squared() <= 0.0:
-		direction = Vector2.RIGHT
-	var stop_distance := maxf(float(fighter_charge_config.get("stop_distance", 46.0)), 0.0)
-	fighter_charge_end = charge_target.global_position - direction * stop_distance
-	var distance := fighter_charge_start.distance_to(fighter_charge_end)
-	var dash_speed := maxf(float(fighter_charge_config.get("dash_speed", 1450.0)), 1.0)
-	fighter_charge_duration = maxf(distance / dash_speed, 0.06)
-	fighter_charge_elapsed = 0.0
-	fighter_charge_afterimage_timer = 0.0
-	velocity = Vector2.ZERO
-	_face_attack_direction(direction.x)
-	_restart_stage1_animation("attack", 1.65)
-	_play_fighter_attack_effect("thrust", direction)
-	if fighter_charge_chain_count == 0:
-		_play_fighter_thrust_audio(true)
-	_spawn_fighter_afterimage(0.78)
+	_fighter_archetype()._begin_fighter_charge_dash(charge_target)
 
 func _update_fighter_charge(delta: float) -> void:
-	if not fighter_charge_active:
-		return
-	if fighter_charge_reference.resolve(get_parent()) == null:
-		_finish_fighter_charge()
-		return
-
-	fighter_charge_elapsed = minf(
-		fighter_charge_elapsed + delta,
-		fighter_charge_duration
-	)
-	var t := clampf(
-		fighter_charge_elapsed / maxf(fighter_charge_duration, 0.001),
-		0.0,
-		1.0
-	)
-	var eased_t := 1.0 - pow(1.0 - t, 2.5)
-	global_position = fighter_charge_start.lerp(fighter_charge_end, eased_t)
-	_clamp_to_battlefield()
-
-	fighter_charge_afterimage_timer -= delta
-	if fighter_charge_afterimage_timer <= 0.0:
-		_spawn_fighter_afterimage(0.62)
-		fighter_charge_afterimage_timer = maxf(
-			float(fighter_charge_config.get("afterimage_interval", 0.035)),
-			0.015
-		)
-
-	if t >= 1.0:
-		_complete_fighter_charge_dash()
+	_fighter_archetype()._update_fighter_charge(delta)
 
 func _complete_fighter_charge_dash() -> void:
-	# Revalidate immediately before damage, including callbacks during movement.
-	var live_target := fighter_charge_reference.resolve(get_parent()) as Node2D
-	if live_target == null:
-		_finish_fighter_charge()
-		return
-	var direction := fighter_charge_start.direction_to(global_position)
-	if direction.length_squared() <= 0.0:
-		direction = Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
-
-	var dash_damage := maxi(
-		1,
-		int(round(
-			float(attack_damage)
-			* float(fighter_charge_config.get("dash_damage_ratio", 1.20))
-		))
-	)
-	if is_instance_valid(live_target):
-		_fighter_charge_damage_target(live_target, dash_damage)
-
-	var impact_damage := maxi(
-		1,
-		int(round(
-			float(attack_damage)
-			* float(fighter_charge_config.get("impact_damage_ratio", 1.70))
-		))
-	)
-	var radius := maxf(float(fighter_charge_config.get("impact_radius", 175.0)), 1.0)
-	_fill_monster_nodes_near(
-		global_position,
-		radius,
-		fighter_charge_impact_candidates
-	)
-	for node in fighter_charge_impact_candidates:
-		if not HERO_TARGET_POLICY.is_detectable(node):
-			continue
-		var monster := node as Node2D
-		if monster == null:
-			continue
-		if (
-			global_position.distance_squared_to(monster.global_position)
-			<= radius * radius
-		):
-			_fighter_charge_damage_target(monster, impact_damage)
-	fighter_charge_impact_candidates.clear()
-
-	_play_fighter_charge_impact_effect()
-	fighter_charge_chain_count += 1
-
-	var base_chains := clampi(
-		int(fighter_charge_config.get("max_chains", 3)),
-		1,
-		3
-	)
-	var courage_max_chains := clampi(
-		int(fighter_charge_config.get("courage_max_chains", 6)),
-		base_chains,
-		6
-	)
-	var should_continue := fighter_charge_chain_count < base_chains
-	if (
-		not should_continue
-		and fighter_courage_bonus > 0.0
-		and fighter_charge_chain_count < courage_max_chains
-	):
-		should_continue = randf() <= fighter_courage_bonus
-
-	if should_continue:
-		var next_target := _find_fighter_charge_target(fighter_charge_target)
-		if is_instance_valid(next_target):
-			_begin_fighter_charge_dash(next_target)
-			return
-
-	_finish_fighter_charge()
+	_fighter_archetype()._complete_fighter_charge_dash()
 
 func _fighter_charge_damage_target(monster: Node2D, damage: int) -> void:
-	if not is_instance_valid(monster) or monster.is_queued_for_deletion():
-		return
-	if not monster.has_method("take_damage"):
-		return
-
-	var hp_before_value = monster.get("current_hp")
-	var hp_before := int(hp_before_value) if hp_before_value != null else -1
-	preload("res://src/systems/monster_hit_context.gd").hit(monster, maxi(damage, 1), "melee", self)
-
-	if fighter_charge_kill_heal <= 0.0 or hp_before <= 0:
-		return
-	var hp_after_value = monster.get("current_hp")
-	if hp_after_value == null or int(hp_after_value) > 0:
-		return
-
-	var heal_amount := maxi(int(round(fighter_charge_kill_heal)), 0)
-	if heal_amount <= 0 or current_hp <= 0:
-		return
-
-	heal_direct(heal_amount)
+	_fighter_archetype()._fighter_charge_damage_target(monster, damage)
 
 func _finish_fighter_charge() -> void:
-	fighter_charge_reference.clear()
-	fighter_charge_active = false
-	fighter_charge_target = null
-	fighter_charge_elapsed = 0.0
-	fighter_charge_duration = 0.0
-	fighter_charge_cooldown_timer = maxf(
-		float(fighter_charge_config.get("cooldown", 17.0)),
-		0.0
-	)
-	attack_pose_timer = 0.24
-	velocity = Vector2.ZERO
+	_fighter_archetype()._finish_fighter_charge()
 
 func _spawn_fighter_afterimage(alpha: float) -> void:
-	if not hero_sprite.visible or hero_sprite.sprite_frames == null:
-		return
-	if not hero_sprite.sprite_frames.has_animation(hero_sprite.animation):
-		return
-	var frame_texture := hero_sprite.sprite_frames.get_frame_texture(
-		hero_sprite.animation,
-		hero_sprite.frame
-	)
-	if frame_texture == null:
-		return
-
-	var parent := get_parent()
-	if not is_instance_valid(parent):
-		return
-	var ghost: Sprite2D = null
-	if parent.has_method("acquire_transient_fx"):
-		ghost = parent.call(
-			"acquire_transient_fx",
-			"fighter_charge_afterimage",
-			"sprite"
-		) as Sprite2D
-	if ghost == null:
-		ghost = Sprite2D.new()
-		parent.add_child(ghost)
-
-	ghost.visible = true
-	ghost.texture = frame_texture
-	ghost.centered = hero_sprite.centered
-	ghost.flip_h = hero_sprite.flip_h
-	ghost.flip_v = hero_sprite.flip_v
-	ghost.offset = hero_sprite.offset
-	ghost.scale = hero_sprite.scale
-	ghost.rotation = hero_sprite.rotation
-	ghost.global_position = global_position
-	ghost.z_index = hero_sprite.z_index - 1
-	ghost.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	ghost.modulate = Color(1.0, 1.0, 1.0, clampf(alpha, 0.05, 0.92))
-
-	var fade_time := maxf(
-		float(fighter_charge_config.get("afterimage_fade_time", 0.30)),
-		0.05
-	)
-	var tween := ghost.create_tween()
-	tween.tween_property(ghost, "modulate:a", 0.0, fade_time)
-	if parent.has_method("recycle_transient_fx"):
-		tween.finished.connect(
-			Callable(parent, "recycle_transient_fx").bind(
-				ghost,
-				"fighter_charge_afterimage"
-			),
-			Object.CONNECT_ONE_SHOT
-		)
-	else:
-		tween.finished.connect(
-			Callable(ghost, "queue_free"),
-			Object.CONNECT_ONE_SHOT
-		)
+	_fighter_archetype()._spawn_fighter_afterimage(alpha)
 
 func _play_fighter_charge_impact_effect() -> void:
-	_play_fighter_charge_impact_audio()
-	if channel_effect.sprite_frames == null:
-		return
-	if not channel_effect.sprite_frames.has_animation("charge_impact"):
-		return
-	channel_effect.visible = true
-	channel_effect.stop()
-	channel_effect.animation = "charge_impact"
-	channel_effect.frame = 0
-	channel_effect.rotation = 0.0
-	channel_effect.position = Vector2(0, 34)
-	channel_effect.play("charge_impact")
+	_fighter_archetype()._play_fighter_charge_impact_effect()
 
 func _fighter_move_without_monsters(speed_scale: float) -> void:
-	if is_instance_valid(heal_item_target):
-		var heal_direction := _apply_heal_item_steering(Vector2.ZERO, 0.016)
-		if heal_direction.length_squared() > 0.01:
-			_execute_ai_movement(
-				heal_direction
-				* move_speed
-				* 0.90
-				* _get_effective_move_multiplier()
-				* speed_scale
-			)
-			return
-
-	if is_instance_valid(magnet_item_target):
-		var magnet_direction := _apply_magnet_item_steering(
-			Vector2.ZERO,
-			0.016
-		)
-		if magnet_direction.length_squared() > 0.01:
-			_execute_ai_movement(
-				magnet_direction
-				* move_speed
-				* 0.82
-				* _get_effective_move_multiplier()
-				* speed_scale
-			)
-			return
-
-	if is_instance_valid(chest_target):
-		var chest_direction := _apply_chest_steering(Vector2.ZERO, 0.016)
-		if chest_direction.length_squared() > 0.01:
-			_execute_ai_movement(
-				chest_direction
-				* move_speed
-				* 0.72
-				* _get_effective_move_multiplier()
-				* speed_scale
-			)
-			if (
-				global_position.distance_squared_to(chest_target.global_position)
-				<= 105.0 * 105.0
-				and attack_timer <= 0.0
-			):
-				chest_target.call("take_damage", attack_damage)
-				attack_timer = _get_common_attack_interval(attack_cooldown)
-			return
-
-	var nearest_exp_orb := _find_nearest_exp_orb()
-	if is_instance_valid(nearest_exp_orb):
-		var exp_direction := global_position.direction_to(nearest_exp_orb.global_position)
-		_execute_ai_movement(
-			exp_direction
-			* move_speed
-			* 0.90
-			* _get_effective_move_multiplier()
-			* speed_scale
-		)
-		return
-
-	if (
-		wander_timer <= 0.0
-		or position.distance_squared_to(wander_target)
-		<= WANDER_REACHED_DISTANCE * WANDER_REACHED_DISTANCE
-	):
-		_pick_new_wander_target()
-
-	var direction := position.direction_to(wander_target)
-	_execute_ai_movement(
-		direction
-		* move_speed
-		* 0.72
-		* _get_effective_move_multiplier()
-		* speed_scale
-	)
+	_fighter_archetype()._fighter_move_without_monsters(speed_scale)
 
 func _update_fighter_pose_visual(delta: float) -> void:
-	if hero_archetype != "sword_shield" or not hero_sprite.visible or is_dying:
-		return
-	if hit_pose_timer > 0.0 or attack_pose_timer > 0.0:
-		return
-
-	_update_facing_from_horizontal(velocity.x, delta)
-	if velocity.length() > 4.0:
-		_play_stage1_animation("move", 1.0)
-	else:
-		_play_stage1_animation("idle", 1.0)
+	_fighter_archetype()._update_fighter_pose_visual(delta)
 
 func _fighter_basic_attack(current_target: Node2D) -> void:
-	if not is_instance_valid(current_target):
-		return
-
-	var direction := global_position.direction_to(current_target.global_position)
-	if direction.length_squared() <= 0.0:
-		direction = Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
-	direction = direction.normalized()
-
-	attack_timer = _get_common_attack_interval(attack_cooldown)
-	attack_pose_timer = 0.42
-	_face_attack_direction(direction.x)
-	_restart_fighter_attack_animation(false)
-
-	if _fighter_should_use_slash():
-		_fighter_apply_slash(direction, false)
-		_play_fighter_attack_effect("slash", direction, false)
-		_play_fighter_slash_audio()
-		if fighter_slash_mastery_stacks > 0:
-			fighter_slash_bonus_hits_remaining = fighter_slash_mastery_stacks
-			fighter_slash_combo_direction = direction
-			fighter_slash_combo_swing_index = 1
-			fighter_slash_combo_timer = _get_common_attack_interval(0.18)
-	else:
-		_fighter_apply_thrust(direction)
-		_play_fighter_attack_effect("thrust", direction, false)
-		_play_fighter_thrust_audio()
-	_damage_treasure_chests(
-		global_position + direction * 85.0,
-		145.0,
-		attack_damage
-	)
+	_fighter_archetype()._fighter_basic_attack(current_target)
 
 
 func _update_fighter_slash_combo(delta: float) -> bool:
-	if fighter_slash_bonus_hits_remaining <= 0:
-		return false
-
-	fighter_slash_combo_timer = maxf(fighter_slash_combo_timer - delta, 0.0)
-	if fighter_slash_combo_timer > 0.0:
-		return true
-
-	fighter_slash_combo_swing_index += 1
-	var reverse_frames := fighter_slash_combo_swing_index % 2 == 0
-	var direction := fighter_slash_combo_direction
-	if direction.length_squared() <= 0.0:
-		direction = Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
-	direction = direction.normalized()
-
-	attack_pose_timer = 0.24
-	_face_attack_direction(direction.x)
-	_restart_fighter_attack_animation(reverse_frames)
-	_fighter_apply_slash(direction, true)
-	_play_fighter_attack_effect("slash", direction, reverse_frames)
-	_play_fighter_slash_audio()
-
-	fighter_slash_bonus_hits_remaining -= 1
-	if fighter_slash_bonus_hits_remaining > 0:
-		fighter_slash_combo_timer = _get_common_attack_interval(0.18)
-	else:
-		fighter_slash_combo_timer = 0.0
-		fighter_slash_combo_direction = Vector2.ZERO
-	return true
+	return _fighter_archetype()._update_fighter_slash_combo(delta)
 
 
 func _restart_fighter_attack_animation(reverse_frames: bool) -> void:
-	if not hero_sprite.visible or hero_sprite.sprite_frames == null:
-		return
-	if not hero_sprite.sprite_frames.has_animation("attack"):
-		return
-
-	hero_sprite.stop()
-	hero_sprite.animation = &"attack"
-	hero_sprite.speed_scale = 1.0
-	if reverse_frames:
-		var frame_count := hero_sprite.sprite_frames.get_frame_count(&"attack")
-		hero_sprite.frame = maxi(frame_count - 1, 0)
-		hero_sprite.frame_progress = 0.0
-		hero_sprite.play_backwards(&"attack")
-	else:
-		hero_sprite.frame = 0
-		hero_sprite.frame_progress = 0.0
-		hero_sprite.play(&"attack")
+	_fighter_archetype()._restart_fighter_attack_animation(reverse_frames)
 
 
 func _fighter_should_use_slash() -> bool:
-	var trigger := HERO_FIGHTER_RUNTIME.get_slash_trigger(
-		fighter_basic_config,
-		fighter_slash_half_width_bonus
-	)
-	var radius := trigger.x
-	var required := maxi(int(trigger.y), 1)
-	return _count_monsters_near(
-		global_position,
-		radius,
-		required
-	) >= required
+	return _fighter_archetype()._fighter_should_use_slash()
 
 func _fighter_apply_slash(direction: Vector2, bonus_hit: bool = false) -> int:
-	var reach := maxf(float(fighter_basic_config.get("slash_reach", 135.0)), 1.0)
-	var half_width := maxf(
-		float(fighter_basic_config.get("slash_half_width", 88.0))
-		+ fighter_slash_half_width_bonus,
-		1.0
-	)
-	var damage := maxi(
-		1,
-		int(round(
-			float(attack_damage)
-			* float(fighter_basic_config.get("slash_damage_ratio", 1.0))
-			* fighter_basic_damage_multiplier
-		))
-	)
-	var side := Vector2(-direction.y, direction.x)
-	var bonus_kills := 0
-
-	_fill_monster_nodes_near(
-		global_position,
-		reach + half_width,
-		fighter_combat_candidates
-	)
-	for node in fighter_combat_candidates:
-		if not HERO_TARGET_POLICY.is_detectable(node):
-			continue
-		var monster := node as Node2D
-		if monster == null:
-			continue
-		var offset := monster.global_position - global_position
-		var forward := offset.dot(direction)
-		var lateral := absf(offset.dot(side))
-		if forward < -24.0 or forward > reach or lateral > half_width:
-			continue
-		if not monster.has_method("take_damage"):
-			continue
-
-		var hp_before_value = monster.get("current_hp")
-		var hp_before := int(hp_before_value) if hp_before_value != null else -1
-		preload("res://src/systems/monster_hit_context.gd").hit(monster, damage, "melee", self)
-		if not bonus_hit or hp_before <= 0:
-			continue
-		if not is_instance_valid(monster):
-			bonus_kills += 1
-			continue
-		var hp_after_value = monster.get("current_hp")
-		if hp_after_value != null and int(hp_after_value) <= 0:
-			bonus_kills += 1
-	fighter_combat_candidates.clear()
-
-	if bonus_kills > 0 and current_hp > 0:
-		heal_direct(bonus_kills * 10)
-
-	return bonus_kills
+	return _fighter_archetype()._fighter_apply_slash(direction, bonus_hit)
 
 
 func _fighter_apply_thrust(direction: Vector2) -> void:
-	var length := maxf(
-		float(fighter_basic_config.get("thrust_length", 190.0))
-		+ fighter_thrust_length_bonus,
-		1.0
-	)
-	var half_width := maxf(
-		float(fighter_basic_config.get("thrust_half_width", 34.0)),
-		1.0
-	)
-	var damage := maxi(
-		1,
-		int(round(
-			float(attack_damage)
-			* (
-				float(fighter_basic_config.get("thrust_damage_ratio", 1.05))
-				+ fighter_thrust_damage_bonus
-			)
-			* fighter_basic_damage_multiplier
-		))
-	)
-	var side := Vector2(-direction.y, direction.x)
-
-	_fill_monster_nodes_near(
-		global_position,
-		length + half_width,
-		fighter_combat_candidates
-	)
-	for node in fighter_combat_candidates:
-		if not HERO_TARGET_POLICY.is_detectable(node):
-			continue
-		var monster := node as Node2D
-		if monster == null:
-			continue
-		var offset := monster.global_position - global_position
-		var forward := offset.dot(direction)
-		var lateral := absf(offset.dot(side))
-		if forward < 0.0 or forward > length or lateral > half_width:
-			continue
-		if monster.has_method("take_damage"):
-			preload("res://src/systems/monster_hit_context.gd").hit(monster, damage, "melee", self)
-	fighter_combat_candidates.clear()
+	_fighter_archetype()._fighter_apply_thrust(direction)
 
 func _update_fighter_guard(delta: float) -> void:
-	if fighter_guard_active:
-		fighter_guard_duration_timer = maxf(
-			fighter_guard_duration_timer - delta,
-			0.0
-		)
-		if fighter_guard_duration_timer <= 0.0:
-			_end_fighter_guard()
-		return
-
-	var charge_max := maxf(float(ultimate_config.get("charge_max", 100.0)), 1.0)
-	var charge_seconds := maxf(fighter_guard_charge_seconds, 1.0)
-	ultimate_charge = minf(
-		ultimate_charge + (charge_max / charge_seconds) * delta,
-		charge_max
-	)
-	if ultimate_charge + 0.001 >= charge_max and _fighter_can_activate_guard():
-		_start_fighter_guard()
-	queue_redraw()
+	_fighter_archetype()._update_fighter_guard(delta)
 
 func _fighter_can_activate_guard() -> bool:
-	if silence_timer > 0.0:
-		return false
-	if imposed_skill_cooldown > 0.0:
-		return false
-	var trigger := HERO_FIGHTER_RUNTIME.get_guard_trigger(
-		ultimate_config
-	)
-	var radius := trigger.x
-	var required := maxi(int(trigger.y), 1)
-	return _count_monsters_near(
-		global_position,
-		radius,
-		required
-	) >= required
+	return _fighter_archetype()._fighter_can_activate_guard()
 
 
 func _start_fighter_guard() -> void:
-	if silence_timer > 0.0:
-		return
-	if fighter_guard_active:
-		return
-
-	fighter_guard_active = true
-	fighter_guard_duration_timer = maxf(
-		float(ultimate_config.get("duration", 10.0)),
-		0.1
-	)
-	fighter_guard_stored_damage = 0.0
-	ultimate_charge = 0.0
-
-	var shield_ratio := maxf(
-		float(ultimate_config.get("shield_hp_ratio", 0.60))
-		+ fighter_guard_shield_ratio_bonus,
-		0.0
-	)
-	shield_max_hp = _player_shield_amount(float(max_hp) * shield_ratio)
-	shield_hp = shield_max_hp
-
-	_play_fighter_guard_start_audio()
-	if shield_effect.sprite_frames != null and shield_effect.sprite_frames.has_animation("guard_aura"):
-		shield_effect.visible = true
-		shield_effect.play("guard_aura")
-
-	ultimate_used.emit(
-		String(ultimate_config.get("id", "shield_guard")),
-		String(ultimate_config.get("name", "막기"))
-	)
-	queue_redraw()
+	_fighter_archetype()._start_fighter_guard()
 
 func _end_fighter_guard() -> void:
-	if not fighter_guard_active:
-		return
-
-	fighter_guard_active = false
-	fighter_guard_duration_timer = 0.0
-	shield_effect.visible = false
-
-	var release_ratio := maxf(
-		float(ultimate_config.get("stored_damage_release_ratio", 0.50))
-		+ fighter_guard_release_ratio_bonus,
-		0.0
-	)
-	var release_damage := maxi(
-		int(round(fighter_guard_stored_damage * release_ratio)),
-		0
-	)
-	var release_radius := maxf(
-		float(ultimate_config.get("release_radius", 250.0)),
-		0.0
-	)
-
-	if release_damage > 0 and release_radius > 0.0:
-		_fill_monster_nodes_near(
-			global_position,
-			release_radius,
-			fighter_combat_candidates
-		)
-		var release_radius_sq := release_radius * release_radius
-		for node in fighter_combat_candidates:
-			if not HERO_TARGET_POLICY.is_detectable(node):
-				continue
-			var monster := node as Node2D
-			if monster == null:
-				continue
-			if (
-				global_position.distance_squared_to(monster.global_position)
-				> release_radius_sq
-			):
-				continue
-			if monster.has_method("take_damage"):
-				preload("res://src/systems/monster_hit_context.gd").hit(monster, release_damage, "ranged", self)
-		fighter_combat_candidates.clear()
-
-	_play_fighter_guard_release_effect()
-
-	fighter_guard_stored_damage = 0.0
-	shield_hp = 0.0
-	shield_max_hp = 0.0
-	queue_redraw()
+	_fighter_archetype()._end_fighter_guard()
 
 func _fighter_reflect_damage(raw_damage: float, source: Node) -> void:
-	if fighter_reflect_ratio <= 0.0:
-		return
-	var reflected := maxi(
-		1,
-		int(round(raw_damage * fighter_reflect_ratio))
-	)
-
-	if (
-		is_instance_valid(source)
-		and source.is_in_group("monsters")
-		and source.has_method("take_damage")
-	):
-		preload("res://src/systems/monster_hit_context.gd").hit(source, reflected, "melee", self)
-		return
-
-	var reflect_radius := maxf(
-		float(ultimate_config.get("reflect_radius", 175.0)),
-		1.0
-	)
-	var nearest: Node2D = null
-	var nearest_distance_sq := INF
-	var reflect_radius_sq := reflect_radius * reflect_radius
-	_fill_monster_nodes_near(
-		global_position,
-		reflect_radius,
-		fighter_combat_candidates
-	)
-	for node in fighter_combat_candidates:
-		if not HERO_TARGET_POLICY.is_detectable(node):
-			continue
-		var monster := node as Node2D
-		if monster == null:
-			continue
-		var distance_sq := global_position.distance_squared_to(
-			monster.global_position
-		)
-		if (
-			distance_sq <= reflect_radius_sq
-			and distance_sq < nearest_distance_sq
-		):
-			nearest = monster
-			nearest_distance_sq = distance_sq
-	fighter_combat_candidates.clear()
-	if is_instance_valid(nearest) and nearest.has_method("take_damage"):
-		preload("res://src/systems/monster_hit_context.gd").hit(nearest, reflected, "melee", self)
+	_fighter_archetype()._fighter_reflect_damage(raw_damage, source)
 
 func _play_fighter_attack_effect(
 	animation_name: String,
 	direction: Vector2,
 	reverse_frames: bool = false
 ) -> void:
-	if rogue_attack_effect.sprite_frames == null:
-		return
-	if not rogue_attack_effect.sprite_frames.has_animation(animation_name):
-		return
-
-	rogue_attack_effect.visible = true
-	rogue_attack_effect.stop()
-	rogue_attack_effect.animation = animation_name
-	rogue_attack_effect.rotation = direction.angle()
-	if reverse_frames:
-		var frame_count := rogue_attack_effect.sprite_frames.get_frame_count(animation_name)
-		rogue_attack_effect.frame = maxi(frame_count - 1, 0)
-		rogue_attack_effect.frame_progress = 0.0
-		rogue_attack_effect.play_backwards(animation_name)
-	else:
-		rogue_attack_effect.frame = 0
-		rogue_attack_effect.frame_progress = 0.0
-		rogue_attack_effect.play(animation_name)
+	_fighter_archetype()._play_fighter_attack_effect(animation_name, direction, reverse_frames)
 
 
 func _play_fighter_guard_release_effect() -> void:
-	_play_fighter_guard_release_audio()
-	if channel_effect.sprite_frames == null:
-		return
-	if not channel_effect.sprite_frames.has_animation("guard_release"):
-		return
-
-	channel_effect.visible = true
-	channel_effect.stop()
-	channel_effect.animation = "guard_release"
-	channel_effect.frame = 0
-	channel_effect.rotation = 0.0
-	channel_effect.play("guard_release")
+	_fighter_archetype()._play_fighter_guard_release_effect()
 
 func _apply_stage3_fighter_effect_visuals() -> void:
-	_configure_combat_effect_profile(HERO_PRESENTATION.get_combat_effect_profile(hero_archetype, &"fighter"))
+	_fighter_archetype()._apply_stage3_fighter_effect_visuals()
 
 func _apply_stage4_gunner_effect_visuals() -> void:
 	_gunner_archetype()._apply_stage4_gunner_effect_visuals()
@@ -20123,3 +15680,27 @@ func _gunner_archetype():
 	if _gunner_archetype_runtime == null:
 		_gunner_archetype_runtime = HERO_GUNNER_ARCHETYPE.new(self)
 	return _gunner_archetype_runtime
+
+
+func _rogue_archetype():
+	if _rogue_archetype_runtime == null:
+		_rogue_archetype_runtime = HERO_ROGUE_ARCHETYPE.new(self)
+	return _rogue_archetype_runtime
+
+
+func _fighter_archetype():
+	if _fighter_archetype_runtime == null:
+		_fighter_archetype_runtime = HERO_FIGHTER_ARCHETYPE.new(self)
+	return _fighter_archetype_runtime
+
+
+func _berserker_archetype():
+	if _berserker_archetype_runtime == null:
+		_berserker_archetype_runtime = HERO_BERSERKER_ARCHETYPE.new(self)
+	return _berserker_archetype_runtime
+
+
+func _summoner_archetype():
+	if _summoner_archetype_runtime == null:
+		_summoner_archetype_runtime = HERO_SUMMONER_ARCHETYPE.new(self)
+	return _summoner_archetype_runtime
