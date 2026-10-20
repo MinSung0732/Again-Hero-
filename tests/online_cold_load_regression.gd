@@ -9,7 +9,10 @@ var results := 0
 var failed := false
 var started := false
 var deadline := 0
-func _initialize(): run.call_deferred()
+func _initialize():
+	var args := OS.get_cmdline_user_args()
+	if args.is_empty() or not preload("res://tests/online_process_scope.gd").configure(args[0]): quit(1); return
+	run.call_deferred()
 func fail(message: String):
 	failed = true; push_error(message); quit(1)
 func run():

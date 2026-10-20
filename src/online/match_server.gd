@@ -4,6 +4,7 @@ const QUEUE := preload("res://src/online/match_queue.gd")
 const AUTH := preload("res://src/online/auth_verifier.gd")
 const LOCAL_ACCESS := preload("res://src/online/local_test_access.gd")
 const ROOM := preload("res://src/online/battle_room.gd")
+const CODEC := preload("res://src/online/snapshot_codec.gd")
 var metrics = preload("res://src/online/network_metrics.gd").new()
 var metrics_report_at := -1
 var metrics_cache := {}
@@ -92,7 +93,7 @@ func _process(delta: float) -> void:
 					var peer_id: int = rooms[key].seats[role].peer
 					if peers.has(peer_id): state.ack[role]=peers[peer_id].seq
 				started=Time.get_ticks_usec()
-			var encoded := _encode(state)
+			var encoded := _encode_state(key,state)
 			if metrics.enabled:
 				metrics.samples.encode.push(float(Time.get_ticks_usec()-started)/1000.0)
 				bytes=encoded.to_utf8_buffer().size(); metrics.snapshot_bytes=bytes
@@ -182,7 +183,7 @@ func _match_waiters() -> void:
 		seats[peer.role] = {"uid":peer.uid,"peer":id,"resume_token":resume_token,"deadline":0}
 		reserved_uids[peer.uid] = key
 		resume_tokens[resume_token] = {"match":key,"role":peer.role}
-	rooms[key] = {"node":room,"members":pair,"seats":seats,"created":Time.get_ticks_msec(),"ended":0}
+	rooms[key] = {"node":room,"members":pair,"seats":seats,"codec":CODEC.new(),"created":Time.get_ticks_msec(),"ended":0}
 	room.completed.connect(_completed.bind(key)); room.prepare()
 	if room.finished:
 		for id in pair: _reject(id,"battle_load_failed")
@@ -219,7 +220,7 @@ func _resume(id: int,message: Dictionary) -> void:
 	_send_matched(id,key,true)
 	_sync_connection_state(key)
 	if match_data.node.is_prepared:
-		var state: Dictionary = match_data.node.snapshot(); state["match"] = key; _send(id,state)
+		var state: Dictionary = match_data.node.snapshot(); state["match"] = key; _send_encoded(id,_encode_state(key,state))
 	if match_data.node.finished: _send_result(id,key)
 func _sync_connection_state(key: String) -> void:
 	if not rooms.has(key) or rooms[key].node.finished: return
@@ -252,6 +253,10 @@ func _completed(winner: String,reason: String,key: String) -> void:
 static func _encode(message: Dictionary) -> String:
 	var encoded := JSON.stringify(message)
 	return encoded if encoded.to_utf8_buffer().size() <= RULES.MAX_SNAPSHOT else ""
+func _encode_state(key: String,message: Dictionary) -> String:
+	# Lazy fallback also supports isolated test rooms installed without the lobby.
+	if not rooms[key].has("codec"): rooms[key]["codec"] = CODEC.new()
+	return rooms[key].codec.encode(message)
 
 func _send(id: int,message: Dictionary) -> void:
 	_send_encoded(id,_encode(message))

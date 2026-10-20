@@ -1,0 +1,105 @@
+{
+  "cpu_only": true,
+  "engine": "4.5.1-stable (official)",
+  "protocol": 7,
+  "rows": [
+    {
+      "actors": 0,
+      "commands": 1,
+      "packed_bytes": 526,
+      "packed_decode_and_expand": {
+        "count": 96,
+        "max_ms": 0.105,
+        "mean_ms": 0.0178854166666667,
+        "p95_ms": 0.018
+      },
+      "packed_encode": {
+        "count": 96,
+        "max_ms": 0.1,
+        "mean_ms": 0.0238125,
+        "p95_ms": 0.025
+      },
+      "plain_bytes": 526,
+      "plain_decode": {
+        "count": 96,
+        "max_ms": 0.088,
+        "mean_ms": 0.01209375,
+        "p95_ms": 0.013
+      },
+      "plain_encode": {
+        "count": 96,
+        "max_ms": 0.051,
+        "mean_ms": 0.0194375,
+        "p95_ms": 0.021
+      },
+      "saved_percent": 0.0,
+      "used_table": false
+    },
+    {
+      "actors": 24,
+      "commands": 30,
+      "packed_bytes": 6557,
+      "packed_decode_and_expand": {
+        "count": 96,
+        "max_ms": 0.378,
+        "mean_ms": 0.257666666666667,
+        "p95_ms": 0.319
+      },
+      "packed_encode": {
+        "count": 96,
+        "max_ms": 0.5,
+        "mean_ms": 0.311208333333333,
+        "p95_ms": 0.387
+      },
+      "plain_bytes": 7663,
+      "plain_decode": {
+        "count": 96,
+        "max_ms": 0.195,
+        "mean_ms": 0.1295625,
+        "p95_ms": 0.17
+      },
+      "plain_encode": {
+        "count": 96,
+        "max_ms": 0.398,
+        "mean_ms": 0.22203125,
+        "p95_ms": 0.32
+      },
+      "saved_percent": 14.4329896907216,
+      "used_table": true
+    },
+    {
+      "actors": 48,
+      "commands": 54,
+      "packed_bytes": 11187,
+      "packed_decode_and_expand": {
+        "count": 96,
+        "max_ms": 0.696,
+        "mean_ms": 0.46815625,
+        "p95_ms": 0.611
+      },
+      "packed_encode": {
+        "count": 96,
+        "max_ms": 1.693,
+        "mean_ms": 0.551739583333333,
+        "p95_ms": 0.714
+      },
+      "plain_bytes": 13574,
+      "plain_decode": {
+        "count": 96,
+        "max_ms": 0.502,
+        "mean_ms": 0.236260416666667,
+        "p95_ms": 0.353
+      },
+      "plain_encode": {
+        "count": 96,
+        "max_ms": 0.697,
+        "mean_ms": 0.407177083333333,
+        "p95_ms": 0.531
+      },
+      "saved_percent": 17.5850891410049,
+      "used_table": true
+    }
+  ],
+  "scope": "same paused Battle snapshots; mixed roster via direct fixture spawn; encode includes UTF8 size check; decode includes JSON parse, new path validation/expansion; excludes snapshot generation, view/draw, socket/TLS, audio and continuing combat",
+  "trials": 96
+}

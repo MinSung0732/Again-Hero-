@@ -2,6 +2,7 @@ extends Node
 const RULES := preload("res://src/online/match_rules.gd")
 const LOCAL_ACCESS := preload("res://src/online/local_test_access.gd")
 const DRAIN := preload("res://src/online/socket_drain.gd")
+const CODEC := preload("res://src/online/snapshot_codec.gd")
 signal event_received(event: Dictionary)
 signal connection_closed(message: String)
 signal connection_recovering(active: bool, remaining: float)
@@ -138,7 +139,9 @@ func _process(delta: float) -> void:
 				reconnecting = false; reconnect_deadline = 0; connection_recovering.emit(false,0.0)
 		if op == "connection" and event.get("match","")==match_id and event.get("paused",false)==true: metrics.transport_reset()
 		if op == "pong": metrics.pong(event)
-		if op == "state" and event.get("match","")==match_id: metrics.state(event,role)
+		if op == "state":
+			if event.get("match","") != match_id or not CODEC.expand(event): continue
+			metrics.state(event,role)
 		if op == "result":
 			if event.get("match","") != match_id or result_received: continue
 			result_received = true; resume_token = ""; reconnecting = false; reconnect_deadline = 0

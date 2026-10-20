@@ -6,6 +6,7 @@ const SERVER := preload("res://src/online/match_server.gd")
 const CLIENT := preload("res://src/online/match_client.gd")
 const ACCESS := preload("res://src/online/local_test_access.gd")
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
+const RULES := preload("res://src/online/match_rules.gd")
 var checks := 0
 func check(ok: bool,message: String) -> void:
 	checks+=1
@@ -84,7 +85,7 @@ func run() -> void:
 		screen._refresh_metrics()
 		check(screen.metrics_label.text.contains("RTT") and screen.metrics_label.text.contains("서버 전체 물리"),"panel displays measured values")
 		var report: Variant=JSON.parse_string(screen._metrics_json())
-		check(report is Dictionary and report.role==screen.role and report.protocol==6,"copy report parses for each role")
+		check(report is Dictionary and report.role==screen.role and report.protocol==RULES.VERSION,"copy report parses for each role")
 		check(report.rx_bytes>0 and report.tx_bytes>0 and DATA.server_valid(report.server),"actual transport byte counts and monitor fields")
 	check(server.metrics.samples.snapshot.count>0 and server.metrics.samples.encode.count>0,"server build/encode timings sampled")
 	var action: Dictionary={"id":"slime","point":[server.rooms[key].node.battle.hero.position.x+300,server.rooms[key].node.battle.hero.position.y]}

@@ -11,7 +11,10 @@ var input_left := 0.0
 var ended_age := 0.0
 var states := 0
 var sent_summon := false
-func _initialize() -> void: start.call_deferred()
+func _initialize() -> void:
+	var args := OS.get_cmdline_user_args()
+	if args.is_empty() or not preload("res://tests/online_process_scope.gd").configure(args[0]): quit(1); return
+	start.call_deferred()
 func start() -> void:
 	var arguments := OS.get_cmdline_user_args()
 	mode = arguments[0] if not arguments.is_empty() else ""

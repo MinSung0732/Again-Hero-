@@ -8,6 +8,8 @@ const MOTION_RESET_SECONDS := MOTION_SECONDS * 3.0
 const MOTION_SNAP_DISTANCE := 256.0
 const MAX_TEXTURES := 512
 const COMMAND_SIZE := 22
+const PATH_INDEX := 1
+const PATH_TABLE_FIELD := "visual_paths"
 const BACKGROUND_Z := -100
 const MAX_WORLD_EXTENT := 8192.0
 const EMPTY := []
@@ -17,9 +19,17 @@ const MAX_TEXTURE_EXTENT := 8192.0
 static func path_allowed(path: Variant) -> bool:
 	return path is String and path.length() <= MAX_PATH_LENGTH and path.begins_with(ART_ROOT) and path.ends_with(".png") and not path.contains("..") and not path.contains("\\")
 static func valid(command: Variant) -> bool:
-	if not command is Array or command.size() != COMMAND_SIZE or not path_allowed(command[1]): return false
+	if not command is Array or command.size() != COMMAND_SIZE or not path_allowed(command[PATH_INDEX]): return false
+	return _fields_valid(command)
+static func indexed_valid(command: Variant,path_count: int) -> bool:
+	if not command is Array or command.size() != COMMAND_SIZE: return false
+	var index: Variant = command[PATH_INDEX]
+	if not (index is int or index is float) or not is_finite(float(index)): return false
+	if index < 0 or index >= path_count or float(index) != floorf(float(index)): return false
+	return _fields_valid(command)
+static func _fields_valid(command: Array) -> bool:
 	for index in COMMAND_SIZE:
-		if index == 1: continue
+		if index == PATH_INDEX: continue
 		var value: Variant = command[index]
 		if not (value is float or value is int) or not is_finite(float(value)) or absf(float(value)) > 1000000.0: return false
 	for index in [2,3,4,5]:

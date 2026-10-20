@@ -14,6 +14,10 @@ func _initialize() -> void: run.call_deferred()
 func pump(seconds: float) -> void:
 	var deadline := Time.get_ticks_msec()+int(seconds*1000)
 	while Time.get_ticks_msec() < deadline: await process_frame
+func stop_audio(host: Node) -> void:
+	# Retire paused attack playback outside assertions before headless shutdown.
+	for kind in ["AudioStreamPlayer","AudioStreamPlayer2D"]:
+		for player in host.find_children("*",kind,true,false): player.stream_paused=false; player.stop(); player.stream=null
 func run() -> void:
 	server = SERVER.new(); root.add_child(server)
 	check(server.start(24842,"0.0.0.0",true) == ERR_UNAUTHORIZED,"fixture auth rejects public bind")
@@ -77,5 +81,6 @@ func run() -> void:
 	for event in hero_events:
 		if event.op == "result": received = event.winner == "hero" and event.rated == false
 	check(received,"authoritative result delivered")
-	hero.close(); server.queue_free(); hero.queue_free(); demon.queue_free(); await process_frame
+	hero.close(); stop_audio(server); stop_audio(root.get_node("GameAudio"))
+	server.queue_free(); hero.queue_free(); demon.queue_free(); await pump(0.2)
 	print("ONLINE_WEBSOCKET_REAL_BATTLE_PASS checks=",checks); quit()
