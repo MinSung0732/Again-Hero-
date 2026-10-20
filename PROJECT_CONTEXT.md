@@ -1,3 +1,9 @@
+## 2026-10-20 — 온라인 지연·부하 측정 패널
+
+- localtest 연결 테스트에 접기/펼치기 측정 패널·복사/초기화 추가. RTT·상태 도착간격·서버 최신 입력 처리 확인의 평균/P95, FPS·본문 송수신KiB/s·누적byte/packet, 서버 전체process/physics monitor·snapshot/encode 평균/표본수·방/연결/활성개체·상태크기를 수집. 입력 확인은 화면 반응/편도 지연이 아니라 전송→서버 처리 seq를 담은 다음 snapshot 수신 시간임.
+- 기존2초 heartbeat에 probe/echo, localtest snapshot에 역할별 processed seq만 추가. 추가 입력 ACK 패킷 없음. 고정96표본/64 pending 입력·O(1) 기록, UI1Hz/P95 정렬은 요청 시만, 서버 개체 집계/모니터 응답은1초 공유캐시. 일반 인증 서버/클라이언트 기본 수집 꺼짐. ready/pause/재접속 때 대기 시계 초기화, 중복/잘못된 pong·stale seq/덮인 pending 표본 무시. 복사 JSON은 수치/역할/OS/프로토콜만, 토큰/주소·입장코드·UID/파일/클라우드 쓰기 없음. protocol6, 전투/AI/재접속 정책·보상 불변.
+- Godot4.5.1 새38+UI51/버튼48/로딩63/lifecycle53/transport18/reconnect66=337검사 PASS, 별도3프로세스 측정 모드에서 양쪽29상태·동일 승자 및 RTT/입력 확인/서버 monitor 수집 PASS. 최종 import/정적·Python AST 통과, fixture 누락 아트 경고 있음. 작은 Linux loopback 검사이며 실제 Windows↔Android/WSS·부하·GPU 수치/최적화 효과는 미측정. docs/ONLINE_METRICS_20261020.md. feature/stage10-astra만, main 병합 없음.
+
 ## 2026-10-20 — 온라인 피격·회복·공통 도형 효과·기존 SFX 연결
 
 - 사용자 Windows에서 역할 로딩/맵/전투/거미 투사체 정상 확인 보고 기록. 다음 단계로 서버가 실제 표시한 피해·회복량을 공통 popup 경로에서 전달, 클라이언트 고정32슬롯으로 피격 링/숫자·회복 숫자 표시. 서버32슬롯 중 용사 피격8슬롯 예약, 소환/기본 마법 공격 이벤트·기존 SFX5개 연결. 원본 WAV/PNG·AI/판정/수치/저장/보상 불변.

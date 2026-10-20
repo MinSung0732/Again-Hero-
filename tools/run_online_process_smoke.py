@@ -1,13 +1,13 @@
 """Exercise one real server and two clients in separate Godot OS processes."""
 from pathlib import Path
 import argparse,json,re,subprocess,time
-p=argparse.ArgumentParser();p.add_argument('godot');p.add_argument('fixture',type=Path);a=p.parse_args()
+p=argparse.ArgumentParser();p.add_argument('godot');p.add_argument('fixture',type=Path);p.add_argument('--metrics',action='store_true');a=p.parse_args()
 logs=a.fixture/'process_logs';logs.mkdir(exist_ok=True)
 processes=[];handles=[]
 try:
  for role in ['server','hero','demon']:
   log=(logs/(role+'.log')).open('w');handles.append(log)
-  process=subprocess.Popen([a.godot,'--headless','--path',str(a.fixture),'--script','res://tests/online_process_smoke.gd','--',role],stdout=log,stderr=subprocess.STDOUT);processes.append(process)
+  process=subprocess.Popen([a.godot,'--headless','--path',str(a.fixture),'--script','res://tests/online_process_smoke.gd','--',role]+(['--metrics'] if a.metrics else []),stdout=log,stderr=subprocess.STDOUT);processes.append(process)
   if role=='server':
    deadline=time.monotonic()+10
    while 'ONLINE_PROCESS_SERVER_READY' not in (logs/'server.log').read_text():

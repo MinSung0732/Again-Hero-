@@ -5,6 +5,7 @@ const DRAIN := preload("res://src/online/socket_drain.gd")
 signal event_received(event: Dictionary)
 signal connection_closed(message: String)
 signal connection_recovering(active: bool, remaining: float)
+var metrics = preload("res://src/online/network_metrics.gd").new()
 var socket: WebSocketPeer
 var token := ""
 var local_ticket := ""
@@ -29,7 +30,7 @@ func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_PAUSED and not match_id.is_empty() and not resume_token.is_empty() and not result_received:
 		_network_lost("백그라운드에서 돌아오면 경기에 다시 연결합니다.")
 func join(endpoint: String,access_token: String,requested_role: String) -> Error:
-	close(); token = access_token; role = requested_role
+	close(); metrics.enabled=false; metrics.reset(); token = access_token; role = requested_role
 	if not RULES.endpoint_valid(endpoint) or requested_role not in ["hero","demon"]: token = ""; return ERR_INVALID_PARAMETER
 	endpoint_url = endpoint
 	var error := _connect_transport()
@@ -37,12 +38,14 @@ func join(endpoint: String,access_token: String,requested_role: String) -> Error
 	set_process(true); return OK
 func _connect_transport() -> Error:
 	socket = WebSocketPeer.new(); socket.inbound_buffer_size = 262144; socket.outbound_buffer_size = 65536
+	metrics.transport_reset()
 	greeted = false; heartbeat_left = 0.0; last_message = Time.get_ticks_msec()
 	return socket.connect_to_url(endpoint_url)
 func join_local_test(endpoint: String,invitation: String,requested_role: String) -> Error:
 	if not LOCAL_ACCESS.valid_hex(invitation,LOCAL_ACCESS.TICKET_BYTES): close(); return ERR_INVALID_PARAMETER
 	var error := join(endpoint,"",requested_role)
 	if error == OK:
+		metrics.enabled=true
 		local_test_connection = true
 		local_ticket = invitation
 		if local_session.is_empty(): local_session = LOCAL_ACCESS.new_session()
@@ -63,6 +66,7 @@ func set_local_test_disconnected(disconnected: bool) -> bool:
 	return true
 func _reset_transport() -> void:
 	if socket != null: socket.close()
+	metrics.transport_reset()
 	socket = null; token = ""; local_ticket = ""; greeted = false
 func close() -> void:
 	# Intentional lobby exit/cancel is a forfeit; transport failures use recovery.
@@ -74,11 +78,19 @@ func close() -> void:
 	local_test_connection = false; test_transport_paused = false
 	reconnecting = false; reconnect_deadline = 0; next_retry = 0; set_process(false)
 func send(data: Dictionary) -> bool:
-	return socket != null and socket.get_ready_state() == WebSocketPeer.STATE_OPEN and socket.send_text(JSON.stringify(data)) == OK
+	if socket == null or socket.get_ready_state()!=WebSocketPeer.STATE_OPEN: return false
+	var encoded := JSON.stringify(data)
+	var sent := socket.send_text(encoded)==OK
+	if sent and metrics.enabled:
+		metrics.send_bytes(encoded.to_utf8_buffer().size())
+		if data.get("op","")=="ready": metrics.transport_reset()
+	return sent
 func command(kind: String,argument: Variant) -> bool:
 	if match_id.is_empty() or reconnecting or result_received or socket == null or socket.get_ready_state() != WebSocketPeer.STATE_OPEN: return false
 	sequence += 1
-	return send({"op":"input","match":match_id,"seq":sequence,"kind":kind,"argument":argument})
+	var sent := send({"op":"input","match":match_id,"seq":sequence,"kind":kind,"argument":argument})
+	if sent: metrics.input_sent(sequence)
+	return sent
 func _network_lost(message: String) -> void:
 	_reset_transport()
 	if resume_token.is_empty() or match_id.is_empty() or result_received:
@@ -89,6 +101,7 @@ func _network_lost(message: String) -> void:
 	next_retry = now + int(RULES.RECONNECT_RETRY * 1000.0)
 	connection_recovering.emit(true,maxf(0.0,float(reconnect_deadline-now)/1000.0))
 func _process(delta: float) -> void:
+	metrics.tick_rates()
 	var now := Time.get_ticks_msec()
 	if reconnecting and now >= reconnect_deadline:
 		close(); connection_closed.emit("연결을 복구하지 못했습니다. 로비로 돌아가 주세요."); return
@@ -109,7 +122,9 @@ func _process(delta: float) -> void:
 	var budget := 8
 	while socket != null and socket.get_available_packet_count() > 0 and budget > 0:
 		budget -= 1
-		var event := RULES.decode(socket.get_packet(),RULES.MAX_SNAPSHOT)
+		var packet := socket.get_packet()
+		metrics.receive_bytes(packet.size())
+		var event := RULES.decode(packet,RULES.MAX_SNAPSHOT)
 		if event.is_empty(): continue
 		last_message = Time.get_ticks_msec()
 		var op: String = String(event.get("op",""))
@@ -121,6 +136,9 @@ func _process(delta: float) -> void:
 			match_id = event.match; resume_token = event.resume_token; sequence = 0
 			if reconnecting:
 				reconnecting = false; reconnect_deadline = 0; connection_recovering.emit(false,0.0)
+		if op == "connection" and event.get("match","")==match_id and event.get("paused",false)==true: metrics.transport_reset()
+		if op == "pong": metrics.pong(event)
+		if op == "state" and event.get("match","")==match_id: metrics.state(event,role)
 		if op == "result":
 			if event.get("match","") != match_id or result_received: continue
 			result_received = true; resume_token = ""; reconnecting = false; reconnect_deadline = 0
@@ -141,6 +159,6 @@ func _process(delta: float) -> void:
 		_network_lost("서버 연결이 종료되었습니다."); return
 	if state == WebSocketPeer.STATE_OPEN:
 		heartbeat_left -= delta
-		if heartbeat_left <= 0.0: heartbeat_left = RULES.HEARTBEAT_INTERVAL; send({"op":"ping"})
+		if heartbeat_left <= 0.0: heartbeat_left = RULES.HEARTBEAT_INTERVAL; send(metrics.heartbeat())
 	var timeout: float = RULES.RESPONSE_TIMEOUT if not match_id.is_empty() else RULES.JOIN_TIMEOUT
 	if Time.get_ticks_msec()-last_message > int(timeout*1000.0): _network_lost("서버 응답 시간이 초과되었습니다.")

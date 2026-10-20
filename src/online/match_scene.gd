@@ -11,6 +11,10 @@ var loading
 var local_preparing := false
 var waiting_for_start := false
 var load_revision := 0
+const METRICS := preload("res://src/data/online_metrics_catalog.gd")
+var metrics_panel: VBoxContainer
+var metrics_label: Label
+var metrics_left := 0.0
 var client
 var view
 var status: Label
@@ -61,6 +65,16 @@ func _ready() -> void:
 		disconnect_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		reconnect_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		disconnect_button.disabled = true; reconnect_button.disabled = true
+	if initial_local_test:
+		var show_metrics := _button(rows,"연결 측정 보기",_toggle_metrics)
+		show_metrics.custom_minimum_size.y=56
+		metrics_panel=VBoxContainer.new(); rows.add_child(metrics_panel); metrics_panel.visible=false
+		metrics_label=_label(metrics_panel,"측정 대기 중…",19)
+		var metric_actions := HBoxContainer.new(); metrics_panel.add_child(metric_actions)
+		var copy_metrics := _button(metric_actions,"측정값 복사",_copy_metrics)
+		var reset_metrics := _button(metric_actions,"측정 초기화",_reset_metrics)
+		for button in [copy_metrics,reset_metrics]:
+			button.custom_minimum_size.y=56; button.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	view = VIEW.new(); view.size_flags_vertical = Control.SIZE_EXPAND_FILL; view.custom_minimum_size.y = 400; rows.add_child(view)
 	view.placement.connect(func(point: Vector2):
 		if role == "demon" and not ended and not local_preparing and not waiting_for_start and not connection_waiting and not client.reconnecting: client.command("summon",{"id":selected_monster,"point":[point.x,point.y]}))
@@ -204,6 +218,10 @@ func _choose(id: String,choice_revision: int) -> void:
 	if not ended and not connection_waiting and not client.reconnecting: client.command("choose",{"id":id,"revision":choice_revision})
 func _process(delta: float) -> void:
 	if client == null: return
+	if metrics_panel!=null and metrics_panel.visible:
+		metrics_left-=delta
+		if metrics_left<=0:
+			metrics_left=METRICS.PANEL_SECONDS; _refresh_metrics()
 	if not ended and LocalTestMode.is_online_match_allowed() != initial_local_test: client.close(); view.feedback.pause_feedback(); status.text = "테스트 모드가 변경되어 대전을 종료했습니다."; ended = true; _set_controls(false)
 	if not ended and LoginGateway.user_id != initial_owner: client.close(); view.feedback.pause_feedback(); status.text = "계정이 변경되어 대전을 종료했습니다."; ended = true; _set_controls(false)
 	if connection_waiting and not ended and not client.reconnecting:
@@ -228,3 +246,25 @@ func _leave() -> void:
 func _exit_tree() -> void:
 	load_revision += 1
 	if client != null: client.close()
+
+func _toggle_metrics() -> void:
+	if metrics_panel==null: return
+	metrics_panel.visible=not metrics_panel.visible; metrics_left=0
+func _metric_text(sample: Dictionary) -> String:
+	return "미측정" if sample.count==0 else "%.1f / %.1f ms" % [sample.mean_ms,sample.p95_ms]
+func _refresh_metrics() -> void:
+	var data: Dictionary = client.metrics.report(role)
+	metrics_label.text="FPS %d · RTT 평균/P95 %s\n수신간격 평균/P95 %s\n입력 처리 확인 평균/P95 %s\n수신 %.1f / 송신 %.1f KiB/s (본문)" % [Engine.get_frames_per_second(),_metric_text(data.rtt),_metric_text(data.state_gap),_metric_text(data.input_confirmation),data.rx_kib_s,data.tx_kib_s]
+	if not data.server.is_empty():
+		var value: Dictionary=data.server
+		var snapshot_text := "미측정" if value.snapshot_samples==0 else "%.2f ms" % value.snapshot_ms
+		var encode_text := "미측정" if value.encode_samples==0 else "%.2f ms" % value.encode_ms
+		metrics_label.text+="\n서버 전체 물리 %.2f ms · 스냅샷/인코딩 평균 %s / %s\n방 %d · 연결 %d · 몬스터 %d · 투사체 %d · 상태 %.1f KiB" % [value.physics_ms,snapshot_text,encode_text,value.rooms,value.peers,value.actors,value.projectiles,value.snapshot_bytes/1024.0]
+func _metrics_json() -> String:
+	return JSON.stringify(client.metrics.report(role),"\t")
+func _copy_metrics() -> void:
+	if DisplayServer.get_name()!="headless": DisplayServer.clipboard_set(_metrics_json())
+	action_notice.text="측정값을 복사했습니다." if DisplayServer.get_name()!="headless" else "현재 환경에서는 클립보드를 사용할 수 없습니다."
+
+func _reset_metrics() -> void:
+	client.metrics.reset(); metrics_left=0

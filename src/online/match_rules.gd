@@ -1,6 +1,6 @@
 extends RefCounted
 ## Separate versioned experiment; no rating or account-reward writer.
-const VERSION := 5
+const VERSION := 6
 const ID := "duel_smoke_v1"
 const HERO := "ranged_rookie"
 const ROSTER := ["slime","spider","orc","bomb_rat","skeleton_archer"]

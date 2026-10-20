@@ -4,6 +4,9 @@ const QUEUE := preload("res://src/online/match_queue.gd")
 const AUTH := preload("res://src/online/auth_verifier.gd")
 const LOCAL_ACCESS := preload("res://src/online/local_test_access.gd")
 const ROOM := preload("res://src/online/battle_room.gd")
+var metrics = preload("res://src/online/network_metrics.gd").new()
+var metrics_report_at := -1
+var metrics_cache := {}
 var listener := TCPServer.new()
 var peers := {}
 var rooms := {}
@@ -23,11 +26,13 @@ var remove_rooms: Array[String] = []
 func start(port: int,bind: String = "127.0.0.1",development_auth: bool = false,invitation: String = "") -> Error:
 	if development_auth and bind != "127.0.0.1": return ERR_UNAUTHORIZED
 	if not invitation.is_empty() and (bind != "127.0.0.1" or not LOCAL_ACCESS.valid_hex(invitation, LOCAL_ACCESS.TICKET_BYTES) or development_auth): return ERR_UNAUTHORIZED
+	metrics.enabled = development_auth or not invitation.is_empty(); metrics.reset(); metrics_report_at=-1; metrics_cache={}
 	bind_address = bind; test_auth = development_auth
 	local_test_ticket = invitation
 	auth = AUTH.new(); add_child(auth)
 	return listener.listen(port,bind)
 func _process(delta: float) -> void:
+	metrics.tick_rates()
 	if listener.is_connection_available():
 		var stream := listener.take_connection()
 		if peers.size() >= RULES.MAX_CLIENTS: stream.disconnect_from_host()
@@ -45,7 +50,8 @@ func _process(delta: float) -> void:
 			budget -= 1
 			if Time.get_ticks_msec()-int(peer.rate_at) >= 1000: peer.rate_at = Time.get_ticks_msec(); peer.rate = 0
 			peer.rate = int(peer.rate)+1
-			var message := RULES.decode(socket.get_packet())
+			var packet := socket.get_packet(); metrics.receive_bytes(packet.size())
+			var message := RULES.decode(packet)
 			if message.is_empty() or int(peer.rate) > 60: retire.append(id); break
 			peer.last = Time.get_ticks_msec(); _receive(id,message)
 			if socket.get_ready_state() == WebSocketPeer.STATE_CLOSING: break
@@ -76,9 +82,21 @@ func _process(delta: float) -> void:
 		for key in rooms:
 			var room = rooms[key].node
 			if not room.is_prepared or not room.running or room.connection_paused or room.finished: continue
+			var started: int = Time.get_ticks_usec() if metrics.enabled else 0
 			var state: Dictionary = room.snapshot(); state["match"] = key
+			var bytes := -1
+			if metrics.enabled:
+				metrics.samples.snapshot.push(float(Time.get_ticks_usec()-started)/1000.0)
+				state["ack"]={"hero":0,"demon":0}
+				for role in rooms[key].seats:
+					var peer_id: int = rooms[key].seats[role].peer
+					if peers.has(peer_id): state.ack[role]=peers[peer_id].seq
+				started=Time.get_ticks_usec()
 			var encoded := _encode(state)
-			for id in rooms[key].members: _send_encoded(id,encoded)
+			if metrics.enabled:
+				metrics.samples.encode.push(float(Time.get_ticks_usec()-started)/1000.0)
+				bytes=encoded.to_utf8_buffer().size(); metrics.snapshot_bytes=bytes
+			for id in rooms[key].members: _send_encoded(id,encoded,bytes)
 	for id in queue.members:
 		if peers.has(id) and Time.get_ticks_msec()-int(peers[id].get("queue_ping",0)) > 5000:
 			peers[id]["queue_ping"] = Time.get_ticks_msec(); _send(id,{"op":"queued","role":peers[id].role})
@@ -100,7 +118,12 @@ func _receive(id: int,message: Dictionary) -> void:
 		if role not in ["hero","demon"]: _reject(id,"invalid_role"); return
 		if message.has("local_test") and (not message.local_test is Dictionary or not message.token.is_empty()): _reject(id,"invalid_request"); return
 		peer.authenticating = true; _authenticate(id,message.token,role,message.get("local_test",{})); return
-	if op == "ping" and not peer.uid.is_empty(): _send(id,{"op":"pong"}); return
+	if op == "ping" and not peer.uid.is_empty():
+		var pong := {"op":"pong"}
+		if preload("res://src/data/online_metrics_catalog.gd").sequence(message.get("probe",null)):
+			pong["probe"]=message.probe
+			if metrics.enabled: pong["metrics"]=_metrics_report()
+		_send(id,pong); return
 	if peer.uid.is_empty() or not rooms.has(peer.room): return
 	var match_data: Dictionary = rooms[peer.room]
 	if op == "leave" and message.get("match","") == peer.room:
@@ -233,12 +256,13 @@ static func _encode(message: Dictionary) -> String:
 func _send(id: int,message: Dictionary) -> void:
 	_send_encoded(id,_encode(message))
 
-func _send_encoded(id: int,encoded: String) -> void:
+func _send_encoded(id: int,encoded: String,bytes: int = -1) -> void:
 	if not peers.has(id): return
 	var socket: WebSocketPeer = peers[id].socket
 	if socket.get_ready_state() != WebSocketPeer.STATE_OPEN: return
 	if socket.get_current_outbound_buffered_amount() > RULES.MAX_SNAPSHOT*2: socket.close(1008,"slow consumer"); return
-	if not encoded.is_empty(): socket.send_text(encoded)
+	if not encoded.is_empty() and socket.send_text(encoded)==OK and metrics.enabled:
+		metrics.send_bytes(bytes if bytes>=0 else encoded.to_utf8_buffer().size())
 func _reject(id: int,reason: String) -> void:
 	_send(id,{"op":"error","reason":reason})
 	if peers.has(id): peers[id].socket.close(1008,reason)
@@ -254,3 +278,20 @@ func _drop(id: int) -> void:
 func _exit_tree() -> void:
 	listener.stop()
 	for peer in peers.values(): peer.socket.close()
+
+func _metrics_report() -> Dictionary:
+	var now := Time.get_ticks_usec()
+	if metrics_report_at>=0 and now-metrics_report_at<preload("res://src/data/online_metrics_catalog.gd").REFRESH_US: return metrics_cache
+	metrics_report_at=now
+	var actors := 0
+	var projectiles := 0
+	for key in rooms:
+		var room = rooms[key].node
+		if not room.is_prepared or room.finished: continue
+		actors += room.battle.active_monsters.size()
+		projectiles += room.battle.online_visual_projectiles.size()
+		if room.battle.hero.player_weapons != null:
+			for shot in room.battle.hero.player_weapons.projectiles:
+				if shot.active: projectiles += 1
+	metrics_cache=metrics.server_report(rooms.size(),peers.size(),actors,projectiles)
+	return metrics_cache
