@@ -39,6 +39,35 @@ def tokens(s):
     return [(m.lastgroup, m.group()) for m in TOKEN.finditer(s)]
 
 
+CONTINUATION = (')', ']', '}', 'or ', 'and ', '+', '-', '*', '/')
+
+
+def shadow_scope_violations(func_lines, name, params):
+    """Bare uses of `name` that are not covered by a param/var/for declaration
+    whose block is still open (indentation based, multi-line expressions kept)."""
+    out = []
+    scope = None  # (indent, block_scoped)
+    if name in params:
+        scope = (1, False)
+    for raw in func_lines[1:]:
+        code = re.sub(r'"[^"]*"', '""', raw.split('#')[0])
+        if not code.strip():
+            continue
+        ind = len(raw) - len(raw.lstrip('\t'))
+        if scope and scope[1] and ind < scope[0] and not code.strip().startswith(CONTINUATION):
+            scope = None
+        stripped = code.strip()
+        if re.match(r'(?:var|const)\s+%s\b' % name, stripped):
+            scope = (ind, True)
+            continue
+        if re.match(r'for\s+%s\b' % name, stripped):
+            scope = (ind + 1, True)
+            continue
+        if re.search(r'(?<![\w.])%s\b' % name, code) and scope is None:
+            out.append(stripped[:80])
+    return out
+
+
 # -------------------------------------------------------- top-level layout
 def is_top(line):
     return bool(line) and not line[0].isspace() and not line.startswith('#') and not line.startswith(')')
@@ -117,9 +146,11 @@ for name, a, b in moved:
         locals_.add(kind_val.group(1) or kind_val.group(2))
     for lam in re.finditer(r'\bfunc\s*\w*\s*\(([^)]*)\)', body[len(header):]):
         locals_.update(re.findall(r'(\w+)\s*(?::|=|,|$)', lam.group(1)))
-    shadow = sorted((locals_ & members) - set())
-    if shadow:
-        problems.append('%s: locals shadow hero members %s' % (name, shadow))
+    # A local may share a hero member's name only when every bare use sits
+    # inside its declaring scope; then all uses are the local, never the member.
+    for shadowed in sorted(locals_ & members):
+        for violation in shadow_scope_violations(lines[a:b], shadowed, params):
+            problems.append('%s: %s used outside its local scope: %s' % (name, shadowed, violation))
     # Rewrite body tokens after the header.
     new = [v for _, v in toks[:sig_end + 1]]
     prev_sig = None
@@ -153,6 +184,10 @@ for name, a, b in moved:
     out_funcs.append(''.join(new).rstrip('\n'))
     returns_void = re.search(r'->\s*void\s*:\s*$', header) is not None
     call = '%s().%s(%s)' % (ACCESSOR, name, ', '.join(params))
+    # Coroutines must stay awaitable through the forwarder, or awaiting
+    # callers would resume before the moved body finishes.
+    if any(kind == 'ident' and val == 'await' for kind, val in toks[sig_end + 1:]):
+        call = 'await ' + call
     forwarders[name] = header + '\n\t' + ('' if returns_void else 'return ') + call
 
 print('moved functions:', len(moved), 'lines:', sum(b - a for _, a, b in moved), 'prefixed refs:', prefixed)

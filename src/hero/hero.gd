@@ -107,6 +107,10 @@ const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
 const COMBAT_STATUS_EFFECT_VISUAL := preload("res://src/ui/combat_status_effect_visual.gd")
 const HERO_WORLD_QUERY_RUNTIME := preload("res://src/hero/hero_world_query_runtime.gd")
 const HERO_SUMMONER_RUNTIME := preload("res://src/hero/hero_summoner_runtime.gd")
+const HERO_SAGE_ARCHETYPE := preload("res://src/hero/archetypes/hero_sage_archetype.gd")
+const HERO_ARCHMAGE_ARCHETYPE := preload("res://src/hero/archetypes/hero_archmage_archetype.gd")
+const HERO_PURIFIER_ARCHETYPE := preload("res://src/hero/archetypes/hero_purifier_archetype.gd")
+const HERO_ALCHEMIST_ARCHETYPE := preload("res://src/hero/archetypes/hero_alchemist_archetype.gd")
 const HERO_SUMMONER_ARCHETYPE := preload("res://src/hero/archetypes/hero_summoner_archetype.gd")
 const HERO_BERSERKER_ARCHETYPE := preload("res://src/hero/archetypes/hero_berserker_archetype.gd")
 const HERO_FIGHTER_ARCHETYPE := preload("res://src/hero/archetypes/hero_fighter_archetype.gd")
@@ -341,6 +345,10 @@ var _rogue_archetype_runtime: RefCounted
 var _fighter_archetype_runtime: RefCounted
 var _berserker_archetype_runtime: RefCounted
 var _summoner_archetype_runtime: RefCounted
+var _alchemist_archetype_runtime: RefCounted
+var _purifier_archetype_runtime: RefCounted
+var _archmage_archetype_runtime: RefCounted
+var _sage_archetype_runtime: RefCounted
 var _hero_action_tick: Callable
 var _hero_common_runtime_tick: Callable
 var _hero_boundary_steering: Callable
@@ -2243,240 +2251,14 @@ func _update_summoner_pose_visual(delta: float) -> void:
 
 
 func _physics_process_alchemist(delta: float) -> void:
-	_ensure_alchemist_runtime()
-
-	ai_memory_clock += delta
-	_prune_offensive_memory()
-	_prune_status_memory()
-	ai_observation_timer = maxf(ai_observation_timer - delta, 0.0)
-	if ai_observation_timer <= 0.0:
-		_refresh_ai_observation()
-
-	attack_timer = maxf(attack_timer - delta * get_paralysis_attack_multiplier(), 0.0)
-	retarget_timer = maxf(retarget_timer - delta, 0.0)
-	wander_timer = maxf(wander_timer - delta, 0.0)
-	attack_pose_timer = maxf(attack_pose_timer - delta, 0.0)
-	hit_pose_timer = maxf(hit_pose_timer - delta, 0.0)
-	_update_invulnerability(delta)
-	alchemist_equivalent_exchange_damage_reduction_timer = maxf(
-		alchemist_equivalent_exchange_damage_reduction_timer - delta,
-		0.0
-	)
-	_update_alchemist_material_spawning(delta)
-	_collect_nearby_alchemy_materials()
-	alchemist_philosopher_unlock_grace_timer = maxf(
-		alchemist_philosopher_unlock_grace_timer - delta,
-		0.0
-	)
-	if _update_alchemist_philosopher_unlock_sequence(delta):
-		return
-	alchemist_mixture_field_cooldown = maxf(alchemist_mixture_field_cooldown - delta, 0.0)
-	alchemist_mystery_cauldron_cooldown = maxf(
-		alchemist_mystery_cauldron_cooldown - delta,
-		0.0
-	)
-	alchemist_emergency_cooldown = maxf(
-		alchemist_emergency_cooldown - delta,
-		0.0
-	)
-	_update_alchemist_philosopher_gas_regen(delta)
-	if (
-		bool(alchemist_philosopher_config.get("test_mode", false))
-		and not alchemist_philosopher_used
-		and not alchemist_philosopher_channeling
-		and not alchemist_transformed
-	):
-		alchemist_philosopher_test_timer = maxf(
-			alchemist_philosopher_test_timer - delta,
-			0.0
-		)
-
-	if _update_alchemist_philosopher_channel(delta):
-		return
-	if _try_start_alchemist_philosopher_stone():
-		return
-
-	# A pre-transformation vial burst may already be queued. Once the stone
-	# is active, basic vial attacks are permanently disabled for this run.
-	if not alchemist_transformed:
-		_update_alchemist_throw_sequence(delta)
-
-	_update_alchemist_mixture_field_hero_effects(delta)
-	_update_alchemist_field_locomotion_state(delta)
-	if _update_alchemist_emergency_escape(delta):
-		_update_alchemist_pose_visual(delta)
-		return
-	_try_cast_alchemist_mixture_field()
-	_try_cast_alchemist_mystery_cauldron()
-
-	if slow_timer > 0.0:
-		slow_timer = maxf(slow_timer - delta, 0.0)
-		if slow_timer <= 0.0:
-			move_multiplier = 1.0
-			queue_redraw()
-
-	if alchemist_transformed:
-		_move_alchemist_philosopher_form(delta)
-		_update_alchemist_pose_visual(delta)
-		return
-
-	var alchemist_move_speed := move_speed * _get_alchemist_field_speed_multiplier()
-	var basic_gas_cost := maxf(float(alchemist_config.get("basic_gas_cost", 10.0)), 0.0)
-	if alchemist_gas + 0.001 < basic_gas_cost:
-		var material_target := _find_nearest_active_alchemy_material()
-		if is_instance_valid(material_target):
-			var material_direction := global_position.direction_to(material_target.global_position)
-			var recovery_direction := material_direction
-			var nearest_threat := _find_nearest_monster()
-			if is_instance_valid(nearest_threat):
-				var threat_distance := global_position.distance_to(nearest_threat.global_position)
-				if threat_distance < kite_distance:
-					var escape_direction := _choose_move_direction(
-						nearest_threat,
-						threat_distance
-					)
-					if escape_direction.length_squared() > 0.01:
-						recovery_direction = (
-							material_direction * 0.55
-							+ escape_direction * 1.25
-						).normalized()
-			recovery_direction = _apply_ranged_boundary_escape(recovery_direction)
-			_execute_ai_movement(recovery_direction * alchemist_move_speed * _get_effective_move_multiplier())
-			_update_alchemist_pose_visual(delta)
-			return
-
-	_update_heal_item_goal(delta)
-	_update_chest_goal(delta)
-	_update_magnet_item_goal(delta)
-
-	if not is_instance_valid(target) or target.is_queued_for_deletion() or retarget_timer <= 0.0:
-		target = _find_nearest_monster()
-		retarget_timer = 0.12
-
-	if not is_instance_valid(target):
-		_move_without_monsters()
-		_update_alchemist_pose_visual(delta)
-		return
-
-	var distance := global_position.distance_to(target.global_position)
-	var move_direction := _choose_move_direction(target, distance)
-	move_direction = _apply_heal_item_steering(move_direction, delta)
-	move_direction = _apply_chest_steering(move_direction, delta)
-	move_direction = _apply_magnet_item_steering(move_direction, delta)
-	move_direction = _apply_ranged_boundary_escape(move_direction)
-	_execute_ai_movement(move_direction * alchemist_move_speed * _get_effective_move_multiplier())
-
-	if (
-		distance <= attack_range
-		and attack_timer <= 0.0
-		and alchemist_throw_index >= alchemist_throw_positions.size()
-	):
-		_execute_ai_basic_attack(HERO_ACTION_INTENT.AttackKind.ALCHEMIST, _get_alchemist_chest_attack_target())
-
-	_update_alchemist_pose_visual(delta)
+	_alchemist_archetype()._physics_process_alchemist(delta)
 
 func _ensure_alchemist_runtime() -> void:
-	if alchemist_runtime_ready or hero_archetype != "alchemist_chemical":
-		return
-	var world_parent := get_parent()
-	if not is_instance_valid(world_parent):
-		return
-
-	# Base attack can reach 6 vials with Chemical Support. Keep enough pooled
-	# projectiles for overlapping volleys so bonus vials are never dropped.
-	for _index in range(16):
-		var vial := ALCHEMIST_VIAL_SCENE.instantiate() as Node2D
-		if vial == null:
-			continue
-		world_parent.add_child(vial)
-		vial.connect("landed", Callable(self, "_on_alchemist_vial_landed"))
-		alchemist_vial_pool.append(vial)
-
-	for _index in range(28):
-		var poison := ALCHEMIST_POISON_POOL_SCENE.instantiate() as Node2D
-		if poison == null:
-			continue
-		world_parent.add_child(poison)
-		poison.connect("damage_tick", Callable(self, "_on_alchemist_poison_tick"))
-		alchemist_poison_pool.append(poison)
-
-	var max_materials := clampi(int(alchemist_config.get("material_max_count", 10)), 1, 10)
-	for _index in range(max_materials):
-		var material := ALCHEMY_MATERIAL_SCENE.instantiate() as Node2D
-		if material == null:
-			continue
-		world_parent.add_child(material)
-		alchemist_material_pool.append(material)
-
-	var cauldron_count: int = clampi(
-		int(alchemist_mystery_cauldron_config.get("max_active", 2)) + 3,
-		1,
-		5
-	)
-	for _index in range(cauldron_count):
-		var cauldron := ALCHEMIST_CAULDRON_SCENE.instantiate() as Node2D
-		if cauldron == null:
-			continue
-		world_parent.add_child(cauldron)
-		cauldron.connect(
-			"mix_completed",
-			Callable(self, "_on_alchemist_cauldron_completed")
-		)
-		alchemist_cauldrons.append(cauldron)
-
-	alchemist_mixture_field = ALCHEMIST_MIXTURE_FIELD_SCENE.instantiate() as Node2D
-	if is_instance_valid(alchemist_mixture_field):
-		world_parent.add_child(alchemist_mixture_field)
-		alchemist_mixture_field.connect(
-			"field_tick",
-			Callable(self, "_on_alchemist_mixture_field_tick")
-		)
-
-	_ensure_alchemist_philosopher_unlock_effect()
-	alchemist_runtime_ready = true
-	alchemist_material_spawn_timer = 0.0
-	var initial_count := clampi(
-		int(alchemist_config.get("initial_material_count", 6)),
-		0,
-		alchemist_material_pool.size()
-	)
-	for _index in range(initial_count):
-		_spawn_one_alchemy_material()
+	_alchemist_archetype()._ensure_alchemist_runtime()
 
 
 func _update_alchemist_material_spawning(delta: float) -> void:
-	if not alchemist_runtime_ready:
-		return
-	alchemist_material_spawn_timer = maxf(alchemist_material_spawn_timer - delta, 0.0)
-	if alchemist_material_spawn_timer > 0.0:
-		return
-
-	var active_count := _count_active_alchemy_materials()
-	var max_count := mini(
-		clampi(int(alchemist_config.get("material_max_count", 10)), 1, 10),
-		alchemist_material_pool.size()
-	)
-	if active_count >= max_count:
-		alchemist_material_spawn_timer = 0.75
-		return
-
-	_spawn_one_alchemy_material()
-	var gas_ratio := alchemist_gas / maxf(alchemist_gas_max, 1.0)
-	if gas_ratio <= 0.001 and active_count < 3:
-		alchemist_material_spawn_timer = maxf(
-			float(alchemist_config.get("empty_spawn_interval", 0.8)),
-			0.25
-		)
-	elif gas_ratio <= 0.30:
-		alchemist_material_spawn_timer = maxf(
-			float(alchemist_config.get("low_gas_spawn_interval", 2.0)),
-			0.5
-		)
-	else:
-		alchemist_material_spawn_timer = maxf(
-			float(alchemist_config.get("material_spawn_interval", 4.0)),
-			0.75
-		)
+	_alchemist_archetype()._update_alchemist_material_spawning(delta)
 
 
 func _count_active_alchemy_materials() -> int:
@@ -2576,327 +2358,78 @@ func _find_nearest_active_alchemy_material() -> Node2D:
 
 
 func _add_alchemist_gas(amount: float) -> void:
-	if amount <= 0.0:
-		return
-	alchemist_gas = minf(alchemist_gas + amount, alchemist_gas_max)
-	queue_redraw()
+	_alchemist_archetype()._add_alchemist_gas(amount)
 
 
 func _consume_alchemist_gas(amount: float) -> bool:
-	var cost := maxf(amount, 0.0)
-	if alchemist_gas + 0.001 < cost:
-		return false
-	alchemist_gas = maxf(alchemist_gas - cost, 0.0)
-	queue_redraw()
-	return true
+	return _alchemist_archetype()._consume_alchemist_gas(amount)
 
 
 func _get_alchemist_augment_stacks(augment_id: String) -> int:
-	return maxi(int(build_counts.get(augment_id, 0)), 0)
+	return _alchemist_archetype()._get_alchemist_augment_stacks(augment_id)
 
 
 func _get_alchemist_compressed_range_multiplier() -> float:
-	var stacks := _get_alchemist_augment_stacks("alchemist_compressed_gas")
-	return maxf(1.0 - 0.10 * float(stacks), 0.50)
+	return _alchemist_archetype()._get_alchemist_compressed_range_multiplier()
 
 
 func _get_alchemist_compressed_damage_multiplier() -> float:
-	var stacks := _get_alchemist_augment_stacks("alchemist_compressed_gas")
-	return 1.0 + 0.088 * float(stacks)
+	return _alchemist_archetype()._get_alchemist_compressed_damage_multiplier()
 
 
 func _get_alchemist_speed_gap_damage_multiplier(monster: Node) -> float:
-	var stacks := _get_alchemist_augment_stacks("alchemist_quick_decision")
-	if stacks <= 0 or not is_instance_valid(monster):
-		return 1.0
-	var monster_speed_value = monster.get("move_speed")
-	if monster_speed_value == null:
-		return 1.0
-	var speed_gap := absf(move_speed - float(monster_speed_value))
-	var gap_steps := int(floor(speed_gap / 20.0))
-	return 1.0 + float(gap_steps * stacks) * 0.01
+	return _alchemist_archetype()._get_alchemist_speed_gap_damage_multiplier(monster)
 
 
 func _get_alchemist_equivalent_exchange_data(stacks: int) -> Dictionary:
-	match clampi(stacks, 1, 5):
-		1:
-			return {"hp_cost_ratio": 0.03, "damage_multiplier": 1.20, "range_multiplier": 1.00, "material_refund_chance": 0.0, "damage_reduction": 0.0}
-		2:
-			return {"hp_cost_ratio": 0.025, "damage_multiplier": 1.35, "range_multiplier": 1.00, "material_refund_chance": 0.20, "damage_reduction": 0.0}
-		3:
-			return {"hp_cost_ratio": 0.02, "damage_multiplier": 1.50, "range_multiplier": 1.15, "material_refund_chance": 0.35, "damage_reduction": 0.0}
-		4:
-			return {"hp_cost_ratio": 0.015, "damage_multiplier": 1.70, "range_multiplier": 1.25, "material_refund_chance": 0.50, "damage_reduction": 0.10}
-		_:
-			return {"hp_cost_ratio": 0.01, "damage_multiplier": 2.00, "range_multiplier": 1.35, "material_refund_chance": 0.70, "damage_reduction": 0.20}
+	return _alchemist_archetype()._get_alchemist_equivalent_exchange_data(stacks)
 
 
 func _get_alchemist_equivalent_damage_multiplier() -> float:
-	if not alchemist_equivalent_exchange_active:
-		return 1.0
-	var stacks := _get_alchemist_augment_stacks("alchemist_equivalent_exchange")
-	if stacks <= 0:
-		return 1.0
-	return float(_get_alchemist_equivalent_exchange_data(stacks).get("damage_multiplier", 1.0))
+	return _alchemist_archetype()._get_alchemist_equivalent_damage_multiplier()
 
 
 func _get_alchemist_equivalent_range_multiplier() -> float:
-	if not alchemist_equivalent_exchange_active:
-		return 1.0
-	var stacks := _get_alchemist_augment_stacks("alchemist_equivalent_exchange")
-	if stacks <= 0:
-		return 1.0
-	return float(_get_alchemist_equivalent_exchange_data(stacks).get("range_multiplier", 1.0))
+	return _alchemist_archetype()._get_alchemist_equivalent_range_multiplier()
 
 
 func _try_pay_alchemist_equivalent_exchange(required_materials: int) -> bool:
-	var stacks := _get_alchemist_augment_stacks("alchemist_equivalent_exchange")
-	if stacks <= 0:
-		return false
-	if alchemist_materials_collected >= required_materials:
-		return true
-	if current_hp <= int(ceil(float(max_hp) * 0.20)):
-		return false
-
-	var missing := maxi(required_materials - alchemist_materials_collected, 0)
-	if missing <= 0:
-		return true
-	var data := _get_alchemist_equivalent_exchange_data(stacks)
-	var hp_cost := maxi(
-		1,
-		int(ceil(
-			float(current_hp)
-			* float(data.get("hp_cost_ratio", 0.03))
-			* float(missing)
-		))
-	)
-	alchemist_equivalent_exchange_paid_hp = mini(hp_cost, current_hp - 1)
-	current_hp = maxi(current_hp - alchemist_equivalent_exchange_paid_hp, 1)
-	alchemist_materials_collected = required_materials
-	alchemist_equivalent_exchange_active = true
-	if float(data.get("damage_reduction", 0.0)) > 0.0:
-		alchemist_equivalent_exchange_damage_reduction_timer = 3.0
-	health_changed.emit(current_hp, max_hp)
-	queue_redraw()
-	return true
+	return _alchemist_archetype()._try_pay_alchemist_equivalent_exchange(required_materials)
 
 
 func _on_alchemist_equivalent_exchange_kill() -> void:
-	if not alchemist_equivalent_exchange_active:
-		return
-	var stacks := _get_alchemist_augment_stacks("alchemist_equivalent_exchange")
-	if stacks <= 0:
-		return
-	var data := _get_alchemist_equivalent_exchange_data(stacks)
-	var refund_chance := float(data.get("material_refund_chance", 0.0))
-	if refund_chance > 0.0 and randf() < refund_chance:
-		var required := maxi(
-			int(alchemist_philosopher_config.get("required_materials", 20)),
-			1
-		)
-		alchemist_materials_collected = mini(alchemist_materials_collected + 1, required)
-	if stacks >= 5 and alchemist_equivalent_exchange_paid_hp > 0:
-		var heal_amount := int(round(float(alchemist_equivalent_exchange_paid_hp) * 0.50))
-		current_hp = mini(current_hp + _get_reduced_healing(maxi(heal_amount, 1)), max_hp)
-		alchemist_equivalent_exchange_paid_hp = 0
-		health_changed.emit(current_hp, max_hp)
+	_alchemist_archetype()._on_alchemist_equivalent_exchange_kill()
 
 
 func _deal_alchemist_dot_damage(monster: Node, base_damage: int) -> void:
-	if not is_instance_valid(monster) or not monster.has_method("take_damage"):
-		return
-	var before_hp_value = monster.get("current_hp")
-	var before_hp := int(before_hp_value) if before_hp_value != null else -1
-	var multiplier := (
-		_get_alchemist_compressed_damage_multiplier()
-		* _get_alchemist_speed_gap_damage_multiplier(monster)
-	)
-	var final_damage := maxi(1, int(round(float(base_damage) * multiplier)))
-	preload("res://src/systems/monster_hit_context.gd").hit(monster, final_damage, "ranged", self)
-	if before_hp > 0:
-		var after_hp_value = monster.get("current_hp")
-		if after_hp_value != null and int(after_hp_value) <= 0:
-			_on_alchemist_equivalent_exchange_kill()
+	_alchemist_archetype()._deal_alchemist_dot_damage(monster, base_damage)
 
 
 func _get_alchemist_mystery_cauldron_cooldown_total() -> float:
-	var base := _get_alchemist_effective_cooldown(
-		alchemist_mystery_cauldron_config,
-		20.0
-	)
-	var stacks := _get_alchemist_augment_stacks("alchemist_quick_preparation")
-	return base * maxf(1.0 - 0.10 * float(stacks), 0.10)
+	return _alchemist_archetype()._get_alchemist_mystery_cauldron_cooldown_total()
 
 
 func _get_alchemist_effective_cooldown(
 	config: Dictionary,
 	fallback: float
 ) -> float:
-	var base_cooldown := maxf(float(config.get("cooldown", fallback)), 0.0)
-	if not alchemist_transformed:
-		return base_cooldown
-	return (
-		base_cooldown
-		* clampf(
-			float(alchemist_philosopher_config.get(
-				"skill_cooldown_multiplier",
-				0.70
-			)),
-			0.05,
-			1.0
-		)
-	)
+	return _alchemist_archetype()._get_alchemist_effective_cooldown(config, fallback)
 
 
 func _check_alchemist_philosopher_unlock() -> void:
-	if alchemist_philosopher_config.is_empty():
-		return
-	var required := maxi(
-		int(alchemist_philosopher_config.get("required_materials", 20)),
-		1
-	)
-	if alchemist_materials_collected < required:
-		return
-
-	var skill_id := String(alchemist_philosopher_config.get(
-		"id",
-		"alchemist_philosopher_stone"
-	))
-	if (
-		alchemist_philosopher_unlock_pending
-		or is_conditional_skill_unlocked(skill_id)
-	):
-		return
-
-	alchemist_philosopher_unlock_pending = true
-	alchemist_philosopher_unlock_timer = maxf(
-		float(alchemist_philosopher_config.get(
-			"unlock_effect_seconds",
-			0.55
-		)),
-		0.1
-	)
-	velocity = Vector2.ZERO
-	_play_alchemist_philosopher_unlock_effect()
+	_alchemist_archetype()._check_alchemist_philosopher_unlock()
 
 
 func _update_alchemist_philosopher_unlock_sequence(delta: float) -> bool:
-	if not alchemist_philosopher_unlock_pending:
-		return false
-
-	velocity = Vector2.ZERO
-	alchemist_philosopher_unlock_timer = maxf(
-		alchemist_philosopher_unlock_timer - delta,
-		0.0
-	)
-	if alchemist_philosopher_unlock_timer > 0.0:
-		return true
-
-	alchemist_philosopher_unlock_pending = false
-	if is_instance_valid(alchemist_philosopher_unlock_effect):
-		alchemist_philosopher_unlock_effect.stop()
-		alchemist_philosopher_unlock_effect.visible = false
-
-	var required := maxi(
-		int(alchemist_philosopher_config.get("required_materials", 20)),
-		1
-	)
-	var skill_id := String(alchemist_philosopher_config.get(
-		"id",
-		"alchemist_philosopher_stone"
-	))
-	_unlock_conditional_skill(
-		skill_id,
-		String(alchemist_philosopher_config.get("name", "현자의 돌")),
-		"material_count",
-		alchemist_materials_collected,
-		required,
-		{
-			"hero_id": hero_id,
-			"archetype": hero_archetype,
-			"source": "alchemist_material_collection",
-			"cutscene_texture_path": String(
-				alchemist_philosopher_config.get(
-					"cutscene_texture_path",
-					"res://assets/art/heroes/stage7_alchemist/cutscene/stage7_hero_cutscene.png"
-				)
-			),
-			"cutscene_hold_seconds": float(
-				alchemist_philosopher_config.get(
-					"cutscene_hold_seconds",
-					1.20
-				)
-			),
-		}
-	)
-	# The unlock signal starts the modal cutscene synchronously. Keep a small
-	# post-cutscene grace so the Stone does not auto-channel on the same frame.
-	alchemist_philosopher_unlock_grace_timer = 0.18
-	return true
+	return _alchemist_archetype()._update_alchemist_philosopher_unlock_sequence(delta)
 
 
 func _ensure_alchemist_philosopher_unlock_effect() -> void:
-	if is_instance_valid(alchemist_philosopher_unlock_effect):
-		return
-
-	var frames := SpriteFrames.new()
-	if frames.has_animation("default"):
-		frames.remove_animation("default")
-	frames.add_animation("unlock")
-	frames.set_animation_speed(
-		"unlock",
-		maxf(
-			float(alchemist_philosopher_config.get(
-				"unlock_effect_fps",
-				9.0
-			)),
-			1.0
-		)
-	)
-	frames.set_animation_loop("unlock", false)
-
-	for index in range(1, 5):
-		var texture := _load_stage1_texture(
-			"%s/effect7/cast_%02d.png" % [STAGE7_FRAME_DIR, index]
-		)
-		if texture != null:
-			frames.add_frame("unlock", texture)
-
-	if frames.get_frame_count("unlock") <= 0:
-		return
-
-	var effect := AnimatedSprite2D.new()
-	effect.name = "AlchemistPhilosopherUnlockEffect"
-	effect.sprite_frames = frames
-	effect.animation = &"unlock"
-	effect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	# Same effect7 anchor correction as the Stone channel effect.
-	effect.offset = Vector2(64.0, -144.0)
-	effect.position = Vector2.ZERO
-	effect.scale = Vector2.ONE * maxf(
-		float(alchemist_philosopher_config.get(
-			"unlock_effect_scale",
-			0.58
-		)),
-		0.05
-	)
-	effect.z_index = 11
-	effect.modulate = Color(1.0, 0.92, 0.66, 1.0)
-	effect.visible = false
-	add_child(effect)
-	alchemist_philosopher_unlock_effect = effect
+	_alchemist_archetype()._ensure_alchemist_philosopher_unlock_effect()
 
 
 func _play_alchemist_philosopher_unlock_effect() -> void:
-	_ensure_alchemist_philosopher_unlock_effect()
-	if not is_instance_valid(alchemist_philosopher_unlock_effect):
-		return
-
-	alchemist_philosopher_unlock_effect.stop()
-	alchemist_philosopher_unlock_effect.visible = true
-	alchemist_philosopher_unlock_effect.frame = 0
-	alchemist_philosopher_unlock_effect.frame_progress = 0.0
-	alchemist_philosopher_unlock_effect.play(&"unlock")
+	_alchemist_archetype()._play_alchemist_philosopher_unlock_effect()
 
 
 func _unlock_conditional_skill(
@@ -2929,1335 +2462,165 @@ func get_conditional_skill_unlock_state() -> Dictionary:
 
 
 func _try_start_alchemist_philosopher_stone() -> bool:
-	if silence_timer > 0.0:
-		return false
-	if (
-		alchemist_philosopher_config.is_empty()
-		or alchemist_philosopher_used
-		or alchemist_philosopher_channeling
-		or alchemist_transformed
-	):
-		return false
-
-	var required_materials := maxi(
-		int(alchemist_philosopher_config.get("required_materials", 20)),
-		1
-	)
-	var test_ready := (
-		bool(alchemist_philosopher_config.get("test_mode", false))
-		and alchemist_philosopher_test_timer <= 0.0
-	)
-	var skill_id := String(alchemist_philosopher_config.get(
-		"id",
-		"alchemist_philosopher_stone"
-	))
-	# Philosopher's Stone is a strict collection milestone. Equivalent Exchange
-	# may substitute materials for normal alchemy, but it must never synthesize
-	# the 20/20 Stone progress or trigger the transformation early.
-	if not test_ready:
-		if alchemist_materials_collected < required_materials:
-			return false
-		if (
-			alchemist_philosopher_unlock_pending
-			or alchemist_philosopher_unlock_grace_timer > 0.0
-			or not is_conditional_skill_unlocked(skill_id)
-		):
-			return false
-
-	var gas_cost := maxf(
-		float(alchemist_philosopher_config.get("gas_cost", 100.0)),
-		0.0
-	)
-	if alchemist_gas + 0.001 < gas_cost:
-		return false
-	if not _consume_alchemist_gas(gas_cost):
-		return false
-
-	alchemist_philosopher_used = true
-	alchemist_philosopher_channeling = true
-	var fps := maxf(
-		float(alchemist_philosopher_config.get("channel_fps", 8.0)),
-		1.0
-	)
-	alchemist_philosopher_channel_timer = 12.0 / fps
-	velocity = Vector2.ZERO
-	alchemist_throw_positions.clear()
-	alchemist_throw_index = 0
-	alchemist_throw_timer = 0.0
-	alchemist_direct_chest_target = null
-
-	if is_instance_valid(hero_sprite):
-		hero_sprite.visible = false
-		channel_hid_hero_sprite = true
-	if (
-		is_instance_valid(channel_effect)
-		and channel_effect.sprite_frames != null
-		and channel_effect.sprite_frames.has_animation("philosopher_stone")
-	):
-		channel_effect.stop()
-		channel_effect.frame = 0
-		channel_effect.frame_progress = 0.0
-		channel_effect.visible = true
-		channel_effect.play(&"philosopher_stone")
-	return true
+	return _alchemist_archetype()._try_start_alchemist_philosopher_stone()
 
 
 func _update_alchemist_philosopher_channel(delta: float) -> bool:
-	if not alchemist_philosopher_channeling:
-		return false
-
-	velocity = Vector2.ZERO
-	alchemist_philosopher_channel_timer = maxf(
-		alchemist_philosopher_channel_timer - delta,
-		0.0
-	)
-	if alchemist_philosopher_channel_timer > 0.0:
-		return true
-
-	alchemist_philosopher_channeling = false
-	if is_instance_valid(channel_effect):
-		channel_effect.stop()
-		channel_effect.visible = false
-	if channel_hid_hero_sprite and is_instance_valid(hero_sprite) and not is_dying:
-		hero_sprite.visible = true
-	channel_hid_hero_sprite = false
-	_activate_alchemist_philosopher_form()
-	return true
+	return _alchemist_archetype()._update_alchemist_philosopher_channel(delta)
 
 
 func _activate_alchemist_philosopher_form() -> void:
-	if alchemist_transformed:
-		return
-	alchemist_transformed = true
-
-	var hp_multiplier := maxf(
-		float(alchemist_philosopher_config.get("hp_multiplier", 1.50)),
-		1.0
-	)
-	var attack_multiplier := maxf(
-		float(alchemist_philosopher_config.get("attack_multiplier", 1.50)),
-		1.0
-	)
-	var speed_multiplier := maxf(
-		float(alchemist_philosopher_config.get("move_speed_multiplier", 1.22)),
-		1.0
-	)
-	max_hp = maxi(1, int(round(float(max_hp) * hp_multiplier)))
-	current_hp = clampi(
-		int(round(float(current_hp) * hp_multiplier)),
-		1,
-		max_hp
-	)
-	attack_damage = maxi(
-		1,
-		int(round(float(attack_damage) * attack_multiplier))
-	)
-	base_attack_damage_for_level_growth *= attack_multiplier
-	move_speed *= speed_multiplier
-	if player_controlled and player_weapons != null and player_weapons.identity != null:
-		player_weapons.identity.permanent_growth(hp_multiplier,speed_multiplier)
-
-	var cooldown_multiplier := clampf(
-		float(alchemist_philosopher_config.get(
-			"skill_cooldown_multiplier",
-			0.70
-		)),
-		0.05,
-		1.0
-	)
-	alchemist_mixture_field_cooldown *= cooldown_multiplier
-	alchemist_mystery_cauldron_cooldown *= cooldown_multiplier
-	alchemist_emergency_cooldown *= cooldown_multiplier
-
-	alchemist_gas_regen_timer = maxf(
-		float(alchemist_philosopher_config.get("gas_regen_interval", 5.0)),
-		0.1
-	)
-	alchemist_poison_trail_timer = 0.0
-	alchemist_poison_trail_last_position = global_position
-	alchemist_poison_trail_has_position = true
-	target = null
-	attack_timer = 0.0
-	attack_pose_timer = 0.0
-
-	health_changed.emit(current_hp, max_hp)
-	queue_redraw()
-	if is_instance_valid(alchemist_philosopher_audio):
-		alchemist_philosopher_audio.stop()
-		alchemist_philosopher_audio.play()
+	_alchemist_archetype()._activate_alchemist_philosopher_form()
 
 
 func _update_alchemist_philosopher_gas_regen(delta: float) -> void:
-	if not alchemist_transformed:
-		return
-	alchemist_gas_regen_timer -= delta
-	if alchemist_gas_regen_timer > 0.0:
-		return
-
-	var interval := maxf(
-		float(alchemist_philosopher_config.get("gas_regen_interval", 5.0)),
-		0.1
-	)
-	var amount := maxf(
-		float(alchemist_philosopher_config.get("gas_regen_amount", 10.0)),
-		0.0
-	)
-	_add_alchemist_gas(amount)
-	alchemist_gas_regen_timer += interval
+	_alchemist_archetype()._update_alchemist_philosopher_gas_regen(delta)
 
 
 func _move_alchemist_philosopher_form(delta: float) -> void:
-	if (
-		wander_timer <= 0.0
-		or global_position.distance_squared_to(wander_target)
-		<= WANDER_REACHED_DISTANCE * WANDER_REACHED_DISTANCE
-	):
-		_pick_new_wander_target()
-
-	var desired := global_position.direction_to(wander_target)
-	var sense_radius := maxf(ai_sense_radius, 520.0)
-	var repulsion := Vector2.ZERO
-	var sense_radius_sq := sense_radius * sense_radius
-	_fill_monster_nodes_near(
-		global_position,
-		sense_radius,
-		alchemist_movement_query_candidates
-	)
-	for node in alchemist_movement_query_candidates:
-		if not HERO_TARGET_POLICY.is_detectable(node):
-			continue
-		var monster := node as Node2D
-		if monster == null:
-			continue
-		var offset := global_position - monster.global_position
-		var distance_sq := offset.length_squared()
-		if distance_sq <= 0.01 or distance_sq > sense_radius_sq:
-			continue
-		var distance := sqrt(distance_sq)
-		var pressure := 1.0 - clampf(distance / sense_radius, 0.0, 1.0)
-		repulsion += offset / distance * (0.35 + pressure * pressure * 2.4)
-	alchemist_movement_query_candidates.clear()
-
-	if repulsion.length_squared() > 0.01:
-		desired = desired * 0.55 + repulsion * 1.55
-
-	var soft_margin := 330.0
-	var inward := Vector2.ZERO
-	var left_space := global_position.x - FIELD_MARGIN
-	var right_space := battlefield_size.x - FIELD_MARGIN - global_position.x
-	var top_space := global_position.y - FIELD_MARGIN
-	var bottom_space := battlefield_size.y - FIELD_MARGIN - global_position.y
-	if left_space < soft_margin:
-		inward.x += 1.0 - clampf(left_space / soft_margin, 0.0, 1.0)
-	if right_space < soft_margin:
-		inward.x -= 1.0 - clampf(right_space / soft_margin, 0.0, 1.0)
-	if top_space < soft_margin:
-		inward.y += 1.0 - clampf(top_space / soft_margin, 0.0, 1.0)
-	if bottom_space < soft_margin:
-		inward.y -= 1.0 - clampf(bottom_space / soft_margin, 0.0, 1.0)
-	if inward.length_squared() > 0.01:
-		desired += inward.normalized() * 2.2
-
-	if desired.length_squared() <= 0.01:
-		desired = global_position.direction_to(battlefield_size * 0.5)
-	if desired.length_squared() <= 0.01:
-		desired = Vector2.RIGHT
-	desired = _apply_ranged_boundary_escape(desired, 360.0, 155.0)
-
-	var speed := (
-		move_speed
-		* _get_alchemist_field_speed_multiplier()
-		* _get_effective_move_multiplier()
-	)
-	velocity = desired.normalized() * speed
-	_move_and_slide_with_obstacle_escape()
-	_clamp_to_battlefield()
-	_update_alchemist_poison_trail(delta)
+	_alchemist_archetype()._move_alchemist_philosopher_form(delta)
 
 
 func _update_alchemist_poison_trail(delta: float) -> void:
-	if not alchemist_transformed:
-		return
-
-	alchemist_poison_trail_timer = maxf(
-		alchemist_poison_trail_timer - delta,
-		0.0
-	)
-	if alchemist_poison_trail_timer > 0.0 or velocity.length_squared() <= 16.0:
-		return
-
-	var min_spacing := maxf(
-		float(alchemist_philosopher_config.get("trail_min_spacing", 36.0)),
-		1.0
-	)
-	if (
-		alchemist_poison_trail_has_position
-		and global_position.distance_squared_to(alchemist_poison_trail_last_position)
-		< min_spacing * min_spacing
-	):
-		return
-
-	var damage := maxi(
-		1,
-		int(round(
-			float(attack_damage)
-			* maxf(float(alchemist_philosopher_config.get(
-				"trail_tick_damage_ratio",
-				0.18
-			)), 0.0)
-			* maxf(float(alchemist_philosopher_config.get(
-				"poison_damage_multiplier",
-				1.50
-			)), 0.0)
-			* _get_alchemist_equivalent_damage_multiplier()
-		))
-	)
-	for poison_node in alchemist_poison_pool:
-		if not is_instance_valid(poison_node):
-			continue
-		if not bool(poison_node.call("is_available")):
-			continue
-		poison_node.call(
-			"activate",
-			global_position,
-			maxf(float(alchemist_philosopher_config.get(
-				"trail_duration",
-				2.0
-			)), 0.1),
-			maxf(
-				float(alchemist_philosopher_config.get(
-					"trail_radius",
-					115.0
-				))
-				* _get_alchemist_compressed_range_multiplier()
-				* _get_alchemist_equivalent_range_multiplier(),
-				1.0
-			),
-			maxf(float(alchemist_philosopher_config.get(
-				"trail_tick_interval",
-				0.30
-			)), 0.03),
-			damage,
-			_get_alchemist_compressed_range_multiplier()
-		)
-		alchemist_poison_trail_last_position = global_position
-		alchemist_poison_trail_has_position = true
-		alchemist_poison_trail_timer = maxf(
-			float(alchemist_philosopher_config.get(
-				"trail_spawn_interval",
-				0.22
-			)),
-			0.05
-		)
-		return
+	_alchemist_archetype()._update_alchemist_poison_trail(delta)
 
 
 func _is_alchemist_inside_mixture_field() -> bool:
-	return (
-		is_instance_valid(alchemist_mixture_field)
-		and bool(alchemist_mixture_field.get("active"))
-		and bool(alchemist_mixture_field.call("contains_world_point", global_position))
-	)
+	return _alchemist_archetype()._is_alchemist_inside_mixture_field()
 
 
 func _get_alchemist_field_speed_multiplier() -> float:
-	if not _is_alchemist_inside_mixture_field():
-		return 1.0
-	return maxf(
-		float(alchemist_mixture_field_config.get("hero_move_speed_multiplier", 1.30)),
-		1.0
-	)
+	return _alchemist_archetype()._get_alchemist_field_speed_multiplier()
 
 
 func _is_alchemist_inside_mixture_field_with_margin(margin: float) -> bool:
-	if not is_instance_valid(alchemist_mixture_field):
-		return false
-	if not bool(alchemist_mixture_field.get("active")):
-		return false
-
-	var field_radius := maxf(float(alchemist_mixture_field.get("radius")) + margin, 1.0)
-	return (
-		alchemist_mixture_field.global_position.distance_squared_to(global_position)
-		<= field_radius * field_radius
-	)
+	return _alchemist_archetype()._is_alchemist_inside_mixture_field_with_margin(margin)
 
 
 func _update_alchemist_field_locomotion_state(delta: float) -> void:
-	var enter_delay := maxf(
-		float(alchemist_mixture_field_config.get("run_enter_delay", 0.08)),
-		0.0
-	)
-	var exit_delay := maxf(
-		float(alchemist_mixture_field_config.get("run_exit_delay", 0.12)),
-		0.0
-	)
-	var exit_margin := maxf(
-		float(alchemist_mixture_field_config.get("run_exit_margin", 24.0)),
-		0.0
-	)
-
-	if not alchemist_field_run_active:
-		alchemist_field_run_exit_timer = 0.0
-		if not _is_alchemist_inside_mixture_field():
-			alchemist_field_run_enter_timer = 0.0
-			return
-
-		alchemist_field_run_enter_timer += delta
-		if alchemist_field_run_enter_timer >= enter_delay:
-			alchemist_field_run_active = true
-			alchemist_field_run_enter_timer = 0.0
-		return
-
-	alchemist_field_run_enter_timer = 0.0
-	if _is_alchemist_inside_mixture_field_with_margin(exit_margin):
-		alchemist_field_run_exit_timer = 0.0
-		return
-
-	alchemist_field_run_exit_timer += delta
-	if alchemist_field_run_exit_timer >= exit_delay:
-		alchemist_field_run_active = false
-		alchemist_field_run_exit_timer = 0.0
+	_alchemist_archetype()._update_alchemist_field_locomotion_state(delta)
 
 
 func _update_alchemist_mixture_field_hero_effects(delta: float) -> void:
-	if not _is_alchemist_inside_mixture_field():
-		alchemist_mixture_heal_timer = 0.0
-		return
-
-	alchemist_mixture_heal_timer = maxf(alchemist_mixture_heal_timer - delta, 0.0)
-	if alchemist_mixture_heal_timer > 0.0:
-		return
-
-	var heal_ratio := maxf(
-		float(alchemist_mixture_field_config.get("heal_max_hp_ratio", 0.01)),
-		0.0
-	)
-	if heal_ratio > 0.0:
-		heal_direct(maxi(1, int(round(float(max_hp) * heal_ratio))))
-	alchemist_mixture_heal_timer = maxf(
-		float(alchemist_mixture_field_config.get("heal_interval", 1.0)),
-		0.1
-	)
+	_alchemist_archetype()._update_alchemist_mixture_field_hero_effects(delta)
 
 
 func _try_cast_alchemist_mixture_field() -> void:
-	if silence_timer > 0.0:
-		return
-	if alchemist_mixture_field_config.is_empty():
-		return
-	if alchemist_mixture_field_cooldown > 0.0:
-		return
-	if not is_instance_valid(alchemist_mixture_field):
-		return
-	if bool(alchemist_mixture_field.get("active")):
-		return
-
-	var gas_cost := maxf(
-		float(alchemist_mixture_field_config.get("gas_cost", 30.0)),
-		0.0
-	)
-	if alchemist_gas + 0.001 < gas_cost:
-		return
-
-	var radius := maxf(
-		float(alchemist_mixture_field_config.get("radius", 660.0))
-		* _get_alchemist_compressed_range_multiplier(),
-		1.0
-	)
-	var required_enemies := maxi(
-		int(alchemist_mixture_field_config.get("enemy_count_trigger", 2)),
-		1
-	)
-	var nearby_enemies := _count_monsters_near(
-		global_position,
-		radius,
-		required_enemies
-	)
-	if nearby_enemies < required_enemies:
-		return
-
-	if not _consume_alchemist_gas(gas_cost):
-		return
-
-	alchemist_mixture_field_cooldown = _get_alchemist_effective_cooldown(
-		alchemist_mixture_field_config,
-		20.0
-	)
-	alchemist_mixture_heal_timer = 0.0
-	alchemist_mixture_field.call(
-		"activate",
-		global_position,
-		radius,
-		maxf(float(alchemist_mixture_field_config.get("duration", 8.0)), 0.1),
-		maxf(float(alchemist_mixture_field_config.get("tick_interval", 0.50)), 0.05)
-	)
+	_alchemist_archetype()._try_cast_alchemist_mixture_field()
 
 
 func _count_active_alchemist_cauldrons() -> int:
-	var count: int = 0
-	for cauldron in alchemist_cauldrons:
-		if is_instance_valid(cauldron) and bool(cauldron.get("active")):
-			count += 1
-	return count
+	return _alchemist_archetype()._count_active_alchemist_cauldrons()
 
 
 func _try_cast_alchemist_mystery_cauldron() -> void:
-	if silence_timer > 0.0:
-		return
-	if alchemist_mystery_cauldron_config.is_empty():
-		return
-	if alchemist_mystery_cauldron_cooldown > 0.0:
-		return
-
-	var quick_prep_stacks := _get_alchemist_augment_stacks("alchemist_quick_preparation")
-	var max_active: int = clampi(
-		int(alchemist_mystery_cauldron_config.get("max_active", 2))
-		+ quick_prep_stacks,
-		1,
-		alchemist_cauldrons.size()
-	)
-	if _count_active_alchemist_cauldrons() >= max_active:
-		return
-
-	var cauldron_to_use: Node2D = null
-	for cauldron in alchemist_cauldrons:
-		if is_instance_valid(cauldron) and not bool(cauldron.get("active")):
-			cauldron_to_use = cauldron
-			break
-	if cauldron_to_use == null:
-		return
-
-	var angle: float = randf() * TAU
-	var placement_radius: float = randf_range(90.0, 145.0)
-	var placement: Vector2 = (
-		global_position
-		+ Vector2.from_angle(angle) * placement_radius
-	)
-	var margin: float = 96.0
-	placement.x = clampf(placement.x, margin, battlefield_size.x - margin)
-	placement.y = clampf(placement.y, margin, battlefield_size.y - margin)
-
-	var min_mix: float = maxf(
-		float(alchemist_mystery_cauldron_config.get("mix_time_min", 8.0)),
-		0.1
-	)
-	var max_mix: float = maxf(
-		float(alchemist_mystery_cauldron_config.get("mix_time_max", 10.0)),
-		min_mix
-	)
-	var mix_duration: float = randf_range(min_mix, max_mix)
-	cauldron_to_use.call("activate", placement, mix_duration)
-	alchemist_mystery_cauldron_cooldown = (
-		_get_alchemist_mystery_cauldron_cooldown_total()
-	)
+	_alchemist_archetype()._try_cast_alchemist_mystery_cauldron()
 
 
 func set_alchemist_cauldron_runtime_paused(paused: bool) -> void:
-	if hero_archetype != "alchemist_chemical":
-		return
-	for cauldron in alchemist_cauldrons:
-		if not is_instance_valid(cauldron):
-			continue
-		if paused:
-			cauldron.set_process(false)
-		elif bool(cauldron.get("active")):
-			cauldron.set_process(true)
+	_alchemist_archetype().set_alchemist_cauldron_runtime_paused(paused)
 
 
 func _on_alchemist_cauldron_completed(
 	cauldron: Node2D,
 	origin: Vector2
 ) -> void:
-	if not is_instance_valid(cauldron):
-		return
-
-	var success_mother_stacks := _get_alchemist_augment_stacks(
-		"alchemist_failure_mother_success"
-	)
-	var chance_shift := 0.0
-	if success_mother_stacks > 0:
-		chance_shift = 0.10 + 0.025 * float(success_mother_stacks - 1)
-	var great_chance: float = clampf(
-		float(alchemist_mystery_cauldron_config.get("great_success_chance", 0.20))
-		+ chance_shift,
-		0.0,
-		1.0
-	)
-	var fail_chance: float = clampf(
-		float(alchemist_mystery_cauldron_config.get("failure_chance", 0.20))
-		- chance_shift,
-		0.0,
-		1.0 - great_chance
-	)
-	var roll: float = randf()
-
-	if roll < great_chance:
-		if _get_alchemist_augment_stacks("alchemist_quick_preparation") >= 3:
-			alchemist_mystery_cauldron_cooldown = 0.0
-		cauldron.call("play_result_sound", "great_success")
-		await _execute_alchemist_cauldron_great_success(origin)
-		await COMBAT_DELAY.wait(self,0.50)
-	elif roll < great_chance + fail_chance:
-		# Failure should feel instantaneous: hide/deactivate the cauldron
-		# immediately, but let its child AudioStreamPlayer finish the boom.
-		cauldron.call("play_result_sound", "failure")
-		cauldron.call("deactivate")
-		_execute_alchemist_cauldron_failure(origin)
-		return
-	else:
-		cauldron.call("play_result_sound", "success")
-		_execute_alchemist_cauldron_success(origin)
-		await COMBAT_DELAY.wait(self,0.65)
-
-	if is_instance_valid(cauldron):
-		cauldron.call("deactivate")
+	await _alchemist_archetype()._on_alchemist_cauldron_completed(cauldron, origin)
 
 
 func _execute_alchemist_cauldron_great_success(origin: Vector2) -> void:
-	var batch_count: int = maxi(
-		int(alchemist_mystery_cauldron_config.get("great_success_batches", 5)),
-		1
-	)
-	var batch_interval: float = maxf(
-		float(
-			alchemist_mystery_cauldron_config.get(
-				"great_success_batch_interval",
-				0.32
-			)
-		),
-		0.05
-	)
-	for batch_index in range(batch_count):
-		var vial_min: int = maxi(
-			int(
-				alchemist_mystery_cauldron_config.get(
-					"great_success_vials_min",
-					4
-				)
-			),
-			1
-		)
-		var vial_max: int = maxi(
-			int(
-				alchemist_mystery_cauldron_config.get(
-					"great_success_vials_max",
-					5
-				)
-			),
-			vial_min
-		)
-		var vial_count: int = randi_range(vial_min, vial_max)
-		for vial_index in range(vial_count):
-			_spawn_alchemist_mystery_vial(origin)
-		if batch_index + 1 < batch_count:
-			await COMBAT_DELAY.wait(self,batch_interval)
+	await _alchemist_archetype()._execute_alchemist_cauldron_great_success(origin)
 
 
 func _acquire_alchemist_mystery_vial() -> Node2D:
-	for vial in alchemist_mystery_vial_pool:
-		if (
-			is_instance_valid(vial)
-			and vial.has_method("is_available")
-			and bool(vial.call("is_available"))
-		):
-			return vial
-
-	var parent := get_parent()
-	if not is_instance_valid(parent):
-		return null
-	var vial := ALCHEMIST_VIAL_SCENE.instantiate() as Node2D
-	if vial == null:
-		return null
-	parent.add_child(vial)
-	# Great-success vials keep their quieter throw mix for every reuse.
-	var mystery_throw_audio := vial.get_node_or_null("ThrowAudio") as AudioStreamPlayer
-	if is_instance_valid(mystery_throw_audio):
-		mystery_throw_audio.volume_db = -24.0
-	vial.connect(
-		"landed",
-		Callable(self, "_on_alchemist_mystery_vial_landed")
-	)
-	alchemist_mystery_vial_pool.append(vial)
-	return vial
+	return _alchemist_archetype()._acquire_alchemist_mystery_vial()
 
 
 func _spawn_alchemist_mystery_vial(origin: Vector2) -> void:
-	if charm_timer > 0.0:
-		return
-	var vial := _acquire_alchemist_mystery_vial()
-	if vial == null:
-		return
-	var throw_radius: float = maxf(
-		float(
-			alchemist_mystery_cauldron_config.get(
-				"great_success_throw_radius",
-				285.0
-			)
-		),
-		60.0
-	)
-	var angle: float = randf() * TAU
-	var radius: float = sqrt(randf()) * throw_radius
-	var landing: Vector2 = origin + Vector2.from_angle(angle) * radius
-	var margin: float = 64.0
-	landing.x = clampf(landing.x, margin, battlefield_size.x - margin)
-	landing.y = clampf(landing.y, margin, battlefield_size.y - margin)
-	vial.call(
-		"launch",
-		origin + Vector2(0.0, -24.0),
-		landing,
-		0.42,
-		105.0,
-		null,
-		false
-	)
+	_alchemist_archetype()._spawn_alchemist_mystery_vial(origin)
 
 
 func _on_alchemist_mystery_vial_landed(
 	landing_position: Vector2,
 	_direct_target: Node
 ) -> void:
-	var radius: float = maxf(
-		float(
-			alchemist_mystery_cauldron_config.get(
-				"great_success_hit_radius",
-				105.0
-			)
-		),
-		1.0
-	)
-	var damage: int = maxi(
-		int(round(
-			float(attack_damage)
-			* maxf(
-				float(
-					alchemist_mystery_cauldron_config.get(
-						"great_success_damage_ratio",
-						0.45
-					)
-				),
-				0.0
-			)
-		)),
-		1
-	)
-	_damage_monsters_in_radius(landing_position, radius, damage)
+	_alchemist_archetype()._on_alchemist_mystery_vial_landed(landing_position, _direct_target)
 
 
 func _acquire_alchemist_bonus_material() -> Node2D:
-	for material in alchemist_bonus_material_pool:
-		if is_instance_valid(material) and not bool(material.get("active")):
-			return material
-
-	var parent := get_parent()
-	if not is_instance_valid(parent):
-		return null
-	var material := ALCHEMY_MATERIAL_SCENE.instantiate() as Node2D
-	if material == null:
-		return null
-	parent.add_child(material)
-	if material.has_method("set_temporary_reuse_enabled"):
-		material.call("set_temporary_reuse_enabled", true)
-	alchemist_bonus_material_pool.append(material)
-	return material
+	return _alchemist_archetype()._acquire_alchemist_bonus_material()
 
 
 func _execute_alchemist_cauldron_success(origin: Vector2) -> void:
-	var parent := get_parent()
-	if not is_instance_valid(parent):
-		return
-
-	var material_count: int = maxi(
-		int(alchemist_mystery_cauldron_config.get("success_material_count", 7)),
-		0
-	)
-	var lifetime: float = maxf(
-		float(
-			alchemist_mystery_cauldron_config.get(
-				"success_drop_duration",
-				10.0
-			)
-		),
-		0.1
-	)
-	for index in range(material_count):
-		var material := _acquire_alchemist_bonus_material()
-		if material == null:
-			continue
-		var material_angle: float = (
-			TAU * float(index) / float(maxi(material_count, 1))
-			+ randf_range(-0.24, 0.24)
-		)
-		var material_radius: float = randf_range(78.0, 170.0)
-		var position: Vector2 = (
-			origin
-			+ Vector2.from_angle(material_angle) * material_radius
-		)
-		position.x = clampf(position.x, 64.0, battlefield_size.x - 64.0)
-		position.y = clampf(position.y, 64.0, battlefield_size.y - 64.0)
-		material.call(
-			"activate",
-			origin,
-			maxf(float(alchemist_config.get("gas_per_material", 20.0)), 0.0),
-			lifetime,
-			true
-		)
-		material.call(
-			"launch_from_cauldron",
-			origin + Vector2(0.0, -18.0),
-			position,
-			randf_range(0.36, 0.50),
-			randf_range(52.0, 78.0)
-		)
-		if not alchemist_bonus_materials.has(material):
-			alchemist_bonus_materials.append(material)
-
-	var heal_count: int = maxi(
-		int(
-			alchemist_mystery_cauldron_config.get(
-				"success_heal_item_count",
-				3
-			)
-		),
-		0
-	)
-	for index in range(heal_count):
-		var item := HEAL_ITEM_SCENE.instantiate() as Node2D
-		if item == null:
-			continue
-		parent.add_child(item)
-		var heal_angle: float = (
-			TAU * float(index) / float(maxi(heal_count, 1))
-			+ 0.35
-		)
-		var heal_position: Vector2 = (
-			origin
-			+ Vector2.from_angle(heal_angle) * randf_range(105.0, 165.0)
-		)
-		heal_position.x = clampf(
-			heal_position.x,
-			64.0,
-			battlefield_size.x - 64.0
-		)
-		heal_position.y = clampf(
-			heal_position.y,
-			64.0,
-			battlefield_size.y - 64.0
-		)
-		item.global_position = heal_position
-		preload("res://src/systems/pickup_placement.gd").ensure_reachable(item)
-		if item.has_method("set_temporary_lifetime"):
-			item.call("set_temporary_lifetime", lifetime)
+	_alchemist_archetype()._execute_alchemist_cauldron_success(origin)
 
 
 func _execute_alchemist_cauldron_failure(origin: Vector2) -> void:
-	var fail_fx := _spawn_archmage_fx(
-		"%s/effect3" % STAGE7_FRAME_DIR,
-		"effect",
-		8,
-		4,
-		14.0,
-		false,
-		origin,
-		Vector2(0.52, 0.52)
-	)
-	if is_instance_valid(fail_fx):
-		fail_fx.z_index = 9
+	_alchemist_archetype()._execute_alchemist_cauldron_failure(origin)
 
 
 func _on_alchemist_mixture_field_tick(origin: Vector2, radius: float) -> void:
-	if current_hp <= 0:
-		return
-
-	var damage := maxi(
-		1,
-		int(round(
-			float(attack_damage)
-			* maxf(
-				float(alchemist_mixture_field_config.get("tick_damage_ratio", 0.20)),
-				0.0
-			)
-		))
-	)
-	var slow_multiplier := clampf(
-		float(alchemist_mixture_field_config.get("slow_multiplier", 0.80)),
-		0.1,
-		1.0
-	)
-	var slow_until := COMBAT_DELAY.now_msec(self) + int(round(
-		maxf(
-			float(alchemist_mixture_field_config.get("slow_refresh_seconds", 0.75)),
-			0.05
-		) * 1000.0
-	))
-	var radius_sq := radius * radius
-	_fill_monster_nodes_near(
-		origin,
-		radius,
-		alchemist_damage_query_candidates
-	)
-
-	for node in alchemist_damage_query_candidates:
-		if not HERO_TARGET_POLICY.is_detectable(node):
-			continue
-		var monster := node as Node2D
-		if monster == null or origin.distance_squared_to(monster.global_position) > radius_sq:
-			continue
-		_deal_alchemist_dot_damage(monster, damage)
-		# Existing monster movement code reads these shared external-slow meta keys.
-		var current_until := int(monster.get_meta("gunner_slow_until", 0))
-		var current_multiplier := float(monster.get_meta("gunner_slow_multiplier", 1.0))
-		monster.set_meta("gunner_slow_until", maxi(current_until, slow_until))
-		monster.set_meta(
-			"gunner_slow_multiplier",
-			minf(current_multiplier, slow_multiplier)
-		)
-	alchemist_damage_query_candidates.clear()
+	_alchemist_archetype()._on_alchemist_mixture_field_tick(origin, radius)
 
 
 func _update_alchemist_emergency_escape(delta: float) -> bool:
-	if alchemist_emergency_config.is_empty():
-		alchemist_emergency_trapped_timer = 0.0
-		alchemist_emergency_threats.clear()
-		return false
-	if alchemist_emergency_cooldown > 0.0 or alchemist_gas > 0.001:
-		alchemist_emergency_trapped_timer = 0.0
-		alchemist_emergency_threats.clear()
-		return false
-
-	var trigger_radius := clampf(
-		float(alchemist_emergency_config.get("trigger_radius", 230.0)),
-		200.0,
-		240.0
-	)
-	var min_enemies := maxi(
-		int(alchemist_emergency_config.get("min_enemy_count", 4)),
-		2
-	)
-	_fill_monster_nodes_near(
-		global_position,
-		trigger_radius,
-		alchemist_emergency_query_candidates
-	)
-	alchemist_emergency_threats.clear()
-	var radius_sq := trigger_radius * trigger_radius
-	for node in alchemist_emergency_query_candidates:
-		if not HERO_TARGET_POLICY.is_detectable(node):
-			continue
-		var monster := node as Node2D
-		if monster == null:
-			continue
-		var hp_value = monster.get("current_hp")
-		if hp_value != null and int(hp_value) <= 0:
-			continue
-		if global_position.distance_squared_to(monster.global_position) <= radius_sq:
-			alchemist_emergency_threats.append(monster)
-	alchemist_emergency_query_candidates.clear()
-
-	if alchemist_emergency_threats.size() < min_enemies:
-		alchemist_emergency_trapped_timer = 0.0
-		return false
-
-	var blocked_ratio := _update_alchemist_escape_direction(
-		alchemist_emergency_threats,
-		trigger_radius
-	)
-	var required_blocked_ratio := clampf(
-		float(alchemist_emergency_config.get("blocked_direction_ratio", 0.75)),
-		0.50,
-		1.0
-	)
-	if blocked_ratio + 0.001 < required_blocked_ratio:
-		alchemist_emergency_trapped_timer = 0.0
-		return false
-
-	alchemist_emergency_trapped_timer += delta
-	var trapped_duration := clampf(
-		float(alchemist_emergency_config.get("trapped_duration", 0.40)),
-		0.30,
-		0.50
-	)
-	if alchemist_emergency_trapped_timer < trapped_duration:
-		return false
-
-	alchemist_emergency_trapped_timer = 0.0
-	_cast_alchemist_emergency_escape(
-		alchemist_emergency_threats,
-		alchemist_emergency_escape_direction
-	)
-	alchemist_emergency_threats.clear()
-	return true
+	return _alchemist_archetype()._update_alchemist_emergency_escape(delta)
 
 
 func _update_alchemist_escape_direction(
 	threats: Array[Node2D],
 	trigger_radius: float
 ) -> float:
-	const SAMPLE_COUNT := 12
-	var best_direction := Vector2.RIGHT
-	var best_score := -INF
-	var blocked_count := 0
-	var block_distance := minf(trigger_radius, 185.0)
-
-	for sample_index in range(SAMPLE_COUNT):
-		var direction := Vector2.from_angle(
-			TAU * float(sample_index) / float(SAMPLE_COUNT)
-		)
-		var blocked := false
-		var score := 0.0
-		for monster in threats:
-			if not is_instance_valid(monster):
-				continue
-			var offset := monster.global_position - global_position
-			var distance := maxf(offset.length(), 1.0)
-			var toward := direction.dot(offset / distance)
-			if distance <= block_distance and toward > 0.45:
-				blocked = true
-			if toward > 0.0:
-				score -= toward * (1.0 - clampf(distance / trigger_radius, 0.0, 1.0))
-			else:
-				score += (-toward) * 0.18
-
-		var probe := global_position + direction * 150.0
-		var margin := 72.0
-		if (
-			probe.x < margin
-			or probe.y < margin
-			or probe.x > battlefield_size.x - margin
-			or probe.y > battlefield_size.y - margin
-		):
-			blocked = true
-			score -= 2.0
-
-		if blocked:
-			blocked_count += 1
-		else:
-			score += 1.25
-		if score > best_score:
-			best_score = score
-			best_direction = direction
-
-	alchemist_emergency_escape_direction = best_direction
-	return float(blocked_count) / float(SAMPLE_COUNT)
+	return _alchemist_archetype()._update_alchemist_escape_direction(threats, trigger_radius)
 
 
 func _cast_alchemist_emergency_escape(
 	threats: Array[Node2D],
 	escape_direction: Vector2
 ) -> void:
-	if silence_timer > 0.0:
-		return
-	alchemist_emergency_cooldown = maxf(
-		_get_alchemist_effective_cooldown(
-			alchemist_emergency_config,
-			10.0
-		),
-		0.1
-	)
-	if escape_direction.length_squared() <= 0.01:
-		escape_direction = Vector2.RIGHT
-	escape_direction = escape_direction.normalized()
-
-	var effect_radius := maxf(
-		float(alchemist_emergency_config.get("effect_radius", 245.0)),
-		1.0
-	)
-	var knockback := maxf(
-		float(alchemist_emergency_config.get("knockback_distance", 185.0)),
-		0.0
-	)
-	var damage_ratio := maxf(
-		float(alchemist_emergency_config.get("damage_ratio", 0.35)),
-		0.0
-	)
-	var slow_multiplier := clampf(
-		float(alchemist_emergency_config.get("slow_multiplier", 0.85)),
-		0.1,
-		1.0
-	)
-	var slow_duration := maxf(
-		float(alchemist_emergency_config.get("slow_duration", 2.0)),
-		0.05
-	)
-	var effect_radius_sq := effect_radius * effect_radius
-	var enemy_damage := maxi(1, int(round(float(attack_damage) * damage_ratio)))
-	var slow_until := COMBAT_DELAY.now_msec(self) + int(round(slow_duration * 1000.0))
-
-	for monster in threats:
-		if not is_instance_valid(monster) or monster.is_queued_for_deletion():
-			continue
-		if global_position.distance_squared_to(monster.global_position) > effect_radius_sq:
-			continue
-		var radial := global_position.direction_to(monster.global_position)
-		if radial.length_squared() <= 0.01:
-			radial = -escape_direction
-		var lane_dot := radial.dot(escape_direction)
-		var push_direction := radial
-		if lane_dot > 0.15:
-			var side := Vector2(-escape_direction.y, escape_direction.x)
-			var side_sign := 1.0 if side.dot(radial) >= 0.0 else -1.0
-			push_direction = (
-				radial * 0.55
-				+ side * side_sign * 0.85
-				- escape_direction * 0.30
-			).normalized()
-		monster.global_position += push_direction * knockback
-		LOCAL_GRID_MOVEMENT.notify_forced_position_change(monster)
-		if monster.has_method("take_damage"):
-			preload("res://src/systems/monster_hit_context.gd").hit(monster, enemy_damage, "ranged", self)
-		var current_until := int(monster.get_meta("gunner_slow_until", 0))
-		var current_multiplier := float(monster.get_meta("gunner_slow_multiplier", 1.0))
-		monster.set_meta("gunner_slow_until", maxi(current_until, slow_until))
-		monster.set_meta(
-			"gunner_slow_multiplier",
-			minf(current_multiplier, slow_multiplier)
-		)
-
-	var fx := _spawn_archmage_fx(
-		"%s/effect8" % STAGE7_FRAME_DIR,
-		"effect",
-		1,
-		7,
-		16.0,
-		false,
-		global_position,
-		Vector2(0.50, 0.50)
-	)
-	if is_instance_valid(fx):
-		fx.z_index = 10
-
-	if is_instance_valid(alchemist_emergency_audio):
-		alchemist_emergency_audio.stop()
-		alchemist_emergency_audio.play()
-
-	_apply_alchemist_emergency_self_damage()
-	_flash_alchemist_emergency_red()
+	_alchemist_archetype()._cast_alchemist_emergency_escape(threats, escape_direction)
 
 
 func _apply_alchemist_emergency_self_damage() -> void:
-	if current_hp <= 0 or is_dying:
-		return
-	var self_ratio := clampf(
-		float(alchemist_emergency_config.get("self_damage_current_hp_ratio", 0.02)),
-		0.0,
-		1.0
-	)
-	var minimum_damage := maxi(
-		int(alchemist_emergency_config.get("self_damage_min", 100)),
-		1
-	)
-	var self_damage := maxi(
-		minimum_damage,
-		int(ceil(float(current_hp) * self_ratio))
-	)
-	var previous_hp := current_hp
-	current_hp = maxi(current_hp - self_damage, 0)
-	var applied := previous_hp - current_hp
-	if applied > 0:
-		DAMAGE_NUMBERS.show(self, applied)
-		health_changed.emit(current_hp, max_hp)
-		queue_redraw()
-	if current_hp <= 0:
-		_begin_death_sequence()
+	_alchemist_archetype()._apply_alchemist_emergency_self_damage()
 
 
 func _flash_alchemist_emergency_red() -> void:
-	if not is_instance_valid(hero_sprite):
-		return
-	var tween := create_tween()
-	hero_sprite.modulate = Color(1.0, 0.22, 0.22, 1.0)
-	tween.tween_property(hero_sprite, "modulate", Color.WHITE, 0.18)
+	_alchemist_archetype()._flash_alchemist_emergency_red()
 
 
 func _get_alchemist_chest_attack_target() -> Node2D:
-	if (
-		not is_instance_valid(chest_target)
-		or chest_target.is_queued_for_deletion()
-	):
-		return null
-
-	var max_distance := maxf(attack_range, 1.0)
-	var chest_distance_sq := global_position.distance_squared_to(chest_target.global_position)
-	if chest_distance_sq > max_distance * max_distance:
-		return null
-
-	if not is_instance_valid(target) or target.is_queued_for_deletion():
-		return chest_target
-
-	var monster_distance_sq := global_position.distance_squared_to(target.global_position)
-	return chest_target if chest_distance_sq <= monster_distance_sq else null
+	return _alchemist_archetype()._get_alchemist_chest_attack_target()
 
 
 func _start_alchemist_basic_attack(direct_chest_target: Node2D = null) -> void:
-	var gas_cost := maxf(float(alchemist_config.get("basic_gas_cost", 10.0)), 0.0)
-	if not _consume_alchemist_gas(gas_cost):
-		return
-
-	attack_timer = _get_common_attack_interval(attack_cooldown)
-	attack_pose_timer = 0.52
-	_restart_stage1_animation("attack", 1.0)
-
-	alchemist_throw_positions.clear()
-	alchemist_direct_chest_target = (
-		direct_chest_target
-		if is_instance_valid(direct_chest_target)
-		else null
-	)
-	var throw_radius := maxf(float(alchemist_config.get("basic_throw_radius", 400.0)), 1.0)
-	var vial_count := maxi(
-		int(alchemist_config.get("basic_vial_count", 3))
-		+ _get_alchemist_augment_stacks("alchemist_chemical_support"),
-		1
-	)
-	for index in range(vial_count):
-		var landing_position := Vector2.ZERO
-		if index == 0 and is_instance_valid(alchemist_direct_chest_target):
-			landing_position = alchemist_direct_chest_target.global_position
-		else:
-			var angle := randf() * TAU
-			var radius := sqrt(randf()) * throw_radius
-			landing_position = global_position + Vector2.from_angle(angle) * radius
-			var margin := 64.0
-			landing_position.x = clampf(landing_position.x, margin, battlefield_size.x - margin)
-			landing_position.y = clampf(landing_position.y, margin, battlefield_size.y - margin)
-		alchemist_throw_positions.append(landing_position)
-
-	if is_instance_valid(alchemist_direct_chest_target):
-		_face_attack_direction(
-			alchemist_direct_chest_target.global_position.x - global_position.x
-		)
-	alchemist_throw_index = 0
-	alchemist_throw_timer = 0.0
+	_alchemist_archetype()._start_alchemist_basic_attack(direct_chest_target)
 
 
 func _update_alchemist_throw_sequence(delta: float) -> void:
-	if alchemist_throw_index >= alchemist_throw_positions.size():
-		return
-	alchemist_throw_timer = maxf(alchemist_throw_timer - delta, 0.0)
-	if alchemist_throw_timer > 0.0:
-		return
-
-	var landing_position: Vector2 = alchemist_throw_positions[alchemist_throw_index]
-	var direct_target: Node2D = null
-	if alchemist_throw_index == 0 and is_instance_valid(alchemist_direct_chest_target):
-		direct_target = alchemist_direct_chest_target
-	if not _launch_alchemist_vial(landing_position, direct_target):
-		# Retry on the next physics tick instead of silently losing a Chemical
-		# Support bonus vial when every pooled projectile is still in flight.
-		alchemist_throw_timer = 0.01
-		return
-	if alchemist_throw_index == 0:
-		alchemist_direct_chest_target = null
-	alchemist_throw_index += 1
-	alchemist_throw_timer = maxf(
-		float(alchemist_config.get("vial_throw_interval", 0.19)),
-		0.01
-	)
+	_alchemist_archetype()._update_alchemist_throw_sequence(delta)
 
 
 func _launch_alchemist_vial(
 	landing_position: Vector2,
 	direct_target: Node2D = null
 ) -> bool:
-	for vial in alchemist_vial_pool:
-		if not is_instance_valid(vial):
-			continue
-		if not bool(vial.call("is_available")):
-			continue
-		vial.set("warning_radius",maxf(float(alchemist_config.get("poison_radius",275.0))*_get_alchemist_compressed_range_multiplier(),1.0))
-		vial.call(
-			"launch",
-			global_position,
-			landing_position,
-			maxf(float(alchemist_config.get("vial_flight_duration", 0.46)), 0.08),
-			maxf(float(alchemist_config.get("vial_arc_height", 120.0)), 0.0),
-			direct_target
-		)
-		return true
-	return false
+	return _alchemist_archetype()._launch_alchemist_vial(landing_position, direct_target)
 
 
 func _on_alchemist_vial_landed(
 	landing_position: Vector2,
 	direct_target: Node
 ) -> void:
-	if (
-		is_instance_valid(direct_target)
-		and not direct_target.is_queued_for_deletion()
-		and direct_target.is_in_group("treasure_chests")
-		and direct_target.has_method("take_damage")
-	):
-		preload("res://src/systems/monster_hit_context.gd").hit(direct_target, maxi(attack_damage, 1), "ranged", self)
-
-	var tick_damage := maxi(
-		1,
-		int(round(
-			float(attack_damage)
-			* maxf(float(alchemist_config.get("poison_tick_damage_ratio", 0.18)), 0.0)
-		))
-	)
-	for poison in alchemist_poison_pool:
-		if not is_instance_valid(poison):
-			continue
-		if not bool(poison.call("is_available")):
-			continue
-		poison.call(
-			"activate",
-			landing_position,
-			maxf(float(alchemist_config.get("poison_duration", 4.0)), 0.1),
-			maxf(
-				float(alchemist_config.get("poison_radius", 275.0))
-				* _get_alchemist_compressed_range_multiplier(),
-				1.0
-			),
-			maxf(float(alchemist_config.get("poison_tick_interval", 0.27)), 0.03),
-			tick_damage,
-			_get_alchemist_compressed_range_multiplier()
-		)
-		return
+	_alchemist_archetype()._on_alchemist_vial_landed(landing_position, direct_target)
 
 
 func _on_alchemist_poison_tick(origin: Vector2, radius: float, damage: int) -> void:
-	if current_hp <= 0:
-		return
-	var radius_sq := radius * radius
-	_fill_monster_nodes_near(
-		origin,
-		radius,
-		alchemist_damage_query_candidates
-	)
-	for node in alchemist_damage_query_candidates:
-		if not HERO_TARGET_POLICY.is_detectable(node):
-			continue
-		var monster := node as Node2D
-		if monster == null:
-			continue
-		if origin.distance_squared_to(monster.global_position) > radius_sq:
-			continue
-		_deal_alchemist_dot_damage(monster, damage)
-	alchemist_damage_query_candidates.clear()
+	_alchemist_archetype()._on_alchemist_poison_tick(origin, radius, damage)
 
 
 func _update_alchemist_pose_visual(delta: float) -> void:
-	if hero_archetype != "alchemist_chemical" or not hero_sprite.visible or is_dying:
-		return
-	if hit_pose_timer > 0.0 or attack_pose_timer > 0.0:
-		return
-	_update_facing_from_horizontal(velocity.x, delta)
-	var speed := velocity.length()
-	if speed > 4.0:
-		var movement_ratio := speed / maxf(move_speed, 1.0)
-		var locomotion_animation := (
-			"move"
-			if alchemist_transformed
-			else ("run" if alchemist_field_run_active else "move")
-		)
-		_play_stage1_animation(
-			locomotion_animation,
-			clampf(movement_ratio, 0.80, 1.45)
-		)
-	else:
-		_play_stage1_animation("idle", 1.0)
+	_alchemist_archetype()._update_alchemist_pose_visual(delta)
 
 
 func _physics_process_gunner(delta: float) -> void:
@@ -4269,7 +2632,7 @@ func _update_gunner_pose_visual(delta: float) -> void:
 
 
 func _apply_archmage_boundary_steering(base_direction: Vector2) -> Vector2:
-	return _apply_ranged_boundary_escape(base_direction, 440.0, 165.0)
+	return _archmage_archetype()._apply_archmage_boundary_steering(base_direction)
 
 
 func _apply_gunner_boundary_steering(base_direction: Vector2) -> Vector2:
@@ -4480,7 +2843,7 @@ func _apply_stage6_berserker_effect_visuals() -> void:
 
 
 func _apply_alchemist_philosopher_effect_visuals() -> void:
-	_configure_channel_effect_profile(HERO_PRESENTATION.get_channel_effect_profile(hero_archetype, &"channelled"))
+	_alchemist_archetype()._apply_alchemist_philosopher_effect_visuals()
 
 
 func _configure_channel_effect_profile(profile: Dictionary) -> void:
@@ -6200,34 +4563,11 @@ func _acquire_projectile(scene: PackedScene, pool_key: String) -> Area2D:
 
 
 func _ensure_purifier_basic_audio() -> void:
-	if hero_archetype != "cleric_purifier":
-		return
-	if is_instance_valid(purifier_basic_audio):
-		return
-
-	purifier_basic_audio = AudioStreamPlayer.new()
-	purifier_basic_audio.bus = &"SFX"
-	purifier_basic_audio.volume_db = -13.0
-	# The source is a broader elemental projectile sound. A slightly higher
-	# pitch keeps the purifier version brighter and distinct from Stage 8.
-	purifier_basic_audio.pitch_scale = 1.12
-	if ResourceLoader.exists(PURIFIER_BASIC_ATTACK_AUDIO_PATH):
-		var stream = load(PURIFIER_BASIC_ATTACK_AUDIO_PATH)
-		if stream is AudioStream:
-			purifier_basic_audio.stream = stream
-	add_child(purifier_basic_audio)
+	_purifier_archetype()._ensure_purifier_basic_audio()
 
 
 func _play_purifier_basic_audio() -> void:
-	_ensure_purifier_basic_audio()
-	if (
-		is_instance_valid(purifier_basic_audio)
-		and purifier_basic_audio.stream != null
-	):
-		# One player per hero; restarting avoids overlapping a long tail every
-		# 1.35s while keeping allocation-free repeated basic attacks.
-		purifier_basic_audio.stop()
-		purifier_basic_audio.play()
+	_purifier_archetype()._play_purifier_basic_audio()
 
 
 func _fire_projectile(current_target: Node2D) -> void:
@@ -6281,193 +4621,35 @@ func _fire_projectile(current_target: Node2D) -> void:
 	)
 
 func _get_sage_augment_stacks(augment_id: String) -> int:
-	if hero_archetype != "grand_sage_astra":
-		return 0
-	return maxi(int(build_counts.get(augment_id, 0)), 0)
+	return _sage_archetype()._get_sage_augment_stacks(augment_id)
 
 
 func _consume_one_sage_condensation_stack() -> bool:
-	if sage_condensation_stacks <= 0:
-		return false
-	sage_condensation_stacks -= 1
-	for slot_index in range(sage_condensation_visuals.size()):
-		if slot_index in sage_condensation_free_slots:
-			continue
-		var sprite := sage_condensation_visuals[slot_index]
-		if is_instance_valid(sprite):
-			sprite.stop()
-			sprite.visible = false
-		sage_condensation_free_slots.append(slot_index)
-		break
-	queue_redraw()
-	return true
+	return _sage_archetype()._consume_one_sage_condensation_stack()
 
 
 func _apply_sage_mana_conversion(incoming_damage: float) -> float:
-	var augment_stacks := _get_sage_augment_stacks("sage_mana_conversion")
-	if augment_stacks <= 0 or sage_condensation_stacks <= 0:
-		return incoming_damage
-	var projected_hp := maxf(float(current_hp) - incoming_damage, 0.0)
-	if projected_hp / float(maxi(max_hp, 1)) > 0.50:
-		return incoming_damage
-	var absorbed := minf(
-		incoming_damage,
-		float(max_hp) * 0.03 * float(augment_stacks)
-	)
-	if absorbed <= 0.0 or not _consume_one_sage_condensation_stack():
-		return incoming_damage
-	return maxf(incoming_damage - absorbed, 0.0)
+	return _sage_archetype()._apply_sage_mana_conversion(incoming_damage)
 
 
 func _ensure_sage_runtime() -> void:
-	if hero_archetype != "grand_sage_astra":
-		return
-	if not is_instance_valid(sage_basic_audio):
-		sage_basic_audio = _create_sage_audio_player(SAGE_BASIC_ATTACK_AUDIO_PATH, SAGE_SFX_REFERENCE_DB, 1.08)
-	if not is_instance_valid(sage_third_audio):
-		sage_third_audio = _create_sage_audio_player(SAGE_THIRD_ATTACK_AUDIO_PATH, SAGE_SFX_REFERENCE_DB, 0.92)
-	if not is_instance_valid(sage_phase_audio):
-		sage_phase_audio = _create_sage_audio_player(SAGE_PHASE_AUDIO_PATH, SAGE_SFX_REFERENCE_DB, 1.02)
-	if not is_instance_valid(sage_ice_pillar_audio):
-		sage_ice_pillar_audio = _create_sage_audio_player(SAGE_ICE_PILLAR_AUDIO_PATH, SAGE_SFX_REFERENCE_DB, 0.90)
-	if not is_instance_valid(sage_radiance_create_audio):
-		sage_radiance_create_audio = _create_sage_audio_player(SAGE_RADIANCE_CREATE_AUDIO_PATH, SAGE_SFX_REFERENCE_DB, 1.04)
-	if not is_instance_valid(sage_condensation_stack_audio):
-		sage_condensation_stack_audio = _create_sage_audio_player(SAGE_CONDENSATION_STACK_AUDIO_PATH, SAGE_SFX_REFERENCE_DB, 1.18)
-	if not is_instance_valid(sage_condensation_release_audio):
-		sage_condensation_release_audio = _create_sage_audio_player(SAGE_CONDENSATION_RELEASE_AUDIO_PATH, SAGE_SFX_REFERENCE_DB, 0.96)
-	_ensure_sage_condensation_visuals()
-	_ensure_sage_starlight_aura()
-	_ensure_sage_blackspot_pool()
-	if not sage_afterimage_pool.is_empty():
-		return
-	if _sage_afterimage_frames_cache == null:
-		var frames := SpriteFrames.new()
-		if frames.has_animation(&"default"):
-			frames.remove_animation(&"default")
-		frames.add_animation(&"trail")
-		frames.set_animation_loop(&"trail", false)
-		frames.set_animation_speed(&"trail", 18.0)
-		for frame_index in range(1, 8):
-			var texture := _load_stage1_texture("%s/effect6/dash_%02d.png" % [STAGE10_FRAME_DIR, frame_index])
-			if texture != null:
-				frames.add_frame(&"trail", texture)
-		_sage_afterimage_frames_cache = frames
-	if _sage_afterimage_frames_cache.get_frame_count(&"trail") <= 0:
-		return
-	var pool_size := clampi(int(sage_config.get("afterimage_pool_size", 12)), 4, 20)
-	for index in range(pool_size):
-		var ghost := AnimatedSprite2D.new()
-		ghost.name = "SageAfterimage%02d" % index
-		ghost.sprite_frames = _sage_afterimage_frames_cache
-		ghost.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		ghost.top_level = true
-		# Keep Astra's phase trail strictly behind the hero body. Using both a
-		# lower Z and show_behind_parent avoids the trail covering the sprite
-		# even when the battle root uses Y-sorting.
-		ghost.z_index = -1
-		ghost.show_behind_parent = true
-		ghost.visible = false
-		ghost.modulate = Color(1.0, 1.0, 1.0, 0.58)
-		ghost.animation_finished.connect(Callable(self, "_on_sage_afterimage_finished").bind(ghost))
-		add_child(ghost)
-		sage_afterimage_pool.append(ghost)
+	_sage_archetype()._ensure_sage_runtime()
 
 
 func _ensure_sage_condensation_visuals() -> void:
-	if not sage_condensation_visuals.is_empty():
-		return
-
-	if _sage_condensation_frames_cache == null:
-		var frames := SpriteFrames.new()
-		if frames.has_animation(&"default"):
-			frames.remove_animation(&"default")
-		frames.add_animation(&"summon")
-		frames.set_animation_loop(&"summon", false)
-		frames.set_animation_speed(&"summon", 12.0)
-		for frame_index in range(1, 9):
-			var texture := _load_stage1_texture(
-				"%s/effect4/summon_%02d.png"
-				% [STAGE10_FRAME_DIR, frame_index]
-			)
-			if texture != null:
-				frames.add_frame(&"summon", texture)
-		_sage_condensation_frames_cache = frames
-
-	if _sage_condensation_frames_cache.get_frame_count(&"summon") <= 0:
-		return
-
-	var skill_value = sage_config.get("skill_3", {})
-	var skill: Dictionary = (
-		skill_value if typeof(skill_value) == TYPE_DICTIONARY else {}
-	)
-	var radius := maxf(float(skill.get("visual_radius", 82.0)), 20.0)
-	var visual_scale := maxf(float(skill.get("visual_scale", 0.34)), 0.05)
-	for index in range(SAGE_CONDENSATION_SLOT_ANGLES.size()):
-		var sprite := AnimatedSprite2D.new()
-		sprite.name = "SageCondensation%02d" % index
-		sprite.sprite_frames = _sage_condensation_frames_cache
-		sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		sprite.position = Vector2.from_angle(
-			deg_to_rad(SAGE_CONDENSATION_SLOT_ANGLES[index])
-		) * radius
-		sprite.scale = Vector2.ONE * visual_scale
-		# Health/shield/resource bars are drawn by the Hero parent itself.
-		# Keep condensation visuals behind the parent draw so the orbiting
-		# effect can never cover Astra's HP, shield, or yellow gauge bars.
-		sprite.z_index = 0
-		sprite.show_behind_parent = true
-		sprite.visible = false
-		add_child(sprite)
-		sage_condensation_visuals.append(sprite)
+	_sage_archetype()._ensure_sage_condensation_visuals()
 
 
 func _reset_sage_condensation_slots() -> void:
-	sage_condensation_free_slots.clear()
-	for index in range(8):
-		sage_condensation_free_slots.append(index)
-	for sprite in sage_condensation_visuals:
-		if is_instance_valid(sprite):
-			sprite.stop()
-			sprite.visible = false
-			sprite.modulate = Color.WHITE
+	_sage_archetype()._reset_sage_condensation_slots()
 
 
 func _ensure_sage_starlight_aura() -> void:
-	if is_instance_valid(sage_starlight_aura):
-		return
-
-	var texture := _load_stage1_texture(
-		"%s/effect7/stage10_effect2_01.png" % STAGE10_FRAME_DIR
-	)
-	if texture == null:
-		return
-
-	var raw_skill = sage_config.get("skill_4", {})
-	var skill: Dictionary = (
-		raw_skill if typeof(raw_skill) == TYPE_DICTIONARY else {}
-	)
-	var sprite := Sprite2D.new()
-	sprite.name = "SageStarlightAura"
-	sprite.texture = texture
-	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	sprite.position = Vector2.ZERO
-	sprite.scale = Vector2.ONE * maxf(
-		float(skill.get("aura_visual_scale", 0.70)),
-		0.05
-	)
-	sprite.show_behind_parent = true
-	sprite.z_index = -1
-	sprite.visible = false
-	add_child(sprite)
-	sage_starlight_aura = sprite
+	_sage_archetype()._ensure_sage_starlight_aura()
 
 
 func _set_sage_starlight_aura_active(active: bool) -> void:
-	if active:
-		_ensure_sage_starlight_aura()
-	if is_instance_valid(sage_starlight_aura):
-		sage_starlight_aura.visible = active
+	_sage_archetype()._set_sage_starlight_aura_active(active)
 
 
 func _create_stage1_audio_player(
@@ -6662,198 +4844,35 @@ func _play_gunner_death_audio() -> void:
 
 
 func _ensure_archmage_audio_runtime() -> void:
-	if hero_archetype != "archmage_elementalist":
-		return
-
-	if archmage_basic_audio_pool.is_empty():
-		for index in range(3):
-			archmage_basic_audio_pool.append(
-				_create_hero_sfx_player(
-					STAGE5_BASIC_AUDIO_PATH,
-					HERO_SFX_DB_PRIMARY_ATTACK - 3.0,
-					1.0
-				)
-			)
-
-	if not is_instance_valid(archmage_combustion_charge_audio):
-		archmage_combustion_charge_audio = _create_hero_sfx_player(
-			STAGE5_COMBUSTION_CHARGE_AUDIO_PATH,
-			HERO_SFX_DB_REGULAR_SKILL,
-			0.92
-		)
-	if not is_instance_valid(archmage_combustion_release_audio):
-		archmage_combustion_release_audio = _create_hero_sfx_player(
-			STAGE5_COMBUSTION_RELEASE_AUDIO_PATH,
-			HERO_SFX_DB_HEAVY_SKILL - 3.0,
-			1.0
-		)
-	if not is_instance_valid(archmage_ice_bolt_audio):
-		archmage_ice_bolt_audio = _create_hero_sfx_player(
-			STAGE5_ICE_BOLT_AUDIO_PATH,
-			HERO_SFX_DB_REGULAR_SKILL - 4.0,
-			1.48
-		)
-	if not is_instance_valid(archmage_ice_impact_audio):
-		archmage_ice_impact_audio = _create_hero_sfx_player(
-			STAGE5_ICE_IMPACT_AUDIO_PATH,
-			HERO_SFX_DB_REGULAR_SKILL - 1.0,
-			0.94
-		)
-
-	if archmage_earth_audio_pool.is_empty():
-		for index in range(4):
-			archmage_earth_audio_pool.append(
-				_create_hero_sfx_player(
-					STAGE5_EARTH_SPIKE_AUDIO_PATH,
-					HERO_SFX_DB_SECONDARY_REPEAT - 1.0,
-					0.78
-				)
-			)
-
-	if archmage_holy_audio_pool.is_empty():
-		for index in range(4):
-			archmage_holy_audio_pool.append(
-				_create_hero_sfx_player(
-					STAGE5_HOLY_BURST_AUDIO_PATH,
-					HERO_SFX_DB_SECONDARY_REPEAT,
-					1.20
-				)
-			)
-
-	if not is_instance_valid(archmage_chain_launch_audio):
-		archmage_chain_launch_audio = _create_hero_sfx_player(
-			STAGE5_CHAIN_LAUNCH_AUDIO_PATH,
-			HERO_SFX_DB_REGULAR_SKILL - 2.0,
-			1.18
-		)
-	if archmage_chain_hit_audio_pool.is_empty():
-		for index in range(4):
-			archmage_chain_hit_audio_pool.append(
-				_create_hero_sfx_player(
-					STAGE5_CHAIN_HIT_AUDIO_PATH,
-					HERO_SFX_DB_SECONDARY_REPEAT + 2.0,
-					1.30
-				)
-			)
-
-	if not is_instance_valid(archmage_harmony_audio):
-		archmage_harmony_audio = _create_hero_sfx_player(
-			STAGE5_HARMONY_AUDIO_PATH,
-			HERO_SFX_DB_HEAVY_SKILL - 1.0,
-			1.10
-		)
-	if not is_instance_valid(archmage_storm_audio):
-		archmage_storm_audio = _create_hero_sfx_player(
-			STAGE5_STORM_AUDIO_PATH,
-			HERO_SFX_DB_REGULAR_SKILL - 2.0,
-			1.06
-		)
-	if not is_instance_valid(archmage_blink_audio):
-		archmage_blink_audio = _create_hero_sfx_player(
-			STAGE5_BLINK_AUDIO_PATH,
-			HERO_SFX_DB_REGULAR_SKILL - 4.0,
-			1.18
-		)
-	if not is_instance_valid(archmage_hit_audio):
-		archmage_hit_audio = _create_hero_sfx_player(
-			STAGE5_HIT_AUDIO_PATH, CONTEXT_AUDIO.HIT_DB, 1.0
-		)
-	if not is_instance_valid(archmage_death_audio):
-		archmage_death_audio = _create_hero_sfx_player(
-			STAGE5_DEATH_AUDIO_PATH,
-			HERO_SFX_DB_DEATH,
-			0.88
-		)
+	_archmage_archetype()._ensure_archmage_audio_runtime()
 
 
 func _play_archmage_player(player: AudioStreamPlayer) -> void:
-	if not is_instance_valid(player) or player.stream == null:
-		return
-	player.stop()
-	player.play()
+	_archmage_archetype()._play_archmage_player(player)
 
 
 func _play_archmage_basic_audio(element: String) -> void:
-	_ensure_archmage_audio_runtime()
-	if archmage_basic_audio_pool.is_empty():
-		return
-	var player := archmage_basic_audio_pool[
-		archmage_basic_audio_cursor % archmage_basic_audio_pool.size()
-	]
-	archmage_basic_audio_cursor = (
-		archmage_basic_audio_cursor + 1
-	) % archmage_basic_audio_pool.size()
-	if not is_instance_valid(player) or player.stream == null:
-		return
-	var element_pitch := {
-		"earth": 0.82,
-		"fire": 0.96,
-		"ice": 1.16,
-		"light": 1.28,
-		"wind": 1.08,
-		"holy": 1.22,
-	}
-	player.pitch_scale = float(element_pitch.get(element, 1.0))
-	player.stop()
-	player.play()
+	_archmage_archetype()._play_archmage_basic_audio(element)
 
 
 func _play_archmage_earth_spike_audio() -> void:
-	_ensure_archmage_audio_runtime()
-	if archmage_earth_audio_pool.is_empty():
-		return
-	var player := archmage_earth_audio_pool[
-		archmage_earth_audio_cursor % archmage_earth_audio_pool.size()
-	]
-	archmage_earth_audio_cursor = (
-		archmage_earth_audio_cursor + 1
-	) % archmage_earth_audio_pool.size()
-	if is_instance_valid(player) and player.stream != null:
-		player.pitch_scale = 0.74 + 0.04 * float(archmage_earth_audio_cursor % 3)
-		player.stop()
-		player.play()
+	_archmage_archetype()._play_archmage_earth_spike_audio()
 
 
 func _play_archmage_holy_burst_audio() -> void:
-	_ensure_archmage_audio_runtime()
-	if archmage_holy_audio_pool.is_empty():
-		return
-	var player := archmage_holy_audio_pool[
-		archmage_holy_audio_cursor % archmage_holy_audio_pool.size()
-	]
-	archmage_holy_audio_cursor = (
-		archmage_holy_audio_cursor + 1
-	) % archmage_holy_audio_pool.size()
-	if is_instance_valid(player) and player.stream != null:
-		player.pitch_scale = 1.14 + 0.04 * float(archmage_holy_audio_cursor % 4)
-		player.stop()
-		player.play()
+	_archmage_archetype()._play_archmage_holy_burst_audio()
 
 
 func play_archmage_chain_hit_audio() -> void:
-	_ensure_archmage_audio_runtime()
-	if archmage_chain_hit_audio_pool.is_empty():
-		return
-	var player := archmage_chain_hit_audio_pool[
-		archmage_chain_hit_audio_cursor % archmage_chain_hit_audio_pool.size()
-	]
-	archmage_chain_hit_audio_cursor = (
-		archmage_chain_hit_audio_cursor + 1
-	) % archmage_chain_hit_audio_pool.size()
-	if is_instance_valid(player) and player.stream != null:
-		player.pitch_scale = 1.22 + 0.04 * float(archmage_chain_hit_audio_cursor % 4)
-		player.stop()
-		player.play()
+	_archmage_archetype().play_archmage_chain_hit_audio()
 
 
 func _play_archmage_hit_audio() -> void:
-	_ensure_archmage_audio_runtime()
-	_play_archmage_player(archmage_hit_audio)
+	_archmage_archetype()._play_archmage_hit_audio()
 
 
 func _play_archmage_death_audio() -> void:
-	_ensure_archmage_audio_runtime()
-	_play_archmage_player(archmage_death_audio)
+	_archmage_archetype()._play_archmage_death_audio()
 
 
 func _ensure_berserker_audio_runtime() -> void:
@@ -6881,1096 +4900,117 @@ func _play_berserker_death_audio() -> void:
 
 
 func _create_sage_audio_player(audio_path: String, volume_db: float, pitch_scale: float) -> AudioStreamPlayer:
-	var player := AudioStreamPlayer.new()
-	player.bus = &"SFX"
-	player.volume_db = volume_db
-	player.pitch_scale = pitch_scale
-	if ResourceLoader.exists(audio_path):
-		var stream = load(audio_path)
-		if stream is AudioStream:
-			player.stream = stream
-	add_child(player)
-	return player
+	return _sage_archetype()._create_sage_audio_player(audio_path, volume_db, pitch_scale)
 
 
 func _play_sage_audio(player: AudioStreamPlayer) -> void:
-	if not is_instance_valid(player) or player.stream == null:
-		return
-	player.stop()
-	player.play()
+	_sage_archetype()._play_sage_audio(player)
 
 
 func _fire_sage_projectile(current_target: Node2D) -> void:
-	if not is_instance_valid(current_target):
-		return
-	var shot_direction := global_position.direction_to(current_target.global_position)
-	if shot_direction.length_squared() <= 0.0:
-		return
-	_ensure_sage_runtime()
-	attack_timer = _get_common_attack_interval(attack_cooldown)
-	attack_pose_timer = 0.42
-	_face_attack_direction(shot_direction.x)
-	_restart_stage1_animation("attack")
-	sage_attack_serial += 1
-	var third_interval := maxi(int(sage_config.get("third_attack_interval", 3)), 1)
-	var is_piercing := sage_attack_serial % third_interval == 0
-	var shot_damage := attack_damage
-	var shot_speed := maxf(float(sage_config.get("basic_projectile_speed", 800.0)), 1.0)
-	var shot_range := maxf(float(sage_config.get("basic_range", 650.0)), 1.0)
-	var diameter := 26.4
-	var projectile_mode := 0
-
-	if is_piercing:
-		projectile_mode = 1
-		var celestial_pierce_stacks := _get_sage_augment_stacks(
-			"sage_celestial_pierce"
-		)
-		shot_damage = maxi(1, int(round(
-			float(attack_damage)
-			* maxf(float(sage_config.get("piercing_damage_ratio", 0.90)), 0.0)
-			* (1.0 + 0.08 * float(celestial_pierce_stacks))
-		)))
-		shot_speed = maxf(
-			float(sage_config.get("piercing_projectile_speed", 800.0)),
-			1.0
-		)
-		shot_range = maxf(
-			float(sage_config.get("piercing_range", 1200.0))
-			+ 80.0 * float(celestial_pierce_stacks),
-			1.0
-		)
-		diameter = maxf(
-			float(sage_config.get("piercing_diameter", 220.0)),
-			2.0
-		)
-
-	# 탄환 강화는 1·2번째 일반 평타에만 적용한다.
-	# 3번째 관통 평타는 천체관통 전용 단일탄을 유지한다.
-	var projectile_count := (
-		1
-		if is_piercing
-		else 1 + clampi(projectile_count_bonus, 0, 4)
-	)
-	var volley := PROJECTILE_VOLLEY.new() if projectile_count > 1 else null
-	var spread_step := deg_to_rad(12.0)
-	var center_index := float(projectile_count - 1) * 0.5
-	var pool_key := (
-		"sage_piercing_projectile"
-		if is_piercing
-		else "sage_basic_projectile"
-	)
-
-	for index in range(projectile_count):
-		var projectile_direction := shot_direction
-		if not is_piercing and projectile_count > 1:
-			var angle_offset := (float(index) - center_index) * spread_step
-			projectile_direction = shot_direction.rotated(angle_offset).normalized()
-
-		var projectile := _acquire_projectile(
-			SAGE_PROJECTILE_SCENE,
-			pool_key
-		)
-		if projectile == null:
-			continue
-		projectile.global_position = (
-			global_position + projectile_direction * 54.0
-		)
-		projectile.call(
-			"setup",
-			projectile_direction,
-			shot_damage,
-			shot_speed,
-			shot_range,
-			projectile_mode,
-			diameter,
-			self,
-			volley
-		)
-
-	if is_piercing:
-		_play_sage_audio(sage_third_audio)
-	else:
-		_play_sage_audio(sage_basic_audio)
+	_sage_archetype()._fire_sage_projectile(current_target)
 
 
 func _add_sage_gauge(amount: float) -> void:
-	if amount <= 0.0 or hero_archetype != "grand_sage_astra" or sage_config.is_empty() or is_dying:
-		return
-	var gauge_max := maxf(float(sage_config.get("gauge_max", 100.0)), 1.0)
-	ultimate_charge = minf(ultimate_charge + amount, gauge_max)
-	queue_redraw()
+	_sage_archetype()._add_sage_gauge(amount)
 
 
 func is_sage_skill_ready() -> bool:
-	if hero_archetype != "grand_sage_astra" or sage_config.is_empty():
-		return false
-	return ultimate_charge + 0.001 >= maxf(float(sage_config.get("gauge_max", 100.0)), 1.0)
+	return _sage_archetype().is_sage_skill_ready()
 
 
 func _update_sage_runtime(delta: float) -> void:
-	if hero_archetype != "grand_sage_astra" or sage_config.is_empty() or is_dying or current_hp <= 0:
-		return
-	var gauge_max := maxf(float(sage_config.get("gauge_max", 100.0)), 1.0)
-	var level_steps := floori(float(maxi(level, 0)) / 5.0)
-	var regen_per_second := maxf(float(sage_config.get("gauge_regen_base", 1.0)), 0.0) + float(level_steps) * maxf(float(sage_config.get("gauge_regen_per_5_levels", 1.0)), 0.0)
-	if regen_per_second > 0.0 and ultimate_charge < gauge_max:
-		ultimate_charge = minf(ultimate_charge + regen_per_second * delta, gauge_max)
-		sage_gauge_redraw_timer -= delta
-		if sage_gauge_redraw_timer <= 0.0:
-			sage_gauge_redraw_timer = 0.10
-			queue_redraw()
-	var sage_skill_cooldown_delta := (
-		delta * _get_sage_condensation_cooldown_rate()
-	)
-	sage_skill1_cooldown_timer = maxf(
-		sage_skill1_cooldown_timer - sage_skill_cooldown_delta,
-		0.0
-	)
-	sage_skill2_cooldown_timer = maxf(
-		sage_skill2_cooldown_timer - sage_skill_cooldown_delta,
-		0.0
-	)
-	sage_skill3_cooldown_timer = maxf(
-		sage_skill3_cooldown_timer - sage_skill_cooldown_delta,
-		0.0
-	)
-	sage_skill4_cooldown_timer = maxf(
-		sage_skill4_cooldown_timer - sage_skill_cooldown_delta,
-		0.0
-	)
-	sage_skill5_cooldown_timer = maxf(
-		sage_skill5_cooldown_timer - sage_skill_cooldown_delta,
-		0.0
-	)
-	sage_condensation_skill_damage_buff_timer = maxf(
-		sage_condensation_skill_damage_buff_timer - delta,
-		0.0
-	)
-
-	if sage_condensation_unlock_pending:
-		sage_condensation_unlock_effect_timer = maxf(
-			sage_condensation_unlock_effect_timer - delta,
-			0.0
-		)
-		if sage_condensation_unlock_effect_timer <= 0.0:
-			sage_condensation_unlock_pending = false
-			_emit_sage_late_skill_unlock_cutscene()
-
-	if sage_starlight_remaining > 0.0:
-		sage_starlight_remaining = maxf(sage_starlight_remaining - delta, 0.0)
-		sage_starlight_volley_timer -= delta
-		var skill4_value = sage_config.get("skill_4", {})
-		var skill4: Dictionary = (
-			skill4_value if typeof(skill4_value) == TYPE_DICTIONARY else {}
-		)
-		var volley_interval := maxf(
-			float(skill4.get("spawn_interval", 0.75)),
-			0.05
-		)
-		while sage_starlight_remaining > 0.0 and sage_starlight_volley_timer <= 0.0:
-			_launch_sage_starlight_volley(skill4)
-			sage_starlight_volley_timer += volley_interval
-		if sage_starlight_remaining <= 0.0:
-			_set_sage_starlight_aura_active(false)
-
-	if sage_radiance_launch_remaining > 0:
-		sage_radiance_launch_timer = maxf(sage_radiance_launch_timer - delta, 0.0)
-		if sage_radiance_launch_timer <= 0.0:
-			_launch_sage_radiance_orb()
-			sage_radiance_launch_remaining = maxi(sage_radiance_launch_remaining - 1, 0)
-			var skill2_value = sage_config.get("skill_2", {})
-			var skill2: Dictionary = (
-				skill2_value if typeof(skill2_value) == TYPE_DICTIONARY else {}
-			)
-			sage_radiance_launch_timer = maxf(
-				float(skill2.get("spawn_interval", 0.25)),
-				0.01
-			)
-	elif sage_skill5_cooldown_timer <= 0.0 and _try_cast_sage_annihilation():
-		pass
-	elif sage_skill4_cooldown_timer <= 0.0 and _try_cast_sage_starlight():
-		pass
-	elif sage_skill3_cooldown_timer <= 0.0:
-		if not _try_cast_sage_mana_condensation():
-			if sage_skill2_cooldown_timer <= 0.0:
-				if not _try_cast_sage_radiance_singularity() and sage_skill1_cooldown_timer <= 0.0:
-					_try_cast_sage_ice_pillar()
-			elif sage_skill1_cooldown_timer <= 0.0:
-				_try_cast_sage_ice_pillar()
-	elif sage_skill2_cooldown_timer <= 0.0:
-		if not _try_cast_sage_radiance_singularity() and sage_skill1_cooldown_timer <= 0.0:
-			_try_cast_sage_ice_pillar()
-	elif sage_skill1_cooldown_timer <= 0.0:
-		_try_cast_sage_ice_pillar()
-
-	if sage_post_phase_shield_timer > 0.0:
-		sage_post_phase_shield_timer = maxf(sage_post_phase_shield_timer - delta, 0.0)
-		if shield_hp <= 0.0:
-			sage_post_phase_shield_timer = 0.0
-			shield_max_hp = 0.0
-		elif sage_post_phase_shield_timer <= 0.0:
-			shield_hp = 0.0
-			shield_max_hp = 0.0
-			queue_redraw()
-	if sage_phase_active:
-		sage_phase_remaining = maxf(sage_phase_remaining - delta, 0.0)
-		sage_afterimage_timer = maxf(sage_afterimage_timer - delta, 0.0)
-		if velocity.length_squared() > 36.0 and sage_afterimage_timer <= 0.0:
-			_emit_sage_afterimage()
-			sage_afterimage_timer = maxf(float(sage_config.get("afterimage_interval", 0.075)), 0.03)
-		if sage_phase_remaining <= 0.0:
-			_end_sage_phase()
-		return
-	sage_phase_cooldown_timer = maxf(sage_phase_cooldown_timer - delta, 0.0)
-	if sage_phase_cooldown_timer <= 0.0:
-		_start_sage_phase()
+	_sage_archetype()._update_sage_runtime(delta)
 
 
 func _try_cast_sage_ice_pillar() -> void:
-	if silence_timer > 0.0:
-		return
-	if hero_archetype != "grand_sage_astra" or sage_config.is_empty():
-		return
-	if not is_instance_valid(target) or target.is_queued_for_deletion():
-		return
-	var skill_value = sage_config.get("skill_1", {})
-	if typeof(skill_value) != TYPE_DICTIONARY:
-		return
-	var skill: Dictionary = skill_value
-	if skill.is_empty():
-		return
-	var gauge_cost := maxf(float(skill.get("gauge_cost", 35.0)), 0.0)
-	if ultimate_charge + 0.001 < gauge_cost:
-		return
-
-	var effect_diameter := maxf(float(skill.get("effect_diameter", 250.0)), 2.0)
-	var damage := maxi(
-		1,
-		int(round(
-			float(attack_damage)
-			* maxf(float(skill.get("damage_ratio", 1.0)), 0.0)
-			* _get_sage_skill_damage_multiplier()
-		))
-	)
-	var cast_position := target.global_position
-	var cast_direction := global_position.direction_to(cast_position)
-	if cast_direction.length_squared() <= 0.001:
-		cast_direction = Vector2.RIGHT
-	var wall_direction := cast_direction.orthogonal().normalized()
-	var glacier_wall_stacks := _get_sage_augment_stacks("sage_glacier_wall")
-	var spawned_any := false
-	for pillar_index in range(1 + glacier_wall_stacks):
-		var pillar := _acquire_projectile(
-			SAGE_ICE_PILLAR_SCENE,
-			"sage_ice_pillar"
-		)
-		if pillar == null:
-			continue
-		var pillar_position := cast_position
-		var pillar_damage := damage
-		if pillar_index > 0:
-			var side := -1.0 if pillar_index % 2 == 1 else 1.0
-			var row := float(ceili(float(pillar_index) / 2.0))
-			pillar_position += (
-				wall_direction
-				* side
-				* row
-				* effect_diameter
-				* 0.72
-			)
-			pillar_damage = maxi(1, int(round(float(damage) * 0.65)))
-		pillar_position.x = clampf(
-			pillar_position.x,
-			FIELD_MARGIN,
-			battlefield_size.x - FIELD_MARGIN
-		)
-		pillar_position.y = clampf(
-			pillar_position.y,
-			FIELD_MARGIN,
-			battlefield_size.y - FIELD_MARGIN
-		)
-		pillar.global_position = pillar_position
-		pillar.call(
-			"setup",
-			pillar_damage,
-			maxf(float(skill.get("duration", 4.0)), 0.1),
-			effect_diameter * 0.5,
-			clampf(float(skill.get("slow_multiplier", 0.80)), 0.1, 1.0),
-			maxf(float(skill.get("collision_radius", 34.0)), 8.0),
-			self
-		)
-		spawned_any = true
-	if not spawned_any:
-		return
-
-	ultimate_charge = maxf(ultimate_charge - gauge_cost, 0.0)
-	sage_skill1_cooldown_timer = maxf(float(skill.get("cooldown", 25.0)), 0.1)
-	attack_timer = maxf(attack_timer, 0.35)
-	attack_pose_timer = maxf(attack_pose_timer, 0.42)
-	_face_attack_direction(target.global_position.x - global_position.x)
-	_restart_stage1_animation("attack")
-	_play_sage_audio(sage_ice_pillar_audio)
-	queue_redraw()
+	_sage_archetype()._try_cast_sage_ice_pillar()
 
 
 func _try_cast_sage_radiance_singularity() -> bool:
-	if silence_timer > 0.0:
-		return false
-	if hero_archetype != "grand_sage_astra" or sage_config.is_empty():
-		return false
-	var skill_value = sage_config.get("skill_2", {})
-	if typeof(skill_value) != TYPE_DICTIONARY:
-		return false
-	var skill: Dictionary = skill_value
-	if skill.is_empty() or sage_radiance_launch_remaining > 0:
-		return false
-
-	var gauge_cost := maxf(float(skill.get("gauge_cost", 40.0)), 0.0)
-	if ultimate_charge + 0.001 < gauge_cost:
-		return false
-
-	ultimate_charge = maxf(ultimate_charge - gauge_cost, 0.0)
-	sage_skill2_cooldown_timer = maxf(float(skill.get("cooldown", 45.0)), 0.1)
-	sage_radiance_launch_remaining = maxi(
-		int(skill.get("orb_count", 10))
-		+ _get_sage_augment_stacks("sage_radiance_split") * 2,
-		1
-	)
-	sage_radiance_launch_timer = 0.0
-	attack_timer = maxf(attack_timer, 0.35)
-	attack_pose_timer = maxf(attack_pose_timer, 0.42)
-	_restart_stage1_animation("attack")
-	_play_sage_audio(sage_radiance_create_audio)
-	queue_redraw()
-	return true
+	return _sage_archetype()._try_cast_sage_radiance_singularity()
 
 
 func _launch_sage_radiance_orb() -> void:
-	var skill_value = sage_config.get("skill_2", {})
-	if typeof(skill_value) != TYPE_DICTIONARY:
-		return
-	var skill: Dictionary = skill_value
-	if skill.is_empty():
-		return
-
-	var direction := Vector2.from_angle(randf_range(0.0, TAU))
-	var min_distance := maxf(float(skill.get("travel_distance_min", 180.0)), 1.0)
-	var max_distance := maxf(
-		float(skill.get("travel_distance_max", attack_range)),
-		min_distance
-	)
-	var travel_distance := randf_range(min_distance, max_distance)
-	var destination := global_position + direction * travel_distance
-	var tracked_target: Node2D = null
-	if _get_sage_augment_stacks("sage_radiance_split") > 0:
-		var monster_nodes := _get_monster_nodes_cached()
-		var monster_count := monster_nodes.size()
-		for offset in range(monster_count):
-			var candidate_index := (
-				sage_radiance_target_cursor + offset
-			) % maxi(monster_count, 1)
-			var candidate := monster_nodes[candidate_index] as Node2D
-			if (
-				not is_instance_valid(candidate)
-				or candidate.is_queued_for_deletion()
-			):
-				continue
-			var hp_value = candidate.get("current_hp")
-			if hp_value != null and int(hp_value) <= 0:
-				continue
-			tracked_target = candidate
-			destination = candidate.global_position
-			sage_radiance_target_cursor = (
-				candidate_index + 1
-			) % maxi(monster_count, 1)
-			break
-	destination.x = clampf(
-		destination.x,
-		FIELD_MARGIN,
-		battlefield_size.x - FIELD_MARGIN
-	)
-	destination.y = clampf(
-		destination.y,
-		FIELD_MARGIN,
-		battlefield_size.y - FIELD_MARGIN
-	)
-
-	var size_min := clampf(float(skill.get("orb_scale_min", 0.50)), 0.05, 4.0)
-	var size_max := maxf(float(skill.get("orb_scale_max", 1.0)), size_min)
-	var orb_scale := randf_range(size_min, size_max)
-	var size_ratio := (
-		clampf((orb_scale - size_min) / maxf(size_max - size_min, 0.001), 0.0, 1.0)
-	)
-	var diameter := lerpf(
-		maxf(float(skill.get("explosion_diameter_min", 100.0)), 2.0),
-		maxf(float(skill.get("explosion_diameter_max", 250.0)), 2.0),
-		size_ratio
-	)
-	var damage_ratio := lerpf(
-		maxf(float(skill.get("damage_ratio_min", 0.50)), 0.0),
-		maxf(float(skill.get("damage_ratio_max", 1.0)), 0.0),
-		size_ratio
-	)
-	var orb_damage := maxi(1, int(round(float(attack_damage) * damage_ratio * _get_sage_skill_damage_multiplier())))
-
-	var orb := _acquire_projectile(SAGE_RADIANCE_ORB_SCENE, "sage_radiance_orb")
-	if orb == null:
-		return
-	orb.global_position = global_position
-	orb.call(
-		"setup",
-		destination,
-		maxf(float(skill.get("projectile_speed", 350.0)), 1.0),
-		maxf(float(skill.get("arrival_delay", 1.0)), 0.0),
-		diameter * 0.5,
-		orb_damage,
-		clampf(float(skill.get("slow_multiplier", 0.85)), 0.1, 1.0),
-		maxf(float(skill.get("slow_duration", 2.0)), 0.0),
-		orb_scale,
-		self,
-		tracked_target
-	)
+	_sage_archetype()._launch_sage_radiance_orb()
 
 
 func _try_cast_sage_annihilation() -> bool:
-	if silence_timer > 0.0:
-		return false
-	if hero_archetype != "grand_sage_astra" or sage_config.is_empty():
-		return false
-	if not is_conditional_skill_unlocked("sage_skill_5"):
-		return false
-
-	var skill_value = sage_config.get("skill_5", {})
-	if typeof(skill_value) != TYPE_DICTIONARY:
-		return false
-	var skill: Dictionary = skill_value
-	if skill.is_empty():
-		return false
-
-	var gauge_cost := maxf(float(skill.get("gauge_cost", 100.0)), 0.0)
-	if ultimate_charge + 0.001 < gauge_cost:
-		return false
-
-	var point := _acquire_projectile(
-		SAGE_ANNIHILATION_POINT_SCENE,
-		"sage_annihilation_point"
-	)
-	if point == null:
-		return false
-
-	var damage := maxi(
-		int(round(
-			float(attack_damage)
-			* maxf(float(skill.get("damage_ratio", 0.70)), 0.0)
-			* _get_sage_skill_damage_multiplier()
-		)),
-		1
-	)
-	point.global_position = global_position
-	point.call(
-		"setup",
-		self,
-		maxf(
-			float(skill.get("duration", 15.0))
-			+ 0.6 * float(_get_sage_augment_stacks("sage_event_horizon")),
-			0.1
-		),
-		maxf(
-			float(skill.get("effect_diameter", 400.0))
-			* 0.5
-			* (1.0 + 0.12 * float(_get_sage_augment_stacks("sage_event_horizon"))),
-			1.0
-		),
-		damage,
-		maxf(float(skill.get("pull_interval", 0.10)), 0.05),
-		maxf(
-			float(skill.get("pull_step", 10.0))
-			* (1.0 + 0.08 * float(_get_sage_augment_stacks("sage_event_horizon"))),
-			0.0
-		),
-		maxf(float(skill.get("damage_interval", 0.50)), 0.05),
-		clampf(float(skill.get("execution_hp_ratio", 0.10)), 0.0, 1.0),
-		maxf(float(skill.get("visual_scale", 1.05)), 0.05),
-		maxf(float(skill.get("create_fps", 10.0)), 1.0),
-		maxf(float(skill.get("active_fps", 5.0)), 1.0),
-		maxf(float(skill.get("disappear_fps", 10.0)), 1.0)
-	)
-
-	ultimate_charge = maxf(ultimate_charge - gauge_cost, 0.0)
-	sage_skill5_cooldown_timer = maxf(
-		float(skill.get("cooldown", 60.0)),
-		0.1
-	)
-	attack_timer = maxf(attack_timer, 0.40)
-	attack_pose_timer = maxf(attack_pose_timer, 0.48)
-	_restart_stage1_animation("attack")
-	queue_redraw()
-	return true
+	return _sage_archetype()._try_cast_sage_annihilation()
 
 
 func _try_cast_sage_starlight() -> bool:
-	if silence_timer > 0.0:
-		return false
-	if hero_archetype != "grand_sage_astra" or sage_config.is_empty():
-		return false
-	if sage_starlight_remaining > 0.0:
-		return false
-
-	var skill_value = sage_config.get("skill_4", {})
-	if typeof(skill_value) != TYPE_DICTIONARY:
-		return false
-	var skill: Dictionary = skill_value
-	if skill.is_empty():
-		return false
-
-	var gauge_cost := maxf(float(skill.get("gauge_cost", 70.0)), 0.0)
-	if ultimate_charge + 0.001 < gauge_cost:
-		return false
-
-	_ensure_sage_runtime()
-	ultimate_charge = maxf(ultimate_charge - gauge_cost, 0.0)
-	sage_skill4_cooldown_timer = maxf(
-		float(skill.get("cooldown", 60.0)),
-		0.1
-	)
-	sage_starlight_remaining = maxf(
-		float(skill.get("duration", 8.0)),
-		0.1
-	)
-	sage_starlight_volley_timer = maxf(
-		float(skill.get("spawn_interval", 0.75)),
-		0.05
-	)
-	_set_sage_starlight_aura_active(true)
-	_launch_sage_starlight_volley(skill)
-
-	attack_timer = maxf(attack_timer, 0.35)
-	attack_pose_timer = maxf(attack_pose_timer, 0.42)
-	_restart_stage1_animation("attack")
-	queue_redraw()
-	return true
+	return _sage_archetype()._try_cast_sage_starlight()
 
 
 func _launch_sage_starlight_volley(skill: Dictionary) -> void:
-	if skill.is_empty():
-		return
-
-	var meteor_count := maxi(
-		int(skill.get("meteors_per_volley", 3))
-		+ _get_sage_augment_stacks("sage_constellation_chain"),
-		1
-	)
-	var spawn_radius := maxf(
-		float(skill.get("spawn_diameter", 1200.0)) * 0.5,
-		1.0
-	)
-	var impact_radius := maxf(
-		float(skill.get("impact_diameter", 200.0)) * 0.5,
-		1.0
-	)
-	var damage_ratio := maxf(float(skill.get("damage_ratio", 1.10)), 0.0)
-	var hit_damage := maxi(
-		int(round(
-			float(attack_damage)
-			* damage_ratio
-			* _get_sage_skill_damage_multiplier()
-		)),
-		1
-	)
-	var fall_duration := maxf(float(skill.get("fall_duration", 0.58)), 0.05)
-	var fall_height := maxf(float(skill.get("fall_height", 430.0)), 40.0)
-	var fall_side_offset := maxf(
-		float(skill.get("fall_side_offset", 90.0)),
-		0.0
-	)
-	var visual_scale := maxf(
-		float(skill.get("meteor_visual_scale", 0.62)),
-		0.05
-	)
-	var explosion_fps := maxf(
-		float(skill.get("explosion_fps", 14.0)),
-		1.0
-	)
-
-	for _index in range(meteor_count):
-		var angle := randf_range(0.0, TAU)
-		var distance := sqrt(randf()) * spawn_radius
-		var impact_position := (
-			global_position
-			+ Vector2.from_angle(angle) * distance
-		)
-		impact_position.x = clampf(
-			impact_position.x,
-			FIELD_MARGIN,
-			maxf(battlefield_size.x - FIELD_MARGIN, FIELD_MARGIN)
-		)
-		impact_position.y = clampf(
-			impact_position.y,
-			FIELD_MARGIN,
-			maxf(battlefield_size.y - FIELD_MARGIN, FIELD_MARGIN)
-		)
-
-		var meteor := _acquire_projectile(
-			SAGE_STARLIGHT_METEOR_SCENE,
-			"sage_starlight_meteor"
-		)
-		if meteor == null:
-			continue
-		meteor.global_position = impact_position
-		meteor.call(
-			"setup",
-			hit_damage,
-			impact_radius,
-			fall_duration,
-			visual_scale,
-			fall_height,
-			fall_side_offset,
-			explosion_fps,
-			self
-		)
+	_sage_archetype()._launch_sage_starlight_volley(skill)
 
 
 func _try_cast_sage_mana_condensation() -> bool:
-	if silence_timer > 0.0:
-		return false
-	if hero_archetype != "grand_sage_astra" or sage_config.is_empty():
-		return false
-	var skill_value = sage_config.get("skill_3", {})
-	if typeof(skill_value) != TYPE_DICTIONARY:
-		return false
-	var skill: Dictionary = skill_value
-	if skill.is_empty():
-		return false
-
-	var gauge_cost := maxf(float(skill.get("gauge_cost", 20.0)), 0.0)
-	if ultimate_charge + 0.001 < gauge_cost:
-		return false
-
-	_ensure_sage_runtime()
-	ultimate_charge = maxf(ultimate_charge - gauge_cost, 0.0)
-	sage_skill3_cooldown_timer = maxf(float(skill.get("cooldown", 13.0)), 0.1)
-	attack_timer = maxf(attack_timer, 0.30)
-	attack_pose_timer = maxf(attack_pose_timer, 0.38)
-	_restart_stage1_animation("attack")
-
-	var max_stacks := maxi(int(skill.get("max_stacks", 8)), 1)
-	if sage_condensation_stacks >= max_stacks:
-		_consume_sage_condensation(skill)
-	else:
-		_add_sage_condensation_stack(skill)
-	queue_redraw()
-	return true
+	return _sage_archetype()._try_cast_sage_mana_condensation()
 
 
 func _add_sage_condensation_stack(skill: Dictionary) -> void:
-	if sage_condensation_free_slots.is_empty():
-		return
-	var pick_index := randi_range(0, sage_condensation_free_slots.size() - 1)
-	var slot_index := sage_condensation_free_slots[pick_index]
-	sage_condensation_free_slots.remove_at(pick_index)
-	sage_condensation_stacks = mini(
-		sage_condensation_stacks + 1,
-		maxi(int(skill.get("max_stacks", 8)), 1)
-	)
-
-	if slot_index >= 0 and slot_index < sage_condensation_visuals.size():
-		var sprite := sage_condensation_visuals[slot_index]
-		if is_instance_valid(sprite):
-			sprite.modulate = Color.WHITE
-			sprite.visible = true
-			sprite.stop()
-			sprite.animation = &"summon"
-			sprite.frame = 0
-			sprite.frame_progress = 0.0
-			sprite.play(&"summon")
-	_play_sage_audio(sage_condensation_stack_audio)
+	_sage_archetype()._add_sage_condensation_stack(skill)
 
 
 func _consume_sage_condensation(skill: Dictionary) -> void:
-	sage_condensation_stacks = 0
-	_reset_sage_condensation_slots()
-	sage_condensation_completion_count += 1
-
-	var hp_multiplier := 1.0 + maxf(
-		float(skill.get("permanent_hp_ratio", 0.03)),
-		0.0
-	)
-	var attack_multiplier := 1.0 + maxf(
-		float(skill.get("permanent_attack_ratio", 0.03)),
-		0.0
-	)
-	var move_multiplier := 1.0 + maxf(
-		float(skill.get("permanent_move_speed_ratio", 0.0025)),
-		0.0
-	)
-	var attack_speed_gain := maxf(
-		float(skill.get("permanent_attack_speed_ratio", 0.0025)),
-		0.0
-	)
-
-	var previous_max_hp := max_hp
-	max_hp = maxi(1, int(round(float(max_hp) * hp_multiplier)))
-	current_hp = mini(
-		max_hp,
-		current_hp + maxi(max_hp - previous_max_hp, 0)
-	)
-	attack_damage = maxi(
-		1,
-		int(round(float(attack_damage) * attack_multiplier))
-	)
-	base_attack_damage_for_level_growth *= attack_multiplier
-	move_speed *= move_multiplier
-	common_attack_speed_bonus += attack_speed_gain
-	if player_controlled and player_weapons != null and player_weapons.identity != null:
-		player_weapons.identity.permanent_growth(hp_multiplier,move_multiplier)
-	sage_condensation_skill_damage_buff_timer = maxf(
-		float(skill.get("skill_damage_buff_duration", 10.0)),
-		0.0
-	)
-
-	_play_sage_audio(sage_condensation_release_audio)
-	health_changed.emit(current_hp, max_hp)
-	_try_start_sage_late_skill_unlock_sequence(skill)
+	_sage_archetype()._consume_sage_condensation(skill)
 
 
 func _get_sage_condensation_cooldown_reduction() -> float:
-	if (
-		hero_archetype != "grand_sage_astra"
-		or sage_condensation_stacks <= 0
-	):
-		return 0.0
-	var skill_value = sage_config.get("skill_3")
-	var skill: Dictionary = (
-		skill_value if typeof(skill_value) == TYPE_DICTIONARY else {}
-	)
-	var per_stack := maxf(
-		float(skill.get("cooldown_reduction_per_stack", 0.02)),
-		0.0
-	)
-	return clampf(
-		per_stack * float(sage_condensation_stacks),
-		0.0,
-		0.90
-	)
+	return _sage_archetype()._get_sage_condensation_cooldown_reduction()
 
 
 func _get_sage_condensation_cooldown_rate() -> float:
-	var reduction := _get_sage_condensation_cooldown_reduction()
-	return (
-		1.0 / maxf(1.0 - reduction, 0.10)
-		* (1.0 + 0.05 * float(_get_sage_augment_stacks("sage_multicast")))
-	)
+	return _sage_archetype()._get_sage_condensation_cooldown_rate()
 
 
 func _get_sage_skill_damage_multiplier() -> float:
-	if hero_archetype != "grand_sage_astra":
-		return 1.0
-
-	var bonus_ratio := 0.0
-	if sage_condensation_skill_damage_buff_timer > 0.0:
-		var skill3_value = sage_config.get("skill_3", {})
-		var skill3: Dictionary = (
-			skill3_value
-			if typeof(skill3_value) == TYPE_DICTIONARY
-			else {}
-		)
-		bonus_ratio += maxf(
-			float(skill3.get("skill_damage_buff_ratio", 0.30)),
-			0.0
-		)
-
-	if is_conditional_skill_unlocked("sage_skill_6"):
-		var skill6_value = sage_config.get("skill_6", {})
-		var skill6: Dictionary = (
-			skill6_value
-			if typeof(skill6_value) == TYPE_DICTIONARY
-			else {}
-		)
-		bonus_ratio += maxf(
-			float(skill6.get("skill_damage_bonus_ratio", 0.10)),
-			0.0
-		)
-	bonus_ratio += 0.08 * float(_get_sage_augment_stacks("sage_multicast"))
-
-	return 1.0 + bonus_ratio
+	return _sage_archetype()._get_sage_skill_damage_multiplier()
 
 
 func _ensure_sage_blackspot_pool() -> void:
-	if not sage_blackspot_effects.is_empty(): return
-	var world := get_parent()
-	if not is_instance_valid(world) or not world.has_method("acquire_projectile"): return
-	var skill: Dictionary = sage_config.get("skill_6",{})
-	for index in maxi(int(skill.get("max_active",8)),1):
-		var effect := world.acquire_projectile(SAGE_BLACKSPOT_EXPLOSION_SCENE,"sage_blackspot_explosion") as Node2D
-		if effect != null: sage_blackspot_effects.append(effect)
-	for effect in sage_blackspot_effects:
-		world.recycle_projectile(effect,"sage_blackspot_explosion")
+	_sage_archetype()._ensure_sage_blackspot_pool()
 
 func _on_sage_skill_hit(hit_position: Vector2) -> void:
-	if (
-		hero_archetype != "grand_sage_astra"
-		or is_dying
-		or current_hp <= 0
-		or not is_conditional_skill_unlocked("sage_skill_6")
-	):
-		return
-
-	var skill_value = sage_config.get("skill_6", {})
-	if typeof(skill_value) != TYPE_DICTIONARY:
-		return
-	var skill: Dictionary = skill_value
-	if skill.is_empty():
-		return
-	if randf() >= clampf(
-		float(skill.get("trigger_chance", 0.50)),
-		0.0,
-		1.0
-	):
-		return
-
-	var authority := get_parent()
-	if authority.has_method("acquire_projectile"):
-		if not authority.projectile_pools.has("sage_blackspot_explosion") or authority.projectile_pools["sage_blackspot_explosion"].is_empty(): return
-	# This effect is Node2D, not Area2D; the projectile-only helper rejected it
-	# after allocating a pooled actor and then an unparented fallback instance.
-	var explosion: Node2D
-	var world := get_parent()
-	if is_instance_valid(world) and world.has_method("acquire_projectile"):
-		explosion = world.acquire_projectile(SAGE_BLACKSPOT_EXPLOSION_SCENE,"sage_blackspot_explosion") as Node2D
-	elif is_instance_valid(world):
-		explosion = SAGE_BLACKSPOT_EXPLOSION_SCENE.instantiate() as Node2D
-		world.add_child(explosion)
-	if explosion == null:
-		return
-
-	var blackspot_damage := maxi(
-		int(round(
-			float(attack_damage)
-			* maxf(float(skill.get("damage_ratio", 0.80)), 0.0)
-			* _get_sage_skill_damage_multiplier()
-		)),
-		1
-	)
-	explosion.global_position = hit_position
-	explosion.call(
-		"setup",
-		self,
-		blackspot_damage,
-		maxf(
-			float(skill.get("explosion_diameter", 150.0)) * 0.5,
-			1.0
-		),
-		maxf(float(skill.get("explosion_fps", 14.0)), 1.0),
-		maxf(float(skill.get("visual_scale", 0.34)), 0.05)
-	)
+	_sage_archetype()._on_sage_skill_hit(hit_position)
 
 
 func _on_sage_blackspot_kill() -> void:
-	if (
-		hero_archetype != "grand_sage_astra"
-		or is_dying
-		or current_hp <= 0
-		or current_hp >= max_hp
-	):
-		return
-
-	var skill_value = sage_config.get("skill_6", {})
-	var skill: Dictionary = (
-		skill_value
-		if typeof(skill_value) == TYPE_DICTIONARY
-		else {}
-	)
-	var heal_ratio := maxf(
-		float(skill.get("kill_heal_current_hp_ratio", 0.005)),
-		0.0
-	)
-	if heal_ratio <= 0.0:
-		return
-
-	var heal_amount := maxi(
-		int(round(float(current_hp) * heal_ratio)),
-		1
-	)
-	var previous_hp := current_hp
-	current_hp = mini(current_hp + _get_reduced_healing(heal_amount), max_hp)
-	if current_hp != previous_hp:
-		health_changed.emit(current_hp, max_hp)
-		queue_redraw()
+	_sage_archetype()._on_sage_blackspot_kill()
 
 
 func _try_start_sage_late_skill_unlock_sequence(skill: Dictionary) -> void:
-	var required := maxi(int(skill.get("unlock_completion_count", 2)), 1)
-	if sage_condensation_completion_count < required:
-		return
-	if (
-		is_conditional_skill_unlocked("sage_skill_5")
-		and is_conditional_skill_unlocked("sage_skill_6")
-	):
-		return
-
-	conditional_skill_unlocks["sage_skill_5"] = true
-	conditional_skill_unlocks["sage_skill_6"] = true
-	sage_condensation_unlock_pending = true
-	sage_condensation_unlock_effect_timer = maxf(
-		float(skill.get("unlock_effect_seconds", 0.80)),
-		0.1
-	)
-	_play_sage_condensation_unlock_effect(skill)
+	_sage_archetype()._try_start_sage_late_skill_unlock_sequence(skill)
 
 
 func _play_sage_condensation_unlock_effect(skill: Dictionary) -> void:
-	var visual_scale := maxf(float(skill.get("visual_scale", 0.34)), 0.05)
-	for sprite in sage_condensation_visuals:
-		if not is_instance_valid(sprite):
-			continue
-		sprite.modulate = Color(1.0, 1.0, 1.0, 1.0)
-		sprite.scale = Vector2.ONE * visual_scale * 1.18
-		sprite.visible = true
-		sprite.stop()
-		sprite.animation = &"summon"
-		sprite.frame = 0
-		sprite.frame_progress = 0.0
-		sprite.play(&"summon")
-		var tween := create_tween()
-		tween.set_parallel(true)
-		tween.tween_property(
-			sprite,
-			"scale",
-			Vector2.ONE * visual_scale * 1.42,
-			0.72
-		)
-		tween.tween_property(sprite, "modulate:a", 0.0, 0.72)
-		tween.chain().tween_callback(
-			Callable(self, "_hide_sage_condensation_unlock_sprite").bind(
-				sprite,
-				visual_scale
-			)
-		)
+	_sage_archetype()._play_sage_condensation_unlock_effect(skill)
 
 
 func _hide_sage_condensation_unlock_sprite(
 	sprite: AnimatedSprite2D,
 	visual_scale: float
 ) -> void:
-	if not is_instance_valid(sprite):
-		return
-	sprite.stop()
-	sprite.visible = false
-	sprite.scale = Vector2.ONE * visual_scale
-	sprite.modulate = Color.WHITE
+	_sage_archetype()._hide_sage_condensation_unlock_sprite(sprite, visual_scale)
 
 
 func _emit_sage_late_skill_unlock_cutscene() -> void:
-	var skill_value = sage_config.get("skill_3", {})
-	var skill: Dictionary = (
-		skill_value if typeof(skill_value) == TYPE_DICTIONARY else {}
-	)
-	var required := maxi(int(skill.get("unlock_completion_count", 2)), 1)
-	var payload := {
-		"hero_id": hero_id,
-		"archetype": hero_archetype,
-		"source": "sage_condensation_completions",
-		"condition_type": "mana_condensation_cycles",
-		"current_value": sage_condensation_completion_count,
-		"required_value": required,
-		"skill_id": "sage_skill_5_6",
-		"skill_name": "스킬 5·6",
-		"unlocked_skill_ids": ["sage_skill_5", "sage_skill_6"],
-		"cutscene_texture_path": String(
-			skill.get(
-				"cutscene_texture_path",
-				"res://assets/art/heroes/stage10_sage/cutscene/stage10_hero_cutscene.png"
-			)
-		),
-		"cutscene_hold_seconds": float(
-			skill.get("cutscene_hold_seconds", 1.20)
-		),
-	}
-	conditional_skill_unlocked.emit(
-		"sage_skill_5_6",
-		"스킬 5·6",
-		payload
-	)
+	_sage_archetype()._emit_sage_late_skill_unlock_cutscene()
 
 
 func _start_sage_phase() -> void:
-	if sage_phase_active or hero_archetype != "grand_sage_astra":
-		return
-	_ensure_sage_runtime()
-	sage_phase_entry_position = position
-	sage_phase_active = true
-	sage_phase_remaining = maxf(float(sage_config.get("phase_duration", 7.0)), 0.1)
-	sage_afterimage_timer = 0.0
-	if sage_saved_collision_mask < 0:
-		sage_saved_collision_mask = collision_mask
-	# Ignore monsters and decorative obstacles, but preserve hard castle
-	# boundaries so phase cannot cross the upper wall and get trapped behind it.
-	collision_mask = (
-		sage_saved_collision_mask
-		& SAGE_PHASE_BOUNDARY_COLLISION_MASK
-	)
-	_play_sage_audio(sage_phase_audio)
+	_sage_archetype()._start_sage_phase()
 
 
 func _end_sage_phase() -> void:
-	if not sage_phase_active:
-		return
-	sage_phase_active = false
-	sage_phase_remaining = 0.0
-	if sage_saved_collision_mask >= 0:
-		collision_mask = sage_saved_collision_mask
-	sage_saved_collision_mask = -1
-	# Resolve after the physics action wrapper, including its petrify anchor lock.
-	call_deferred("_resolve_sage_phase_obstacle_overlap")
-	var interval := maxf(float(sage_config.get("phase_interval", 25.0)), 0.1)
-	var duration := maxf(float(sage_config.get("phase_duration", 7.0)), 0.0)
-	sage_phase_cooldown_timer = maxf(interval - duration, 0.1)
-	var shield_ratio := maxf(float(sage_config.get("post_phase_shield_ratio", 0.10)), 0.0)
-	shield_max_hp = _player_shield_amount(float(max_hp) * shield_ratio)
-	shield_hp = shield_max_hp
-	sage_post_phase_shield_timer = maxf(float(sage_config.get("post_phase_shield_duration", 3.0)), 0.0)
-	queue_redraw()
+	_sage_archetype()._end_sage_phase()
 
 
 func _resolve_sage_phase_obstacle_overlap() -> void:
-	if hero_archetype != "grand_sage_astra" or sage_phase_active or is_dying or current_hp <= 0 or not is_inside_tree():
-		return
-	var body_shape := get_node_or_null("CollisionShape2D") as CollisionShape2D
-	if body_shape == null or body_shape.disabled or body_shape.shape == null:
-		return
-	var query := PhysicsShapeQueryParameters2D.new()
-	query.shape = body_shape.shape
-	query.transform = body_shape.global_transform
-	query.collision_mask = collision_mask & (
-		HERO_DECOR_COLLISION_LAYER | SAGE_PHASE_BOUNDARY_COLLISION_MASK
-	)
-	query.exclude = [get_rid()]
-	query.margin = 2.0
-	var space := get_world_2d().direct_space_state
-	if space.intersect_shape(query, 1).is_empty():
-		return
-	var origin := position
-	var shape_offset := body_shape.global_position - global_position
-	# Bounded one-shot search, only on expiry inside a prop; no frame/group scan.
-	for ring in range(1, 33):
-		for direction_index in range(16):
-			var direction := Vector2.RIGHT.rotated(TAU * float(direction_index) / 16.0)
-			var candidate := origin + direction * float(ring) * 24.0
-			if not _sage_phase_landing_is_clear(candidate, query, space, shape_offset):
-				continue
-			var blocked_distance := float(ring - 1) * 24.0
-			var clear_distance := float(ring) * 24.0
-			for refinement in range(6):
-				var midpoint := (blocked_distance + clear_distance) * 0.5
-				if _sage_phase_landing_is_clear(origin + direction * midpoint, query, space, shape_offset):
-					clear_distance = midpoint
-				else:
-					blocked_distance = midpoint
-			_apply_sage_phase_landing(origin + direction * clear_distance)
-			return
-	# The phase entry is a checked fallback for unusually large/concave props.
-	if _sage_phase_landing_is_clear(sage_phase_entry_position, query, space, shape_offset):
-		_apply_sage_phase_landing(sage_phase_entry_position)
+	_sage_archetype()._resolve_sage_phase_obstacle_overlap()
 
 
 func _sage_phase_landing_is_clear(
@@ -7979,297 +5019,55 @@ func _sage_phase_landing_is_clear(
 	space: PhysicsDirectSpaceState2D,
 	shape_offset: Vector2
 ) -> bool:
-	if (
-		candidate.x < FIELD_MARGIN or candidate.y < FIELD_MARGIN
-		or candidate.x > battlefield_size.x - FIELD_MARGIN
-		or candidate.y > battlefield_size.y - FIELD_MARGIN
-	):
-		return false
-	query.transform.origin = get_parent().to_global(candidate) + shape_offset
-	return space.intersect_shape(query, 1).is_empty()
+	return _sage_archetype()._sage_phase_landing_is_clear(candidate, query, space, shape_offset)
 
 
 func _apply_sage_phase_landing(candidate: Vector2) -> void:
-	position = candidate
-	velocity = Vector2.ZERO
-	obstacle_stuck_timer = 0.0
-	obstacle_escape_timer = 0.0
-	if petrify_timer > 0.0:
-		petrify_anchor = global_position
+	_sage_archetype()._apply_sage_phase_landing(candidate)
 
 
 func _emit_sage_afterimage() -> void:
-	if sage_afterimage_pool.is_empty() or not is_instance_valid(hero_sprite):
-		return
-	var ghost := sage_afterimage_pool[sage_afterimage_index]
-	sage_afterimage_index = (sage_afterimage_index + 1) % sage_afterimage_pool.size()
-	if not is_instance_valid(ghost):
-		return
-	ghost.stop()
-	ghost.global_position = global_position
-	ghost.global_rotation = 0.0
-	ghost.scale = hero_sprite.scale
-	ghost.offset = hero_sprite.offset
-	ghost.flip_h = hero_sprite.flip_h
-	ghost.modulate = Color(1.0, 1.0, 1.0, 0.58)
-	ghost.visible = true
-	ghost.frame = 0
-	ghost.play(&"trail")
+	_sage_archetype()._emit_sage_afterimage()
 
 
 func _on_sage_afterimage_finished(ghost: AnimatedSprite2D) -> void:
-	if is_instance_valid(ghost):
-		ghost.visible = false
+	_sage_archetype()._on_sage_afterimage_finished(ghost)
 
 
 func _fire_archmage_projectile(current_target: Node2D) -> void:
-	var shot_direction := global_position.direction_to(current_target.global_position)
-	if shot_direction.length_squared() <= 0.0:
-		return
-
-	attack_timer = _get_common_attack_interval(attack_cooldown)
-	attack_pose_timer = 0.34
-	_face_attack_direction(shot_direction.x)
-	_restart_stage1_animation("attack")
-
-	var element := _roll_next_archmage_element()
-	var projectile := _acquire_projectile(
-		ARCHMAGE_PROJECTILE_SCENE,
-		"archmage_projectile"
-	)
-	if projectile == null:
-		return
-	_play_archmage_basic_audio(element)
-	projectile.global_position = global_position + shot_direction * 52.0
-	projectile.call(
-		"setup",
-		shot_direction,
-		attack_damage,
-		projectile_speed,
-		attack_range,
-		element,
-		archmage_element_config,
-		self
-	)
-	_add_archmage_gauge(
-		maxf(float(archmage_skill_config.get("gauge_per_basic_attack", 4.0)), 0.0)
-	)
+	_archmage_archetype()._fire_archmage_projectile(current_target)
 
 
 func _configure_archmage_basic_elements() -> void:
-	archmage_basic_elements.clear()
-	var configured = archmage_element_config.get(
-		"elements",
-		ARCHMAGE_DEFAULT_BASIC_ELEMENTS
-	)
-	if typeof(configured) == TYPE_ARRAY:
-		for raw_element in configured:
-			var element := String(raw_element)
-			if (
-				not element.is_empty()
-				and element not in archmage_basic_elements
-			):
-				archmage_basic_elements.append(element)
-
-	if archmage_basic_elements.is_empty():
-		for element in ARCHMAGE_DEFAULT_BASIC_ELEMENTS:
-			archmage_basic_elements.append(element)
+	_archmage_archetype()._configure_archmage_basic_elements()
 
 
 func _roll_next_archmage_element() -> String:
-	if archmage_basic_elements.is_empty():
-		_configure_archmage_basic_elements()
-	if archmage_basic_elements.is_empty():
-		return "earth"
-
-	var element_count := archmage_basic_elements.size()
-	var chosen_index := 0
-	if element_count > 1 and not archmage_last_element.is_empty():
-		var last_index := archmage_basic_elements.find(archmage_last_element)
-		if last_index >= 0:
-			chosen_index = randi_range(0, element_count - 2)
-			if chosen_index >= last_index:
-				chosen_index += 1
-		else:
-			chosen_index = randi_range(0, element_count - 1)
-	else:
-		chosen_index = randi_range(0, element_count - 1)
-
-	var chosen := archmage_basic_elements[chosen_index]
-	archmage_last_element = chosen
-	return chosen
+	return _archmage_archetype()._roll_next_archmage_element()
 
 
 
 func _update_archmage_skill_runtime(delta: float) -> void:
-	for key in ARCHMAGE_SKILL_KEYS:
-		archmage_skill_cooldowns[key] = maxf(
-			float(archmage_skill_cooldowns.get(key, 0.0)) - delta,
-			0.0
-		)
-
-	if archmage_blink_stacks > 0:
-		archmage_blink_cooldown_timer = maxf(
-			archmage_blink_cooldown_timer - delta,
-			0.0
-		)
-		if (
-			archmage_blink_cooldown_timer <= 0.0
-			and _archmage_is_surrounded_for_blink()
-		):
-			_cast_archmage_blink()
-
-	_add_archmage_gauge(
-		maxf(float(archmage_skill_config.get("gauge_per_second", 3.0)), 0.0) * delta
-	)
-	archmage_orbit_angle = fmod(archmage_orbit_angle + delta * 1.9, TAU)
-	_update_archmage_orbit_positions()
-
-	if archmage_casting_sequence or archmage_multicast_active:
-		return
-
-	var gauge_max := maxf(float(archmage_skill_config.get("gauge_max", 100.0)), 1.0)
-	if ultimate_charge + 0.001 < gauge_max:
-		return
-
-	var chosen := _choose_archmage_skill()
-	if chosen.is_empty():
-		return
-	_use_archmage_skill(chosen)
+	_archmage_archetype()._update_archmage_skill_runtime(delta)
 
 func _add_archmage_gauge(amount: float) -> void:
-	if amount <= 0.0 or hero_archetype != "archmage_elementalist":
-		return
-	var gauge_max := maxf(float(archmage_skill_config.get("gauge_max", 100.0)), 1.0)
-	ultimate_charge = minf(ultimate_charge + amount, gauge_max)
-	queue_redraw()
+	_archmage_archetype()._add_archmage_gauge(amount)
 
 
 func restore_archmage_gauge(amount: float) -> void:
-	_add_archmage_gauge(amount)
+	_archmage_archetype().restore_archmage_gauge(amount)
 
 
 func _choose_archmage_skill() -> String:
-	var nearby_220 := _count_monsters_near(global_position, 220.0)
-	var nearby_360 := _count_monsters_near(global_position, 360.0)
-	var total_monsters := _get_monster_nodes_cached().size()
-
-	var combustion_weight := 0.0
-	var ice_bolt_weight := 0.0
-	var earth_spikes_weight := 0.0
-	var holy_power_weight := 0.0
-	var chain_dagger_weight := 0.0
-	var storm_weight := 0.0
-	var harmony_weight := 0.0
-
-	if _archmage_skill_ready("combustion"):
-		combustion_weight = maxf(
-			1.2 + float(nearby_220) * 0.65,
-			0.05
-		)
-	if _archmage_skill_ready("ice_bolt") and is_instance_valid(target):
-		ice_bolt_weight = maxf(2.2, 0.05)
-	if _archmage_skill_ready("earth_spikes"):
-		earth_spikes_weight = maxf(
-			1.4 + minf(float(total_monsters) * 0.14, 2.2),
-			0.05
-		)
-	if _archmage_skill_ready("holy_power"):
-		holy_power_weight = maxf(
-			1.1 + float(nearby_360) * 0.45,
-			0.05
-		)
-	if (
-		_archmage_skill_ready("chain_dagger")
-		and not archmage_chain_dagger_active
-		and total_monsters > 0
-	):
-		chain_dagger_weight = maxf(
-			1.4 + minf(float(total_monsters) * 0.25, 2.6),
-			0.05
-		)
-	if _archmage_skill_ready("storm"):
-		storm_weight = maxf(
-			1.0 + float(nearby_360) * 0.55,
-			0.05
-		)
-
-	var cooling_count := 0
-	for key in ARCHMAGE_OFFENSIVE_SKILL_KEYS:
-		if float(archmage_skill_cooldowns.get(key, 0.0)) > 0.0:
-			cooling_count += 1
-	if _archmage_skill_ready("harmony") and cooling_count >= 1:
-		harmony_weight = maxf(
-			3.0 + float(cooling_count) * 1.10,
-			0.05
-		)
-
-	var total_score := (
-		combustion_weight
-		+ ice_bolt_weight
-		+ earth_spikes_weight
-		+ holy_power_weight
-		+ chain_dagger_weight
-		+ storm_weight
-		+ harmony_weight
-	)
-	if total_score <= 0.0:
-		return ""
-
-	var roll := randf() * total_score
-	if combustion_weight > 0.0:
-		roll -= combustion_weight
-		if roll <= 0.0:
-			return "combustion"
-	if ice_bolt_weight > 0.0:
-		roll -= ice_bolt_weight
-		if roll <= 0.0:
-			return "ice_bolt"
-	if earth_spikes_weight > 0.0:
-		roll -= earth_spikes_weight
-		if roll <= 0.0:
-			return "earth_spikes"
-	if holy_power_weight > 0.0:
-		roll -= holy_power_weight
-		if roll <= 0.0:
-			return "holy_power"
-	if chain_dagger_weight > 0.0:
-		roll -= chain_dagger_weight
-		if roll <= 0.0:
-			return "chain_dagger"
-	if storm_weight > 0.0:
-		roll -= storm_weight
-		if roll <= 0.0:
-			return "storm"
-	if harmony_weight > 0.0:
-		return "harmony"
-
-	if storm_weight > 0.0:
-		return "storm"
-	if chain_dagger_weight > 0.0:
-		return "chain_dagger"
-	if holy_power_weight > 0.0:
-		return "holy_power"
-	if earth_spikes_weight > 0.0:
-		return "earth_spikes"
-	if ice_bolt_weight > 0.0:
-		return "ice_bolt"
-	return "combustion"
+	return _archmage_archetype()._choose_archmage_skill()
 
 
 func _archmage_skill_ready(skill_key: String) -> bool:
-	if archmage_skill_config.is_empty():
-		return false
-	var config: Dictionary = archmage_skill_config.get(skill_key, {})
-	if config.is_empty():
-		return false
-	return float(archmage_skill_cooldowns.get(skill_key, 0.0)) <= 0.0
+	return _archmage_archetype()._archmage_skill_ready(skill_key)
 
 
 func _use_archmage_skill(skill_key: String) -> void:
-	if silence_timer > 0.0:
-		return
-	_cast_archmage_skill_internal(skill_key, true, true)
+	_archmage_archetype()._use_archmage_skill(skill_key)
 
 
 func _cast_archmage_skill_internal(
@@ -8277,144 +5075,14 @@ func _cast_archmage_skill_internal(
 	consume_gauge: bool,
 	trigger_multicast: bool
 ) -> bool:
-	if silence_timer > 0.0:
-		return false
-	if charm_timer > 0.0:
-		return false
-	var config: Dictionary = archmage_skill_config.get(skill_key, {})
-	if config.is_empty():
-		return false
-	if skill_key == "chain_dagger" and archmage_chain_dagger_active:
-		return false
-
-	if consume_gauge:
-		var gauge_max := maxf(
-			float(archmage_skill_config.get("gauge_max", 100.0)),
-			1.0
-		)
-		if ultimate_charge + 0.001 < gauge_max:
-			return false
-
-	var empowered := false
-	if skill_key != "harmony" and _archmage_has_all_element_orbs():
-		empowered = true
-		archmage_element_orbs.clear()
-		archmage_orbit_order.clear()
-		_refresh_archmage_orbit_visuals()
-
-	if consume_gauge:
-		ultimate_charge = 0.0
-	ultimate_flash_timer = 0.28
-
-	var cooldown_multiplier := maxf(
-		1.0 - archmage_cooldown_reduction,
-		0.10
-	)
-	archmage_skill_cooldowns[skill_key] = (
-		maxf(float(config.get("cooldown", 0.0)), 0.0)
-		* cooldown_multiplier
-	)
-	attack_pose_timer = 0.36
-	_restart_stage1_animation("attack")
-
-	match skill_key:
-		"combustion":
-			_cast_archmage_combustion(config, empowered)
-			_collect_archmage_element("fire")
-		"ice_bolt":
-			_cast_archmage_ice_bolt(config, empowered)
-			_collect_archmage_element("water")
-		"earth_spikes":
-			_cast_archmage_earth_spikes(config, empowered)
-			_collect_archmage_element("earth")
-		"holy_power":
-			_cast_archmage_holy_power(config, empowered)
-			_collect_archmage_element("holy")
-		"chain_dagger":
-			_cast_archmage_chain_dagger(config, empowered)
-			_collect_archmage_element("electric")
-		"harmony":
-			_cast_archmage_harmony(config)
-		"storm":
-			_cast_archmage_storm(config, empowered)
-			_collect_archmage_element("wind")
-		_:
-			return false
-
-	if archmage_mana_overflow_stacks > 0:
-		var gauge_per_stack := 4.0 if consume_gauge else 1.0
-		_add_archmage_gauge(
-			gauge_per_stack * float(archmage_mana_overflow_stacks)
-		)
-
-	ultimate_used.emit(
-		String(config.get("id", skill_key)),
-		String(config.get("name", skill_key))
-	)
-	queue_redraw()
-
-	if (
-		trigger_multicast
-		and archmage_multicast_stacks > 0
-		and not archmage_multicast_active
-	):
-		_start_archmage_multicast(skill_key)
-
-	return true
+	return _archmage_archetype()._cast_archmage_skill_internal(skill_key, consume_gauge, trigger_multicast)
 
 
 func _cancel_archmage_multicast() -> void:
-	# Synchronous reset/start invalidates pending timers without copying the list.
-	archmage_multicast_revision += 1
-	archmage_multicast_candidates.clear()
-	archmage_multicast_active = false
+	_archmage_archetype()._cancel_archmage_multicast()
 
 func _start_archmage_multicast(origin_skill: String) -> void:
-	var source_life := _capture_delayed_skill_source()
-	if source_life.x < 0:
-		return
-	var source_scope_id := get_parent().get_instance_id()
-	_cancel_archmage_multicast()
-	var reservation_revision := archmage_multicast_revision
-	for key in ARCHMAGE_OFFENSIVE_SKILL_KEYS:
-		if key == origin_skill:
-			continue
-		if not archmage_skill_config.has(key):
-			continue
-		if key == "chain_dagger" and archmage_chain_dagger_active:
-			continue
-		archmage_multicast_candidates.append(key)
-
-	if archmage_multicast_candidates.is_empty():
-		return
-
-	archmage_multicast_candidates.shuffle()
-	archmage_multicast_active = true
-	var wanted := mini(
-		archmage_multicast_stacks,
-		archmage_multicast_candidates.size()
-	)
-	var casted := 0
-
-	while (
-		casted < wanted
-		and not archmage_multicast_candidates.is_empty()
-	):
-		if reservation_revision != archmage_multicast_revision or not _is_delayed_skill_source_current(source_life, source_scope_id):
-			break
-		await COMBAT_DELAY.wait(self,0.30)
-		if reservation_revision != archmage_multicast_revision or not _is_delayed_skill_source_current(source_life, source_scope_id):
-			break
-
-		var extra_skill := String(
-			archmage_multicast_candidates.pop_back()
-		)
-		if _cast_archmage_skill_internal(extra_skill, false, false):
-			casted += 1
-
-	# Do not clear candidates or active state owned by a newer reservation.
-	if reservation_revision == archmage_multicast_revision and _is_delayed_skill_life_current(source_life, source_scope_id):
-		_cancel_archmage_multicast()
+	await _archmage_archetype()._start_archmage_multicast(origin_skill)
 
 func _skill_damage_multiplier(empowered: bool) -> float:
 	return (
@@ -8425,114 +5093,19 @@ func _skill_damage_multiplier(empowered: bool) -> float:
 
 
 func _begin_archmage_casting_sequence() -> void:
-	archmage_casting_sequence_count += 1
-	archmage_casting_sequence = true
+	_archmage_archetype()._begin_archmage_casting_sequence()
 
 
 func _end_archmage_casting_sequence() -> void:
-	archmage_casting_sequence_count = maxi(
-		archmage_casting_sequence_count - 1,
-		0
-	)
-	archmage_casting_sequence = archmage_casting_sequence_count > 0
+	_archmage_archetype()._end_archmage_casting_sequence()
 
 
 func _cast_archmage_combustion(config: Dictionary, empowered: bool) -> void:
-	var source_life := _capture_delayed_skill_source()
-	if source_life.x < 0:
-		return
-	var source_scope_id := get_parent().get_instance_id()
-	_begin_archmage_casting_sequence()
-	_ensure_archmage_audio_runtime()
-	_play_archmage_player(archmage_combustion_charge_audio)
-	var facing := Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
-	if is_instance_valid(target):
-		facing = global_position.direction_to(target.global_position)
-	if facing.length_squared() <= 0.0:
-		facing = Vector2.RIGHT
-	var orb_position := global_position + facing.normalized() * 76.0
-	var charge_fx := _spawn_archmage_fx(
-		"res://assets/art/heroes/stage5_archmage/frames/effect2",
-		"fire", 1, 7, 18.0, true, orb_position, Vector2(0.88, 0.88)
-	)
-	var charge_fx_revision := int(charge_fx.get_meta("archmage_cast_revision", 0)) if is_instance_valid(charge_fx) else 0
-	var duration := maxf(float(config.get("charge_duration", 0.90)), 0.05)
-	var tick_interval := maxf(float(config.get("charge_tick_interval", 0.18)), 0.05)
-	var radius := maxf(float(config.get("charge_radius", 95.0)), 1.0)
-	var tick_damage := maxi(1, int(round(
-		float(attack_damage)
-		* maxf(float(config.get("charge_tick_damage_ratio", 0.22)), 0.0)
-		* _skill_damage_multiplier(empowered)
-	)))
-	var elapsed := 0.0
-	while elapsed < duration and _is_delayed_skill_source_current(source_life, source_scope_id):
-		_damage_monsters_in_radius(orb_position, radius, tick_damage, source_life, source_scope_id)
-		if not _is_delayed_skill_source_current(source_life, source_scope_id):
-			break
-		await COMBAT_DELAY.wait(self,tick_interval)
-		elapsed += tick_interval
-	if is_instance_valid(charge_fx):
-		_recycle_archmage_fx_if_current(charge_fx, charge_fx_revision, source_scope_id)
-	if not _is_delayed_skill_source_current(source_life, source_scope_id):
-		if _is_delayed_skill_life_current(source_life, source_scope_id):
-			_end_archmage_casting_sequence()
-		return
-
-	var thrust_direction := facing.normalized()
-	var nearest := _find_nearest_monster_from_point(orb_position)
-	if is_instance_valid(nearest):
-		thrust_direction = orb_position.direction_to(nearest.global_position)
-	var thrust_range := maxf(float(config.get("thrust_range", 280.0)), 1.0)
-	var thrust_end := orb_position + thrust_direction * thrust_range
-	var thrust_fx := _spawn_archmage_fx(
-		"res://assets/art/heroes/stage5_archmage/frames/effect2",
-		"fire", 8, 5, 24.0, false, orb_position, Vector2(0.74, 0.74)
-	)
-	if is_instance_valid(thrust_fx):
-		thrust_fx.rotation = thrust_direction.angle()
-		var tween := thrust_fx.create_tween()
-		tween.tween_property(thrust_fx, "global_position", thrust_end, 0.22)
-	var thrust_damage := maxi(1, int(round(
-		float(attack_damage)
-		* maxf(float(config.get("thrust_damage_ratio", 1.60)), 0.0)
-		* _skill_damage_multiplier(empowered)
-	)))
-	_damage_monsters_in_corridor(
-		orb_position,
-		thrust_end,
-		maxf(float(config.get("thrust_half_width", 92.0)), 1.0),
-		thrust_damage,
-		source_life,
-		source_scope_id
-	)
-	if _is_delayed_skill_source_current(source_life, source_scope_id):
-		_ensure_archmage_audio_runtime()
-		_play_archmage_player(archmage_combustion_release_audio)
-	if _is_delayed_skill_life_current(source_life, source_scope_id):
-		_end_archmage_casting_sequence()
+	await _archmage_archetype()._cast_archmage_combustion(config, empowered)
 
 
 func _cast_archmage_ice_bolt(config: Dictionary, empowered: bool) -> void:
-	_ensure_archmage_audio_runtime()
-	_play_archmage_player(archmage_ice_bolt_audio)
-	var current_target := _find_farthest_monster_from_point(global_position)
-	if not is_instance_valid(current_target):
-		return
-	var direction := global_position.direction_to(current_target.global_position)
-	var projectile := _acquire_projectile(
-		ARCHMAGE_SKILL_PROJECTILE_SCENE,
-		"archmage_skill_projectile"
-	)
-	if projectile == null:
-		return
-	projectile.global_position = global_position + direction * 58.0
-	projectile.call(
-		"setup", "ice_bolt", direction,
-		maxi(1, int(round(float(attack_damage) * float(config.get("damage_ratio", 1.15)) * _skill_damage_multiplier(empowered)))),
-		float(config.get("projectile_speed", 1050.0)),
-		float(config.get("projectile_range", 850.0)),
-		config, self, empowered, current_target
-	)
+	_archmage_archetype()._cast_archmage_ice_bolt(config, empowered)
 
 
 func resolve_archmage_ice_bolt_hit(
@@ -8540,39 +5113,7 @@ func resolve_archmage_ice_bolt_hit(
 	hit_position: Vector2,
 	empowered: bool
 ) -> void:
-	# Already emitted ice keeps its impact at HP0 until this source life retires.
-	var source_life := _capture_delayed_skill_source(false)
-	if source_life.x < 0:
-		return
-	var source_scope_id := get_parent().get_instance_id()
-	_ensure_archmage_audio_runtime()
-	_play_archmage_player(archmage_ice_impact_audio)
-	var config: Dictionary = archmage_skill_config.get(
-		"ice_bolt",
-		{}
-	)
-	var impact_radius := maxf(
-		float(config.get("impact_radius", 125.0)),
-		1.0
-	)
-	var impact_damage := maxi(
-		1,
-		int(
-			round(
-				float(attack_damage)
-				* float(config.get("impact_damage_ratio", 1.50))
-				* _skill_damage_multiplier(empowered)
-			)
-		)
-	)
-	_damage_monsters_in_radius(
-		hit_position,
-		impact_radius,
-		impact_damage, source_life, source_scope_id, false
-	)
-	if not _is_delayed_skill_life_current(source_life, source_scope_id):
-		return
-	_resolve_archmage_ice_pillars(hit_position, empowered)
+	_archmage_archetype().resolve_archmage_ice_bolt_hit(_hit_target, hit_position, empowered)
 
 
 func _capture_delayed_skill_source(require_alive: bool = true) -> Vector3i:
@@ -8606,718 +5147,67 @@ func _is_delayed_skill_source_current(source_life: Vector3i, source_scope_id: in
 	return current_hp > 0 and _is_delayed_skill_life_current(source_life, source_scope_id)
 
 func _resolve_archmage_ice_pillars(hit_position: Vector2, empowered: bool) -> void:
-	var source_life := _capture_delayed_skill_source()
-	if source_life.x < 0:
-		return
-	var source_scope_id := get_parent().get_instance_id()
-	var config: Dictionary = archmage_skill_config.get("ice_bolt", {})
-	_spawn_archmage_fx(
-		"res://assets/art/heroes/stage5_archmage/frames/effect4",
-		"ice", 7, 1, 18.0, false, hit_position, Vector2(0.72, 0.72)
-	)
-	var count := maxi(int(config.get("pillar_count", 6)), 1)
-	var spawn_radius := maxf(float(config.get("pillar_spawn_radius", 210.0)), 1.0)
-	var hit_radius := maxf(float(config.get("pillar_hit_radius", 72.0)), 1.0)
-	var pillar_damage := maxi(1, int(round(
-		float(attack_damage)
-		* float(config.get("pillar_damage_ratio", 0.85))
-		* _skill_damage_multiplier(empowered)
-	)))
-	for index in range(count):
-		if not _is_delayed_skill_source_current(source_life, source_scope_id):
-			break
-		var angle := randf_range(0.0, TAU)
-		var position := hit_position + Vector2.from_angle(angle) * randf_range(25.0, spawn_radius)
-		_spawn_archmage_fx(
-			"res://assets/art/heroes/stage5_archmage/frames/effect4",
-			"ice", 1, 6, 20.0, false, position, Vector2(0.70, 0.70)
-		)
-		_damage_monsters_in_radius(position, hit_radius, pillar_damage, source_life, source_scope_id)
-		if not _is_delayed_skill_source_current(source_life, source_scope_id):
-			break
-		await COMBAT_DELAY.wait(self,0.045)
+	await _archmage_archetype()._resolve_archmage_ice_pillars(hit_position, empowered)
 
 
 func _cast_archmage_earth_spikes(config: Dictionary, empowered: bool) -> void:
-	var source_life := _capture_delayed_skill_source()
-	if source_life.x < 0:
-		return
-	var source_scope_id := get_parent().get_instance_id()
-	_begin_archmage_casting_sequence()
-	var direction := Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT
-	if is_instance_valid(target):
-		direction = global_position.direction_to(target.global_position)
-	if direction.length_squared() <= 0.0:
-		direction = Vector2.RIGHT
-	direction = direction.normalized()
-
-	var count: int = maxi(int(config.get("spike_count", 7)), 1)
-	var spacing: float = maxf(float(config.get("spike_spacing", 88.0)), 1.0)
-	var radius: float = maxf(float(config.get("spike_radius", 70.0)), 1.0)
-	var spike_damage: int = maxi(1, int(round(
-		float(attack_damage) * float(config.get("damage_ratio", 1.20)) * _skill_damage_multiplier(empowered)
-	)))
-	var spike_delay: float = maxf(float(config.get("spike_delay", 0.07)), 0.02)
-	var cast_origin: Vector2 = global_position
-	var hit_ids: Dictionary = {}
-
-	for index in range(count):
-		if not _is_delayed_skill_source_current(source_life, source_scope_id):
-			break
-		var position: Vector2 = cast_origin + direction * spacing * float(index + 1)
-		_spawn_archmage_fx(
-			"res://assets/art/heroes/stage5_archmage/frames/effect1",
-			"earth", 1, 11, 22.0, false, position, Vector2(0.72, 0.72)
-		)
-		_play_archmage_earth_spike_audio()
-		_damage_monsters_in_radius_once(position, radius, spike_damage, hit_ids, source_life, source_scope_id)
-		if not _is_delayed_skill_source_current(source_life, source_scope_id):
-			break
-		await COMBAT_DELAY.wait(self,spike_delay)
-
-	if _is_delayed_skill_source_current(source_life, source_scope_id):
-		var original_distance: float = spacing * float(count)
-		var branch_distance: float = original_distance * clampf(
-			float(config.get("branch_distance_ratio", 0.50)),
-			0.0,
-			2.0
-		)
-		if branch_distance > 0.0:
-			var endpoint: Vector2 = cast_origin + direction * original_distance
-			var branch_count: int = maxi(int(ceil(branch_distance / spacing)), 1)
-			var left_direction: Vector2 = direction.rotated(PI * 0.5)
-			var right_direction: Vector2 = direction.rotated(-PI * 0.5)
-
-			for branch_index in range(branch_count):
-				if not _is_delayed_skill_source_current(source_life, source_scope_id):
-					break
-				var progress: float = float(branch_index + 1) / float(branch_count)
-				var left_position: Vector2 = (
-					endpoint + left_direction * branch_distance * progress
-				)
-				var right_position: Vector2 = (
-					endpoint + right_direction * branch_distance * progress
-				)
-
-				_spawn_archmage_fx(
-					"res://assets/art/heroes/stage5_archmage/frames/effect1",
-					"earth", 1, 11, 22.0, false,
-					left_position, Vector2(0.72, 0.72)
-				)
-				_play_archmage_earth_spike_audio()
-				_damage_monsters_in_radius_once(
-					left_position,
-					radius,
-					spike_damage,
-					hit_ids,
-					source_life,
-					source_scope_id
-				)
-
-				if not _is_delayed_skill_source_current(source_life, source_scope_id):
-					break
-				_spawn_archmage_fx(
-					"res://assets/art/heroes/stage5_archmage/frames/effect1",
-					"earth", 1, 11, 22.0, false,
-					right_position, Vector2(0.72, 0.72)
-				)
-				_play_archmage_earth_spike_audio()
-				_damage_monsters_in_radius_once(
-					right_position,
-					radius,
-					spike_damage,
-					hit_ids,
-					source_life,
-					source_scope_id
-				)
-				if not _is_delayed_skill_source_current(source_life, source_scope_id):
-					break
-				await COMBAT_DELAY.wait(self,spike_delay)
-
-	# Old tasks must not decrement a new life's casting counter.
-	if _is_delayed_skill_life_current(source_life, source_scope_id):
-		_end_archmage_casting_sequence()
+	await _archmage_archetype()._cast_archmage_earth_spikes(config, empowered)
 
 func _find_archmage_holy_cluster_target(config: Dictionary) -> Node2D:
-	var search_radius: float = maxf(
-		float(config.get("cluster_search_radius", 850.0)),
-		1.0
-	)
-	var cluster_radius: float = maxf(
-		float(config.get("cluster_score_radius", 190.0)),
-		1.0
-	)
-	var best: Node2D = null
-	var best_count: int = -1
-	var best_distance_sq: float = INF
-	var search_radius_sq := search_radius * search_radius
-	_fill_monster_nodes_near(
-		global_position,
-		search_radius,
-		archmage_query_candidates
-	)
-
-	for node in archmage_query_candidates:
-		if not HERO_TARGET_POLICY.is_detectable(node):
-			continue
-		var monster := node as Node2D
-		if monster == null:
-			continue
-
-		var distance_sq: float = global_position.distance_squared_to(
-			monster.global_position
-		)
-		if distance_sq > search_radius_sq:
-			continue
-
-		var nearby_count: int = _count_monsters_near(
-			monster.global_position,
-			cluster_radius
-		)
-		if nearby_count > best_count:
-			best = monster
-			best_count = nearby_count
-			best_distance_sq = distance_sq
-		elif nearby_count == best_count and distance_sq < best_distance_sq:
-			best = monster
-			best_distance_sq = distance_sq
-
-	archmage_query_candidates.clear()
-	return best
+	return _archmage_archetype()._find_archmage_holy_cluster_target(config)
 
 
 func _cast_archmage_holy_power(config: Dictionary, empowered: bool) -> void:
-	var source_life := _capture_delayed_skill_source()
-	if source_life.x < 0:
-		return
-	var source_scope_id := get_parent().get_instance_id()
-	var source_scope := get_parent()
-	var tracked_targets := source_scope.has_method("get_battle_entity_handle")
-	_begin_archmage_casting_sequence()
-
-	var cluster_target: Node2D = _find_archmage_holy_cluster_target(config)
-	if not is_instance_valid(cluster_target):
-		if _is_delayed_skill_life_current(source_life, source_scope_id):
-			_end_archmage_casting_sequence()
-		return
-
-	var cast_center: Vector2 = cluster_target.global_position
-	var count: int = maxi(int(config.get("burst_count", 7)), 1)
-	var spawn_radius: float = maxf(
-		float(config.get("burst_spawn_radius", 210.0)),
-		1.0
-	)
-	var hit_radius: float = maxf(
-		float(config.get("burst_hit_radius", 86.0)),
-		1.0
-	)
-	var base_damage: int = maxi(1, int(round(
-		float(attack_damage)
-		* float(config.get("damage_ratio", 0.90))
-		* _skill_damage_multiplier(empowered)
-	)))
-	var hit_radius_sq := hit_radius * hit_radius
-
-	for index in range(count):
-		if not _is_delayed_skill_source_current(source_life, source_scope_id):
-			break
-
-		var angle: float = randf_range(0.0, TAU)
-		var position: Vector2 = (
-			cast_center
-			+ Vector2.from_angle(angle) * randf_range(0.0, spawn_radius)
-		)
-		_spawn_archmage_fx(
-			"res://assets/art/heroes/stage5_archmage/frames/effect3",
-			"holy", 1, 5, 20.0, false, position, Vector2(0.94, 0.94)
-		)
-		_play_archmage_holy_burst_audio()
-
-		_fill_monster_nodes_near(
-			position,
-			hit_radius,
-			archmage_query_candidates
-		)
-		for node in archmage_query_candidates:
-			if not _is_delayed_skill_source_current(source_life, source_scope_id):
-				break
-			if not is_instance_valid(node):
-				continue
-			if not HERO_TARGET_POLICY.is_detectable(node):
-				continue
-			var monster := node as Node2D
-			if monster == null or not monster.has_method("take_damage"):
-				continue
-			if position.distance_squared_to(monster.global_position) > hit_radius_sq:
-				continue
-
-			var dealt: int = base_damage
-			if MONSTER_CATALOG.is_undead_node(monster):
-				dealt = maxi(
-					1,
-					int(round(
-						float(dealt)
-						* float(config.get("undead_damage_multiplier", 1.70))
-					))
-				)
-
-			# Capture a scalar handle only; damage callbacks may recycle this Node.
-			var victim_handle := Vector3i.ZERO
-			if tracked_targets:
-				victim_handle = source_scope.call("get_battle_entity_handle", monster)
-			preload("res://src/systems/monster_hit_context.gd").hit(monster, dealt, "ranged", self)
-			if not _is_delayed_skill_source_current(source_life, source_scope_id):
-				break
-			if not is_instance_valid(monster) or monster.is_queued_for_deletion():
-				continue
-			if tracked_targets and (
-				victim_handle == Vector3i.ZERO
-				or source_scope.call("resolve_battle_entity", victim_handle) != monster
-			):
-				continue
-			monster.set_meta(
-				"gunner_slow_multiplier",
-				clampf(
-					float(config.get("slow_multiplier", 0.60)),
-					0.0,
-					1.0
-				)
-			)
-			monster.set_meta(
-				"gunner_slow_until",
-				COMBAT_DELAY.now_msec(self)
-				+ int(
-					maxf(
-						float(config.get("slow_duration", 2.0)),
-						0.0
-					) * 1000.0
-				)
-			)
-		archmage_query_candidates.clear()
-
-		if not _is_delayed_skill_source_current(source_life, source_scope_id):
-			break
-		await COMBAT_DELAY.wait(self,
-			maxf(float(config.get("burst_delay", 0.09)), 0.02)
-		)
-
-	if _is_delayed_skill_life_current(source_life, source_scope_id):
-		_end_archmage_casting_sequence()
+	await _archmage_archetype()._cast_archmage_holy_power(config, empowered)
 
 func _get_archmage_chain_dagger_targets(
 	max_count: int,
 	search_radius: float
 ) -> Array[Node2D]:
-	archmage_chain_target_candidates.clear()
-	archmage_chain_target_results.clear()
-	var radius_sq := search_radius * search_radius
-	_fill_monster_nodes_near(
-		global_position,
-		search_radius,
-		archmage_query_candidates
-	)
-	for node in archmage_query_candidates:
-		if not HERO_TARGET_POLICY.is_detectable(node):
-			continue
-		var monster := node as Node2D
-		if (
-			monster == null
-			or not monster.is_in_group("monsters")
-			or global_position.distance_squared_to(monster.global_position)
-			> radius_sq
-		):
-			continue
-		archmage_chain_target_candidates.append(monster)
-	archmage_query_candidates.clear()
-
-	if archmage_chain_target_candidates.is_empty():
-		return archmage_chain_target_results
-
-	if (
-		HERO_TARGET_POLICY.is_detectable(target)
-		and target.is_in_group("monsters")
-		and global_position.distance_squared_to(target.global_position)
-		<= radius_sq
-	):
-		archmage_chain_target_results.append(target)
-
-	while (
-		archmage_chain_target_results.size() < max_count
-		and archmage_chain_target_results.size()
-		< archmage_chain_target_candidates.size()
-	):
-		var best: Node2D = null
-		var best_score := -INF
-		for candidate in archmage_chain_target_candidates:
-			if candidate in archmage_chain_target_results:
-				continue
-			var direction := global_position.direction_to(
-				candidate.global_position
-			)
-			if direction.length_squared() <= 0.001:
-				continue
-
-			var min_angle := PI
-			if not archmage_chain_target_results.is_empty():
-				for chosen in archmage_chain_target_results:
-					var chosen_direction := global_position.direction_to(
-						chosen.global_position
-					)
-					min_angle = minf(
-						min_angle,
-						absf(direction.angle_to(chosen_direction))
-					)
-
-			var distance_ratio := clampf(
-				global_position.distance_to(candidate.global_position)
-				/ maxf(search_radius, 1.0),
-				0.0,
-				1.0
-			)
-			# Prefer a wide fan first, then slightly favor nearer targets.
-			var score := min_angle * 3.0 + (1.0 - distance_ratio) * 0.35
-			if score > best_score:
-				best_score = score
-				best = candidate
-
-		if not is_instance_valid(best):
-			break
-		archmage_chain_target_results.append(best)
-
-	if archmage_chain_target_results.is_empty():
-		archmage_chain_target_results.append(
-			archmage_chain_target_candidates[0]
-		)
-	return archmage_chain_target_results
+	return _archmage_archetype()._get_archmage_chain_dagger_targets(max_count, search_radius)
 
 
 func _cast_archmage_chain_dagger(config: Dictionary, empowered: bool) -> void:
-	var projectile_range := maxf(
-		float(config.get("projectile_range", 900.0)),
-		1.0
-	)
-	var projectile_count := 1 + archmage_chain_multithrow_stacks
-	var targets := _get_archmage_chain_dagger_targets(
-		projectile_count,
-		projectile_range
-	)
-	if targets.is_empty():
-		return
-
-	archmage_chain_dagger_active_count += targets.size()
-	archmage_chain_dagger_active = (
-		archmage_chain_dagger_active_count > 0
-	)
-	_ensure_archmage_audio_runtime()
-	_play_archmage_player(archmage_chain_launch_audio)
-
-	for current_target in targets:
-		if not is_instance_valid(current_target):
-			notify_archmage_chain_dagger_finished()
-			continue
-		var direction := global_position.direction_to(
-			current_target.global_position
-		)
-		if direction.length_squared() <= 0.001:
-			direction = Vector2.RIGHT
-
-		var projectile := _acquire_projectile(
-			ARCHMAGE_SKILL_PROJECTILE_SCENE,
-			"archmage_chain_dagger_projectile"
-		)
-		if projectile == null:
-			notify_archmage_chain_dagger_finished()
-			continue
-		if not projectile.is_in_group(
-			"archmage_chain_dagger_projectile"
-		):
-			projectile.add_to_group(
-				"archmage_chain_dagger_projectile"
-			)
-		projectile.global_position = (
-			global_position + direction.normalized() * 58.0
-		)
-		projectile.call(
-			"setup",
-			"chain_dagger",
-			direction,
-			maxi(
-				1,
-				int(
-					round(
-						float(attack_damage)
-						* float(config.get("damage_ratio", 1.0))
-					)
-				)
-			),
-			float(config.get("projectile_speed", 700.0)),
-			projectile_range,
-			config,
-			self,
-			empowered,
-			current_target
-		)
+	_archmage_archetype()._cast_archmage_chain_dagger(config, empowered)
 
 
 func notify_archmage_chain_dagger_finished() -> void:
-	archmage_chain_dagger_active_count = maxi(
-		archmage_chain_dagger_active_count - 1,
-		0
-	)
-	archmage_chain_dagger_active = (
-		archmage_chain_dagger_active_count > 0
-	)
+	_archmage_archetype().notify_archmage_chain_dagger_finished()
 
 
 func _archmage_is_surrounded_for_blink() -> bool:
-	if archmage_blink_stacks <= 0:
-		return false
-	return _count_monsters_near(
-		global_position,
-		230.0,
-		5
-	) >= 5
+	return _archmage_archetype()._archmage_is_surrounded_for_blink()
 
 
 func _archmage_blink_cooldown() -> float:
-	return maxf(
-		30.0 - float(maxi(archmage_blink_stacks - 1, 0)) * 3.0,
-		18.0
-	)
+	return _archmage_archetype()._archmage_blink_cooldown()
 
 
 func _cast_archmage_blink() -> void:
-	if silence_timer > 0.0:
-		return
-	if archmage_blink_stacks <= 0:
-		return
-
-	var start_position := global_position
-	var repulsion := Vector2.ZERO
-	_fill_monster_nodes_near(
-		global_position,
-		460.0,
-		archmage_query_candidates
-	)
-	for node in archmage_query_candidates:
-		if not HERO_TARGET_POLICY.is_detectable(node):
-			continue
-		var monster := node as Node2D
-		if monster == null:
-			continue
-		var offset := global_position - monster.global_position
-		var distance_sq := offset.length_squared()
-		if distance_sq <= 0.001:
-			continue
-		repulsion += offset.normalized() / maxf(
-			sqrt(distance_sq),
-			1.0
-		)
-	archmage_query_candidates.clear()
-
-	var preferred := (
-		repulsion.normalized()
-		if repulsion.length_squared() > 0.001
-		else Vector2.RIGHT
-	)
-	var best_position := start_position
-	var best_score := INF
-	var blink_distance := 700.0
-
-	for index in range(20):
-		var direction := Vector2.from_angle(
-			TAU * float(index) / 20.0
-		)
-		var raw_target := start_position + direction * blink_distance
-		var candidate := Vector2(
-			clampf(
-				raw_target.x,
-				FIELD_MARGIN,
-				battlefield_size.x - FIELD_MARGIN
-			),
-			clampf(
-				raw_target.y,
-				FIELD_MARGIN,
-				battlefield_size.y - FIELD_MARGIN
-			)
-		)
-		var actual_distance := start_position.distance_to(candidate)
-		if actual_distance < 120.0:
-			continue
-
-		var nearby_count := _count_monsters_near(
-			candidate,
-			320.0
-		)
-		var alignment_penalty := (
-			1.0 - direction.dot(preferred)
-		) * 2.5
-		var distance_loss := (
-			blink_distance - actual_distance
-		) / blink_distance
-		var score := (
-			float(nearby_count) * 100.0
-			+ alignment_penalty
-			+ distance_loss * 12.0
-		)
-		if score < best_score:
-			best_score = score
-			best_position = candidate
-
-	if best_position == start_position:
-		return
-
-	_ensure_archmage_audio_runtime()
-	_play_archmage_player(archmage_blink_audio)
-	_spawn_archmage_fx(
-		"res://assets/art/heroes/stage5_archmage/frames/effect8",
-		"wind",
-		1,
-		9,
-		24.0,
-		false,
-		start_position,
-		Vector2(0.86, 0.86)
-	)
-	global_position = best_position
-	velocity = Vector2.ZERO
-	_clamp_to_battlefield()
-	_spawn_archmage_fx(
-		"res://assets/art/heroes/stage5_archmage/frames/effect8",
-		"wind",
-		1,
-		9,
-		24.0,
-		false,
-		global_position,
-		Vector2(0.86, 0.86)
-	)
-	archmage_blink_cooldown_timer = _archmage_blink_cooldown()
+	_archmage_archetype()._cast_archmage_blink()
 
 
 func _cast_archmage_harmony(config: Dictionary) -> void:
-	_ensure_archmage_audio_runtime()
-	_play_archmage_player(archmage_harmony_audio)
-	for key in ARCHMAGE_OFFENSIVE_SKILL_KEYS:
-		archmage_skill_cooldowns[key] = 0.0
-	_add_archmage_gauge(maxf(float(config.get("gauge_refund", 50.0)), 0.0))
-	_spawn_archmage_fx(
-		"res://assets/art/heroes/stage5_archmage/frames/effect7",
-		"orb", 8, 5, 16.0, false, global_position, Vector2(0.82, 0.82)
-	)
+	_archmage_archetype()._cast_archmage_harmony(config)
 
 
 func _cast_archmage_storm(config: Dictionary, empowered: bool) -> void:
-	_ensure_archmage_audio_runtime()
-	_play_archmage_player(archmage_storm_audio)
-	for index in range(8):
-		var direction := Vector2.from_angle(TAU * float(index) / 8.0)
-		var projectile := _acquire_projectile(
-			ARCHMAGE_SKILL_PROJECTILE_SCENE,
-			"archmage_skill_projectile"
-		)
-		if projectile == null:
-			continue
-		projectile.global_position = global_position + direction * 56.0
-		projectile.call(
-			"setup", "storm", direction,
-			maxi(1, int(round(float(attack_damage) * float(config.get("damage_ratio", 0.75))))),
-			float(config.get("projectile_speed", 350.0)),
-			float(config.get("projectile_range", 950.0)),
-			config, self, empowered, null
-		)
+	_archmage_archetype()._cast_archmage_storm(config, empowered)
 
 
 func _collect_archmage_element(element: String) -> void:
-	if element.is_empty():
-		return
-
-	var already_owned := bool(
-		archmage_element_orbs.get(element, false)
-	)
-	archmage_element_orbs[element] = true
-	if not already_owned:
-		archmage_orbit_order.append(element)
-
-	if (
-		already_owned
-		and archmage_element_cycle_stacks > 0
-		and randf() <= 0.25 * float(archmage_element_cycle_stacks)
-	):
-		var missing: Array[String] = []
-		for candidate in ARCHMAGE_ORB_ELEMENTS:
-			if not bool(archmage_element_orbs.get(candidate, false)):
-				missing.append(candidate)
-		if not missing.is_empty():
-			var granted := String(missing.pick_random())
-			archmage_element_orbs[granted] = true
-			archmage_orbit_order.append(granted)
-
-	_refresh_archmage_orbit_visuals()
+	_archmage_archetype()._collect_archmage_element(element)
 
 func _archmage_has_all_element_orbs() -> bool:
-	for element in ARCHMAGE_ORB_ELEMENTS:
-		if not bool(archmage_element_orbs.get(element, false)):
-			return false
-	return true
+	return _archmage_archetype()._archmage_has_all_element_orbs()
 
 
 func _refresh_archmage_orbit_visuals() -> void:
-	for element in ARCHMAGE_ORB_ELEMENTS:
-		var existing = archmage_orbit_sprites.get(element)
-		if is_instance_valid(existing):
-			existing.visible = false
-
-	if hero_archetype != "archmage_elementalist":
-		return
-
-	for element in archmage_orbit_order:
-		if not bool(archmage_element_orbs.get(element, false)):
-			continue
-		var frame_index := int(ARCHMAGE_ORB_FRAME_INDEX.get(element, 0))
-		if frame_index <= 0:
-			continue
-
-		var sprite := archmage_orbit_sprites.get(element) as Sprite2D
-		if not is_instance_valid(sprite):
-			var texture := _load_stage1_texture(
-				"res://assets/art/heroes/stage5_archmage/frames/effect6/orb_%02d.png" % frame_index
-			)
-			if texture == null:
-				continue
-			sprite = Sprite2D.new()
-			sprite.texture = texture
-			sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-			sprite.scale = Vector2(0.20, 0.20)
-			sprite.z_index = 8
-			add_child(sprite)
-			archmage_orbit_sprites[element] = sprite
-		sprite.visible = true
-
-	_update_archmage_orbit_positions()
+	_archmage_archetype()._refresh_archmage_orbit_visuals()
 
 
 func _update_archmage_orbit_positions() -> void:
-	var count := 0
-	for element in archmage_orbit_order:
-		if not bool(archmage_element_orbs.get(element, false)):
-			continue
-		var sprite := archmage_orbit_sprites.get(element) as Sprite2D
-		if is_instance_valid(sprite) and sprite.visible:
-			count += 1
-	if count <= 0:
-		return
-
-	var index := 0
-	for element in archmage_orbit_order:
-		if not bool(archmage_element_orbs.get(element, false)):
-			continue
-		var sprite := archmage_orbit_sprites.get(element) as Sprite2D
-		if not is_instance_valid(sprite) or not sprite.visible:
-			continue
-		var angle := archmage_orbit_angle + TAU * float(index) / float(count)
-		sprite.position = Vector2.from_angle(angle) * 64.0 + Vector2(0.0, -8.0)
-		index += 1
+	_archmage_archetype()._update_archmage_orbit_positions()
 
 
 func _spawn_archmage_fx(
@@ -9330,107 +5220,14 @@ func _spawn_archmage_fx(
 	world_position: Vector2,
 	fx_scale: Vector2
 ) -> AnimatedSprite2D:
-	var cache_key := "%s|%s|%d|%d|%.3f|%s" % [
-		dir,
-		prefix,
-		start,
-		count,
-		fps,
-		str(looped),
-	]
-	var cached = _archmage_fx_frames_cache.get(cache_key)
-	var frames: SpriteFrames
-	if cached is SpriteFrames:
-		frames = cached
-	else:
-		frames = SpriteFrames.new()
-		if frames.has_animation("default"):
-			frames.remove_animation("default")
-		frames.add_animation("fx")
-		frames.set_animation_speed("fx", fps)
-		frames.set_animation_loop("fx", looped)
-		for index in range(start, start + count):
-			var texture := _load_stage1_texture(
-				"%s/%s_%02d.png" % [dir, prefix, index]
-			)
-			if texture != null:
-				frames.add_frame("fx", texture)
-		_archmage_fx_frames_cache[cache_key] = frames
-
-	if frames.get_frame_count("fx") <= 0:
-		return null
-
-	var parent := get_parent()
-	if not is_instance_valid(parent):
-		return null
-
-	var fx: AnimatedSprite2D = null
-	if parent.has_method("acquire_transient_fx"):
-		fx = parent.call(
-			"acquire_transient_fx",
-			"archmage_cast_fx",
-			"animated_sprite"
-		) as AnimatedSprite2D
-	if fx == null:
-		fx = AnimatedSprite2D.new()
-		parent.add_child(fx)
-
-	# A pooled sprite may now belong to another delayed cast.
-	fx.set_meta("archmage_cast_revision", int(fx.get_meta("archmage_cast_revision", 0)) + 1)
-	fx.stop()
-	fx.sprite_frames = frames
-	fx.animation = &"fx"
-	fx.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	fx.z_index = 7
-	fx.global_position = world_position
-	fx.scale = fx_scale
-	fx.rotation = 0.0
-	fx.modulate = Color.WHITE
-	fx.frame = 0
-	fx.frame_progress = 0.0
-	fx.visible = true
-
-	if not looped:
-		if parent.has_method("recycle_transient_fx"):
-			fx.animation_finished.connect(
-				Callable(parent, "recycle_transient_fx").bind(
-					fx,
-					"archmage_cast_fx"
-				),
-				Object.CONNECT_ONE_SHOT
-			)
-		else:
-			fx.animation_finished.connect(
-				Callable(fx, "queue_free"),
-				Object.CONNECT_ONE_SHOT
-			)
-
-	fx.play(&"fx")
-	return fx
+	return _archmage_archetype()._spawn_archmage_fx(dir, prefix, start, count, fps, looped, world_position, fx_scale)
 
 
 func _recycle_archmage_fx_if_current(fx: AnimatedSprite2D, revision: int, scope_id: int) -> void:
-	# Recycle only this playback, through its original parent, even after reparenting Hero.
-	if not is_instance_valid(fx) or fx.is_queued_for_deletion() or not fx.visible:
-		return
-	if int(fx.get_meta("archmage_cast_revision", 0)) != revision:
-		return
-	var scope := fx.get_parent()
-	if not is_instance_valid(scope) or scope.is_queued_for_deletion() or scope.get_instance_id() != scope_id:
-		return
-	if scope.has_method("recycle_transient_fx"):
-		scope.call("recycle_transient_fx", fx, "archmage_cast_fx")
-	else:
-		fx.queue_free()
+	_archmage_archetype()._recycle_archmage_fx_if_current(fx, revision, scope_id)
 
 func _recycle_archmage_fx(fx: AnimatedSprite2D) -> void:
-	if not is_instance_valid(fx):
-		return
-	var parent := get_parent()
-	if is_instance_valid(parent) and parent.has_method("recycle_transient_fx"):
-		parent.call("recycle_transient_fx", fx, "archmage_cast_fx")
-	else:
-		fx.queue_free()
+	_archmage_archetype()._recycle_archmage_fx(fx)
 
 
 func _damage_monsters_in_radius(origin: Vector2, radius: float, damage: int, source_life: Vector3i = Vector3i.ZERO, source_scope_id: int = 0, require_alive: bool = true) -> void:
@@ -9860,40 +5657,7 @@ func _build_purifier_effect_frames(
 	end_first: int,
 	end_last: int
 ) -> SpriteFrames:
-	var frames := SpriteFrames.new()
-	if frames.has_animation(&"default"):
-		frames.remove_animation(&"default")
-
-	frames.add_animation(&"start")
-	frames.set_animation_loop(&"start", false)
-	frames.set_animation_speed(&"start", 10.0)
-	for frame_index in range(start_first, start_last + 1):
-		var texture := _load_stage1_texture(
-			"%s/effect_%02d.png" % [effect_dir, frame_index]
-		)
-		if texture != null:
-			frames.add_frame(&"start", texture)
-
-	frames.add_animation(&"sustain")
-	frames.set_animation_loop(&"sustain", true)
-	frames.set_animation_speed(&"sustain", 7.0)
-	for frame_index in range(sustain_first, sustain_last + 1):
-		var texture := _load_stage1_texture(
-			"%s/effect_%02d.png" % [effect_dir, frame_index]
-		)
-		if texture != null:
-			frames.add_frame(&"sustain", texture)
-
-	frames.add_animation(&"end")
-	frames.set_animation_loop(&"end", false)
-	frames.set_animation_speed(&"end", 10.0)
-	for frame_index in range(end_first, end_last + 1):
-		var texture := _load_stage1_texture(
-			"%s/effect_%02d.png" % [effect_dir, frame_index]
-		)
-		if texture != null:
-			frames.add_frame(&"end", texture)
-	return frames
+	return _purifier_archetype()._build_purifier_effect_frames(effect_dir, start_first, start_last, sustain_first, sustain_last, end_first, end_last)
 
 
 func _create_purifier_audio_player(
@@ -9901,316 +5665,66 @@ func _create_purifier_audio_player(
 	volume_db: float,
 	pitch_scale: float = 1.0
 ) -> AudioStreamPlayer:
-	var player := AudioStreamPlayer.new()
-	player.bus = &"SFX"
-	player.volume_db = volume_db
-	player.pitch_scale = pitch_scale
-	if ResourceLoader.exists(audio_path):
-		var stream = load(audio_path)
-		if stream is AudioStream:
-			player.stream = stream
-	add_child(player)
-	return player
+	return _purifier_archetype()._create_purifier_audio_player(audio_path, volume_db, pitch_scale)
 
 
 func _ensure_purifier_skill_runtime() -> void:
-	if hero_archetype != "cleric_purifier":
-		return
-
-	if not is_instance_valid(purifier_protection_effect):
-		if _purifier_protection_frames_cache == null:
-			var effect_dir := String(
-				purifier_protection_config.get(
-					"effect_dir",
-					"%s/effect4" % STAGE9_FRAME_DIR
-				)
-			)
-			_purifier_protection_frames_cache = _build_purifier_effect_frames(
-				effect_dir, 23, 24, 24, 26, 27, 28
-			)
-		purifier_protection_effect = AnimatedSprite2D.new()
-		purifier_protection_effect.sprite_frames = _purifier_protection_frames_cache
-		purifier_protection_effect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		purifier_protection_effect.scale = hero_sprite.scale
-		# Divine Protection should stay readable without covering the hero body.
-		# self_modulate keeps the effect at a consistent 50% opacity.
-		purifier_protection_effect.self_modulate = Color(1.0, 1.0, 1.0, 0.5)
-		purifier_protection_effect.offset = Vector2(16.0, -24.0)
-		purifier_protection_effect.z_index = 8
-		purifier_protection_effect.visible = false
-		purifier_protection_effect.animation_finished.connect(
-			Callable(self, "_on_purifier_protection_effect_finished")
-		)
-		add_child(purifier_protection_effect)
-
-	if not is_instance_valid(purifier_crown_effect):
-		if _purifier_crown_frames_cache == null:
-			var effect_dir := String(
-				purifier_crown_config.get(
-					"effect_dir",
-					"%s/effect3" % STAGE9_FRAME_DIR
-				)
-			)
-			_purifier_crown_frames_cache = _build_purifier_effect_frames(
-				effect_dir, 17, 18, 19, 20, 21, 22
-			)
-		purifier_crown_effect = AnimatedSprite2D.new()
-		purifier_crown_effect.sprite_frames = _purifier_crown_frames_cache
-		purifier_crown_effect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-		# The raw effect3 crown is visually larger than the Stage 9 head.
-		# Keep it compact and attached to the same horizontal visual anchor as
-		# the animated hero frames so it does not drift a few pixels per frame.
-		purifier_crown_effect.scale = hero_sprite.scale * 0.78
-		# Center the crown on the gameplay/root X, then place it directly above
-		# the head. Demon Castle Y-sort normalizes HeroSprite to z=0 after _ready().
-		# Keep the crown on that same behind-parent layer: HeroSprite is an earlier
-		# child, so Crown draws over the body, while Hero._draw() bars stay on top.
-		purifier_crown_effect.offset = Vector2(0.0, -24.0)
-		purifier_crown_effect.position = Vector2(0.0, -36.0)
-		purifier_crown_effect.show_behind_parent = true
-		purifier_crown_effect.z_index = 0
-		purifier_crown_effect.visible = false
-		purifier_crown_effect.animation_finished.connect(
-			Callable(self, "_on_purifier_crown_effect_finished")
-		)
-		add_child(purifier_crown_effect)
-
-	if not is_instance_valid(purifier_shield_create_audio):
-		purifier_shield_create_audio = _create_purifier_audio_player(
-			String(purifier_protection_config.get(
-				"create_audio_path",
-				PURIFIER_SHIELD_CREATE_AUDIO_PATH
-			)),
-			-12.0,
-			1.08
-		)
-	if not is_instance_valid(purifier_shield_break_audio):
-		purifier_shield_break_audio = _create_purifier_audio_player(
-			String(purifier_protection_config.get(
-				"break_audio_path",
-				PURIFIER_SHIELD_BREAK_AUDIO_PATH
-			)),
-			-11.0,
-			0.82
-		)
-	if not is_instance_valid(purifier_crown_audio):
-		purifier_crown_audio = _create_purifier_audio_player(
-			String(purifier_crown_config.get(
-				"audio_path",
-				PURIFIER_CROWN_AUDIO_PATH
-			)),
-			-13.0,
-			1.12
-		)
-	if not is_instance_valid(purifier_orb_create_audio):
-		purifier_orb_create_audio = _create_purifier_audio_player(
-			String(purifier_orb_config.get(
-				"create_audio_path",
-				PURIFIER_ORB_CREATE_AUDIO_PATH
-			)),
-			-12.0,
-			1.04
-		)
-	if not is_instance_valid(purifier_orb_explosion_audio):
-		purifier_orb_explosion_audio = _create_purifier_audio_player(
-			String(purifier_orb_config.get(
-				"explosion_audio_path",
-				PURIFIER_ORB_EXPLOSION_AUDIO_PATH
-			)),
-			-10.0,
-			0.96
-		)
-	if not is_instance_valid(purifier_cleansing_audio):
-		purifier_cleansing_audio = _create_purifier_audio_player(
-			String(purifier_cleansing_config.get(
-				"audio_path",
-				PURIFIER_CLEANSING_AUDIO_PATH
-			)),
-			-12.0,
-			1.18
-		)
-	if not is_instance_valid(purifier_gungnir_charge_audio):
-		purifier_gungnir_charge_audio = _create_purifier_audio_player(
-			String(purifier_gungnir_config.get(
-				"charge_audio_path",
-				PURIFIER_GUNGNIR_CHARGE_AUDIO_PATH
-			)),
-			-10.0,
-			1.05
-		)
-	if not is_instance_valid(purifier_gungnir_flight_audio):
-		purifier_gungnir_flight_audio = _create_purifier_audio_player(
-			String(purifier_gungnir_config.get(
-				"flight_audio_path",
-				PURIFIER_GUNGNIR_FLIGHT_AUDIO_PATH
-			)),
-			-9.0,
-			1.12
-		)
-	if not is_instance_valid(purifier_gungnir_explosion_audio):
-		purifier_gungnir_explosion_audio = _create_purifier_audio_player(
-			String(purifier_gungnir_config.get(
-				"explosion_audio_path",
-				PURIFIER_GUNGNIR_EXPLOSION_AUDIO_PATH
-			)),
-			-8.0,
-			0.78
-		)
+	_purifier_archetype()._ensure_purifier_skill_runtime()
 
 
 func _play_purifier_audio(player: AudioStreamPlayer) -> void:
-	if not is_instance_valid(player) or player.stream == null:
-		return
-	player.stop()
-	player.play()
+	_purifier_archetype()._play_purifier_audio(player)
 
 
 func _on_purifier_protection_effect_finished() -> void:
-	if not is_instance_valid(purifier_protection_effect):
-		return
-	if purifier_protection_effect.animation == &"start":
-		if purifier_protection_active:
-			purifier_protection_effect.play(&"sustain")
-		else:
-			purifier_protection_effect.visible = false
-	elif purifier_protection_effect.animation == &"end":
-		purifier_protection_effect.visible = false
+	_purifier_archetype()._on_purifier_protection_effect_finished()
 
 
 func _on_purifier_crown_effect_finished() -> void:
-	if not is_instance_valid(purifier_crown_effect):
-		return
-	if purifier_crown_effect.animation == &"start":
-		if purifier_crown_stacks > 0:
-			purifier_crown_effect.play(&"sustain")
-		else:
-			purifier_crown_effect.visible = false
-	elif purifier_crown_effect.animation == &"end":
-		purifier_crown_effect.visible = false
+	_purifier_archetype()._on_purifier_crown_effect_finished()
 
 
 func _play_purifier_effect(effect: AnimatedSprite2D, animation_name: StringName) -> void:
-	if (
-		not is_instance_valid(effect)
-		or effect.sprite_frames == null
-		or not effect.sprite_frames.has_animation(animation_name)
-		or effect.sprite_frames.get_frame_count(animation_name) <= 0
-	):
-		return
-	effect.visible = true
-	effect.stop()
-	effect.animation = animation_name
-	effect.frame = 0
-	effect.frame_progress = 0.0
-	effect.play(animation_name)
+	_purifier_archetype()._play_purifier_effect(effect, animation_name)
 
 
 func _get_purifier_augment_stacks(augment_id: String) -> int:
-	if hero_archetype != "cleric_purifier":
-		return 0
-	return maxi(int(build_counts.get(augment_id, 0)), 0)
+	return _purifier_archetype()._get_purifier_augment_stacks(augment_id)
 
 
 func _get_purifier_crown_effect_multiplier() -> float:
-	return (
-		0.85
-		if _get_purifier_augment_stacks("purifier_radiant_crown") > 0
-		else 1.0
-	)
+	return _purifier_archetype()._get_purifier_crown_effect_multiplier()
 
 
 func _get_purifier_crown_max_stacks() -> int:
-	return maxi(
-		int(purifier_crown_config.get("max_stacks", 5))
-		+ _get_purifier_augment_stacks("purifier_radiant_crown"),
-		1
-	)
+	return _purifier_archetype()._get_purifier_crown_max_stacks()
 
 
 func _get_purifier_orb_damage_multiplier() -> float:
-	return (
-		0.50
-		if _get_purifier_augment_stacks("purifier_book_of_purification") > 0
-		else 1.0
-	)
+	return _purifier_archetype()._get_purifier_orb_damage_multiplier()
 
 
 func _get_purifier_orb_range_multiplier() -> float:
-	return (
-		0.50
-		if _get_purifier_augment_stacks("purifier_book_of_purification") > 0
-		else 1.0
-	)
+	return _purifier_archetype()._get_purifier_orb_range_multiplier()
 
 
 func _get_purifier_orb_explosion_radius() -> float:
-	return maxf(
-		float(purifier_orb_config.get("explosion_radius", 137.5))
-		* _get_purifier_orb_range_multiplier(),
-		1.0
-	)
+	return _purifier_archetype()._get_purifier_orb_explosion_radius()
 
 
 func _get_purifier_skill_cooldown_multiplier() -> float:
-	if hero_archetype != "cleric_purifier" or purifier_crown_stacks <= 0:
-		return 1.0
-	return maxf(
-		1.0
-		- float(purifier_crown_config.get("cooldown_reduction_per_stack", 0.04))
-		* _get_purifier_crown_effect_multiplier()
-		* float(purifier_crown_stacks),
-		0.20
-	)
+	return _purifier_archetype()._get_purifier_skill_cooldown_multiplier()
 
 
 func _get_purifier_move_speed_multiplier() -> float:
-	var multiplier := 1.0
-	if hero_archetype == "cleric_purifier" and purifier_crown_stacks > 0:
-		multiplier *= 1.0 + maxf(
-			float(purifier_crown_config.get("move_speed_per_stack", 0.02)),
-			0.0
-		) * _get_purifier_crown_effect_multiplier() * float(purifier_crown_stacks)
-	if hero_archetype == "grand_sage_astra" and sage_phase_active:
-		multiplier *= maxf(
-			float(sage_config.get("phase_move_speed_multiplier", 1.40)),
-			1.0
-		)
-	return multiplier
+	return _purifier_archetype()._get_purifier_move_speed_multiplier()
 
 func _is_purifier_undead_target(target_node: Node) -> bool:
-	return MONSTER_CATALOG.is_undead_node(target_node)
+	return _purifier_archetype()._is_purifier_undead_target(target_node)
 
 
 func get_purifier_holy_damage_multiplier(target_node: Node = null) -> float:
-	if hero_archetype != "cleric_purifier":
-		return 1.0
-	var crown_effect_multiplier := _get_purifier_crown_effect_multiplier()
-	var multiplier := (
-		1.0
-		+ maxf(
-			float(purifier_crown_config.get("holy_damage_per_stack", 0.05)),
-			0.0
-		) * crown_effect_multiplier * float(purifier_crown_stacks)
-	)
-	if shield_hp > 0.0:
-		multiplier *= maxf(
-			float(purifier_protection_config.get("holy_damage_multiplier", 1.15)),
-			0.0
-		)
-	if _is_purifier_undead_target(target_node):
-		multiplier *= (
-			1.0
-			+ maxf(
-				float(purifier_crown_config.get("undead_damage_per_stack", 0.10)),
-				0.0
-			) * crown_effect_multiplier * float(purifier_crown_stacks)
-		)
-	var broken_sanctuary_stacks := _get_purifier_augment_stacks(
-		"purifier_broken_sanctuary"
-	)
-	if broken_sanctuary_stacks > 0 and purifier_broken_sanctuary_timer > 0.0:
-		multiplier *= 1.0 + 0.06 * float(broken_sanctuary_stacks)
-	return multiplier
+	return _purifier_archetype().get_purifier_holy_damage_multiplier(target_node)
 
 func notify_monster_kill(_monster_type: String = "") -> void:
 	if player_controlled and player_weapons != null:
@@ -10232,1006 +5746,148 @@ func notify_monster_kill(_monster_type: String = "") -> void:
 
 
 func _add_purifier_shield_layer() -> void:
-	var layer_amount := maxf(
-		float(max_hp)
-		* maxf(
-			float(purifier_protection_config.get("shield_hp_ratio_per_tick", 0.01)),
-			0.0
-		),
-		1.0
-	)
-	layer_amount = _player_shield_amount(layer_amount)
-	shield_max_hp += layer_amount
-	shield_hp += layer_amount
-	queue_redraw()
+	_purifier_archetype()._add_purifier_shield_layer()
 
 
 func _try_activate_purifier_protection() -> void:
-	if silence_timer > 0.0:
-		return
-	if (
-		hero_archetype != "cleric_purifier"
-		or purifier_protection_config.is_empty()
-		or purifier_protection_active
-		or purifier_protection_cooldown > 0.0
-		or is_dying
-		or current_hp <= 0
-	):
-		return
-	var gauge_max := maxf(
-		float(purifier_gauge_config.get("charge_max", 100.0)),
-		1.0
-	)
-	if ultimate_charge + 0.001 < gauge_max:
-		return
-
-	ultimate_charge = 0.0
-	purifier_protection_active = true
-	purifier_protection_break_triggered = false
-	purifier_protection_duration_timer = maxf(
-		float(purifier_protection_config.get("duration", 20.0)),
-		0.1
-	)
-	purifier_protection_tick_timer = maxf(
-		float(purifier_protection_config.get("shield_tick_interval", 1.0)),
-		0.05
-	)
-	purifier_protection_cooldown = (
-		maxf(float(purifier_protection_config.get("cooldown", 30.0)), 0.0)
-		* _get_purifier_skill_cooldown_multiplier()
-	)
-	shield_hp = 0.0
-	shield_max_hp = 0.0
-	_add_purifier_shield_layer()
-	_ensure_purifier_skill_runtime()
-	_play_purifier_effect(purifier_protection_effect, &"start")
-	_play_purifier_audio(purifier_shield_create_audio)
-	queue_redraw()
+	_purifier_archetype()._try_activate_purifier_protection()
 
 
 func _trigger_purifier_protection_break_pulse() -> void:
-	var radius := maxf(
-		float(purifier_protection_config.get("break_radius", 240.0)),
-		0.0
-	)
-	if radius <= 0.0:
-		return
-	var knockback := maxf(
-		float(purifier_protection_config.get("break_knockback", 135.0)),
-		0.0
-	)
-	var slow_multiplier := clampf(
-		float(purifier_protection_config.get("break_slow_multiplier", 0.70)),
-		0.1,
-		1.0
-	)
-	var slow_until := COMBAT_DELAY.now_msec(self) + int(round(
-		maxf(
-			float(purifier_protection_config.get("break_slow_duration", 1.5)),
-			0.05
-		) * 1000.0
-	))
-	var radius_sq := radius * radius
-	_fill_monster_nodes_near(
-		global_position,
-		radius,
-		_combat_monster_scratch
-	)
-	for node in _combat_monster_scratch:
-		if not HERO_TARGET_POLICY.is_detectable(node):
-			continue
-		var monster := node as Node2D
-		if (
-			monster == null
-			or global_position.distance_squared_to(monster.global_position) > radius_sq
-		):
-			continue
-		var push_direction := global_position.direction_to(monster.global_position)
-		if push_direction.length_squared() <= 0.001:
-			push_direction = Vector2.RIGHT
-		monster.global_position += push_direction.normalized() * knockback
-		LOCAL_GRID_MOVEMENT.notify_forced_position_change(monster)
-		var current_until := int(monster.get_meta("gunner_slow_until", 0))
-		var current_multiplier := float(
-			monster.get_meta("gunner_slow_multiplier", 1.0)
-		)
-		monster.set_meta("gunner_slow_until", maxi(current_until, slow_until))
-		monster.set_meta(
-			"gunner_slow_multiplier",
-			minf(current_multiplier, slow_multiplier)
-		)
-	_combat_monster_scratch.clear()
+	_purifier_archetype()._trigger_purifier_protection_break_pulse()
 
 
 func _end_purifier_protection(broken: bool) -> void:
-	if not purifier_protection_active and shield_hp <= 0.0:
-		return
-	if broken and not purifier_protection_break_triggered:
-		purifier_protection_break_triggered = true
-		purifier_protection_break_count += 1
-		_trigger_purifier_protection_break_pulse()
-		if _get_purifier_augment_stacks("purifier_broken_sanctuary") > 0:
-			purifier_broken_sanctuary_timer = 6.0
-	purifier_protection_active = false
-	purifier_protection_duration_timer = 0.0
-	purifier_protection_tick_timer = 0.0
-	shield_hp = 0.0
-	shield_max_hp = 0.0
-	_ensure_purifier_skill_runtime()
-	_play_purifier_effect(purifier_protection_effect, &"end")
-	_play_purifier_audio(purifier_shield_break_audio)
-	queue_redraw()
+	_purifier_archetype()._end_purifier_protection(broken)
 
 
 func _cast_purifier_crown() -> void:
-	if silence_timer > 0.0:
-		return
-	if (
-		hero_archetype != "cleric_purifier"
-		or purifier_crown_config.is_empty()
-		or purifier_crown_cooldown > 0.0
-		or is_dying
-		or current_hp <= 0
-	):
-		return
-	var max_stacks := _get_purifier_crown_max_stacks()
-	purifier_crown_stacks = mini(purifier_crown_stacks + 1, max_stacks)
-	purifier_crown_duration_timer = maxf(
-		float(purifier_crown_config.get("duration", 60.0)),
-		0.1
-	)
-	if purifier_crown_heal_timer <= 0.0:
-		purifier_crown_heal_timer = maxf(
-			float(purifier_crown_config.get("heal_interval", 5.0)),
-			0.1
-		)
-	purifier_crown_cooldown = (
-		maxf(float(purifier_crown_config.get("cooldown", 20.0)), 0.0)
-		* _get_purifier_skill_cooldown_multiplier()
-	)
-	_ensure_purifier_skill_runtime()
-	_play_purifier_effect(purifier_crown_effect, &"start")
-	_play_purifier_audio(purifier_crown_audio)
-	queue_redraw()
+	_purifier_archetype()._cast_purifier_crown()
 
 
 func _expire_purifier_crown() -> void:
-	if purifier_crown_stacks <= 0:
-		return
-	purifier_crown_stacks = 0
-	purifier_crown_duration_timer = 0.0
-	purifier_crown_heal_timer = 0.0
-	_ensure_purifier_skill_runtime()
-	_play_purifier_effect(purifier_crown_effect, &"end")
-	queue_redraw()
+	_purifier_archetype()._expire_purifier_crown()
 
 
 func _clear_purifier_orb_runtime() -> void:
-	for raw_link in purifier_orb_links.values():
-		var link := raw_link as Node
-		if is_instance_valid(link):
-			link.queue_free()
-	purifier_orb_links.clear()
-
-	for orb in purifier_orbs:
-		if is_instance_valid(orb):
-			orb.queue_free()
-	purifier_orbs.clear()
-	purifier_orb_chain_queue.clear()
-	purifier_orb_chain_active = false
-	purifier_orb_chain_timer = 0.0
-	purifier_orb_chain_step = 0
-
-	for entry in purifier_prism_active:
-		var prism_orb = entry.get("orb", null)
-		if is_instance_valid(prism_orb):
-			prism_orb.queue_free()
-	purifier_prism_active.clear()
-	purifier_prism_launch_queue.clear()
-	purifier_prism_launch_timer = 0.0
+	_purifier_archetype()._clear_purifier_orb_runtime()
 
 
 func _is_purifier_orb_active(orb: Node2D) -> bool:
-	return (
-		is_instance_valid(orb)
-		and not orb.is_queued_for_deletion()
-		and orb.has_method("is_network_active")
-		and bool(orb.call("is_network_active"))
-	)
+	return _purifier_archetype()._is_purifier_orb_active(orb)
 
 
 func _get_active_purifier_orbs() -> Array[Node2D]:
-	var result: Array[Node2D] = []
-	for orb in purifier_orbs:
-		if _is_purifier_orb_active(orb):
-			result.append(orb)
-	return result
+	return _purifier_archetype()._get_active_purifier_orbs()
 
 
 func _purifier_orb_link_key(a: Node2D, b: Node2D) -> String:
-	var a_id := a.get_instance_id()
-	var b_id := b.get_instance_id()
-	if a_id > b_id:
-		var swap := a_id
-		a_id = b_id
-		b_id = swap
-	return "%d:%d" % [a_id, b_id]
+	return _purifier_archetype()._purifier_orb_link_key(a, b)
 
 
 func _refresh_purifier_orb_links() -> void:
-	var active_orbs := _get_active_purifier_orbs()
-	var link_distance := maxf(
-		float(purifier_orb_config.get("link_distance", 780.0)),
-		1.0
-	)
-	var link_distance_sq := link_distance * link_distance
-	var seen_links: Dictionary = {}
-	var link_effect_dir := String(
-		purifier_orb_config.get(
-			"link_effect_dir",
-			"%s/effect5" % STAGE5_FRAME_DIR
-		)
-	)
-	var link_vertical_scale := maxf(
-		float(purifier_orb_config.get("link_vertical_scale", 0.58)),
-		0.05
-	)
-	var pilgrims_path_stacks := _get_purifier_augment_stacks(
-		"purifier_pilgrims_path"
-	)
-	var link_damage_ratio := (
-		0.10 + 0.05 * float(pilgrims_path_stacks - 1)
-		if pilgrims_path_stacks > 0
-		else 0.0
-	)
-	var parent := get_parent()
-	if not is_instance_valid(parent):
-		return
-
-	for first_index in range(active_orbs.size()):
-		var first := active_orbs[first_index]
-		for second_index in range(first_index + 1, active_orbs.size()):
-			var second := active_orbs[second_index]
-			if (
-				first.global_position.distance_squared_to(second.global_position)
-				> link_distance_sq
-			):
-				continue
-
-			var key := _purifier_orb_link_key(first, second)
-			seen_links[key] = true
-			if purifier_orb_links.has(key):
-				var existing_link = purifier_orb_links.get(key)
-				if (
-					is_instance_valid(existing_link)
-					and existing_link.has_method("configure_damage")
-				):
-					existing_link.call(
-						"configure_damage",
-						self,
-						link_damage_ratio,
-						0.22,
-						24.0
-					)
-				continue
-
-			var link := PURIFIER_ORB_LINK_SCENE.instantiate() as Node2D
-			if link == null:
-				continue
-			parent.add_child(link)
-			link.call(
-				"setup",
-				first.global_position,
-				second.global_position,
-				link_effect_dir,
-				link_vertical_scale,
-				self,
-				link_damage_ratio,
-				0.22,
-				24.0
-			)
-			purifier_orb_links[key] = link
-
-	for raw_key in purifier_orb_links.keys():
-		var key := String(raw_key)
-		if seen_links.has(key):
-			continue
-		var stale_link = purifier_orb_links.get(key)
-		if is_instance_valid(stale_link):
-			stale_link.queue_free()
-		purifier_orb_links.erase(key)
+	_purifier_archetype()._refresh_purifier_orb_links()
 
 
 func _on_purifier_orb_settled(orb: Node2D) -> void:
-	if not _is_purifier_orb_active(orb):
-		return
-	_refresh_purifier_orb_links()
-	_try_start_purifier_orb_chain_from(orb)
+	_purifier_archetype()._on_purifier_orb_settled(orb)
 
 
 func _on_purifier_orb_deactivated(_orb: Node2D) -> void:
-	_refresh_purifier_orb_links()
+	_purifier_archetype()._on_purifier_orb_deactivated(_orb)
 
 
 func _on_purifier_orb_finished(orb: Node2D) -> void:
-	purifier_orbs.erase(orb)
-	purifier_orb_chain_queue.erase(orb)
-	_refresh_purifier_orb_links()
+	_purifier_archetype()._on_purifier_orb_finished(orb)
 
 
 func _clamp_purifier_orb_target_position(candidate: Vector2) -> Vector2:
-	var throw_range := maxf(
-		float(purifier_orb_config.get("throw_range", 820.0)),
-		1.0
-	)
-	var offset := candidate - global_position
-	if offset.length_squared() > throw_range * throw_range:
-		offset = offset.normalized() * throw_range
-		candidate = global_position + offset
-
-	var clamped := Vector2(
-		clampf(
-			candidate.x,
-			FIELD_MARGIN,
-			maxf(battlefield_size.x - FIELD_MARGIN, FIELD_MARGIN)
-		),
-		clampf(
-			candidate.y,
-			FIELD_MARGIN,
-			maxf(battlefield_size.y - FIELD_MARGIN, FIELD_MARGIN)
-		)
-	)
-	var battle := get_parent()
-	if (
-		is_instance_valid(battle)
-		and battle.has_method("_clamp_manual_spawn_position")
-	):
-		var battle_clamped = battle.call(
-			"_clamp_manual_spawn_position",
-			clamped
-		)
-		if typeof(battle_clamped) == TYPE_VECTOR2:
-			clamped = battle_clamped as Vector2
-	return clamped
+	return _purifier_archetype()._clamp_purifier_orb_target_position(candidate)
 
 
 func _purifier_orb_connection_count(
 	position: Vector2,
 	active_orbs: Array[Node2D]
 ) -> int:
-	var link_distance := maxf(
-		float(purifier_orb_config.get("link_distance", 780.0)),
-		1.0
-	)
-	var link_distance_sq := link_distance * link_distance
-	var count := 0
-	for orb in active_orbs:
-		if (
-			_is_purifier_orb_active(orb)
-			and position.distance_squared_to(orb.global_position)
-			<= link_distance_sq
-		):
-			count += 1
-	return count
+	return _purifier_archetype()._purifier_orb_connection_count(position, active_orbs)
 
 
 func _purifier_orb_resulting_component_size(
 	position: Vector2,
 	active_orbs: Array[Node2D]
 ) -> int:
-	var link_distance := maxf(
-		float(purifier_orb_config.get("link_distance", 780.0)),
-		1.0
-	)
-	var link_distance_sq := link_distance * link_distance
-	var visited: Dictionary = {}
-	var frontier: Array[Node2D] = []
-
-	for orb in active_orbs:
-		if (
-			_is_purifier_orb_active(orb)
-			and position.distance_squared_to(orb.global_position)
-			<= link_distance_sq
-		):
-			frontier.append(orb)
-
-	var cursor := 0
-	while cursor < frontier.size():
-		var current := frontier[cursor]
-		cursor += 1
-		if not _is_purifier_orb_active(current):
-			continue
-		var current_id := current.get_instance_id()
-		if visited.has(current_id):
-			continue
-		visited[current_id] = true
-
-		for candidate in active_orbs:
-			if (
-				not _is_purifier_orb_active(candidate)
-				or visited.has(candidate.get_instance_id())
-				or current.global_position.distance_squared_to(
-					candidate.global_position
-				) > link_distance_sq
-			):
-				continue
-			frontier.append(candidate)
-
-	# Include the candidate orb itself.
-	return visited.size() + 1
+	return _purifier_archetype()._purifier_orb_resulting_component_size(position, active_orbs)
 
 
 func _purifier_orb_position_has_spacing(
 	position: Vector2,
 	active_orbs: Array[Node2D]
 ) -> bool:
-	var min_spacing := maxf(
-		float(purifier_orb_config.get("min_orb_spacing", 96.0)),
-		1.0
-	)
-	var min_spacing_sq := min_spacing * min_spacing
-	for orb in active_orbs:
-		if (
-			_is_purifier_orb_active(orb)
-			and position.distance_squared_to(orb.global_position)
-			< min_spacing_sq
-		):
-			return false
-	return true
+	return _purifier_archetype()._purifier_orb_position_has_spacing(position, active_orbs)
 
 
 func _choose_purifier_orb_target_position() -> Vector2:
-	var throw_range := maxf(
-		float(purifier_orb_config.get("throw_range", 820.0)),
-		1.0
-	)
-	var blast_radius := _get_purifier_orb_explosion_radius()
-	var link_distance := maxf(
-		float(purifier_orb_config.get("link_distance", 780.0)),
-		1.0
-	)
-	var active_orbs := _get_active_purifier_orbs()
-	var candidates: Array[Vector2] = []
-
-	if is_instance_valid(target) and not target.is_queued_for_deletion():
-		candidates.append(target.global_position)
-
-	var monsters := _get_monster_nodes_near(global_position, throw_range)
-	var monster_sample_count := 0
-	for node in monsters:
-		if not HERO_TARGET_POLICY.is_detectable(node):
-			continue
-		var monster := node as Node2D
-		if monster == null:
-			continue
-		candidates.append(monster.global_position)
-		monster_sample_count += 1
-		if monster_sample_count >= 12:
-			break
-
-	for orb in active_orbs:
-		var desired_direction := Vector2.ZERO
-		if is_instance_valid(target):
-			desired_direction = orb.global_position.direction_to(
-				target.global_position
-			)
-		if desired_direction.length_squared() <= 0.001:
-			desired_direction = global_position.direction_to(
-				orb.global_position
-			)
-		if desired_direction.length_squared() <= 0.001:
-			desired_direction = Vector2.from_angle(randf_range(0.0, TAU))
-
-		for angle_offset in [-0.70, -0.35, 0.0, 0.35, 0.70]:
-			candidates.append(
-				orb.global_position
-				+ desired_direction.rotated(angle_offset)
-				* link_distance * 0.72
-			)
-
-	for first_index in range(active_orbs.size()):
-		for second_index in range(first_index + 1, active_orbs.size()):
-			var first := active_orbs[first_index]
-			var second := active_orbs[second_index]
-			if (
-				first.global_position.distance_squared_to(second.global_position)
-				<= (link_distance * 2.0) * (link_distance * 2.0)
-			):
-				candidates.append(
-					first.global_position.lerp(second.global_position, 0.5)
-				)
-
-	var random_center := global_position
-	if is_instance_valid(target):
-		random_center = target.global_position
-	for _sample_index in range(8):
-		candidates.append(
-			random_center
-			+ Vector2.from_angle(randf_range(0.0, TAU))
-			* randf_range(80.0, minf(blast_radius * 1.65, throw_range))
-		)
-
-	if candidates.is_empty():
-		var fallback_direction := (
-			Vector2.LEFT
-			if hero_sprite.flip_h
-			else Vector2.RIGHT
-		)
-		return _clamp_purifier_orb_target_position(
-			global_position + fallback_direction * minf(420.0, throw_range)
-		)
-
-	var hold_chain := (
-		active_orbs.size() >= 2
-		and randf()
-		< clampf(
-			float(purifier_orb_config.get("chain_hold_chance", 0.25)),
-			0.0,
-			1.0
-		)
-	)
-	var best_position := Vector2.ZERO
-	var best_score := -INF
-	var found := false
-
-	for pass_index in range(2):
-		var avoid_multi_link := hold_chain and pass_index == 0
-		for raw_candidate in candidates:
-			var candidate := _clamp_purifier_orb_target_position(raw_candidate)
-			if not _purifier_orb_position_has_spacing(candidate, active_orbs):
-				continue
-
-			var link_count := _purifier_orb_connection_count(
-				candidate,
-				active_orbs
-			)
-			var resulting_component_size := (
-				_purifier_orb_resulting_component_size(
-					candidate,
-					active_orbs
-				)
-			)
-			if avoid_multi_link and resulting_component_size >= 3:
-				continue
-
-			var monster_count := _count_monsters_near(
-				candidate,
-				blast_radius
-			)
-			var score := float(monster_count) * 3.0
-			if avoid_multi_link:
-				score += (
-					2.5
-					if link_count == 0
-					else 1.2
-				)
-			else:
-				if resulting_component_size == 2:
-					score += maxf(
-						float(
-							purifier_orb_config.get(
-								"partial_link_score_bonus",
-								4.0
-							)
-						),
-						0.0
-					)
-				score += (
-					float(link_count)
-					* maxf(
-						float(
-							purifier_orb_config.get(
-								"link_score_per_neighbor",
-								5.0
-							)
-						),
-						0.0
-					)
-				)
-				if resulting_component_size >= 3:
-					score += (
-						maxf(
-							float(
-								purifier_orb_config.get(
-									"chain_ready_score_bonus",
-									12.0
-								)
-							),
-							0.0
-						)
-						+ float(resulting_component_size - 3)
-						* maxf(
-							float(
-								purifier_orb_config.get(
-									"extra_chain_orb_score_bonus",
-									5.0
-								)
-							),
-							0.0
-						)
-					)
-
-			score -= (
-				global_position.distance_to(candidate)
-				/ throw_range
-			) * 0.30
-			score += randf_range(-0.35, 0.35)
-
-			if not found or score > best_score:
-				found = true
-				best_score = score
-				best_position = candidate
-
-		if found:
-			break
-
-	if found:
-		return best_position
-
-	var fallback := candidates[0]
-	return _clamp_purifier_orb_target_position(fallback)
+	return _purifier_archetype()._choose_purifier_orb_target_position()
 
 
 func _spawn_purifier_network_orb(destination: Vector2) -> bool:
-	var parent := get_parent()
-	if not is_instance_valid(parent):
-		return false
-
-	var orb := PURIFIER_ORB_SCENE.instantiate() as Node2D
-	if orb == null:
-		return false
-
-	purifier_orb_install_serial += 1
-	parent.add_child(orb)
-	orb.connect(
-		"settled",
-		Callable(self, "_on_purifier_orb_settled")
-	)
-	orb.connect(
-		"deactivated",
-		Callable(self, "_on_purifier_orb_deactivated")
-	)
-	orb.connect(
-		"finished",
-		Callable(self, "_on_purifier_orb_finished")
-	)
-
-	var start_position := global_position + Vector2(0.0, -42.0)
-	orb.call(
-		"setup",
-		self,
-		start_position,
-		destination,
-		maxf(
-			float(purifier_orb_config.get("projectile_speed", 380.0)),
-			1.0
-		),
-		maxf(float(purifier_orb_config.get("duration", 80.0)), 0.1),
-		_get_purifier_orb_explosion_radius(),
-		purifier_orb_install_serial,
-		String(
-			purifier_orb_config.get(
-				"effect_dir",
-				"%s/effect2" % STAGE9_FRAME_DIR
-			)
-		),
-		maxf(
-			float(purifier_orb_config.get("visual_scale", 0.45)),
-			0.05
-		)
-	)
-	purifier_orbs.append(orb)
-	return true
+	return _purifier_archetype()._spawn_purifier_network_orb(destination)
 
 
 func _cast_purifier_orb() -> void:
-	if silence_timer > 0.0:
-		return
-	if (
-		hero_archetype != "cleric_purifier"
-		or purifier_orb_config.is_empty()
-		or purifier_orb_cooldown > 0.0
-		or is_dying
-		or current_hp <= 0
-	):
-		return
-
-	var book_stacks := _get_purifier_augment_stacks("purifier_book_of_purification")
-	var orb_count := 1 + book_stacks
-	var primary_destination := _choose_purifier_orb_target_position()
-	var spacing := maxf(
-		float(purifier_orb_config.get("min_orb_spacing", 96.0)) * 1.20,
-		72.0
-	)
-	var launched := 0
-	var reserved_positions: Array[Vector2] = []
-
-	for orb_index in range(orb_count):
-		var destination := primary_destination
-		if orb_index > 0:
-			var extra_count := maxi(orb_count - 1, 1)
-			var angle := (
-				TAU * float(orb_index - 1) / float(extra_count)
-				+ 0.35
-			)
-			destination = _clamp_purifier_orb_target_position(
-				primary_destination
-				+ Vector2.from_angle(angle)
-				* spacing
-				* (1.0 + 0.12 * float(orb_index - 1))
-			)
-
-		var adjustment_index := 0
-		var needs_adjustment := true
-		while needs_adjustment and adjustment_index < 4:
-			needs_adjustment = false
-			for reserved in reserved_positions:
-				if destination.distance_to(reserved) < spacing * 0.85:
-					needs_adjustment = true
-					break
-			if needs_adjustment:
-				destination = _clamp_purifier_orb_target_position(
-					destination
-					+ Vector2.from_angle(
-						0.85 + float(adjustment_index) * 1.70
-					) * spacing * 0.75
-				)
-				adjustment_index += 1
-
-		reserved_positions.append(destination)
-		if _spawn_purifier_network_orb(destination):
-			launched += 1
-
-	if launched <= 0:
-		return
-
-	purifier_orb_cooldown = (
-		maxf(float(purifier_orb_config.get("cooldown", 10.0)), 0.0)
-		* _get_purifier_skill_cooldown_multiplier()
-	)
-	_ensure_purifier_skill_runtime()
-	_play_purifier_audio(purifier_orb_create_audio)
+	_purifier_archetype()._cast_purifier_orb()
 
 func _get_purifier_orb_component(start_orb: Node2D) -> Array[Node2D]:
-	var component: Array[Node2D] = []
-	if not _is_purifier_orb_active(start_orb):
-		return component
-
-	var link_distance := maxf(
-		float(purifier_orb_config.get("link_distance", 780.0)),
-		1.0
-	)
-	var link_distance_sq := link_distance * link_distance
-	component.append(start_orb)
-	var cursor := 0
-
-	while cursor < component.size():
-		var current := component[cursor]
-		cursor += 1
-		for candidate in purifier_orbs:
-			if (
-				not _is_purifier_orb_active(candidate)
-				or candidate in component
-			):
-				continue
-			if (
-				current.global_position.distance_squared_to(
-					candidate.global_position
-				)
-				<= link_distance_sq
-			):
-				component.append(candidate)
-
-	return component
+	return _purifier_archetype()._get_purifier_orb_component(start_orb)
 
 
 func _purifier_orb_install_index(orb: Node2D) -> int:
-	if (
-		is_instance_valid(orb)
-		and orb.has_method("get_install_index")
-	):
-		return int(orb.call("get_install_index"))
-	return 0
+	return _purifier_archetype()._purifier_orb_install_index(orb)
 
 
 func _sort_purifier_orbs_by_install_order(
 	orbs: Array[Node2D]
 ) -> void:
-	for index in range(1, orbs.size()):
-		var current := orbs[index]
-		var current_order := _purifier_orb_install_index(current)
-		var insert_index := index - 1
-		while (
-			insert_index >= 0
-			and _purifier_orb_install_index(orbs[insert_index])
-			> current_order
-		):
-			orbs[insert_index + 1] = orbs[insert_index]
-			insert_index -= 1
-		orbs[insert_index + 1] = current
+	_purifier_archetype()._sort_purifier_orbs_by_install_order(orbs)
 
 
 func _try_start_purifier_orb_chain_from(orb: Node2D) -> void:
-	if silence_timer > 0.0:
-		return
-	if purifier_orb_chain_active:
-		return
-	var component := _get_purifier_orb_component(orb)
-	if component.size() < 3:
-		return
-	_start_purifier_orb_chain(component)
+	_purifier_archetype()._try_start_purifier_orb_chain_from(orb)
 
 
 func _try_start_any_purifier_orb_chain() -> void:
-	if silence_timer > 0.0:
-		return
-	if purifier_orb_chain_active:
-		return
-	for orb in purifier_orbs:
-		if not _is_purifier_orb_active(orb):
-			continue
-		var component := _get_purifier_orb_component(orb)
-		if component.size() >= 3:
-			_start_purifier_orb_chain(component)
-			return
+	_purifier_archetype()._try_start_any_purifier_orb_chain()
 
 
 func _start_purifier_orb_chain(component: Array[Node2D]) -> void:
-	if silence_timer > 0.0:
-		return
-	if purifier_orb_chain_active or component.size() < 3:
-		return
-
-	_sort_purifier_orbs_by_install_order(component)
-	purifier_orb_chain_queue.clear()
-	for orb in component:
-		if not _is_purifier_orb_active(orb):
-			continue
-		orb.call("reserve_for_chain")
-		purifier_orb_chain_queue.append(orb)
-
-	if purifier_orb_chain_queue.size() < 3:
-		purifier_orb_chain_queue.clear()
-		return
-
-	purifier_orb_chain_active = true
-	purifier_orb_chain_timer = 0.0
-	purifier_orb_chain_step = 0
-	_advance_purifier_orb_chain()
+	_purifier_archetype()._start_purifier_orb_chain(component)
 
 
 func _get_purifier_orb_chain_interval() -> float:
-	var base_interval := maxf(
-		float(purifier_orb_config.get("chain_interval", 1.0)),
-		0.05
-	)
-	return base_interval / maxf(
-		purifier_orb_chain_speed_multiplier,
-		0.05
-	)
+	return _purifier_archetype()._get_purifier_orb_chain_interval()
 
 
 func set_purifier_orb_chain_speed_multiplier(multiplier: float) -> void:
-	purifier_orb_chain_speed_multiplier = maxf(multiplier, 0.05)
+	_purifier_archetype().set_purifier_orb_chain_speed_multiplier(multiplier)
 
 
 func _update_purifier_orb_chain(delta: float) -> void:
-	if not purifier_orb_chain_active:
-		return
-	purifier_orb_chain_timer = maxf(
-		purifier_orb_chain_timer - delta,
-		0.0
-	)
-	if purifier_orb_chain_timer <= 0.0:
-		_advance_purifier_orb_chain()
+	_purifier_archetype()._update_purifier_orb_chain(delta)
 
 
 func _advance_purifier_orb_chain() -> void:
-	if not purifier_orb_chain_active:
-		return
-
-	var orb: Node2D = null
-	while not purifier_orb_chain_queue.is_empty():
-		var candidate := (
-			purifier_orb_chain_queue.pop_front()
-			as Node2D
-		)
-		if _is_purifier_orb_active(candidate):
-			orb = candidate
-			break
-
-	if not is_instance_valid(orb):
-		_finish_purifier_orb_chain()
-		return
-
-	_detonate_purifier_orb(orb, purifier_orb_chain_step)
-	purifier_orb_chain_step += 1
-	orb.call("trigger_explosion")
-	_ensure_purifier_skill_runtime()
-	_play_purifier_audio(purifier_orb_explosion_audio)
-
-	if purifier_orb_chain_queue.is_empty():
-		_finish_purifier_orb_chain()
-	else:
-		purifier_orb_chain_timer = _get_purifier_orb_chain_interval()
+	_purifier_archetype()._advance_purifier_orb_chain()
 
 
 func _finish_purifier_orb_chain() -> void:
-	purifier_orb_chain_active = false
-	purifier_orb_chain_timer = 0.0
-	purifier_orb_chain_step = 0
-	purifier_orb_chain_queue.clear()
-	_try_start_any_purifier_orb_chain()
+	_purifier_archetype()._finish_purifier_orb_chain()
 
 
 func _detonate_purifier_orb(
 	orb: Node2D,
 	chain_index: int
 ) -> void:
-	if not is_instance_valid(orb):
-		return
-
-	var radius := _get_purifier_orb_explosion_radius()
-	var radius_sq := radius * radius
-	var base_ratio := maxf(
-		float(purifier_orb_config.get("base_damage_ratio", 0.80)),
-		0.0
-	) * _get_purifier_orb_damage_multiplier()
-	var growth := maxf(
-		float(purifier_orb_config.get("chain_damage_growth", 0.15)),
-		0.0
-	)
-	var chain_multiplier := 1.0 + growth * float(maxi(chain_index, 0))
-	var raw_damage := maxf(
-		float(attack_damage) * base_ratio * chain_multiplier,
-		1.0
-	)
-	var chain_cleansing_stacks := _get_purifier_augment_stacks("purifier_chain_cleansing")
-	var chain_cleansing_chance := (
-		clampf(
-			0.20 + 0.08 * float(chain_cleansing_stacks - 1),
-			0.0,
-			1.0
-		)
-		if chain_cleansing_stacks > 0
-		else 0.0
-	)
-	var cleansing_proc_positions: Array[Vector2] = []
-
-	for node in _get_monster_nodes_near(orb.global_position, radius):
-		if not HERO_TARGET_POLICY.is_detectable(node):
-			continue
-		var monster := node as Node2D
-		if (
-			monster == null
-			or not monster.has_method("take_damage")
-			or orb.global_position.distance_squared_to(
-				monster.global_position
-			) > radius_sq
-		):
-			continue
-
-		var hit_position := monster.global_position
-		var holy_multiplier := get_purifier_holy_damage_multiplier(monster)
-		var hit_damage := maxi(
-			int(round(raw_damage * holy_multiplier)),
-			1
-		)
-		preload("res://src/systems/monster_hit_context.gd").hit(monster, hit_damage, "ranged", self)
-		if (
-			chain_cleansing_chance > 0.0
-			and randf() <= chain_cleansing_chance
-		):
-			cleansing_proc_positions.append(hit_position)
-
-	_queue_purifier_prism_burst(
-		orb.global_position,
-		raw_damage,
-		radius
-	)
-
-	for proc_position in cleansing_proc_positions:
-		_trigger_purifier_auto_cleansing(proc_position)
+	_purifier_archetype()._detonate_purifier_orb(orb, chain_index)
 
 
 func _queue_purifier_prism_burst(
@@ -11239,726 +5895,87 @@ func _queue_purifier_prism_burst(
 	source_raw_damage: float,
 	source_radius: float
 ) -> void:
-	var prism_stacks := _get_purifier_augment_stacks("purifier_prism_phenomenon")
-	if prism_stacks <= 0:
-		return
-
-	var queue_was_empty := purifier_prism_launch_queue.is_empty()
-	for _index in range(prism_stacks):
-		purifier_prism_launch_queue.append({
-			"origin": origin,
-			"raw_damage": maxf(source_raw_damage * 0.50, 1.0),
-			"radius": maxf(source_radius * 0.50, 1.0),
-		})
-	if queue_was_empty:
-		purifier_prism_launch_timer = 0.0
+	_purifier_archetype()._queue_purifier_prism_burst(origin, source_raw_damage, source_radius)
 
 
 func _choose_purifier_prism_target_position(origin: Vector2) -> Vector2:
-	var search_range := maxf(
-		float(purifier_orb_config.get("throw_range", 820.0)) * 0.50,
-		80.0
-	)
-	var search_range_sq := search_range * search_range
-	var score_radius := maxf(_get_purifier_orb_explosion_radius(), 80.0)
-	_fill_monster_nodes_near(origin, search_range, _combat_monster_scratch)
-
-	var best_position := Vector2.ZERO
-	var best_score := -INF
-	var found := false
-	for raw_node in _combat_monster_scratch:
-		if not is_instance_valid(raw_node) or raw_node.is_queued_for_deletion():
-			continue
-		var monster := raw_node as Node2D
-		if monster == null:
-			continue
-		var distance_sq := origin.distance_squared_to(monster.global_position)
-		if distance_sq > search_range_sq:
-			continue
-		var nearby := _count_monsters_near(monster.global_position, score_radius)
-		var score := (
-			float(nearby) * 10.0
-			- sqrt(distance_sq) / maxf(search_range, 1.0)
-		)
-		if not found or score > best_score:
-			found = true
-			best_score = score
-			best_position = monster.global_position
-	_combat_monster_scratch.clear()
-
-	if not found:
-		var direction := Vector2.RIGHT
-		if is_instance_valid(target) and not target.is_queued_for_deletion():
-			direction = origin.direction_to(target.global_position)
-		if direction.length_squared() <= 0.001:
-			direction = Vector2.from_angle(randf_range(0.0, TAU))
-		best_position = origin + direction.normalized() * minf(180.0, search_range)
-
-	return Vector2(
-		clampf(
-			best_position.x,
-			FIELD_MARGIN,
-			maxf(battlefield_size.x - FIELD_MARGIN, FIELD_MARGIN)
-		),
-		clampf(
-			best_position.y,
-			FIELD_MARGIN,
-			maxf(battlefield_size.y - FIELD_MARGIN, FIELD_MARGIN)
-		)
-	)
+	return _purifier_archetype()._choose_purifier_prism_target_position(origin)
 
 
 func _launch_purifier_prism_orb(job: Dictionary) -> void:
-	var parent := get_parent()
-	if not is_instance_valid(parent):
-		return
-	var orb := PURIFIER_ORB_SCENE.instantiate() as Node2D
-	if orb == null:
-		return
-
-	var origin: Vector2 = job.get("origin", global_position)
-	var destination := _choose_purifier_prism_target_position(origin)
-	parent.add_child(orb)
-	orb.call(
-		"setup",
-		self,
-		origin,
-		destination,
-		maxf(
-			float(purifier_orb_config.get("projectile_speed", 380.0)),
-			1.0
-		),
-		3.0,
-		maxf(float(job.get("radius", 1.0)), 1.0),
-		-1,
-		String(
-			purifier_orb_config.get(
-				"effect_dir",
-				"%s/effect2" % STAGE9_FRAME_DIR
-			)
-		),
-		maxf(
-			float(purifier_orb_config.get("visual_scale", 0.45)) * 0.50,
-			0.05
-		)
-	)
-	purifier_prism_active.append({
-		"orb": orb,
-		"timer": 2.0,
-		"raw_damage": maxf(float(job.get("raw_damage", 1.0)), 1.0),
-		"radius": maxf(float(job.get("radius", 1.0)), 1.0),
-	})
+	_purifier_archetype()._launch_purifier_prism_orb(job)
 
 
 func _detonate_purifier_prism_orb(entry: Dictionary) -> void:
-	var raw_orb = entry.get("orb", null)
-	if not is_instance_valid(raw_orb):
-		return
-	var orb := raw_orb as Node2D
-	if orb == null:
-		return
-
-	var radius := maxf(float(entry.get("radius", 1.0)), 1.0)
-	var radius_sq := radius * radius
-	var raw_damage := maxf(float(entry.get("raw_damage", 1.0)), 1.0)
-	_fill_monster_nodes_near(orb.global_position, radius, _combat_monster_scratch)
-	for raw_node in _combat_monster_scratch:
-		if not is_instance_valid(raw_node) or raw_node.is_queued_for_deletion():
-			continue
-		var monster := raw_node as Node2D
-		if (
-			monster == null
-			or not monster.has_method("take_damage")
-			or orb.global_position.distance_squared_to(monster.global_position) > radius_sq
-		):
-			continue
-		var hit_damage := maxi(
-			int(round(raw_damage * get_purifier_holy_damage_multiplier(monster))),
-			1
-		)
-		preload("res://src/systems/monster_hit_context.gd").hit(monster, hit_damage, "ranged", self)
-	_combat_monster_scratch.clear()
-
-	if orb.has_method("trigger_explosion"):
-		orb.call("trigger_explosion")
-	_ensure_purifier_skill_runtime()
-	_play_purifier_audio(purifier_orb_explosion_audio)
+	_purifier_archetype()._detonate_purifier_prism_orb(entry)
 
 
 func _update_purifier_prism(delta: float) -> void:
-	if not purifier_prism_launch_queue.is_empty():
-		purifier_prism_launch_timer = maxf(
-			purifier_prism_launch_timer - delta,
-			0.0
-		)
-		if purifier_prism_launch_timer <= 0.0:
-			var job: Dictionary = purifier_prism_launch_queue.pop_front()
-			_launch_purifier_prism_orb(job)
-			purifier_prism_launch_timer = 0.32
-
-	for index in range(purifier_prism_active.size() - 1, -1, -1):
-		var entry: Dictionary = purifier_prism_active[index]
-		var raw_orb = entry.get("orb", null)
-		if not is_instance_valid(raw_orb) or raw_orb.is_queued_for_deletion():
-			purifier_prism_active.remove_at(index)
-			continue
-		var timer := float(entry.get("timer", 0.0)) - delta
-		entry["timer"] = timer
-		if timer > 0.0:
-			continue
-		_detonate_purifier_prism_orb(entry)
-		purifier_prism_active.remove_at(index)
+	_purifier_archetype()._update_purifier_prism(delta)
 
 
 func _advance_purifier_cleansing_stack() -> void:
-	var max_stacks := maxi(
-		int(purifier_cleansing_config.get("max_stacks", 100)),
-		1
-	)
-	purifier_cleansing_stacks = mini(
-		purifier_cleansing_stacks + 1,
-		max_stacks
-	)
+	_purifier_archetype()._advance_purifier_cleansing_stack()
 
 
 func _try_purifier_o_lord_heal(total_damage: int) -> void:
-	if silence_timer > 0.0:
-		return
-	var stacks := _get_purifier_augment_stacks("purifier_o_lord")
-	if stacks <= 0 or total_damage <= 0:
-		return
-	var chance := clampf(
-		0.30 + 0.03 * float(stacks - 1),
-		0.0,
-		1.0
-	)
-	if randf() <= chance:
-		heal_direct(total_damage)
+	_purifier_archetype()._try_purifier_o_lord_heal(total_damage)
 
 
 func _apply_purifier_cleansing_centers(centers: Array[Vector2]) -> int:
-	if centers.is_empty():
-		return 0
-	var radius := maxf(
-		float(purifier_cleansing_config.get("radius", 100.0)),
-		1.0
-	)
-	var radius_sq := radius * radius
-	var base_ratio := maxf(
-		float(purifier_cleansing_config.get("base_damage_ratio", 0.80)),
-		0.0
-	)
-	var undead_multiplier := maxf(
-		float(
-			purifier_cleansing_config.get(
-				"undead_damage_multiplier",
-				1.50
-			)
-		),
-		0.0
-	)
-	var raw_damage := maxf(float(attack_damage) * base_ratio, 1.0)
-	var damaged_ids: Dictionary = {}
-	var total_damage := 0
-
-	for center in centers:
-		_spawn_purifier_cleansing_fx(center)
-		for raw_node in _get_monster_nodes_near(center, radius):
-			if not is_instance_valid(raw_node) or raw_node.is_queued_for_deletion():
-				continue
-			var monster := raw_node as Node2D
-			if monster == null or not monster.has_method("take_damage"):
-				continue
-			var instance_id := monster.get_instance_id()
-			if damaged_ids.has(instance_id):
-				continue
-			if center.distance_squared_to(monster.global_position) > radius_sq:
-				continue
-			damaged_ids[instance_id] = true
-			var multiplier := get_purifier_holy_damage_multiplier(monster)
-			if _is_purifier_undead_target(monster):
-				multiplier *= undead_multiplier
-			var hit_damage := maxi(
-				int(round(raw_damage * multiplier)),
-				1
-			)
-			preload("res://src/systems/monster_hit_context.gd").hit(monster, hit_damage, "ranged", self)
-			total_damage += hit_damage
-
-	_try_purifier_o_lord_heal(total_damage)
-	return total_damage
+	return _purifier_archetype()._apply_purifier_cleansing_centers(centers)
 
 
 func _trigger_purifier_auto_cleansing(center: Vector2) -> void:
-	if (
-		hero_archetype != "cleric_purifier"
-		or purifier_cleansing_config.is_empty()
-		or is_dying
-		or current_hp <= 0
-	):
-		return
-	_advance_purifier_cleansing_stack()
-	var centers: Array[Vector2] = []
-	centers.append(center)
-	_apply_purifier_cleansing_centers(centers)
-	_try_unlock_purifier_fourth_skill()
-	queue_redraw()
+	_purifier_archetype()._trigger_purifier_auto_cleansing(center)
 
 func _get_purifier_cleansing_target_count() -> int:
-	var per_target := maxi(
-		int(purifier_cleansing_config.get("casts_per_extra_target", 20)),
-		1
-	)
-	var max_targets := maxi(
-		int(purifier_cleansing_config.get("max_targets", 6)),
-		1
-	)
-	var extra_targets := floori(
-		float(purifier_cleansing_stacks) / float(per_target)
-	)
-	return mini(1 + extra_targets, max_targets)
+	return _purifier_archetype()._get_purifier_cleansing_target_count()
 
 
 func _collect_purifier_cleansing_targets(
 	target_count: int
 ) -> Array[Node2D]:
-	var result: Array[Node2D] = []
-	if target_count <= 0:
-		return result
-
-	if (
-		HERO_TARGET_POLICY.is_detectable(target)
-		and target.is_in_group("monsters")
-	):
-		var hp_value = target.get("current_hp")
-		if hp_value == null or int(hp_value) > 0:
-			result.append(target)
-
-	var search_radius := maxf(ai_sense_radius, attack_range)
-	var candidates := _get_monster_nodes_near(global_position, search_radius)
-	while result.size() < target_count:
-		var best: Node2D = null
-		var best_distance_sq := INF
-		for raw_node in candidates:
-			if not is_instance_valid(raw_node) or raw_node.is_queued_for_deletion():
-				continue
-			var monster := raw_node as Node2D
-			if monster == null or monster in result:
-				continue
-			var hp_value = monster.get("current_hp")
-			if hp_value != null and int(hp_value) <= 0:
-				continue
-			var distance_sq := global_position.distance_squared_to(
-				monster.global_position
-			)
-			if distance_sq < best_distance_sq:
-				best_distance_sq = distance_sq
-				best = monster
-		if best == null:
-			break
-		result.append(best)
-
-	return result
+	return _purifier_archetype()._collect_purifier_cleansing_targets(target_count)
 
 
 func _spawn_purifier_cleansing_fx(world_position: Vector2) -> void:
-	var parent := get_parent()
-	if not is_instance_valid(parent):
-		return
-	var fx := PURIFIER_CLEANSING_FX_SCENE.instantiate() as Node2D
-	if fx == null:
-		return
-	parent.add_child(fx)
-	fx.call(
-		"setup",
-		world_position,
-		String(
-			purifier_cleansing_config.get(
-				"effect_dir",
-				"%s/effect5" % STAGE9_FRAME_DIR
-			)
-		),
-		maxf(
-			float(purifier_cleansing_config.get("visual_scale", 1.0)),
-			0.05
-		),
-		maxf(
-			float(purifier_cleansing_config.get("effect_fps", 12.0)),
-			1.0
-		)
-	)
+	_purifier_archetype()._spawn_purifier_cleansing_fx(world_position)
 
 
 func _try_unlock_purifier_fourth_skill() -> void:
-	var required := maxi(
-		int(purifier_cleansing_config.get("max_stacks", 100)),
-		1
-	)
-	if purifier_cleansing_stacks < required:
-		return
-	var skill_id := String(
-		purifier_cleansing_config.get(
-			"unlock_skill_id",
-			"purifier_fourth_skill"
-		)
-	)
-	if is_conditional_skill_unlocked(skill_id):
-		return
-	_unlock_conditional_skill(
-		skill_id,
-		String(
-			purifier_cleansing_config.get(
-				"unlock_skill_name",
-				"4스킬"
-			)
-		),
-		"purification_cast_count",
-		purifier_cleansing_stacks,
-		required,
-		{
-			"hero_id": hero_id,
-			"archetype": hero_archetype,
-			"source": "purifier_cleansing_stacks",
-			"cutscene_texture_path": String(
-				purifier_cleansing_config.get(
-					"cutscene_texture_path",
-					""
-				)
-			),
-			"cutscene_hold_seconds": float(
-				purifier_cleansing_config.get(
-					"cutscene_hold_seconds",
-					1.05
-				)
-			),
-		}
-	)
+	_purifier_archetype()._try_unlock_purifier_fourth_skill()
 
 
 func _cast_purifier_cleansing() -> void:
-	if silence_timer > 0.0:
-		return
-	if (
-		hero_archetype != "cleric_purifier"
-		or purifier_cleansing_config.is_empty()
-		or purifier_cleansing_cooldown > 0.0
-		or is_dying
-		or current_hp <= 0
-	):
-		return
-
-	var previous_stacks := purifier_cleansing_stacks
-	_advance_purifier_cleansing_stack()
-
-	var targets := _collect_purifier_cleansing_targets(
-		_get_purifier_cleansing_target_count()
-	)
-	if targets.is_empty():
-		purifier_cleansing_stacks = previous_stacks
-		return
-
-	var centers: Array[Vector2] = []
-	for cast_target in targets:
-		if is_instance_valid(cast_target):
-			centers.append(cast_target.global_position)
-
-	if centers.is_empty():
-		purifier_cleansing_stacks = previous_stacks
-		return
-
-	_apply_purifier_cleansing_centers(centers)
-	purifier_cleansing_cooldown = (
-		maxf(float(purifier_cleansing_config.get("cooldown", 3.0)), 0.0)
-		* _get_purifier_skill_cooldown_multiplier()
-	)
-	_ensure_purifier_skill_runtime()
-	_play_purifier_audio(purifier_cleansing_audio)
-	_try_unlock_purifier_fourth_skill()
-	queue_redraw()
+	_purifier_archetype()._cast_purifier_cleansing()
 
 func _choose_purifier_gungnir_direction() -> Vector2:
-	if purifier_gungnir_config.is_empty():
-		return Vector2.ZERO
-
-	var flight_distance := maxf(
-		float(purifier_gungnir_config.get("flight_distance", 1500.0)),
-		1.0
-	)
-	var capture_radius := maxf(
-		float(purifier_gungnir_config.get("capture_diameter", 300.0)) * 0.5,
-		1.0
-	)
-	var sample_count := maxi(
-		int(purifier_gungnir_config.get("direction_samples", 24)),
-		8
-	)
-	var search_radius := flight_distance + capture_radius
-	_fill_monster_nodes_near(
-		global_position,
-		search_radius,
-		_combat_monster_scratch
-	)
-
-	var best_direction := Vector2.ZERO
-	var best_score := -INF
-	var best_count := 0
-
-	for sample_index in range(sample_count):
-		var angle := TAU * float(sample_index) / float(sample_count)
-		var candidate_direction := Vector2.from_angle(angle)
-		var hit_count := 0
-		var density_score := 0.0
-		var distance_score := 0.0
-
-		for raw_node in _combat_monster_scratch:
-			if not is_instance_valid(raw_node) or raw_node.is_queued_for_deletion():
-				continue
-			var monster := raw_node as Node2D
-			if monster == null or not monster.is_in_group("monsters"):
-				continue
-			var hp_value = monster.get("current_hp")
-			if hp_value != null and int(hp_value) <= 0:
-				continue
-
-			var offset := monster.global_position - global_position
-			var forward := offset.dot(candidate_direction)
-			if forward < 0.0 or forward > flight_distance:
-				continue
-			var lateral := absf(candidate_direction.cross(offset))
-			if lateral > capture_radius:
-				continue
-
-			hit_count += 1
-			density_score += 1.0 - clampf(
-				lateral / capture_radius,
-				0.0,
-				1.0
-			)
-			distance_score += 1.0 - clampf(
-				forward / flight_distance,
-				0.0,
-				1.0
-			)
-
-		var score := (
-			float(hit_count) * 1000.0
-			+ density_score * 20.0
-			+ distance_score * 2.0
-		)
-		if hit_count > best_count or (
-			hit_count == best_count and score > best_score
-		):
-			best_count = hit_count
-			best_score = score
-			best_direction = candidate_direction
-
-	_combat_monster_scratch.clear()
-	if best_count <= 0:
-		return Vector2.ZERO
-	return best_direction.normalized()
+	return _purifier_archetype()._choose_purifier_gungnir_direction()
 
 
 func _try_start_purifier_gungnir() -> bool:
-	if silence_timer > 0.0:
-		return false
-	if (
-		hero_archetype != "cleric_purifier"
-		or purifier_gungnir_config.is_empty()
-		or purifier_gungnir_casting
-		or purifier_gungnir_cooldown > 0.0
-		or is_dying
-		or current_hp <= 0
-	):
-		return false
-
-	var unlock_skill_id := String(
-		purifier_gungnir_config.get(
-			"unlock_skill_id",
-			"purifier_fourth_skill"
-		)
-	)
-	if not is_conditional_skill_unlocked(unlock_skill_id):
-		return false
-
-	var fire_direction := _choose_purifier_gungnir_direction()
-	if fire_direction.length_squared() <= 0.001:
-		return false
-
-	var parent := get_parent()
-	if not is_instance_valid(parent):
-		return false
-	var gungnir := PURIFIER_GUNGNIR_SCENE.instantiate() as Node2D
-	if gungnir == null:
-		return false
-
-	parent.add_child(gungnir)
-	gungnir.connect(
-		"launched",
-		Callable(self, "_on_purifier_gungnir_launched")
-	)
-	gungnir.connect(
-		"impacted",
-		Callable(self, "_on_purifier_gungnir_impacted")
-	)
-	gungnir.connect(
-		"finished",
-		Callable(self, "_on_purifier_gungnir_finished").bind(gungnir)
-	)
-
-	purifier_gungnir_instance = gungnir
-	purifier_gungnir_direction = fire_direction
-	purifier_gungnir_casting = true
-	purifier_gungnir_cooldown = (
-		maxf(float(purifier_gungnir_config.get("cooldown", 5.0)), 0.0)
-		* _get_purifier_skill_cooldown_multiplier()
-	)
-
-	if absf(fire_direction.x) > 0.05 and is_instance_valid(hero_sprite):
-		hero_sprite.flip_h = fire_direction.x < 0.0
-	velocity = Vector2.ZERO
-	_ensure_purifier_skill_runtime()
-	_play_purifier_audio(purifier_gungnir_charge_audio)
-	gungnir.call(
-		"setup",
-		self,
-		fire_direction,
-		purifier_gungnir_config
-	)
-	return true
+	return _purifier_archetype()._try_start_purifier_gungnir()
 
 
 func _on_purifier_gungnir_launched() -> void:
-	purifier_gungnir_casting = false
-	if is_instance_valid(purifier_gungnir_charge_audio):
-		purifier_gungnir_charge_audio.stop()
-	_ensure_purifier_skill_runtime()
-	_play_purifier_audio(purifier_gungnir_flight_audio)
+	_purifier_archetype()._on_purifier_gungnir_launched()
 
 
 func _on_purifier_gungnir_impacted() -> void:
-	if is_instance_valid(purifier_gungnir_flight_audio):
-		purifier_gungnir_flight_audio.stop()
-	_ensure_purifier_skill_runtime()
-	_play_purifier_audio(purifier_gungnir_explosion_audio)
+	_purifier_archetype()._on_purifier_gungnir_impacted()
 
 
 func _on_purifier_gungnir_finished(instance: Node2D) -> void:
-	if is_instance_valid(purifier_gungnir_charge_audio):
-		purifier_gungnir_charge_audio.stop()
-	if is_instance_valid(purifier_gungnir_flight_audio):
-		purifier_gungnir_flight_audio.stop()
-	if purifier_gungnir_instance == instance:
-		purifier_gungnir_instance = null
-	purifier_gungnir_casting = false
+	_purifier_archetype()._on_purifier_gungnir_finished(instance)
 
 
 func _update_purifier_gauge(delta: float) -> void:
-	if (
-		hero_archetype != "cleric_purifier"
-		or purifier_gauge_config.is_empty()
-		or is_dying
-		or current_hp <= 0
-	):
-		return
-
-	purifier_protection_cooldown = maxf(
-		purifier_protection_cooldown - delta,
-		0.0
-	)
-	purifier_crown_cooldown = maxf(purifier_crown_cooldown - delta, 0.0)
-	purifier_orb_cooldown = maxf(purifier_orb_cooldown - delta, 0.0)
-	purifier_cleansing_cooldown = maxf(
-		purifier_cleansing_cooldown - delta,
-		0.0
-	)
-	purifier_gungnir_cooldown = maxf(
-		purifier_gungnir_cooldown - delta,
-		0.0
-	)
-	purifier_broken_sanctuary_timer = maxf(
-		purifier_broken_sanctuary_timer - delta,
-		0.0
-	)
-	_update_purifier_orb_chain(delta)
-	_update_purifier_prism(delta)
-
-	if purifier_protection_active:
-		purifier_protection_duration_timer = maxf(
-			purifier_protection_duration_timer - delta,
-			0.0
-		)
-		purifier_protection_tick_timer -= delta
-		if purifier_protection_duration_timer <= 0.0:
-			_end_purifier_protection(false)
-		else:
-			var tick_interval := maxf(
-				float(purifier_protection_config.get("shield_tick_interval", 1.0)),
-				0.05
-			)
-			while purifier_protection_tick_timer <= 0.0:
-				_add_purifier_shield_layer()
-				purifier_protection_tick_timer += tick_interval
-
-	if purifier_crown_stacks > 0:
-		purifier_crown_duration_timer = maxf(
-			purifier_crown_duration_timer - delta,
-			0.0
-		)
-		purifier_crown_heal_timer -= delta
-		if purifier_crown_duration_timer <= 0.0:
-			_expire_purifier_crown()
-		elif purifier_crown_heal_timer <= 0.0:
-			heal_direct(
-				maxi(
-					int(round(
-						float(
-							int(
-								purifier_crown_config.get(
-									"heal_per_stack",
-									20
-								)
-							)
-						)
-						* float(purifier_crown_stacks)
-						* _get_purifier_crown_effect_multiplier()
-					)),
-					1
-				)
-			)
-			purifier_crown_heal_timer += maxf(
-				float(purifier_crown_config.get("heal_interval", 5.0)),
-				0.1
-			)
-
-	if purifier_gungnir_casting:
-		_try_activate_purifier_protection()
-		return
-	if _try_start_purifier_gungnir():
-		_try_activate_purifier_protection()
-		return
-	if purifier_crown_cooldown <= 0.0:
-		_cast_purifier_crown()
-	if purifier_orb_cooldown <= 0.0:
-		_cast_purifier_orb()
-	if purifier_cleansing_cooldown <= 0.0:
-		_cast_purifier_cleansing()
-	_try_activate_purifier_protection()
+	_purifier_archetype()._update_purifier_gauge(delta)
 
 
 func _add_purifier_gauge(amount: float) -> void:
-	if (
-		amount <= 0.0
-		or hero_archetype != "cleric_purifier"
-		or purifier_gauge_config.is_empty()
-		or is_dying
-	):
-		return
-	var gauge_max := maxf(
-		float(purifier_gauge_config.get("charge_max", 100.0)),
-		1.0
-	)
-	ultimate_charge = minf(ultimate_charge + amount, gauge_max)
-	queue_redraw()
+	_purifier_archetype()._add_purifier_gauge(amount)
 
 
 func _update_ultimate(delta: float) -> void:
@@ -12536,388 +6553,35 @@ func _append_skill_cooldown_hud(
 
 
 func _append_sage_skill1_hud(skills: Array) -> void:
-	var raw_skill = sage_config.get("skill_1", {})
-	if typeof(raw_skill) != TYPE_DICTIONARY:
-		return
-	var skill: Dictionary = raw_skill
-	if skill.is_empty():
-		return
-
-	var cooldown_total := maxf(float(skill.get("cooldown", 25.0)), 0.0)
-	var cooldown_remaining := maxf(sage_skill1_cooldown_timer, 0.0)
-	var gauge_cost := maxf(float(skill.get("gauge_cost", 35.0)), 0.0)
-	var gauge_max := maxf(float(sage_config.get("gauge_max", 100.0)), 1.0)
-	var gauge_current := clampf(ultimate_charge, 0.0, gauge_max)
-	var has_gauge := gauge_current + 0.001 >= gauge_cost
-	var cooldown_ready := cooldown_remaining <= 0.01
-	var ready := cooldown_ready and has_gauge
-
-	var status := "사용 가능"
-	if not cooldown_ready:
-		status = "재사용 대기 중"
-	elif not has_gauge:
-		status = "게이지 부족"
-
-	skills.append({
-		"id": String(skill.get("id", "freezing_point_explosion")),
-		"name": String(skill.get("name", "빙점폭발")),
-		"description": _skill_hud_description(skill),
-		"resource_text": "게이지 %.0f" % gauge_cost,
-		"progress_text": "게이지 %.0f / %.0f" % [gauge_current, gauge_max],
-		"status_text": status,
-		"available": ready,
-		"cooldown_total": cooldown_total,
-		"cooldown_remaining": cooldown_remaining,
-		"icon_path": "res://assets/art/heroes/stage10_sage/frames/effect1/ice_04.png",
-	})
+	_sage_archetype()._append_sage_skill1_hud(skills)
 
 
 func _append_sage_skill2_hud(skills: Array) -> void:
-	var raw_skill = sage_config.get("skill_2", {})
-	if typeof(raw_skill) != TYPE_DICTIONARY:
-		return
-	var skill: Dictionary = raw_skill
-	if skill.is_empty():
-		return
-
-	var cooldown_total := maxf(float(skill.get("cooldown", 45.0)), 0.0)
-	var cooldown_remaining := maxf(sage_skill2_cooldown_timer, 0.0)
-	var gauge_cost := maxf(float(skill.get("gauge_cost", 40.0)), 0.0)
-	var gauge_max := maxf(float(sage_config.get("gauge_max", 100.0)), 1.0)
-	var gauge_current := clampf(ultimate_charge, 0.0, gauge_max)
-	var has_gauge := gauge_current + 0.001 >= gauge_cost
-	var launching := sage_radiance_launch_remaining > 0
-	var ready := cooldown_remaining <= 0.01 and has_gauge and not launching
-
-	var status := "사용 가능"
-	if launching:
-		status = "광휘구체 방출 중"
-	elif cooldown_remaining > 0.01:
-		status = "재사용 대기 중"
-	elif not has_gauge:
-		status = "게이지 부족"
-
-	skills.append({
-		"id": String(skill.get("id", "radiance_singularity")),
-		"name": String(skill.get("name", "광휘의 특이점")),
-		"description": _skill_hud_description(skill),
-		"resource_text": "게이지 %.0f" % gauge_cost,
-		"progress_text": "게이지 %.0f / %.0f" % [gauge_current, gauge_max],
-		"status_text": status,
-		"available": ready,
-		"cooldown_total": cooldown_total,
-		"cooldown_remaining": cooldown_remaining,
-		"icon_path": "res://assets/art/heroes/stage10_sage/frames/effect3/starburst_04.png",
-	})
+	_sage_archetype()._append_sage_skill2_hud(skills)
 
 
 func _append_sage_skill3_hud(skills: Array) -> void:
-	var raw_skill = sage_config.get("skill_3", {})
-	if typeof(raw_skill) != TYPE_DICTIONARY:
-		return
-	var skill: Dictionary = raw_skill
-	if skill.is_empty():
-		return
-
-	var cooldown_total := maxf(float(skill.get("cooldown", 13.0)), 0.0)
-	var cooldown_remaining := maxf(sage_skill3_cooldown_timer, 0.0)
-	var gauge_cost := maxf(float(skill.get("gauge_cost", 20.0)), 0.0)
-	var gauge_max := maxf(float(sage_config.get("gauge_max", 100.0)), 1.0)
-	var gauge_current := clampf(ultimate_charge, 0.0, gauge_max)
-	var has_gauge := gauge_current + 0.001 >= gauge_cost
-	var cooldown_ready := cooldown_remaining <= 0.01
-	var ready := cooldown_ready and has_gauge
-	var max_stacks := maxi(int(skill.get("max_stacks", 8)), 1)
-	var required_completions := maxi(
-		int(skill.get("unlock_completion_count", 2)),
-		1
-	)
-	var unlocked := (
-		is_conditional_skill_unlocked("sage_skill_5")
-		and is_conditional_skill_unlocked("sage_skill_6")
-	)
-
-	var status := "사용 가능"
-	if cooldown_remaining > 0.01:
-		status = "재사용 대기 중"
-	elif not has_gauge:
-		status = "게이지 부족"
-	elif sage_condensation_stacks >= max_stacks:
-		status = "8스택 소모 가능"
-	if unlocked:
-		status += " · 스킬 5·6 해금 완료"
-
-	var progress := "마력응축 (%d/%d) · 완성 %d/%d" % [
-		sage_condensation_stacks,
-		max_stacks,
-		mini(sage_condensation_completion_count, required_completions),
-		required_completions,
-	]
-	var cooldown_reduction_percent := (
-		_get_sage_condensation_cooldown_reduction() * 100.0
-	)
-	if cooldown_reduction_percent > 0.01:
-		progress += " · 스킬 쿨감 +%.0f%%" % cooldown_reduction_percent
-	if sage_condensation_skill_damage_buff_timer > 0.0:
-		progress += " · 스킬피해 +30%% %.1f초" % (
-			sage_condensation_skill_damage_buff_timer
-		)
-
-	skills.append({
-		"id": String(skill.get("id", "mana_condensation")),
-		"name": String(skill.get("name", "마력응축")),
-		"description": _skill_hud_description(skill),
-		"resource_text": "게이지 %.0f" % gauge_cost,
-		"progress_text": progress,
-		"status_text": status,
-		"available": ready,
-		"cooldown_total": cooldown_total,
-		"cooldown_remaining": cooldown_remaining,
-		"icon_path": "res://assets/art/heroes/stage10_sage/frames/effect4/summon_08.png",
-	})
+	_sage_archetype()._append_sage_skill3_hud(skills)
 
 
 func _append_sage_skill4_hud(skills: Array) -> void:
-	var raw_skill = sage_config.get("skill_4", {})
-	if typeof(raw_skill) != TYPE_DICTIONARY:
-		return
-	var skill: Dictionary = raw_skill
-	if skill.is_empty():
-		return
-
-	var cooldown_total := maxf(float(skill.get("cooldown", 60.0)), 0.0)
-	var cooldown_remaining := maxf(sage_skill4_cooldown_timer, 0.0)
-	var gauge_cost := maxf(float(skill.get("gauge_cost", 70.0)), 0.0)
-	var gauge_max := maxf(float(sage_config.get("gauge_max", 100.0)), 1.0)
-	var gauge_current := clampf(ultimate_charge, 0.0, gauge_max)
-	var has_gauge := gauge_current + 0.001 >= gauge_cost
-	var active := sage_starlight_remaining > 0.0
-	var ready := cooldown_remaining <= 0.01 and has_gauge and not active
-
-	var status := "사용 가능"
-	if active:
-		status = "스타라이트 전개 중"
-	elif cooldown_remaining > 0.01:
-		status = "재사용 대기 중"
-	elif not has_gauge:
-		status = "게이지 부족"
-
-	var progress := "게이지 %.0f / %.0f" % [gauge_current, gauge_max]
-	if active:
-		progress += " · 남은 시간 %.1f초" % sage_starlight_remaining
-
-	skills.append({
-		"id": String(skill.get("id", "starlight")),
-		"name": String(skill.get("name", "스타라이트")),
-		"description": _skill_hud_description(skill),
-		"resource_text": "게이지 %.0f" % gauge_cost,
-		"progress_text": progress,
-		"status_text": status,
-		"available": ready,
-		"cooldown_total": cooldown_total,
-		"cooldown_remaining": cooldown_remaining,
-		"icon_path": "res://assets/art/heroes/stage10_sage/frames/effect7/stage10_effect2_01.png",
-	})
+	_sage_archetype()._append_sage_skill4_hud(skills)
 
 
 func _append_sage_skill5_hud(skills: Array) -> void:
-	var raw_skill = sage_config.get("skill_5", {})
-	if typeof(raw_skill) != TYPE_DICTIONARY:
-		return
-	var skill: Dictionary = raw_skill
-	if skill.is_empty():
-		return
-
-	var unlocked := is_conditional_skill_unlocked("sage_skill_5")
-	var cooldown_total := maxf(float(skill.get("cooldown", 60.0)), 0.0)
-	var cooldown_remaining := maxf(sage_skill5_cooldown_timer, 0.0)
-	var gauge_cost := maxf(float(skill.get("gauge_cost", 100.0)), 0.0)
-	var gauge_max := maxf(float(sage_config.get("gauge_max", 100.0)), 1.0)
-	var gauge_current := clampf(ultimate_charge, 0.0, gauge_max)
-	var has_gauge := gauge_current + 0.001 >= gauge_cost
-	var ready := unlocked and cooldown_remaining <= 0.01 and has_gauge
-
-	var status := "사용 가능"
-	if not unlocked:
-		status = "해금 조건 대기"
-	elif cooldown_remaining > 0.01:
-		status = "재사용 대기 중"
-	elif not has_gauge:
-		status = "게이지 부족"
-
-	var progress := "게이지 %.0f / %.0f" % [gauge_current, gauge_max]
-	if not unlocked:
-		var skill3_value = sage_config.get("skill_3", {})
-		var skill3: Dictionary = (
-			skill3_value
-			if typeof(skill3_value) == TYPE_DICTIONARY
-			else {}
-		)
-		var required_completions := maxi(
-			int(skill3.get("unlock_completion_count", 2)),
-			1
-		)
-		progress = "마력응축 완성 %d/%d · 스킬 5 해금 조건" % [
-			mini(sage_condensation_completion_count, required_completions),
-			required_completions,
-		]
-
-	skills.append({
-		"id": String(skill.get("id", "annihilation")),
-		"name": String(skill.get("name", "소멸")),
-		"description": _skill_hud_description(skill),
-		"resource_text": "게이지 %.0f" % gauge_cost,
-		"progress_text": progress,
-		"status_text": status,
-		"available": ready,
-		"cooldown_total": cooldown_total,
-		"cooldown_remaining": cooldown_remaining,
-		"icon_path": "res://assets/art/heroes/stage10_sage/frames/effect8/stage10_effect3_05.png",
-	})
+	_sage_archetype()._append_sage_skill5_hud(skills)
 
 
 func _append_sage_skill6_hud(skills: Array) -> void:
-	var raw_skill = sage_config.get("skill_6", {})
-	if typeof(raw_skill) != TYPE_DICTIONARY:
-		return
-	var skill: Dictionary = raw_skill
-	if skill.is_empty():
-		return
-
-	var unlocked := is_conditional_skill_unlocked("sage_skill_6")
-	var skill3_value = sage_config.get("skill_3", {})
-	var skill3: Dictionary = (
-		skill3_value
-		if typeof(skill3_value) == TYPE_DICTIONARY
-		else {}
-	)
-	var required_completions := maxi(
-		int(skill3.get("unlock_completion_count", 2)),
-		1
-	)
-	var progress := (
-		"스킬 피해 +%.0f%% · 적중 시 %.0f%% 발동"
-		% [
-			maxf(
-				float(skill.get("skill_damage_bonus_ratio", 0.10)),
-				0.0
-			) * 100.0,
-			clampf(
-				float(skill.get("trigger_chance", 0.50)),
-				0.0,
-				1.0
-			) * 100.0,
-		]
-		if unlocked
-		else "마력응축 완성 %d/%d · 스킬 6 해금 조건" % [
-			mini(
-				sage_condensation_completion_count,
-				required_completions
-			),
-			required_completions,
-		]
-	)
-
-	skills.append({
-		"id": String(skill.get("id", "black_spot_explosion")),
-		"name": String(skill.get("name", "흑점폭발")),
-		"description": _skill_hud_description(skill),
-		"resource_text": "패시브",
-		"progress_text": progress,
-		"status_text": "패시브 활성" if unlocked else "해금 조건 대기",
-		"available": unlocked,
-		"cooldown_total": 0.0,
-		"cooldown_remaining": 0.0,
-		"icon_path": "res://assets/art/heroes/stage10_sage/frames/effect9/stage10_effect4_04.png",
-	})
+	_sage_archetype()._append_sage_skill6_hud(skills)
 
 
 func _append_purifier_cleansing_hud(skills: Array) -> void:
-	if purifier_cleansing_config.is_empty():
-		return
-	var cooldown_total := (
-		maxf(float(purifier_cleansing_config.get("cooldown", 3.0)), 0.0)
-		* _get_purifier_skill_cooldown_multiplier()
-	)
-	var cooldown_remaining := maxf(purifier_cleansing_cooldown, 0.0)
-	var max_stacks := maxi(
-		int(purifier_cleansing_config.get("max_stacks", 100)),
-		1
-	)
-	skills.append({
-		"id": String(purifier_cleansing_config.get("id", "purifier_cleansing")),
-		"name": String(purifier_cleansing_config.get("name", "정화")),
-		"description": _skill_hud_description(purifier_cleansing_config),
-		"progress_text": (
-			"정화 스택 %d / %d · 대상 수 %d"
-			% [
-				purifier_cleansing_stacks,
-				max_stacks,
-				_get_purifier_cleansing_target_count(),
-			]
-		),
-		"status_text": (
-			"재사용 대기 중"
-			if cooldown_remaining > 0.01
-			else "사용 가능"
-		),
-		"available": cooldown_remaining <= 0.01,
-		"cooldown_total": cooldown_total,
-		"cooldown_remaining": cooldown_remaining,
-		"icon_path": "res://assets/art/heroes/stage9_prist/frames/effect5/effect_30.png",
-	})
+	_purifier_archetype()._append_purifier_cleansing_hud(skills)
 
 
 func _append_purifier_gungnir_hud(skills: Array) -> void:
-	if purifier_gungnir_config.is_empty():
-		return
-	var required := maxi(
-		int(purifier_gungnir_config.get("required_cleansing_stacks", 100)),
-		1
-	)
-	var unlock_skill_id := String(
-		purifier_gungnir_config.get(
-			"unlock_skill_id",
-			"purifier_fourth_skill"
-		)
-	)
-	var unlocked := is_conditional_skill_unlocked(unlock_skill_id)
-	var cooldown_total := (
-		maxf(float(purifier_gungnir_config.get("cooldown", 5.0)), 0.0)
-		* _get_purifier_skill_cooldown_multiplier()
-	)
-	var cooldown_remaining := maxf(purifier_gungnir_cooldown, 0.0)
-	var status := "해금 조건 대기"
-	if unlocked:
-		if purifier_gungnir_casting:
-			status = "시전 중"
-		elif cooldown_remaining > 0.01:
-			status = "재사용 대기 중"
-		else:
-			status = "사용 가능"
-
-	skills.append({
-		"id": String(purifier_gungnir_config.get("id", "purifier_gungnir")),
-		"name": String(purifier_gungnir_config.get("name", "궁그닐")),
-		"description": _skill_hud_description(purifier_gungnir_config),
-		"progress_text": (
-			"정화 %d / %d · 해금 조건"
-			% [mini(purifier_cleansing_stacks, required), required]
-		),
-		"status_text": status,
-		"available": (
-			unlocked
-			and not purifier_gungnir_casting
-			and cooldown_remaining <= 0.01
-		),
-		"cooldown_total": cooldown_total,
-		"cooldown_remaining": (
-			cooldown_remaining
-			if unlocked
-			else cooldown_total
-		),
-		"icon_path": "res://assets/art/heroes/stage9_prist/frames/effect6/frame_05.png",
-	})
+	_purifier_archetype()._append_purifier_gungnir_hud(skills)
 
 
 func _append_summoner_open_gate_hud(skills: Array) -> void:
@@ -12925,68 +6589,7 @@ func _append_summoner_open_gate_hud(skills: Array) -> void:
 
 
 func _append_alchemist_philosopher_hud(skills: Array) -> void:
-	if alchemist_philosopher_config.is_empty():
-		return
-	var required := maxi(
-		int(alchemist_philosopher_config.get("required_materials", 20)),
-		1
-	)
-	var gas_cost := maxf(
-		float(alchemist_philosopher_config.get("gas_cost", 100.0)),
-		0.0
-	)
-	var skill_id := String(alchemist_philosopher_config.get(
-		"id",
-		"alchemist_philosopher_stone"
-	))
-	var unlocked := is_conditional_skill_unlocked(skill_id)
-	var ready := (
-		unlocked
-		and not alchemist_philosopher_unlock_pending
-		and alchemist_philosopher_unlock_grace_timer <= 0.0
-		and not alchemist_philosopher_used
-		and not alchemist_philosopher_channeling
-		and not alchemist_transformed
-		and alchemist_materials_collected >= required
-		and alchemist_gas + 0.001 >= gas_cost
-	)
-	var status := "해금 조건 대기"
-	if alchemist_philosopher_unlock_pending:
-		status = "현자의 돌 해금 중"
-	elif alchemist_philosopher_channeling:
-		status = "채널링 중"
-	elif alchemist_transformed:
-		status = "사용 완료 · 현자의 돌 활성화"
-	elif alchemist_philosopher_used:
-		status = "사용 완료"
-	elif ready:
-		status = "사용 가능"
-	elif unlocked:
-		status = "사용 준비 중"
-
-	skills.append({
-		"id": String(alchemist_philosopher_config.get(
-			"id",
-			"alchemist_philosopher_stone"
-		)),
-		"name": String(alchemist_philosopher_config.get(
-			"name",
-			"현자의 돌"
-		)),
-		"description": _skill_hud_description(alchemist_philosopher_config),
-		"resource_text": "화학가스 %.0f · 전투당 1회" % gas_cost,
-		"progress_text": "연금술 재료 %d / %d · 현재 가스 %.0f / %.0f" % [
-			mini(alchemist_materials_collected, required),
-			required,
-			alchemist_gas,
-			alchemist_gas_max,
-		],
-		"status_text": status,
-		"available": ready,
-		"cooldown_total": 0.0,
-		"cooldown_remaining": 0.0,
-		"icon_path": "res://assets/art/heroes/stage7_alchemist/frames/effect7/cast_04.png",
-	})
+	_alchemist_archetype()._append_alchemist_philosopher_hud(skills)
 
 
 func _append_berserker_skill_cooldown_hud(
@@ -13003,27 +6606,7 @@ func _append_archmage_skill_hud(
 	skill_key: String,
 	icon_path: String
 ) -> void:
-	var config: Dictionary = archmage_skill_config.get(skill_key, {})
-	if config.is_empty():
-		return
-	var cooldown_total := maxf(float(config.get("cooldown", 0.0)), 0.0)
-	if cooldown_total <= 0.0:
-		return
-	var current_remaining := maxf(
-		float(archmage_skill_cooldowns.get(skill_key, 0.0)),
-		0.0
-	)
-	skills.append({
-		"id": String(config.get("id", skill_key)),
-		"name": String(config.get("name", skill_key)),
-		"description": _skill_hud_description(config),
-		"resource_text": _skill_hud_resource_text(config),
-		"status_text": "재사용 대기 중" if current_remaining > 0.01 else "사용 가능",
-		"available": current_remaining <= 0.01,
-		"cooldown_total": cooldown_total,
-		"cooldown_remaining": current_remaining,
-		"icon_path": icon_path,
-	})
+	_archmage_archetype()._append_archmage_skill_hud(skills, skill_key, icon_path)
 
 
 func _append_gunner_cooldown_hud(
@@ -13553,17 +7136,7 @@ func _apply_augment(augment: Dictionary) -> void:
 		_dispatch_augment_stack_hook(augment_id)
 
 func _on_purifier_augment_stack_changed(augment_id: String) -> void:
-	if hero_archetype != "cleric_purifier":
-		return
-	if augment_id == "purifier_pilgrims_path":
-		_refresh_purifier_orb_links()
-	elif augment_id == "purifier_book_of_purification":
-		var effective_radius := _get_purifier_orb_explosion_radius()
-		for orb in purifier_orbs:
-			if not is_instance_valid(orb) or orb.is_queued_for_deletion():
-				continue
-			orb.set("blast_radius", effective_radius)
-			orb.queue_redraw()
+	_purifier_archetype()._on_purifier_augment_stack_changed(augment_id)
 
 
 func _apply_augment_effect(effect: Dictionary) -> void:
@@ -14747,7 +8320,7 @@ func _run_berserker_skill2_wave(
 	start_direction: Vector2,
 	skill_config: Dictionary
 ) -> void:
-	_berserker_archetype()._run_berserker_skill2_wave(start_position, start_direction, skill_config)
+	await _berserker_archetype()._run_berserker_skill2_wave(start_position, start_direction, skill_config)
 
 
 func _damage_berserker_skill2_segment(
@@ -14777,7 +8350,7 @@ func _execute_berserker_skill3(
 	dash_direction: Vector2,
 	skill_config: Dictionary
 ) -> void:
-	_berserker_archetype()._execute_berserker_skill3(dash_direction, skill_config)
+	await _berserker_archetype()._execute_berserker_skill3(dash_direction, skill_config)
 
 
 func _spawn_berserker_blood_orb(
@@ -14850,7 +8423,7 @@ func _update_berserker_hp_visual() -> void:
 
 
 func _begin_berserker_revive() -> void:
-	_berserker_archetype()._begin_berserker_revive()
+	await _berserker_archetype()._begin_berserker_revive()
 
 func _finish_berserker_revive() -> void:
 	_berserker_archetype()._finish_berserker_revive()
@@ -15704,3 +9277,27 @@ func _summoner_archetype():
 	if _summoner_archetype_runtime == null:
 		_summoner_archetype_runtime = HERO_SUMMONER_ARCHETYPE.new(self)
 	return _summoner_archetype_runtime
+
+
+func _alchemist_archetype():
+	if _alchemist_archetype_runtime == null:
+		_alchemist_archetype_runtime = HERO_ALCHEMIST_ARCHETYPE.new(self)
+	return _alchemist_archetype_runtime
+
+
+func _purifier_archetype():
+	if _purifier_archetype_runtime == null:
+		_purifier_archetype_runtime = HERO_PURIFIER_ARCHETYPE.new(self)
+	return _purifier_archetype_runtime
+
+
+func _archmage_archetype():
+	if _archmage_archetype_runtime == null:
+		_archmage_archetype_runtime = HERO_ARCHMAGE_ARCHETYPE.new(self)
+	return _archmage_archetype_runtime
+
+
+func _sage_archetype():
+	if _sage_archetype_runtime == null:
+		_sage_archetype_runtime = HERO_SAGE_ARCHETYPE.new(self)
+	return _sage_archetype_runtime

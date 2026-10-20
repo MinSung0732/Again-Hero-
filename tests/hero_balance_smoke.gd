@@ -233,7 +233,7 @@ func _test_swarm_response(hero:String)->void:
  # Gauge estimate excludes casting/movement/misses/refunds; not measured combat frequency.
  var generation:=float(a.gauge_per_second)+float(a.gauge_per_basic_attack)/float(p.attack_cooldown)
  check(100.0/generation<14.0 and 100.0/generation>13.0,"sustained basic casts generate one gauge in about13.7s")
- var gauge=shell("extends Node\nvar hero_archetype='archmage_elementalist'\nvar archmage_skill_config={}\nvar ultimate_charge=0.0\nfunc queue_redraw():pass\n"+function_source(hero,"_add_archmage_gauge")).new()
+ var gauge=shell("extends Node\nvar hero_archetype='archmage_elementalist'\nvar archmage_skill_config={}\nvar ultimate_charge=0.0\nfunc queue_redraw():pass\n"+function_source(FileAccess.get_file_as_string("res://src/hero/archetypes/hero_archmage_archetype.gd"),"_add_archmage_gauge").replace("hero.","")).new()
  gauge.archmage_skill_config=a
  gauge._add_archmage_gauge(3.5)
  check(is_equal_approx(gauge.ultimate_charge,3.5),"actual gauge function accepts restored regeneration")

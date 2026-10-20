@@ -1,3 +1,10 @@
+## 2026-10-20 — hero.gd 직업 분리 3단계: 연금술사·정화사·대마법사·대현자(완료)
+
+- 연금술사59/정화사76/대마법사46/대현자46 함수(총227개, 6,974줄)를 `src/hero/archetypes/hero_{alchemist,purifier,archmage,sage}_archetype.gd`로 이동. hero.gd 15,706→9,303줄(오늘 시작 20,850줄 대비 -55%). 9개 직업 전부 분리 완료.
+- 변환기에 지역 변수 가림 범위 검사 추가: 지역 변수가 hero 멤버명(position/material/ready/move_multiplier)과 같아도 모든 사용이 선언 블록 안일 때만 허용, 블록 밖/선언 전 사용은 거부(단위 검사 포함). 해당 14개 함수 위반0.
+- 동작 불변 증명: 4개 직업 이동 함수가 원본과 토큰 단위 동일(`hero.` 접두 673/571/448/535곳·self→hero만), hero.gd 나머지 블록 무변경·전달 함수227개 인자 순서 검사, hero/practice_hero/직업 런타임9개 컴파일 확인. `hero_balance_smoke`의 `_add_archmage_gauge` 소스 추출을 런타임 파일 기준으로 갱신(수정 전과 동일 191검사·기존1실패).
+- Windows Godot4.7.2 headless: 9개 직업 관련 테스트87개를 신규 병렬 실행기(6병렬·테스트별 user:// 분리)로 실행해 37 PASS, 실패·시간초과50개는 리팩터링 전 hero.gd(59f0c146)로 재실행한 결과와 50/50 동일. 이 과정에서 코루틴(await 포함) 함수 10개(이미 커밋된 광전사3개 포함)의 전달 함수에 await가 빠져 호출 측이 먼저 재개되는 회귀를 bulgasal_audio_smoke로 발견·수정, 변환기도 코루틴 자동 await 처리. 소유 hero 해제 시 코루틴이 재개되지 않는 동작은 원본과 동일함을 프로브로 확인. 실기 미검증. feature/stage10-astra.
+
 ## 2026-10-20 — hero.gd 직업 분리 2단계: 도적·전사·광전사·소환사
 
 - 거너와 같은 절차로 도적28/전사36/광전사40/소환사42 함수(총146개, 4,809줄)를 `src/hero/archetypes/hero_{rogue,fighter,berserker,summoner}_archetype.gd`로 이동. hero.gd 20,125→15,706줄. 상태 변수·메서드명 전달 함수 유지, 런타임은 hero당 지연 1개.
