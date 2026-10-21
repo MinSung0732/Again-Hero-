@@ -49,7 +49,7 @@ func _physics_process(delta: float) -> void:
 		entry.fraction = float(entry.fraction)-paid
 		if paid > 0:
 			if entry.shield:
-				preload("res://src/monsters/monster_runtime_common.gd").add_support_shield(actor,paid)
+				preload("res://src/monsters/monster_runtime_common.gd").add_support_shield(actor,paid,"arthur_avalon")
 			else:
 				actor.current_hp = mini(actor.max_hp,actor.current_hp+paid)
 				actor.queue_redraw()

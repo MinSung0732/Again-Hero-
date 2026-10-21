@@ -73,7 +73,7 @@ func on_mummy_death() -> void:
 		shield_fraction += float(mode.production)
 		var amount := floori(shield_fraction)
 		shield_fraction -= amount
-		if mode.kind == "shield": MONSTER_RUNTIME_COMMON.add_support_shield(self,amount)
+		if mode.kind == "shield": MONSTER_RUNTIME_COMMON.add_support_shield(self,amount,"anubis")
 		else: MONSTER_RUNTIME_COMMON.grant_typed_shield(self,mode.kind,amount,true)
 	else:
 		MONSTER_RUNTIME_COMMON.grant_typed_shield(self,"melee",DATA.MELEE_SHIELD,true)

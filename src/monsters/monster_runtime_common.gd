@@ -3,6 +3,7 @@ class_name MonsterRuntimeCommon
 const PERFORMANCE_PROBE := preload("res://src/systems/combat_performance_probe.gd")
 const COMBAT_DELAY := preload("res://src/systems/combat_delay.gd")
 const BATTLE_SCOPE := preload("res://src/systems/battle_scope.gd")
+const GENERIC_SHIELDS := preload("res://src/systems/generic_shield_pool.gd")
 
 const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
 
@@ -363,8 +364,10 @@ static func _consume_support_shield(owner: Node2D, amount: int, receipt = null, 
 		amount = maxi(int(round(amount*float(owner.call("ranged_damage_multiplier")))),1)
 	if amount > 0 and kind == "ranged" and not bool(owner.get_meta("guard_transfer",false)):
 		amount = _redirect_ranged_damage(owner,amount)
+	# Conditional (ranged/melee) shields first; generic shields follow in
+	# GENERIC_SHIELDS order. A generic own spawn shield is part of that pool.
 	var temporary_kind := String(owner.get_meta("temporary_shield_kind",""))
-	if amount > 0 and (temporary_kind == "shield" or temporary_kind == kind):
+	if amount > 0 and temporary_kind != "shield" and temporary_kind == kind:
 		var temporary_absorbed := mini(amount,maxi(int(owner.get_meta("temporary_shield_hp",0)),0))
 		if temporary_absorbed > 0:
 			owner.set_meta("temporary_shield_hp",int(owner.get_meta("temporary_shield_hp",0))-temporary_absorbed)
@@ -380,19 +383,12 @@ static func _consume_support_shield(owner: Node2D, amount: int, receipt = null, 
 			DAMAGE_NUMBERS.show(owner,absorbed)
 			amount -= absorbed
 			owner.queue_redraw()
-	if amount > 0 and int(owner.get_meta("arthur_blessing_hp",0)) > 0:
-		var blessing := owner.get_node_or_null("ArthurBlessing")
-		if blessing != null: amount = blessing.absorb(amount,receipt,receipt_revision)
-	var shield := int(owner.get_meta("support_shield_hp",0))
-	if shield <= 0 or amount <= 0:
-		return amount
-	var absorbed := mini(shield,amount)
-	if receipt != null:
-		receipt.record_shield(absorbed, receipt_revision)
-	owner.set_meta("support_shield_hp",shield - absorbed)
+	return GENERIC_SHIELDS.consume(owner,amount,receipt,receipt_revision,_show_generic_absorb)
+
+
+static func _show_generic_absorb(owner: Node2D, absorbed: int) -> void:
 	DAMAGE_NUMBERS.show(owner,absorbed)
 	owner.queue_redraw()
-	return amount - absorbed
 
 
 static func begin_summon_animation(monster: Node2D) -> void:
@@ -611,13 +607,17 @@ static func draw_support_shield_bar(owner: Node2D, _width: float, hp_bar_y: floa
 	draw_status_bars(owner,owner,hp_bar_y)
 
 
-static func add_support_shield(actor: Node2D, amount: int) -> void:
+static func add_support_shield(actor: Node2D, amount: int, source: String = "support") -> void:
 	if not is_instance_valid(actor) or actor.is_queued_for_deletion() or int(actor.get("current_hp")) <= 0: return
-	var shield := int(actor.get_meta("support_shield_hp",0))+maxi(amount,0)
-	actor.set_meta("support_shield_hp",shield)
+	grant_generic_shield(actor,source,amount)
+
+
+## Every generic shield writer goes through here so damage knows each source's
+## amount and grant order (see generic_shield_pool.gd).
+static func grant_generic_shield(actor: Node, source: String, amount: int, refresh_max: bool = false, reset_capacity: bool = false) -> void:
+	GENERIC_SHIELDS.grant(actor,source,amount,refresh_max,reset_capacity)
 	note_shield_grant(actor,"shield")
-	actor.set_meta("support_shield_capacity",maxi(shield,int(actor.get_meta("support_shield_capacity",0))))
-	actor.queue_redraw()
+	if actor is CanvasItem: actor.queue_redraw()
 
 
 static func damage_monster_from(actor: Node2D, amount: int, source: Node, kind: String = "") -> void:

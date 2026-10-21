@@ -39,7 +39,6 @@ tests/monster_upgrade_balance_smoke.gd  # script error, never reaches quit(): SC
 tests/monster_upgrade_feedback_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Cannot call method 'get_parent' on a null value.
 tests/pickup_probability_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Assertion failed.
 tests/pixel_panel_skin_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'texture' on a base object of type 'Nil'.
-tests/powwow_mummy_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid call. Nonexistent function 'set_physics_process' in base 'Nil'. SCRI
 tests/practice_presentation_smoke.gd  # script error, never reaches quit(): 
 tests/support_shield_visual_smoke.gd  # script error, never reaches quit(): 
 tests/test_forced_gacha_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Assertion failed.

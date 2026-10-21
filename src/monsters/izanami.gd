@@ -449,10 +449,7 @@ func _create_torii() -> void:
 	torii_points[torii_next] = point
 	torii_age[torii_next] = 0.0
 	torii_next = (torii_next+1)%DATA.TORII_CAPACITY
-	var total := int(get_meta("support_shield_hp",0)) + int(round(max_hp*DATA.TORII_SHIELD_RATIO))
-	set_meta("support_shield_hp",total)
-	preload("res://src/monsters/monster_runtime_common.gd").note_shield_grant(self,"shield")
-	set_meta("support_shield_capacity",total)
+	preload("res://src/monsters/monster_runtime_common.gd").grant_generic_shield(self,"izanami_torii",int(round(max_hp*DATA.TORII_SHIELD_RATIO)),false,true)
 	status_layer.queue_redraw()
 	torii_layer.queue_redraw()
 
@@ -535,7 +532,7 @@ func _begin_izanami_death(receipt = null, receipt_revision: int = 0) -> void:
 	fire_age.fill(-1.0)
 	spirit_state.fill(0)
 	torii_age.fill(-1.0)
-	set_meta("support_shield_hp",0)
+	preload("res://src/monsters/monster_runtime_common.gd").GENERIC_SHIELDS.clear(self)
 	crossing_records.clear()
 	if is_instance_valid(hero) and hero.accepted_damage_hit.is_connected(_on_accepted_hit):
 		hero.accepted_damage_hit.disconnect(_on_accepted_hit)

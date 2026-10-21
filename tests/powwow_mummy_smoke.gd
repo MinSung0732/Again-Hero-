@@ -101,6 +101,10 @@ func run() -> void:
 	await process_frame
 	# Every roster actor can absorb a support shield, including inherited Medusa/Kraken.
 	for id in CATALOG.ORDER:
+		# Transcendents (added after this test) only enter through the once-per-battle
+		# summon gate, and combat-disabled entries never spawn as ordinary units.
+		if CATALOG.get_rarity(id) == "transcendent" or not bool(CATALOG.MONSTERS[id].get("combat_enabled", true)):
+			continue
 		var target = spawn(id)
 		target.set_meta("support_shield_hp",100)
 		hp = target.current_hp

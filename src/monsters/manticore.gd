@@ -341,10 +341,7 @@ func _register_basic_hit() -> void:
 	if basic_hits >= (4 if transcend_level >= 2 else 5):
 		if hero.apply_bleed(10.0,self,0.03,transcend_level >= 2): basic_hits = 0
 func _add_shield(ratio: float) -> void:
-	var total := int(get_meta("support_shield_hp",0))+int(round(max_hp*ratio))
-	set_meta("support_shield_hp",total)
-	preload("res://src/monsters/monster_runtime_common.gd").note_shield_grant(self,"shield")
-	set_meta("support_shield_capacity",total)
+	preload("res://src/monsters/monster_runtime_common.gd").grant_generic_shield(self,"manticore",int(round(max_hp*ratio)),false,true)
 func take_damage(amount: int) -> void:
 	_apply_manticore_damage(amount)
 func supports_damage_receipt() -> bool:

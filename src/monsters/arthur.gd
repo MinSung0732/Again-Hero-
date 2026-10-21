@@ -316,11 +316,7 @@ static func _alive(actor: Node) -> bool:
 	return hp != null and int(hp)>0 and actor.get("dying") != true and actor.get("is_dying") != true
 static func add_shield(actor: Node2D, amount: int) -> void:
 	if not _alive(actor): return
-	var shield := int(actor.get_meta("support_shield_hp",0))+maxi(amount,0)
-	actor.set_meta("support_shield_hp",shield)
-	preload("res://src/monsters/monster_runtime_common.gd").note_shield_grant(actor,"shield")
-	actor.set_meta("support_shield_capacity",maxi(shield,int(actor.get_meta("support_shield_capacity",0))))
-	actor.queue_redraw()
+	preload("res://src/monsters/monster_runtime_common.gd").grant_generic_shield(actor,"arthur",amount)
 func cast_blessing() -> void:
 	combat_authority.fill_monsters_near(global_position,DATA.BLESSING_RADIUS,allies)
 	for actor in allies:

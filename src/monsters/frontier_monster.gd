@@ -111,6 +111,8 @@ func on_spawn_stats_finalized() -> void:
 func _set_own_shield(amount: int) -> void:
 	set_meta("temporary_shield_kind","shield")
 	set_meta("temporary_shield_hp",maxi(amount,0))
+	# Grant order for newest-first spending among generic shields.
+	set_meta(MONSTER_RUNTIME_COMMON.GENERIC_SHIELDS.SPAWN_SEQ_META,MONSTER_RUNTIME_COMMON.GENERIC_SHIELDS.next_seq())
 	set_meta("temporary_shield_capacity",maxi(amount,int(get_meta("temporary_shield_capacity",0))))
 	MONSTER_RUNTIME_COMMON.note_shield_grant(self,"shield")
 	queue_redraw()
@@ -235,11 +237,8 @@ func _ward_allies(config: Dictionary) -> int:
 	for actor in ally_scratch:
 		if actor == self or not HIT.target_alive(actor) or not actor is Node2D or actor.global_position.distance_squared_to(global_position) > radius*radius: continue
 		var value := int(round(float(actor.get("max_hp"))*float(config.get("ward_ratio",.08))))
-		# Refresh shared support shield to the greater remaining value; never add repeatedly.
-		actor.set_meta("support_shield_hp",maxi(int(actor.get_meta("support_shield_hp",0)),value))
-		actor.set_meta("support_shield_capacity",maxi(int(actor.get_meta("support_shield_capacity",0)),value))
-		MONSTER_RUNTIME_COMMON.note_shield_grant(actor,"shield")
-		actor.queue_redraw()
+		# Refresh the ward shield to the greater remaining value; never add repeatedly.
+		MONSTER_RUNTIME_COMMON.grant_generic_shield(actor,"ward",value,true)
 		count += 1
 		if count >= int(config.get("ward_count",3)): break
 	ally_scratch.clear()

@@ -392,10 +392,7 @@ func _damage(target: Node2D, amount: int, followup: bool = true, dot: bool = fal
 		return true
 	return bool(target.take_damage(amount,self))
 func _add_shield(amount: float) -> void:
-	var total := int(get_meta("support_shield_hp",0))+int(round(amount))
-	set_meta("support_shield_hp",total)
-	preload("res://src/monsters/monster_runtime_common.gd").note_shield_grant(self,"shield")
-	set_meta("support_shield_capacity",total)
+	preload("res://src/monsters/monster_runtime_common.gd").grant_generic_shield(self,"shuten_doji",int(round(amount)),false,true)
 func take_damage(amount: int) -> void:
 	_apply_shuten_damage(amount)
 func supports_damage_receipt() -> bool:

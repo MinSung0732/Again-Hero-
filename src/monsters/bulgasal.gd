@@ -516,10 +516,7 @@ func hit_aftershock(point: Vector2) -> void:
 		hero.take_damage(int(round(attack_damage*DATA.AFTERSHOCK_DAMAGE)),self)
 
 func add_stacking_shield(ratio: float) -> void:
-	var total := int(get_meta("support_shield_hp",0))+int(round(max_hp*ratio))
-	set_meta("support_shield_hp",total)
-	preload("res://src/monsters/monster_runtime_common.gd").note_shield_grant(self,"shield")
-	set_meta("support_shield_capacity",total)
+	preload("res://src/monsters/monster_runtime_common.gd").grant_generic_shield(self,"bulgasal",int(round(max_hp*ratio)),false,true)
 
 func _hero_alive() -> bool:
 	return is_instance_valid(hero) and int(hero.current_hp)>0

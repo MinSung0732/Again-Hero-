@@ -20,10 +20,8 @@ func apply_courage(target: Node2D, duration: float, damage_ratio: float, shield_
 	target.set_meta("support_damage_multiplier",multiplier)
 	COMMON.set_unbuffed_attack_damage(target,base_damage)
 	var shield := int(round(float(target.get("max_hp")) * shield_ratio))
-	preload("res://src/monsters/monster_runtime_common.gd").note_shield_grant(target,"shield")
-	target.set_meta("support_shield_hp",maxi(int(target.get_meta("support_shield_hp",0)),shield))
-	target.set_meta("support_shield_capacity",maxi(int(target.get_meta("support_shield_capacity",0)),int(target.get_meta("support_shield_hp",0))))
-	target.queue_redraw()
+	# Courage refreshes its own shield to the greater value; never stacks with itself.
+	COMMON.grant_generic_shield(target,"courage",shield,true)
 	EFFECTS.show_on(target, "support_courage")
 
 func apply_agility(target: Node2D, duration: float, speed_ratio: float) -> void:
@@ -43,7 +41,7 @@ func tick(delta: float) -> void:
 			if is_instance_valid(target):
 				_restore_damage(target)
 				target.set_meta("support_speed_multiplier",1.0)
-				target.set_meta("support_shield_hp",0)
+				COMMON.GENERIC_SHIELDS.clear(target)
 			expired_ids.append(id)
 			continue
 		if float(entry.damage_timer) > 0:

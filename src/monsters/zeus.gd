@@ -213,10 +213,7 @@ func _fire_projectile(_offset: Vector2) -> void:
 	var was_paralyzed := float(hero.paralysis_timer) > 0.0
 	var accepted: bool = hero.take_followup_damage(amount,self) if immune else hero.take_damage(amount,self)
 	if accepted and was_paralyzed:
-		var total := int(get_meta("support_shield_hp",0))+int(round(max_hp*DATA.BASIC_SHIELD_RATIO))
-		set_meta("support_shield_hp",total)
-		MONSTER_RUNTIME_COMMON.note_shield_grant(self,"shield")
-		set_meta("support_shield_capacity",total)
+		MONSTER_RUNTIME_COMMON.grant_generic_shield(self,"zeus",int(round(max_hp*DATA.BASIC_SHIELD_RATIO)),false,true)
 	if accepted and randf() < chance:
 		apply_paralysis_to(hero,paralysis)
 
