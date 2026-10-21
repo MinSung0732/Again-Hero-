@@ -1,3 +1,9 @@
+## 2026-10-21 — 스킬 편성 모드 몬스터 해금 필터 표시 수정
+
+- 버그: 편성 탭의 스킬 모드에서 몬스터 해금 필터(전체/해금/잠김)가 보이지만 동작하지 않음. 로비 `_refresh_formation_unlock_filters(false)`가 숨긴 직후 `transcendence_formation_view.refresh(false)`가 목록 요소를 일괄 표시하며 다시 켰음(8d47a26d, 10/07부터).
+- 수정: `src/ui/transcendence_formation_view.gd`에서 필터 줄은 초월 탭이 아니고 몬스터 팀 모드일 때만 표시. 다른 목록 요소·필터 동작·수치 불변.
+- 검증: Windows Godot4.7.2 headless 편성 관련 테스트8개 중 7 PASS, `collection_filter_shop_funds_smoke` 기준선에서 제외(43개). 남은 1개(transcendent_upgrade)는 기존 실패. 실기 화면 미확인.
+
 ## 2026-10-21 — 깨진 테스트 정리 4차(병렬 세션 4개): 28개 복구
 
 - 초월·몬스터/용사 모드/로비·UI/경제·가챠 4개 영역 세션이 같은 체크아웃에서 서로 다른 테스트 파일만 수정(게임 코드·공용 문서 변경 없음). 수정 테스트29개를 6병렬로 재검증: 28 PASS, NEW 실패0. 기준선 72→44.

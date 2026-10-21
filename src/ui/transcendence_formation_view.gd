@@ -163,8 +163,10 @@ func refresh(showing: bool) -> void:
 	tab.disabled = showing
 	registered_area.visible = showing
 	layout.get_node("EquippedArea/Margin/Content/SlotRow").visible = not showing
-	for name in ["ListHeader","UnlockFilters","MonsterScroll","Status"]:
+	for name in ["ListHeader","MonsterScroll","Status"]:
 		layout.get_node(name).visible = not showing
+	# The monster unlock filter only applies to the monster team list; skill mode keeps it hidden.
+	layout.get_node("UnlockFilters").visible = not showing and lobby.formation_mode == "team"
 	if showing:
 		layout.get_node("EmptyCollection").hide()
 	else:

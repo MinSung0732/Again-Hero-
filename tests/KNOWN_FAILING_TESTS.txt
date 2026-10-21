@@ -3,7 +3,6 @@
 # fix a test and delete its line. tools/run_godot_tests.sh reports any
 # failure NOT listed here as NEW. Format: <path>  # <kind>: <last output>
 tests/campaign_experience_smoke.gd  # assertion failure: CAMPAIGN_EXPERIENCE_SMOKE checks=52 failures=3
-tests/collection_filter_shop_funds_smoke.gd  # assertion failure: GAME BUG suspected - skill mode shows the monster unlock filter row (transcendence_formation_view.refresh re-shows UnlockFilters after lobby hides it, since 8d47a26d 10-07); test otherwise updated 2026-10-21
 tests/combat_phase3_online_smoke.gd  # assertion failure: COMBAT_PHASE3_ONLINE checks=263 failures=80
 tests/demon_appearance_smoke.gd  # assertion failure: DEMON_APPEARANCE_TEST: FAILED
 tests/hero_loading_gate_smoke.gd  # assertion failure: 
