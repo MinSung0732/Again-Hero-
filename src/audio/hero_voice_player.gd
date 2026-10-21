@@ -46,6 +46,12 @@ func install(battle: Node) -> void:
 	enabled = not battle.practice_mode and not battle.tutorial_mode
 	battle.hero_outcome_confirmed.connect(_on_outcome)
 	battle.battle_finished.connect(_on_battle_finished)
+	# Start the defeat line at the fatal hit, together with the death focus/slow,
+	# so it is not delayed until the death animation ends just before the result.
+	# Revives never emit death_started, so this is always a real defeat.
+	var dying_hero = battle.get("hero")
+	if is_instance_valid(dying_hero) and dying_hero.has_signal("death_started"):
+		dying_hero.connect("death_started", _on_outcome.bind(&"defeat"))
 
 func prepare() -> void:
 	if _prepared or not enabled: return
