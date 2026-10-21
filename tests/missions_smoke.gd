@@ -107,13 +107,16 @@ func _run() -> void:
 	var raw_id := Crypto.new().generate_random_bytes(16).hex_encode()
 	var account_id := "%s-%s-%s-%s-%s" % [raw_id.substr(0, 8), raw_id.substr(8, 4), raw_id.substr(12, 4), raw_id.substr(16, 4), raw_id.substr(20, 12)]
 	check(SCOPE.select_account(account_id), "isolated account selected")
+	# Offline local account fixture: no claimed cloud session, so lift the
+	# CloudStore write fence the same way the cloud save tests seed caches.
+	SCOPE.write_allowed = Callable()
 	STORE.record("mana", 100)
 	check(STORE.flush(), "account buffered flush")
 	var saved_serial := SCOPE.serial
 	var blocked_path := SCOPE.resolve("user://save_bundle.json") + ".tmp"
 	DirAccess.make_dir_recursive_absolute(blocked_path)
 	check(not STORE.claim("daily", "mana").success and SCOPE.serial == saved_serial, "failed account claim rolls back serial")
-	check(STORE.snapshot().claimable == 1 and int(SCOPE.files["stage_progress.cfg"].get("meta", {}).get("gold", 0)) == 0, "failed account claim preserves markers and wallet")
+	check(STORE.snapshot().claimable == 1 and int(SCOPE.files.get("stage_progress.cfg", {}).get("meta", {}).get("gold", 0)) == 0, "failed account claim preserves markers and wallet")
 	DirAccess.remove_absolute(blocked_path)
 	check(STORE.claim("daily", "mana").get("success", false), "account retry awards once")
 	check(not STORE.claim("daily", "mana").success, "account duplicate denied")

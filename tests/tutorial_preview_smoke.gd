@@ -9,7 +9,8 @@ var failed := false
 
 class EntryTransition extends Node:
 	var requests := 0
-	func change_scene(_path: String, _message: String) -> bool:
+	# Mirrors SceneTransition.change_scene(path, message, entry_options).
+	func change_scene(_path: String, _message: String = "", _entry_options: Dictionary = {}) -> bool:
 		requests += 1
 		return true
 

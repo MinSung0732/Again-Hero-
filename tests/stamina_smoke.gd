@@ -12,12 +12,21 @@ class DeferredTransition extends Node:
 	var requests := 0
 	func is_transitioning() -> bool:
 		return false
-	func change_scene(_path: String, _message: String) -> bool:
+	# Mirrors SceneTransition.change_scene(path, message, entry_options).
+	func change_scene(_path: String, _message: String = "", _entry_options: Dictionary = {}) -> bool:
 		requests += 1
 		return true
 
 func _initialize() -> void:
 	call_deferred("run")
+
+# Player path for a full formation without a registered transcendent:
+# tap entry, then accept the 2026-10-07 "enter without transcendence" confirm.
+func confirm_entry(lobby) -> void:
+	lobby._enter_selected_stage()
+	var confirm = lobby._transcendence_entry_confirm
+	if is_instance_valid(confirm) and confirm.visible:
+		confirm._confirm()
 
 func check(value: bool, message: String) -> void:
 	if not value:
@@ -126,6 +135,9 @@ func run() -> void:
 	var hex := Crypto.new().generate_random_bytes(16).hex_encode()
 	var id := "%s-%s-%s-%s-%s" % [hex.substr(0,8),hex.substr(8,4),hex.substr(12,4),hex.substr(16,4),hex.substr(20,12)]
 	check(SCOPE.select_account(id), "isolated account")
+	# Offline local account fixture: no claimed cloud session, so lift the
+	# CloudStore write fence the same way the cloud save tests seed caches.
+	SCOPE.write_allowed = Callable()
 	check(STORE.read_state(T).amount == 30, "account cannot inherit guest wallet")
 	check(STORE.try_enter("stage_1",false,T).success, "account debit")
 	var snapshot := SCOPE.files.duplicate(true)
@@ -150,7 +162,10 @@ func run() -> void:
 		var stamina_before: int = STORE.read_state().amount
 		lobby._enter_selected_stage()
 		check(not lobby._battle_entry_pending and STORE.read_state().amount == stamina_before, "incomplete formation never debits")
-		check(lobby.stamina_view.details.text.contains("편성"), "formation notice explains missing slots")
+		# Since 2026-10-12 entry failures use the framed dungeon entry notice.
+		var notice = lobby.stamina_view._entry_notice
+		check(is_instance_valid(notice) and notice.visible and notice._message.text.contains("편성"), "formation notice explains missing slots")
+		if is_instance_valid(notice): notice.close()
 	lobby.team_selected_ids = ["slime", "spider", "orc"]
 	lobby.demon_skill_selected_ids = skills.duplicate()
 	preload("res://src/systems/team_loadout_store.gd").save_ids(lobby.team_selected_ids, lobby.team_catalog_ids)
@@ -200,8 +215,12 @@ func run() -> void:
 	outside.pressed = true
 	outside.position = Vector2(5, 1200)
 	check(not lobby.stamina_view.handle_info_input(outside) and not lobby.stamina_view.overlay.visible, "outside touch dismisses card without blocking lobby input")
-	lobby._enter_selected_stage()
-	check(lobby.stamina_view.overlay.visible and not lobby._battle_entry_pending and STORE.read_state().amount == 4, "actual insufficient lobby request stays put")
+	lobby.team_selected_ids = ["slime", "spider", "orc"]
+	lobby.demon_skill_selected_ids = skills.duplicate()
+	confirm_entry(lobby)
+	var insufficient_notice = lobby.stamina_view._entry_notice
+	check(is_instance_valid(insufficient_notice) and insufficient_notice.visible and insufficient_notice._message.text.contains("스테미너") and not lobby._battle_entry_pending and STORE.read_state().amount == 4, "actual insufficient lobby request stays put")
+	if is_instance_valid(insufficient_notice): insufficient_notice.close()
 	await capture("recovery")
 	check(lobby.stamina_view.details.text.contains("다음 +1까지") and lobby.stamina_view.details.text.contains("최대 충전까지"), "overlay shows both recovery times")
 	lobby.stamina_view.open_shop()
@@ -223,8 +242,8 @@ func run() -> void:
 	var deferred := DeferredTransition.new()
 	deferred.name = "SceneTransition"
 	root.add_child(deferred)
-	lobby._enter_selected_stage()
-	lobby._enter_selected_stage()
+	confirm_entry(lobby)
+	confirm_entry(lobby)
 	check(lobby.stamina_view._spend_label.visible and lobby.stamina_view._spend_label.text == "-5" and lobby.stamina_view._entry_blocker.visible, "deduction feedback appears before loading")
 	await create_timer(0.55).timeout
 	check(not lobby.stamina_view._spend_label.visible and not lobby.stamina_view._entry_blocker.visible, "deduction feedback recycles controls")
@@ -234,7 +253,7 @@ func run() -> void:
 	mode.active = true
 	lobby.team_selected_ids = ["slime"]
 	lobby.demon_skill_selected_ids = skills.slice(0, 1)
-	lobby._enter_selected_stage()
+	confirm_entry(lobby)
 	await create_timer(0.1).timeout
 	check(deferred.requests == 2 and STORE.read_state().amount == 5, "actual localtest bypasses formation and debit")
 	lobby._refund_failed_stamina_entry()
