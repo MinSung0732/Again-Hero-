@@ -1,3 +1,11 @@
+## 2026-10-21 — 테스트 스위트 기준선 정리
+
+- 전체 SceneTree 테스트337개를 Windows Godot4.7.2 headless(8병렬·테스트별 user:// 분리)로 실행: 172 PASS, 165 실패/시간초과. 시간초과 대부분은 느린 테스트가 아니라 스크립트 오류 후 quit()에 도달하지 못한 경우.
+- `tests/FIXTURE_ONLY_TESTS.txt`(78개): 저장소에서 그대로 돌 수 없는 테스트. 43개는 `tools/build_*_fixture.py`가 만드는 격리 프로젝트에서만 도는 일회성 전후 비교/패킹 검사, 35개는 클라우드 세션에서만 존재하고 한 번도 커밋되지 않은 보조 파일(`*_before.gd`, `*_receipt_helper.gd` 등)에 의존.
+- `tests/KNOWN_FAILING_TESTS.txt`(87개): 19678109 기준 이미 실패하던 테스트(단언 실패43·스크립트 오류 시간초과42·파싱 오류2). 허용 목록이 아니라 회귀 기준선이며 고치면 줄을 지운다.
+- `tools/run_godot_tests.sh`가 fixture 전용 테스트를 SKIP으로, 기준선 밖 실패를 NEW로, 기준선 테스트가 통과하면 NOW PASSING으로 표시. 전후 비교 재실행 없이 회귀 판별 가능.
+- 게임 코드 변경 없음. 테스트 실행이 `docs/HERO_*_2026101x.tsv` 3개를 다시 쓰는 부작용(hero_encounters/hero_growth_export/hero_starting_balance)은 되돌림.
+
 ## 2026-10-20 — hero.gd 직업 분리 3단계: 연금술사·정화사·대마법사·대현자(완료)
 
 - 연금술사59/정화사76/대마법사46/대현자46 함수(총227개, 6,974줄)를 `src/hero/archetypes/hero_{alchemist,purifier,archmage,sage}_archetype.gd`로 이동. hero.gd 15,706→9,303줄(오늘 시작 20,850줄 대비 -55%). 9개 직업 전부 분리 완료.
@@ -4060,4 +4068,4 @@ CloudStore 직렬화 대기는 operation_released 신호로 한다. 정상 완�
 
 ## 로컬 Godot 테스트 병렬 실행 (2026-10-20)
 
-`tools/run_godot_tests.sh GODOT_BIN OUT_FILE [JOBS] [TIMEOUT] < 테스트경로목록`으로 SceneTree 테스트를 병렬 실행한다. 테스트마다 APPDATA/XDG_DATA_HOME을 임시 폴더로 바꿔 `user://`를 분리하므로 실제 플레이어 저장 데이터를 건드리지 않는다. 수정 전/후 비교는 `git stash`를 쓰지 않고 파일 복사로 교체 후 반드시 복원한다(stash pop이 오래된 stash를 꺼내 project.godot 충돌을 낸 사고 재발 방지). `hero_starting_balance_smoke`는 `docs/HERO_STARTING_STATS_20261014.tsv`를 다시 쓰므로 실행 후 의도치 않은 변경이면 되돌린다.
+`tools/run_godot_tests.sh GODOT_BIN OUT_FILE [JOBS] [TIMEOUT] < 테스트경로목록`으로 SceneTree 테스트를 병렬 실행한다. 테스트마다 APPDATA/XDG_DATA_HOME을 임시 폴더로 바꿔 `user://`를 분리하므로 실제 플레이어 저장 데이터를 건드리지 않는다. 실행 결과의 NEW 실패만 회귀로 본다(`tests/KNOWN_FAILING_TESTS.txt` 기준선, `tests/FIXTURE_ONLY_TESTS.txt`는 SKIP). 기준선 테스트를 고치면 해당 줄을 지운다. 수정 전/후 비교는 `git stash`를 쓰지 않고 파일 복사로 교체 후 반드시 복원한다(stash pop이 오래된 stash를 꺼내 project.godot 충돌을 낸 사고 재발 방지). `hero_starting_balance_smoke`는 `docs/HERO_STARTING_STATS_20261014.tsv`를 다시 쓰므로 실행 후 의도치 않은 변경이면 되돌린다.

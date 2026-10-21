@@ -1,0 +1,91 @@
+# Tests already failing at commit 19678109 (Windows Godot 4.7.2 headless,
+# isolated user://). Baseline for regression checks, not an allow-list:
+# fix a test and delete its line. tools/run_godot_tests.sh reports any
+# failure NOT listed here as NEW. Format: <path>  # <kind>: <last output>
+tests/account_withdrawal_smoke.gd  # assertion failure: ACCOUNT_WITHDRAWAL_AND_BANNER: FAIL (24 checks)
+tests/banshee_smoke.gd  # assertion failure: BANSHEE_SMOKE_FAILED
+tests/battle_chrome_smoke.gd  # assertion failure: BATTLE_CHROME_FAILED
+tests/battle_result_readability_smoke.gd  # assertion failure: BATTLE_RESULT_READABILITY_FAILED
+tests/berserker_skill3_animation_smoke.gd  # assertion failure: BERSERKER_SKILL3: FAILED
+tests/bulgasal_integration_smoke.gd  # assertion failure: BULGASAL_INTEGRATION: FAIL failures=1
+tests/bulgasal_presentation_smoke.gd  # assertion failure: SCRIPT ERROR: Invalid access to property or key 'transcendence' on a base object of type '
+tests/campaign_experience_smoke.gd  # assertion failure: CAMPAIGN_EXPERIENCE_SMOKE checks=52 failures=3
+tests/clear_gold_reward_smoke.gd  # assertion failure: CLEAR_GOLD_REWARD_FAILED
+tests/collection_filter_shop_funds_smoke.gd  # assertion failure: COLLECTION_FILTER_SHOP_FUNDS_FAILED
+tests/combat_phase3_online_smoke.gd  # assertion failure: COMBAT_PHASE3_ONLINE checks=263 failures=80
+tests/contextual_audio_smoke.gd  # assertion failure: CONTEXT_AUDIO_SMOKE FAIL
+tests/demon_appearance_smoke.gd  # assertion failure: DEMON_APPEARANCE_TEST: FAILED
+tests/demon_codex_smoke.gd  # assertion failure: DEMON_CODEX: FAIL
+tests/dungeon_entry_notice_smoke.gd  # assertion failure: dungeon_entry_notice_smoke: 36 checks, 5 failures
+tests/exploration_rewards_smoke.gd  # assertion failure: EXPLORATION_REWARDS_FAILED: 4
+tests/formation_touch_scroll_smoke.gd  # assertion failure: FORMATION_TOUCH: FAIL
+tests/gacha_conversion_smoke.gd  # assertion failure: GACHA_CONVERSION_FAILED
+tests/gacha_door_palette_smoke.gd  # assertion failure: GACHA_DOOR_PALETTE_SMOKE_FAILED
+tests/hero_balance_smoke.gd  # assertion failure: SCRIPT ERROR: Invalid call. Nonexistent function 'new' in base 'GDScript'. hero_balance_sm
+tests/hero_character_formation_smoke.gd  # assertion failure: SCRIPT ERROR: Invalid access to property or key 'current_hp' on a base object of type 'Nod
+tests/hero_loading_gate_smoke.gd  # assertion failure: 
+tests/hero_player_mode_smoke.gd  # assertion failure: HERO_PLAYER_MODE_SMOKE checks=45 failures=6
+tests/hero_reveal_presentation_smoke.gd  # assertion failure: REVEAL_TEST: FAILED
+tests/hero_survival_progression_smoke.gd  # assertion failure: HERO_SURVIVAL_PROGRESSION_SMOKE checks=1606 failures=14
+tests/izanami_audio_smoke.gd  # assertion failure: IZANAMI_AUDIO: FAIL (61 checks)
+tests/loading_pipeline_smoke.gd  # assertion failure: LOADING_PIPELINE: FAIL
+tests/lobby_profile_smoke.gd  # assertion failure: PROFILE_TEST: FAILED
+tests/lobby_settings_smoke.gd  # assertion failure: SETTINGS_TEST: FAILED
+tests/manticore_integration_smoke.gd  # assertion failure: MANTICORE_INTEGRATION FAIL
+tests/monster_first_unlock_smoke.gd  # assertion failure: MONSTER_FIRST_UNLOCK_FAILED
+tests/optimization_network_smoke.gd  # assertion failure: OPTIMIZATION_NETWORK: FAIL
+tests/practice_battle_smoke.gd  # assertion failure: PRACTICE_BATTLE: FAIL failures=3
+tests/shuten_doji_combat_smoke.gd  # assertion failure: SHUTEN_COMBAT FAIL
+tests/shuten_doji_integration_smoke.gd  # assertion failure: SHUTEN_INTEGRATION FAIL
+tests/skill_icon_smoke.gd  # assertion failure: SKILL_ICONS: FAIL
+tests/stamina_notice_smoke.gd  # assertion failure: 
+tests/status_action_growth_smoke.gd  # assertion failure: STATUS_ACTION_GROWTH FAIL
+tests/succubus_smoke.gd  # assertion failure: SUCCUBUS_TEST: FAIL
+tests/transcendent_upgrade_smoke.gd  # assertion failure: TRANSCEND_UPGRADE: FAIL
+tests/tutorial_focus_smoke.gd  # assertion failure: TUTORIAL_FOCUS: FAILED
+tests/tutorial_preview_smoke.gd  # assertion failure: SCRIPT ERROR: Invalid call to function 'change_scene (via call)' in base 'Node (EntryTrans
+tests/zeus_combat_smoke.gd  # assertion failure: ZEUS_COMBAT: FAIL
+tests/anubis_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid call. Nonexistent function 'add_child' in base 'Nil'. SCRIPT ERROR: 
+tests/beginner_bulgasal_guarantee_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access of index '9' on a base object of type: 'Array'.
+tests/boar_dark_elf_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid call. Nonexistent function 'new' in base 'GDScript'. SCRIPT ERROR: I
+tests/dark_elf_rogue_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid call. Nonexistent function 'new' in base 'GDScript'. SCRIPT ERROR: I
+tests/fanatic_gumiho_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid call. Nonexistent function 'new' in base 'GDScript'. SCRIPT ERROR: I
+tests/formation_card_presentation_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'texture' on a base object of type 'null i
+tests/frontier_art_export_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Assertion failed: source PNG must be absent
+tests/gacha_background_layout_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid call. Nonexistent function 'new' in base 'GDScript'. SCRIPT ERROR: I
+tests/guest_profile_flow_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Assertion failed.
+tests/gumiho_hero_status_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Parse Error: Identifier "player_control_policy" not declared in the current 
+tests/hero_aoe_coverage_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Compile Error: Failed to compile depended scripts. SCRIPT ERROR: Invalid cal
+tests/hero_lobby_mode_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Assertion failed.
+tests/hero_lobby_startup_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'ranged_rookie' on a base object of type '
+tests/hero_mode_startup_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'build' on a base object of type 'Control 
+tests/hero_move_pad_smoke.gd  # script error, never reaches quit(): 
+tests/hero_survival_enemy_balance_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'max_hp' on a base object of type 'Nil'.
+tests/hero_survival_identity_smoke.gd  # script error, never reaches quit(): 
+tests/hero_survival_revision_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'research' on a base object of type 'Dicti
+tests/hero_weapon_growth_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'evolution_secondary_data' on a base objec
+tests/hobgoblin_combat_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid call. Nonexistent function 'new' in base 'GDScript'. SCRIPT ERROR: I
+tests/initial_gender_cosmetics_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Parse Error: Identifier "_open_gender_change" not declared in the current sc
+tests/izanami_cutscene_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Assertion failed.
+tests/lizardman_fighter_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid call. Nonexistent function 'new' in base 'GDScript'. SCRIPT ERROR: I
+tests/lizardman_spearman_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid call. Nonexistent function 'new' in base 'GDScript'. SCRIPT ERROR: I
+tests/lobby_main_modes_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'icon' on a base object of type 'Nil'.
+tests/manticore_cutscene_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Assertion failed.
+tests/missions_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'stage_progress.cfg' on a base object of t
+tests/mobile_entry_memory_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid assignment of property or key 'previous' with value of type 'WeakRef
+tests/mode_unlock_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'ready_to_close' on a base object of type 
+tests/monster_buff_scale_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid call. Nonexistent function 'set_physics_process' in base 'Nil'.
+tests/monster_upgrade_balance_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'level' on a base object of type 'Dictiona
+tests/monster_upgrade_feedback_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Cannot call method 'get_parent' on a null value.
+tests/ogre_combat_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid call. Nonexistent function 'new' in base 'GDScript'. SCRIPT ERROR: I
+tests/pickup_probability_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Assertion failed.
+tests/pixel_panel_skin_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'texture' on a base object of type 'Nil'.
+tests/powwow_mummy_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid call. Nonexistent function 'set_physics_process' in base 'Nil'. SCRI
+tests/practice_presentation_smoke.gd  # script error, never reaches quit(): 
+tests/shuten_doji_cutscene_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Assertion failed.
+tests/stamina_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'stage_progress.cfg' on a base object of t
+tests/support_shield_visual_smoke.gd  # script error, never reaches quit(): 
+tests/test_forced_gacha_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Assertion failed.
+tests/zeus_cutscene_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Assertion failed.
+tests/hero_presentation_range_smoke.gd  # parse error: SCRIPT ERROR: Parse Error: Cannot find member "ROW_HEIGHT" in base "res://src/ui/hero_ches
+tests/player_prologue_smoke.gd  # parse error: SCRIPT ERROR: Parse Error: Cannot find member "FEMALE" in base "res://src/ui/player_prolog

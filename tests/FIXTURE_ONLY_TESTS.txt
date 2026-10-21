@@ -1,0 +1,84 @@
+# Tests that cannot run against the repository as-is:
+# - "built by tools/..."  : one-off before/after parity or packed-export checks
+#   that run inside a fixture project made by that script.
+# - "helper ... was never committed": the test depends on a helper file that
+#   only existed in a cloud session; it needs the helper rebuilt before use.
+# tools/run_godot_tests.sh reports listed tests as SKIP. Format: <path>  # <reason>
+tests/basic_projectile_policy_smoke.gd  # built by tools/build_basic_projectile_policy_fixture.py
+tests/battle_augment_boundary_smoke.gd  # helper res://tests/battle_boundary_fixture.gd was never committed (cloud-session only)
+tests/battle_entity_boundary_smoke.gd  # helper res://tests/battle_boundary_fixture.gd was never committed (cloud-session only)
+tests/battle_mutation_boundary_smoke.gd  # helper res://tests/battle_boundary_fixture.gd was never committed (cloud-session only)
+tests/bomb_scaling_policy_smoke.gd  # built by tools/build_bomb_scaling_policy_fixture.py
+tests/bulgasal_receipt_special_smoke.gd  # helper res://tests/bulgasal_receipt_helper.gd was never committed (cloud-session only)
+tests/chain_projectile_lifetime_smoke.gd  # helper res://tests/chain_projectile_before.gd was never committed (cloud-session only)
+tests/charge_lifetime_smoke.gd  # helper res://tests/charge_actor.gd was never committed (cloud-session only)
+tests/cloud_rpc_wire_smoke.gd  # built by tools/build_cloud_rpc_fixture.py
+tests/combustion_lifetime_smoke.gd  # helper res://tests/scope.gd was never committed (cloud-session only)
+tests/control_transcendent_receipt_smoke.gd  # helper res://tests/izanami_receipt_helper.gd was never committed (cloud-session only)
+tests/damage_observation_smoke.gd  # helper res://tests/authority.gd was never committed (cloud-session only)
+tests/death_reaction_policy_smoke.gd  # built by tools/build_death_reaction_policy_fixture.py
+tests/delayed_hero_skill_smoke.gd  # helper res://tests/actor_before.gd was never committed (cloud-session only)
+tests/dungeon_entry_input_smoke.gd  # helper res://tests/stamina_view_before.gd was never committed (cloud-session only)
+tests/elemental_projectile_smoke.gd  # helper res://tests/elemental_projectile_before.gd was never committed (cloud-session only)
+tests/elite_spawn_policy_smoke.gd  # built by tools/build_elite_spawn_policy_fixture.py
+tests/ghost_empower_policy_smoke.gd  # built by tools/build_ghost_empower_policy_fixture.py
+tests/giant_scaling_policy_smoke.gd  # built by tools/build_giant_scaling_policy_fixture.py
+tests/heal_item_resource_smoke.gd  # built by tools/build_heal_resource_fixture.py
+tests/hero_action_binding_policy_benchmark.gd  # built by tools/build_hero_action_binding_fixture.py
+tests/hero_action_binding_policy_smoke.gd  # built by tools/build_hero_action_binding_fixture.py
+tests/hero_action_port_smoke.gd  # helper res://tests/hero_action_before_fixture.gd was never committed (cloud-session only)
+tests/hero_augment_reroll_smoke.gd  # built by tools/build_hero_reroll_fixture.py
+tests/hero_boss_deadline_smoke.gd  # helper res://tests/hero_finale_harness.gd was never committed (cloud-session only)
+tests/hero_boss_reservation_smoke.gd  # helper res://tests/hero_finale_harness.gd was never committed (cloud-session only)
+tests/hero_chest_budget_smoke.gd  # built by tools/build_hero_chest_budget_fixture.py
+tests/hero_chest_design_smoke.gd  # built by tools/build_hero_chest_design_fixture.py
+tests/hero_combat_effect_policy_smoke.gd  # built by tools/build_hero_combat_effect_fixture.py
+tests/hero_control_status_smoke.gd  # built by tools/build_hero_control_fixture.py
+tests/hero_cooldown_event_policy_smoke.gd  # built by tools/build_hero_cooldown_event_fixture.py
+tests/hero_cooldown_policy_benchmark.gd  # built by tools/build_hero_cooldown_event_fixture.py
+tests/hero_dot_status_smoke.gd  # helper res://tests/hero_status_receipt_helper.gd was never committed (cloud-session only)
+tests/hero_dropdown_smoke.gd  # built by tools/build_hero_dropdown_fixture.py
+tests/hero_effect_policy_smoke.gd  # built by tools/build_hero_effect_policy_fixture.py
+tests/hero_encounters_smoke.gd  # built by tools/build_hero_encounter_fixture.py
+tests/hero_extended_status_smoke.gd  # helper res://tests/hero_status_receipt_helper.gd was never committed (cloud-session only)
+tests/hero_formation_view_smoke.gd  # built by tools/build_hero_formation_fixture.py
+tests/hero_hud_inventory_smoke.gd  # built by tools/build_hero_hud_fixture.py
+tests/hero_inventory_detail_smoke.gd  # built by tools/build_hero_inventory_detail_fixture.py
+tests/hero_max_native_smoke.gd  # helper res://tests/hero_max_native_host.gd was never committed (cloud-session only)
+tests/hero_modifier_status_smoke.gd  # helper res://tests/hero_status_receipt_helper.gd was never committed (cloud-session only)
+tests/hero_movement_port_smoke.gd  # helper res://tests/hero_movement_before_fixture.gd was never committed (cloud-session only)
+tests/hero_presentation_policy_smoke.gd  # built by tools/build_hero_presentation_policy_fixture.py
+tests/hero_remaining_binding_policy_smoke.gd  # built by tools/build_hero_remaining_binding_fixture.py
+tests/hero_research_runtime_smoke.gd  # built by tools/build_hero_research_fixture.py
+tests/hero_result_smoke.gd  # built by tools/build_hero_result_fixture.py
+tests/hero_scaled_effect_policy_smoke.gd  # built by tools/build_hero_scaled_effect_fixture.py
+tests/hero_stack_policy_smoke.gd  # built by tools/build_hero_stack_policy_fixture.py
+tests/hero_status_policy_benchmark.gd  # built by tools/build_hero_status_fixture.py
+tests/hero_status_policy_smoke.gd  # built by tools/build_hero_status_fixture.py
+tests/hero_status_receipt_smoke.gd  # helper res://tests/hero_status_before.gd was never committed (cloud-session only)
+tests/hero_true_name_entry_smoke.gd  # built by tools/build_hero_true_name_fixture.py
+tests/hero_weapon_art_smoke.gd  # built by tools/build_hero_weapon_art_fixture.py
+tests/holy_power_lifetime_smoke.gd  # helper res://tests/holy_before.gd was never committed (cloud-session only)
+tests/ice_impact_smoke.gd  # helper res://tests/actor_before.gd was never committed (cloud-session only)
+tests/izanami_status_receipt_smoke.gd  # helper res://tests/hero_status_receipt_helper.gd was never committed (cloud-session only)
+tests/lobby_formation_startup_smoke.gd  # helper res://tests/formation_ was never committed (cloud-session only)
+tests/lobby_ui_policy_smoke.gd  # built by tools/build_nickname_fixture.py
+tests/manticore_receipt_special_smoke.gd  # helper res://tests/manticore_receipt_helper.gd was never committed (cloud-session only)
+tests/mode_progression_smoke.gd  # built by tools/build_mode_progression_fixture.py
+tests/monster_scaling_policy_smoke.gd  # built by tools/build_monster_scaling_policy_fixture.py
+tests/multicast_lifetime_smoke.gd  # helper res://tests/multi_before.gd was never committed (cloud-session only)
+tests/nickname_input_smoke.gd  # built by tools/build_nickname_fixture.py
+tests/online_cold_load_regression.gd  # built by tools/run_online_cold_load_smoke.py
+tests/online_process_smoke.gd  # built by tools/run_online_process_smoke.py
+tests/profile_gender_smoke.gd  # built by tools/build_nickname_fixture.py
+tests/projectile_quantity_smoke.gd  # helper res://tests/projectile_draw_harness.gd was never committed (cloud-session only)
+tests/run_clock_smoke.gd  # helper res://tests/run_metrics_before.gd was never committed (cloud-session only)
+tests/secondary_spawn_policy_smoke.gd  # built by tools/build_secondary_spawn_policy_fixture.py
+tests/shuten_status_receipt_smoke.gd  # helper res://tests/hero_status_receipt_helper.gd was never committed (cloud-session only)
+tests/slime_receipt_smoke.gd  # helper res://tests/popups.gd was never committed (cloud-session only)
+tests/succubus_receipt_special_smoke.gd  # helper res://tests/succubus_receipt_helper.gd was never committed (cloud-session only)
+tests/summon_demon_exp_smoke.gd  # built by tools/build_summon_fusion_policy_fixture.py
+tests/summon_fusion_policy_smoke.gd  # built by tools/build_summon_fusion_policy_fixture.py
+tests/wave_projectile_smoke.gd  # helper res://tests/wave_projectile_before.gd was never committed (cloud-session only)
+tests/wave_receipt_smoke.gd  # helper res://tests/wave_projectile_before.gd was never committed (cloud-session only)
+tests/zeus_receipt_audio_smoke.gd  # helper res://tests/zeus_receipt_helper.gd was never committed (cloud-session only)
