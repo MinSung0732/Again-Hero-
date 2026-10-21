@@ -5,3 +5,6 @@ docs/optimization/20261010/changes.patch -whitespace
 *.import text eol=lf
 *.uid text eol=lf
 project.godot text eol=lf
+
+# Shell scripts must keep LF or bash fails on Windows checkouts.
+*.sh text eol=lf
