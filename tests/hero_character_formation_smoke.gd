@@ -12,6 +12,7 @@ class HeroFixture extends Node2D:
 	var hero_id := "ranged_rookie"
 	var build_counts: Dictionary = {}
 	var max_hp := 1200
+	var current_hp := 1200
 	var move_speed := 270.0
 	var exp_pickup_radius := 150.0
 	var exp_gain_multiplier := 1.0
@@ -22,18 +23,26 @@ func check(ok: bool,label: String) -> void:
 func run() -> void:
 	root.get_node("CloudStore").stop(); root.get_node("LoginGateway").remember_session_enabled = false
 	SCOPE.select_guest(); SCOPE.guest_directory = "user://character_formation_"+str(Time.get_ticks_usec()); DirAccess.make_dir_recursive_absolute(SCOPE.guest_directory)
-	var progress := ConfigFile.new(); progress.set_value("progress","current_stage_id","stage_1"); progress.set_value("progress","highest_unlocked_stage",1); progress.set_value("cleared","stage_2",true)
+	# Hero mode opens after demon easy stage 3 (mode_unlock_catalog); each hero needs
+	# the demon easy clear of its origin stage (2026-10-14).
+	var progress := ConfigFile.new(); progress.set_value("progress","current_stage_id","stage_1"); progress.set_value("progress","highest_unlocked_stage",1)
+	for number in range(1,4): progress.set_value("cleared","stage_%d" % number,true)
 	check(SCOPE.save_config(progress,"user://stage_progress.cfg") == OK,"isolated campaign fixture")
 	var config := ConfigFile.new(); config.set_value("team","monster_ids","orc,spider,slime"); config.set_value("hero_growth","stage_1_vitality",2)
 	check(SCOPE.save_config(config,"user://team_loadout.cfg") == OK,"legacy loadout fixture")
 	check(STORE.selected_hero() == CHARACTERS.DEFAULT_HERO,"default apprentice")
 	check(STORE.growth_level(CHARACTERS.DEFAULT_HERO,"vitality") == 2,"legacy character growth migrates by origin key")
 	check(not STORE.select_battle_stage("stage_10"),"new account cannot skip hero stages")
+	# Battlefields unlock only through contiguous hero easy wins (2026-10-15); legacy
+	# aggregate wins never grant stages.
 	for number in range(1,10): config.set_value("hero_progress","stage_%d_wins" % number,1)
-	check(SCOPE.save_config(config,"user://team_loadout.cfg") == OK,"prior hero wins migrate separately from campaign")
+	check(SCOPE.save_config(config,"user://team_loadout.cfg") == OK and not STORE.select_battle_stage("stage_10"),"legacy aggregate wins cannot skip hero stages")
+	for number in range(1,10): config.set_value("hero_progress","stage_%d_easy_wins" % number,1)
+	check(SCOPE.save_config(config,"user://team_loadout.cfg") == OK,"contiguous hero easy wins fixture")
 	check(STORE.select_battle_stage("stage_10") and STORE.selected_hero() == CHARACTERS.DEFAULT_HERO,"map selection never changes hero")
-	check(not STORE.select_hero("swift_hunter"),"easy clear is insufficient to select locked hero")
-	check(PROGRESS.complete_hard_stage("stage_2").success and STORE.select_hero("swift_hunter"),"matching hard clear unlocks hero selection")
+	check(not STORE.select_hero("pistol_hero"),"hero locked until its demon origin stage is cleared")
+	progress.set_value("cleared","stage_4",true)
+	check(SCOPE.save_config(progress,"user://stage_progress.cfg") == OK and STORE.select_hero("pistol_hero"),"matching demon easy clear unlocks hero selection")
 	check(STORE.selected_battle_stage() == "stage_10","hero selection never changes map")
 	var ticket := STAMINA.try_enter("stage_10",true,-1,false)
 	check(ticket.success and not STAMINA.claim_battle_entry("stage_10").is_empty(),"independent map has valid stamina receipt")
@@ -43,7 +52,7 @@ func run() -> void:
 	SCOPE.load_config(config,"user://team_loadout.cfg")
 	check(config.get_value("team","monster_ids","") == "orc,spider,slime","demon formation preserved")
 	check(STORE.set_character_owned_in_config(config,"sage_astra") and not STORE.set_character_owned_in_config(config,"unknown"),"future collection grant validates stable hero IDs")
-	check(SCOPE.save_configs({"team_loadout.cfg":config}) == OK and STORE.character_unlocked("sage_astra"),"collection ownership is usable without hard clear")
+	check(SCOPE.save_configs({"team_loadout.cfg":config}) == OK and not STORE.character_unlocked("sage_astra"),"collection ownership alone cannot bypass the demon clear")
 	var fixture := HeroFixture.new(); root.add_child(fixture)
 	var seen: Dictionary = {}
 	for hero_id in CHARACTERS.ORDER:

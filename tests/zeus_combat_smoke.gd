@@ -340,6 +340,8 @@ func run() -> void:
 		DirAccess.remove_absolute(folder.path_join(file))
 	DirAccess.remove_absolute(folder)
 	SCOPE.guest_directory = "user://"
+	# CloudStore fences account writes on a live cloud session (10-17); this offline scenario drops it.
+	SCOPE.write_allowed = Callable()
 	var hex := Crypto.new().generate_random_bytes(16).hex_encode()
 	var account := "%s-%s-%s-%s-%s" % [hex.substr(0,8),hex.substr(8,4),hex.substr(12,4),hex.substr(16,4),hex.substr(20,12)]
 	check(SCOPE.select_account(account),"isolated account")

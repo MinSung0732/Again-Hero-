@@ -42,6 +42,13 @@ func run() -> void:
 	for id in ["slime", "spider", "orc", "wolf"]:
 		state[id]["unlocked"] = true
 	check(COLLECTION.save_state(state), "isolated collection")
+	# Returning guest: since 10-12 a fresh guest gets the prologue/first-step tutorial modal, which blocks lobby input.
+	var cfg := ConfigFile.new()
+	SCOPE.load_config(cfg, "user://stage_progress.cfg")
+	cfg.set_value("player_profile", "value", {"nickname": "카드마왕", "gender": "female", "required": true, "completed": true})
+	cfg.set_value("guest_tutorial", "status", "skipped")
+	cfg.set_value("guest_tutorial", "claimed", true)
+	check(SCOPE.save_config(cfg, "user://stage_progress.cfg") == OK, "returning guest profile")
 	if "--no-warmup" not in OS.get_cmdline_user_args():
 		await root.get_node("PresentationWarmup").prepare_scene("res://src/lobby/Lobby.tscn")
 		for id in preload("res://src/data/monster_catalog.gd").ORDER:
@@ -84,7 +91,9 @@ func run() -> void:
 	var card: Control = view.grid.get_child(0)
 	var portrait: TextureRect = card.find_child("MonsterPortrait", true, false)
 	var icon: Texture2D = portrait.texture
-	check(portrait.texture.get_size() == Vector2(1254, 1254), "authored Zeus icon used, not idle sprite")
+	# Since 10-09 collection cards show the actual combat idle sprite (MonsterCatalog.get_ui_icon_path), not the old 1254px icon.
+	var catalog = preload("res://src/data/monster_catalog.gd")
+	check(catalog.get_ui_icon_path("zeus") == String(catalog.get_monster("zeus").card_icon_path) and portrait.texture != null and portrait.texture == lobby._team_monster_card_icon("zeus"), "Zeus card uses the shared combat idle sprite")
 	check(portrait.texture_filter == CanvasItem.TEXTURE_FILTER_NEAREST, "pixel icon uses nearest")
 	check(card.find_child("TranscendentFrame", true, false) is NinePatchRect, "rarity PNG frame attached")
 	check(card.find_child("MonsterName", true, false).text == "제우스", "card name readable")

@@ -79,7 +79,8 @@ func run() -> void:
 	var scout_before: int = scout.current_hp
 	for i in range(100): actor._tick_other_enemies(0.01)
 	actor._tick_other_enemies(0.001)
-	check(scout.current_hp==scout_before-65 and bool(scout.get_meta("burn_active",false)),"actual secondary cone contact and burn")
+	# One second of cone contact deals exactly one attack_damage (72 since the 10-11 pass).
+	check(scout.current_hp==scout_before-actor.attack_damage and bool(scout.get_meta("burn_active",false)),"actual secondary cone contact and burn")
 	check(preload("res://src/data/status_effect_catalog.gd").outgoing_multiplier(scout)==0.5,"secondary attack half")
 	preload("res://src/systems/received_afflictions.gd").apply_slow(scout,0.7,3.0)
 	check(preload("res://src/data/status_effect_catalog.gd").movement_multiplier(scout)==0.7,"secondary slow")

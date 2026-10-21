@@ -43,7 +43,14 @@ func run() -> void:
 	root.size = Vector2i(1080, 1920)
 	root.get_node("LoginGateway").remember_session_enabled = false
 	SCOPE.guest_directory = "user://formation_touch_" + Crypto.new().generate_random_bytes(16).hex_encode()
+	DirAccess.make_dir_recursive_absolute(SCOPE.guest_directory)
 	SCOPE.select_guest()
+	# Returning guest: since 10-12 a fresh guest gets the prologue/first-step tutorial modal, which blocks lobby input.
+	var cfg := ConfigFile.new()
+	cfg.set_value("player_profile", "value", {"nickname": "터치마왕", "gender": "female", "required": true, "completed": true})
+	cfg.set_value("guest_tutorial", "status", "skipped")
+	cfg.set_value("guest_tutorial", "claimed", true)
+	SCOPE.save_config(cfg, "user://stage_progress.cfg")
 	var lobby = load("res://src/lobby/Lobby.tscn").instantiate()
 	root.add_child(lobby)
 	current_scene = lobby

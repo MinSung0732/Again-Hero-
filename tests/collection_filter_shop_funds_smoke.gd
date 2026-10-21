@@ -4,6 +4,7 @@ const SCOPE := preload("res://src/systems/account_save_scope.gd")
 const STORE := preload("res://src/systems/monster_collection_store.gd")
 const PROGRESS := preload("res://src/systems/stage_progress.gd")
 const CATALOG := preload("res://src/data/monster_catalog.gd")
+const TRANSCENDENCE := preload("res://src/data/transcendence_catalog.gd")
 var failed := false
 
 func _initialize() -> void:
@@ -20,11 +21,22 @@ func set_gold(amount: int) -> void:
 	config.set_value("meta", "gold", amount)
 	check(SCOPE.save_config(config, PROGRESS.SAVE_PATH) == OK, "gold fixture saved")
 
+# Transcendent monsters register through their own formation mode.
+func team_ids() -> Array:
+	return CATALOG.ORDER.filter(func(id): return not TRANSCENDENCE.is_transcendent(String(id)))
+
 func ids(lobby: Control) -> Array:
 	var result := []
 	for card in lobby.team_monster_grid.get_children():
 		result.append(card.formation_id)
 	return result
+
+# Cold collection cards are built across frames by the formation card cache.
+func settle(lobby: Control) -> void:
+	var frames := 0
+	while lobby._formation_card_cache.pending and frames < 600:
+		frames += 1
+		await process_frame
 
 func capture(name: String) -> void:
 	if "--capture" in OS.get_cmdline_user_args() and DisplayServer.get_name() != "headless":
@@ -45,11 +57,13 @@ func run() -> void:
 	lobby._on_team_tab_pressed()
 	await process_frame
 	await process_frame
+	await settle(lobby)
 	var selected: Array = lobby.team_selected_ids.duplicate()
 	var ordered: Array = ids(lobby)
-	check(ordered.size() == CATALOG.ORDER.size(), "all monsters shown")
+	check(ordered.size() == team_ids().size(), "all team monsters shown")
 	for descending in [false, true]:
 		lobby._on_formation_cost_sort_selected(descending)
+		await settle(lobby)
 		ordered = ids(lobby)
 		var locked_seen := false
 		for id in ordered:
@@ -66,28 +80,35 @@ func run() -> void:
 				check(a >= b if descending else a <= b, "cost sort within unlock group")
 	var filters := lobby.get_node("SafeArea/Layout/Content/TeamTab/TeamLayout/UnlockFilters")
 	filters.get_node("UnlockedButton").pressed.emit()
+	await settle(lobby)
 	check(ids(lobby).size() == 3, "three unlocked starters")
 	await capture("unlocked")
 	for card in lobby.team_monster_grid.get_children():
 		check(card.drag_enabled and card.tapped.is_connected(lobby._open_monster_detail.bind(card.formation_id)), "unlocked details/drag unchanged")
 	filters.get_node("LockedButton").pressed.emit()
-	check(ids(lobby).size() == CATALOG.ORDER.size()-3, "locked filter count")
+	await settle(lobby)
+	check(ids(lobby).size() == team_ids().size()-3, "locked filter count")
 	await capture("locked")
 	for card in lobby.team_monster_grid.get_children():
 		check(not card.drag_enabled, "locked cannot drag")
 	check(lobby.team_selected_ids == selected, "filter never modifies team")
 	lobby._show_formation_mode("skill")
-	check(not filters.visible and lobby.team_monster_grid.get_child_count() == lobby.demon_skill_catalog_ids.size(), "skills not filtered")
+	check(lobby.team_monster_grid.get_child_count() == lobby.demon_skill_catalog_ids.size(), "skills not filtered")
+	# Known game bug: transcendence_formation_view.refresh(false) re-shows the row.
+	check(not filters.visible, "monster unlock filter row hidden in skill mode")
 	lobby._show_formation_mode("team")
+	await settle(lobby)
 	check(filters.visible and lobby.formation_unlock_filter == "locked", "filter retained on return")
 	var state := STORE.load_state()
 	for id in CATALOG.ORDER:
 		state[id].unlocked = true
 	STORE.save_state(state)
 	lobby._restore_saved_team_selection()
+	await settle(lobby)
 	check(ids(lobby).is_empty() and lobby.get_node("SafeArea/Layout/Content/TeamTab/TeamLayout/EmptyCollection").visible, "empty filter explains no results")
 	filters.get_node("AllButton").pressed.emit()
-	check(ids(lobby).size() == CATALOG.ORDER.size(), "all filter recovers list")
+	await settle(lobby)
+	check(ids(lobby).size() == team_ids().size(), "all filter recovers list")
 	lobby._switch_tab("shop")
 	var single := lobby.shop_single_button.get_node("SummonButton") as Button
 	var multi := lobby.shop_multi_button.get_node("SummonButton") as Button

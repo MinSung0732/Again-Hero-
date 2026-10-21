@@ -7,6 +7,8 @@ class BattleStub extends Node2D:
 	var battle_over := false
 	var external_pause := false
 	var demon_augment_selection_active := false
+	# Since 10-15 install() prewarms only the registered transcendent's kit.
+	var transcendence := {"monster_id": "bulgasal"}
 
 class ActorStub extends Node2D:
 	var current_hp := 100
@@ -52,6 +54,8 @@ func run() -> void:
 	await process_frame
 	var cinematic = preload("res://src/ui/battle_summon_cinematic.gd").new()
 	cinematic.install(host)
+	var bulgasal_view := String(preload("res://src/data/battle_summon_cinematic_catalog.gd").ENTRIES.bulgasal.view)
+	check(cinematic.views.keys()==[bulgasal_view],"install prewarms only the registered transcendent view")
 	var original_transform := original.transform
 	var original_zoom := original.zoom
 	Engine.time_scale=0.75
@@ -88,13 +92,8 @@ func run() -> void:
 		host.battle.external_pause=false
 		host.battle.demon_augment_selection_active=false
 		actor.current_hp=100
-	# The original fixture predates four additional transcendent presentations.
-	# Verify catalog-driven unique prewarmed views instead of assuming two monsters.
-	var expected_views: Dictionary = {}
-	for entry in preload("res://src/data/battle_summon_cinematic_catalog.gd").ENTRIES.values():
-		if bool(entry.get("prewarm",true)):
-			expected_views[String(entry.view)] = true
-	check(cinematic.views.size()==expected_views.size(),"one cached view per transcendent")
+	# Repeated plays reuse the one cached view instead of building other kits.
+	check(cinematic.views.keys()==[bulgasal_view],"one cached view per transcendent")
 	Engine.time_scale=1.0
 	host.battle_viewport_container.size=Vector2(540,650)
 	cinematic.play("bulgasal",actor)

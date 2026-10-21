@@ -42,7 +42,8 @@ func run() -> void:
 	await process_frame
 	check(view.other_menu.visible and not view.settings_root.visible, "other tab opens category list instead of settings")
 	check(not view.other_navigation.visible,"category list has no back button")
-	check(view.other_menu_buttons.size() == 9, "nine categories include profile and gated practice")
+	# Missions/community moved to lobby trays on 10-10 (50fffc7a); the list follows the UI policy catalog.
+	check(view.other_menu_buttons.size() == view.OTHER_ENTRIES.size() and view.other_menu_buttons.has("profile") and view.other_menu_buttons.has("practice"), "categories include profile and gated practice")
 	var outer: Rect2 = lobby.other_tab.get_global_rect()
 	var menu_title_rect: Rect2 = view.menu_title_plate.get_global_rect()
 	var team_title_rect: Rect2 = lobby.team_tab.get_node("TitlePlate").get_global_rect()
@@ -193,7 +194,8 @@ func run() -> void:
 	check(view.cloud_status.text == "클라우드 저장 사용 중", "ready cloud status")
 	cloud.conflict = true
 	cloud.status_changed.emit("저장 충돌 테스트")
-	check(view.cloud_status.text.contains("충돌"), "cloud status updates by signal")
+	# Since 10-17 (canonical cloud saves) a conflict is shown as a server save check, not a raw conflict.
+	check(view.cloud_status.text == "서버 저장 확인 중…", "cloud status updates by signal")
 	check(lobby.other_account_panel.get_node("Guide").text == "저장 충돌 테스트", "last sync result remains visible")
 	cloud.stop()
 	gateway.user_id = ""

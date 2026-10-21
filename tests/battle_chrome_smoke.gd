@@ -80,7 +80,10 @@ func run() -> void:
 		root.get_texture().get_image().save_png("res://battle-castle-stage-%d.png" % stage_number)
 	main.settings_battle_frame.button_pressed = false
 	await process_frame
-	check(not chrome.visible and main.battle_viewport_container.offset_left == 0 and main.battle_viewport_container.position.y == 350, "off hides surround and restores wide viewport")
+	# Since 10-12 the combat insight strip sits above the field, so the play area keeps the raised top while it is shown.
+	var insight := main.hud_layer.get_node_or_null("CombatInsight") as Control
+	var frameless_top := 420.0 if insight != null and insight.visible else 350.0
+	check(not chrome.visible and main.battle_viewport_container.offset_left == 0 and main.battle_viewport_container.position.y == frameless_top, "off hides surround and restores wide viewport")
 	main.battle_frame_enabled = true
 	main._load_gameplay_settings()
 	check(not main.battle_frame_enabled, "frame choice persisted")

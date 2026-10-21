@@ -52,24 +52,31 @@ func run() -> void:
 		check(main.result_title.text.begins_with("승리" if won else "패배"), "localized result title")
 		check(main.result_reward.text.contains("+141" if won else "+41"), "actual granted reward shown")
 		check(main.result_reward.text.contains("전투 골드 +84" if won else "전투 골드 +24"), "gold reward explicitly shown")
+		# Width follows the authored beveled frame asset (4px since 10-06), equal on every side.
+		var authored := load("res://assets/art/UI/clean_frames/button_frame.tres") as StyleBoxFlat
 		for button in [main.restart_button, main.stage_select_result_button, main.next_stage_button]:
 			var frame := button.get_theme_stylebox("normal") as StyleBoxFlat
-			check(frame != null and frame.border_width_top == 2 and frame.border_width_left == 2, "continuous uniform button border")
+			check(frame != null and frame.border_width_top == authored.border_width_top and frame.border_width_left == authored.border_width_left and frame.border_width_right == authored.border_width_right and frame.border_width_bottom == authored.border_width_bottom, "continuous uniform button border")
 		check(not main.result_message.text.contains("산정"), "calculation separated from headline")
 		check(main.result_analysis.text.contains("◆ 전투 기록") and not main.result_analysis.text.contains("◆ 보상 상세"), "compact battle record")
-		for hidden in ["용사 증강", "전략 전환", "마왕 최종", "일반증강", "특수증강", "직접 소환"]:
+		# Direct summons, strategy switches and hero augment counts are shown since 10-13 (first-minute strategy).
+		for hidden in ["마왕 최종", "일반증강", "특수증강"]:
 			check(not main.result_analysis.text.contains(hidden), "hidden result metric " + hidden)
 		check(main.result_analysis.get_global_rect().end.y <= main.next_stage_button.get_global_rect().position.y if won else main.result_analysis.get_global_rect().end.y <= main.restart_button.get_global_rect().position.y, "record fits above buttons without scroll")
 		check(main.result_panel.get_global_rect().end.y <= 1920 and main.restart_button.get_global_rect().end.y <= main.result_panel.get_global_rect().end.y, "panel/actions stay in screen")
-		check(main.restart_button.pressed.is_connected(main._on_restart_pressed) and main.stage_select_result_button.pressed.is_connected(main._on_lobby_pressed), "existing actions connected")
+		check(main.restart_button.pressed.is_connected(main._on_restart_pressed) and main.stage_select_result_button.pressed.is_connected(main._on_result_formation_pressed), "existing actions connected")
 		check(won or not main.next_stage_button.visible, "no next-stage action on defeat")
 		check(not won or main.next_stage_button.visible, "unlocked next stage shown on victory")
 		await capture("victory" if won else "defeat")
 	var failed_reward := COPY.format_message("시간 초과!\nRun 연구 보상 저장 실패")
 	check(failed_reward.reward.is_empty() and failed_reward.details.contains("저장 실패"), "failed award never shown as granted")
-	var full_summary := "Run 02:53 / 목표 05:00\nHero 최저 HP: 65 (13%)\nHero 누적 HP 피해: 1240\n마왕 EXP 기여: 밴시 130\n" + "직접 소환: 밴시 100\n전략 전환: 밴시→박쥐\nHero 증강 30회\n마왕 최종 Lv.30\n일반증강: 공격력 증가\n특수증강: 은신\n첫 특수증강: 01:30\n".repeat(60)
+	# RunMetrics writes each shown metric once; large builds grow the detail lists and the per-line content.
+	var full_summary := "Run 02:53 / 목표 05:00\nHero 최저 HP: 65 (13%)\nHero 누적 HP 피해: 1240\n마왕 EXP 기여: 밴시 130\n직접 소환: " + "밴시 100 · ".repeat(60) + "\n전략 전환: 밴시→박쥐\nHero 증강 30회 · 마지막 Lv.30 은신 (특수)\n" + "마왕 최종 Lv.30\n일반증강: 공격력 증가\n특수증강: 은신\n첫 특수증강: 01:30\n".repeat(60)
 	var compact := COPY.format_analysis(full_summary, "보상 산정 내역")
-	check(compact.split("\n").size() == 6 and compact.contains("누적 HP 피해"), "large builds cannot grow result content")
+	var longest := 0
+	for line in compact.split("\n"):
+		longest = maxi(longest, line.length())
+	check(compact.split("\n").size() == 9 and longest <= 180 and compact.contains("누적 HP 피해"), "large builds cannot grow result content")
 	check(main.get_node("HUD/ResultPanel/Margin/VBox/ResultAnalysisArea") is MarginContainer, "result contains no scrolling area")
 	main.free()
 	for file in DirAccess.get_files_at(folder):

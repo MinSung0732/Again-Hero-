@@ -57,7 +57,8 @@ func run() -> void:
 	var actor = SCENE.instantiate()
 	actor.configure_combat_context(target,authority)
 	actor.configure_transcendence(10,0)
-	check(actor.attack_damage==230 and actor.max_hp==2510 and actor.summon_snapshot==10,"pre-summon status snapshot")
+	# 10-11: status growth follows the shared CONTROL role standard (catalog-owned).
+	check(actor.attack_damage==int(round(DATA.BASE.attack_damage+10*DATA.STATUS_GROWTH.attack_damage)) and actor.max_hp==int(round(DATA.BASE.max_hp+10*DATA.STATUS_GROWTH.max_hp)) and actor.summon_snapshot==10,"pre-summon status snapshot")
 	actor.configure_transcendence(0,0)
 	authority.add_child(actor)
 	actor.set_physics_process(false)

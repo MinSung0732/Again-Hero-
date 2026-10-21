@@ -64,7 +64,9 @@ func run() -> void:
 	hero._clear_medusa_statuses()
 	var survivor = spawn()
 	survivor.configure_special_augments({"succubus_shadow_recovery": AUGMENTS.get_augment("succubus_shadow_recovery").effect_values, "succubus_shadow_ambush": AUGMENTS.get_augment("succubus_shadow_ambush").effect_values})
-	var base_damage: int = survivor.attack_damage
+	# The growth multiplier scales the unrounded level base (e.g. 22.5 after the 10-11
+	# budget pass), not the rounded displayed attack, so expect round(base * 1.2).
+	var base_damage: float = float(survivor.get_meta("demon_level_base_attack_damage", survivor.attack_damage))
 	survivor.take_damage(100000)
 	check(not survivor.dying and survivor.current_hp == int(round(survivor.max_hp * 0.3)) and survivor.infiltration_timer == 3, "fatal survives once and heals to thirty percent")
 	hp = survivor.current_hp
@@ -72,7 +74,7 @@ func run() -> void:
 	survivor._physics_process(1)
 	check(survivor.current_hp == hp and survivor.velocity == Vector2.ZERO and is_equal_approx(survivor.visual.modulate.a,0.4), "infiltration immune action locked translucent")
 	survivor._physics_process(2)
-	check(survivor.infiltration_finished and survivor.attack_damage == int(round(base_damage * 1.2)), "exit twenty percent growth")
+	check(survivor.infiltration_finished and survivor.attack_damage == int(round(base_damage * 1.2)) and survivor.attack_damage > int(round(base_damage)), "exit twenty percent growth")
 	battle._apply_demon_level_scaling_to_monster(survivor,true)
 	check(survivor.attack_damage == int(round(base_damage * 1.2)), "growth does not compound exit bonus")
 	survivor.take_damage(100000)

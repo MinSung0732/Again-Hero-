@@ -55,15 +55,23 @@ func run() -> void:
 	var vault_path := fixture("vault", "extends Node\nvar clears := 0\nfunc clear_session() -> bool: clears += 1; return true\nfunc save_session(_id: String, _token: String) -> bool: return true\nfunc read_session() -> Dictionary: return {}\n")
 	var config_path := fixture("config", "extends RefCounted\nconst PROJECT_URL := \"https://fixture.invalid\"\nconst PUBLISHABLE_KEY := \"fixture-public-key\"\n")
 	scope = load(scope_path)
-	var cloud_source := FileAccess.get_file_as_string("res://src/network/cloud_store.gd").replace("res://src/systems/account_save_scope.gd", scope_path).replace("res://src/network/supabase_config.gd", config_path)
+	var cloud_source := FileAccess.get_file_as_string("res://src/network/cloud_store.gd").replace("\r", "").replace("res://src/systems/account_save_scope.gd", scope_path).replace("res://src/network/supabase_config.gd", config_path)
 	# Replace only HTTP transport; retain complete initialize/flush/withdraw logic.
 	cloud_source = cloud_source.replace(method(cloud_source, "request_rpc"), "func request_rpc(name: String, _data: Dictionary) -> Dictionary:\n\tcalls.append(name)\n\tif slow_reply: await get_tree().process_frame\n\treturn replies.pop_front() if not replies.is_empty() else {}\n\n")
 	cloud_source += "\nvar calls: Array[String] = []\nvar replies: Array[Dictionary] = []\nvar slow_reply := false\n"
 	var cloud_script := script(cloud_source, "complete cloud logic compiles")
 	var guest_path := fixture("guest", "extends RefCounted\nstatic func ensure_available() -> bool: return true\nstatic func is_guest() -> bool: return false\nstatic func capture() -> Dictionary: return {}\nstatic func reset() -> bool: return true\nstatic func mark_consumed(_folder: String, _guest: String, _account: String) -> bool: return true\n")
-	var login_source := FileAccess.get_file_as_string("res://src/network/login_gateway.gd").replace("res://src/systems/account_save_scope.gd",scope_path).replace("res://src/network/windows_oauth.gd",oauth_path).replace("res://src/network/session_vault.gd",vault_path).replace("res://src/systems/guest_progress_store.gd",guest_path)
+	var login_source := FileAccess.get_file_as_string("res://src/network/login_gateway.gd").replace("\r", "").replace("res://src/systems/account_save_scope.gd",scope_path).replace("res://src/network/windows_oauth.gd",oauth_path).replace("res://src/network/session_vault.gd",vault_path).replace("res://src/systems/guest_progress_store.gd",guest_path)
 	var login_script := script(login_source, "complete login logic compiles")
 	if failures > 0: quit(1); return
+	# Project autoloads exist in --script runs; replace them so /root/<Name>
+	# resolves to these fixtures instead of auto-renamed duplicates.
+	root.get_node("CloudConnectionOverlay").free()
+	root.get_node("CloudStore").stop()
+	for autoload in ["LoginGateway", "CloudStore", "LocalTestMode", "SceneTransition"]:
+		var real := root.get_node(autoload)
+		root.remove_child(real)
+		real.free()
 	var transition := Transition.new()
 	transition.name = "SceneTransition"
 	root.add_child(transition)
@@ -130,7 +138,7 @@ func run() -> void:
 	check(not gateway.withdrawal_busy and gateway.user_id.is_empty(), "async completion clears lock/session")
 	cloud.slow_reply = false
 	# Compile/execute actual codex guard and direct preview method with a data fixture.
-	var codex_source := FileAccess.get_file_as_string("res://src/ui/lobby_demon_codex_view.gd")
+	var codex_source := FileAccess.get_file_as_string("res://src/ui/lobby_demon_codex_view.gd").replace("\r", "")
 	var collection_path := fixture("collection", "extends RefCounted\nstatic var state := {}\nstatic func load_state() -> Dictionary: return state\nstatic func is_unlocked(id: String, data: Dictionary) -> bool: return data.get(id,{}).get(\"owned\",false)\nstatic func get_upgrade_level(id: String, data: Dictionary) -> int: return data.get(id,{}).get(\"level\",0)\n")
 	var monster_path := fixture("monsters", "extends RefCounted\nstatic func get_monster_name(id: String) -> String: return id\n")
 	var data_path := fixture("data", "extends RefCounted\nconst MONSTERS = preload(\""+monster_path+"\")\nstatic func artwork(_id: String, _kind: String) -> String: return \"fixture\"\n")
@@ -157,7 +165,7 @@ func run() -> void:
 		view.preview_title.free(); view.preview_image.free(); view.preview_background.free(); view.preview_root.free()
 	# Build the actual withdrawal section and modal, keeping the unrelated profile
 	# page fixture small. UI checks never call a real network transport.
-	var settings_source := FileAccess.get_file_as_string("res://src/ui/lobby_settings_view.gd")
+	var settings_source := FileAccess.get_file_as_string("res://src/ui/lobby_settings_view.gd").replace("\r", "")
 	var section := method(settings_source,"_build_account")
 	section = section.substr(section.find("\tvar withdrawal := Button.new()"))
 	# Guest-link UI has its own suite; avoid loading the full presentation tree.

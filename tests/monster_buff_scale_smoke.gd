@@ -52,7 +52,14 @@ func run() -> void:
 	await battle.prepare_spawn_resources()
 	battle.hero.set_physics_process(false)
 	for id in CATALOG.ORDER:
+		# Transcendents (added after this test) only enter through the once-per-battle
+		# summon gate, and combat-disabled entries never spawn; neither gets support buffs here.
+		if CATALOG.get_rarity(id) == "transcendent" or not bool(CATALOG.MONSTERS[id].get("combat_enabled", true)):
+			continue
 		var actor = battle._spawn_monster(id, Vector2(1200, 1000))
+		check(actor != null, "ordinary monster spawns " + id)
+		if actor == null:
+			continue
 		actor.set_physics_process(false)
 		for variant in ["normal", "elite"]:
 			if variant == "elite":

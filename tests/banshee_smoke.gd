@@ -146,9 +146,12 @@ func run() -> void:
 	check(is_instance_valid(spawned), "death threshold spawns elite")
 	if is_instance_valid(spawned):
 		spawned.set_physics_process(false)
-		check(spawned.max_hp == 88 and spawned.attack_damage == 4 and is_equal_approx(spawned.move_speed,110) and is_equal_approx(spawned.attack_cooldown,1), "spawned elite excludes all normal/global augments")
+		# Since the 10-11 grade/role budget pass the catalog's balanced base stats
+		# (not the raw authored 88 HP / 4 ATK) are the augment-free baseline.
+		var base := CATALOG.get_base_stats("banshee")
+		check(spawned.max_hp == int(base.max_hp) and spawned.attack_damage == int(base.attack_damage) and is_equal_approx(spawned.move_speed,float(base.move_speed)) and is_equal_approx(spawned.attack_cooldown,float(base.attack_cooldown)), "spawned elite excludes all normal/global augments")
 		battle._refresh_alive_monsters_for_augments()
-		check(spawned.special_augment_configs.is_empty() and spawned.max_hp == 88, "later augment selections stay excluded")
+		check(spawned.special_augment_configs.is_empty() and spawned.max_hp == int(base.max_hp), "later augment selections stay excluded")
 		check(spawned.get_meta("visual_variant") == "elite" and spawned.visual.sprite_frames.get_frame_count("death") == 5, "elite visual and skill linked")
 		if "--capture" in OS.get_cmdline_user_args() and DisplayServer.get_name() != "headless":
 			hero.position = Vector2(1000,1000)

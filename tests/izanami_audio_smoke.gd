@@ -29,8 +29,12 @@ func run() -> void:
 		var stream := player.stream as AudioStreamWAV
 		check(stream!=null and stream.get_length()>0.4,id+" decodes")
 		if stream==null: continue
-		check(stream.mix_rate==44100 and stream.format==AudioStreamWAV.FORMAT_16_BITS,id+" PCM16 44.1kHz")
-		var pcm := stream.data
+		# The cues import with compress/mode=2 (QOA), so the imported stream.data is
+		# compressed; analyse the authored source WAV decoded as uncompressed PCM.
+		var source_wav := AudioStreamWAV.load_from_file(String(DATA.CUES[id].path),{"compress/mode":0})
+		check(source_wav!=null and source_wav.mix_rate==44100 and source_wav.format==AudioStreamWAV.FORMAT_16_BITS,id+" PCM16 44.1kHz")
+		if source_wav==null: continue
+		var pcm := source_wav.data
 		var peak := 0.0
 		var sum_squared := 0.0
 		for i in range(0,pcm.size(),2):

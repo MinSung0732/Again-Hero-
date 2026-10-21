@@ -143,6 +143,7 @@ var _run_reward_granted=false
 var _run_reward_save_failed=false
 var practice_mode=false
 var hero_player_mode=false
+var online_match_mode=false
 var tutorial_mode=false
 var battle_over=false
 var demon_level=1

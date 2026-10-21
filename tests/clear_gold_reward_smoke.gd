@@ -38,6 +38,13 @@ func run() -> void:
 	check(PROGRESS.get_gold() == gold + 1000, "first clear gold added separately")
 	gold = PROGRESS.get_gold()
 	main.battle.current_stage_data["run_reward_multiplier"] = 3.0
+	# A run grants research once; model a separate defeat run that meets the
+	# partial-reward contribution rules (30s, summon spend 3, real damage).
+	main.battle._run_reward_granted = false
+	var metrics = main.battle.run_metrics
+	metrics.tick(maxf(float(main.battle.STAGE_CATALOG.RUN_REWARD_RULES.get("partial_min_seconds", 30.0)) - metrics.elapsed_seconds, 0.0) + 1.0)
+	metrics.record_summon("goblin", float(main.battle.STAGE_CATALOG.RUN_REWARD_RULES.get("partial_min_spend", 3.0)))
+	metrics.record_hero_damage(50)
 	var defeat_research_before := PROGRESS.get_research_points()
 	main.battle._on_run_time_up()
 	var defeat_research := PROGRESS.get_research_points() - defeat_research_before

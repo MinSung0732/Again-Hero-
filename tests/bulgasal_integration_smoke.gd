@@ -36,7 +36,8 @@ func run() -> void:
 	check(COSMETICS.select("avatar","bulgasal") and COSMETICS.select("banner","bulgasal"),"cosmetic selection")
 	check(COSMETICS.selected_id("avatar")=="bulgasal" and COSMETICS.selected_id("banner")=="bulgasal","cosmetics persist")
 	check(LOADOUT.save_id("bulgasal") and LOADOUT.load_id()=="bulgasal","transcendence registration persists")
-	check(not TEAM.save_ids(["bulgasal"],CATALOG.ORDER),"ordinary team excludes transcendent")
+	# Empty teams are a valid save since 10-12; the transcendent id is dropped, never stored.
+	check(TEAM.save_ids(["bulgasal"],CATALOG.ORDER) and not ("bulgasal" in TEAM.load_ids(CATALOG.ORDER,["slime"])),"ordinary team excludes transcendent")
 	var save_before := FileAccess.get_file_as_string(SCOPE.guest_directory.path_join("monster_collection.cfg"))
 	var gold_before := FileAccess.get_file_as_string(SCOPE.guest_directory.path_join("stage_progress.cfg"))
 	var overlay = OVERLAY.new()

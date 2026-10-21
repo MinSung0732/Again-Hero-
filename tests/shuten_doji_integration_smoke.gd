@@ -69,7 +69,9 @@ func run() -> void:
 	check(battle.try_summon_transcendent(),"actual successful summon")
 	var actor = battle.transcendent_actor
 	actor.set_physics_process(false)
-	check(actor.monster_type==id and actor.transcend_level==5 and actor.attack_damage==223 and actor.max_hp==2503 and actor.summon_snapshot==3,"actual scene and tier with pre-summon status snapshot")
+	# 10-11: status growth follows the shared CONTROL role standard (catalog-owned).
+	var shuten_data := preload("res://src/data/shuten_doji_behavior_catalog.gd")
+	check(actor.monster_type==id and actor.transcend_level==5 and actor.attack_damage==int(round(shuten_data.BASE.attack_damage+3*shuten_data.STATUS_GROWTH.attack_damage)) and actor.max_hp==int(round(shuten_data.BASE.max_hp+3*shuten_data.STATUS_GROWTH.max_hp)) and actor.summon_snapshot==3,"actual scene and tier with pre-summon status snapshot")
 	check(battle.command_power==command_before and not battle.try_summon_transcendent(),"free once per battle")
 	check(battle._spawn_monster(id,Vector2.ZERO)==null,"normal spawn cannot bypass unlock")
 	# Production Hero chain statuses, DOT and post-release immunity.

@@ -68,7 +68,9 @@ func run() -> void:
 			actor._play_rogue_combo_audio(3)
 			var cursor: int = actor.rogue_combo_audio_cursor
 			actor._play_rogue_combo_audio(0)
-			check(actor.rogue_combo_audio_cursor == cursor and actor.rogue_combo_audio_pool[0].pitch_scale == 1.0 and actor.rogue_combo_audio_pool[0].stream.get_length() <= .161,"rogue attacks have no pitch ladder or overlapping long tails")
+			# 10-15 (user request): the rogue basic attack shares the fighter slash cue,
+			# so the clip is long; the 280 ms gate and fixed pitch keep it from laddering.
+			check(actor.rogue_combo_audio_cursor == cursor and actor.rogue_combo_audio_pool[0].pitch_scale == 1.0 and actor.rogue_combo_audio_pool[0].stream.resource_path == actor.STAGE3_SLASH_AUDIO_PATH,"rogue attacks have no pitch ladder and reuse the fighter slash cue")
 			actor._play_rogue_blade_storm_audio()
 			check(actor.rogue_blade_storm_audio.playing,"major rogue skill remains audible")
 		if actor.hero_archetype == "pistol_gunner":

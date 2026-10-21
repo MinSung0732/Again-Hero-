@@ -61,6 +61,8 @@ func run() -> void:
 	SCOPE.guest_directory = previous_directory
 	var account_id := "00000000-0000-0000-0000-%012x" % Time.get_ticks_usec()
 	check(SCOPE.select_account(account_id), "isolated account namespace")
+	# Offline local account fixture: no claimed cloud session, so lift the CloudStore write fence (10-17).
+	SCOPE.write_allowed = Callable()
 	check(STORE.save_ids([], valid), "account bundle accepts empty team")
 	check(STORE.load_ids(valid, fallback).is_empty(), "account empty team reload")
 	SCOPE.select_guest()
@@ -88,6 +90,8 @@ func run() -> void:
 	check(notice._confirm.get_theme_stylebox("normal") is StyleBoxFlat, "authored clean button frame installed")
 	check(root.gui_get_focus_owner() == notice._confirm, "confirmation takes focus")
 	check(notice.blocks_lobby_input(InputEventMouseButton.new()), "lobby gestures blocked while modal open")
+	# The project stretch (canvas_items/expand) keeps a 1080 logical width; disable it so narrow widths reach the layout.
+	root.content_scale_mode = Window.CONTENT_SCALE_MODE_DISABLED
 	for width in [1080, 720, 480]:
 		root.size = Vector2i(width, 1920)
 		await process_frame

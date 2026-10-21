@@ -4,6 +4,9 @@ const SCOPE := preload("res://src/systems/account_save_scope.gd")
 const PROFILE := preload("res://src/systems/player_profile.gd")
 const STORE := preload("res://src/systems/profile_cosmetic_store.gd")
 const APPEARANCE := preload("res://src/systems/demon_appearance_store.gd")
+const COLLECTION := preload("res://src/systems/monster_collection_store.gd")
+# Since 10-11 only the initially chosen gender is owned, so the second cosmetic comes from a transcendent reward.
+const REWARD := "bulgasal"
 var failed := false
 
 func _initialize() -> void:
@@ -39,6 +42,15 @@ func tap(button: Button, drag: bool = false) -> void:
 	root.push_input(up, true)
 	await frames()
 
+func unlock_reward() -> bool:
+	var state := COLLECTION.load_state()
+	state[REWARD]["unlocked"] = true
+	return COLLECTION.save_state(state)
+
+func pick(picker: RefCounted, id: String) -> void:
+	picker._select_slot(picker.ids.find(id))
+	picker.confirm.emit_signal("confirmed")
+
 func capture(name: String) -> void:
 	if "--capture" in OS.get_cmdline_user_args() and DisplayServer.get_name() != "headless":
 		await RenderingServer.frame_post_draw
@@ -60,20 +72,25 @@ func run() -> void:
 	var config := ConfigFile.new()
 	config.set_value("player_profile", "value", {"nickname": "테스트", "gender": "male", "required": false, "completed": true})
 	config.set_value("meta", "gold", 777)
+	# Returning guest: since 10-12 a pending guest tutorial opens a modal that blocks lobby taps.
+	config.set_value("guest_tutorial", "status", "skipped")
+	config.set_value("guest_tutorial", "claimed", true)
 	check(SCOPE.save_config(config, PROFILE.PATH) == OK, "isolated fixture")
 	check(STORE.selected_id("banner") == "original_male", "legacy male default")
+	check(unlock_reward(), "isolated transcendent reward")
 	var identity := PROFILE.get_profile()
-	check(STORE.select("avatar", "original_female"), "select separate avatar")
+	check(not STORE.select("avatar", "original_female") and not STORE.select("banner", "original_female"), "other initial gender cosmetics stay locked")
+	check(STORE.select("avatar", REWARD), "select separate avatar")
 	check(STORE.selected_id("banner") == "original_male" and PROFILE.appearance_id() == "original_male", "avatar cannot change banner or dialogue")
-	check(STORE.select("banner", "original_female"), "select separate banner")
-	check(APPEARANCE.equip("original_female"), "existing representative selection")
+	check(STORE.select("banner", REWARD), "select separate banner")
+	check(not APPEARANCE.equip("original_female") and APPEARANCE.equip("original_male"), "representative limited to the initially chosen gender")
 	check(PROFILE.get_profile() == identity, "all cosmetic choices preserve identity")
 	check(not STORE.select("banner", "unknown") and not STORE.select("title", "original_male"), "invalid IDs and nonexistent features denied")
 	SCOPE.load_config(config, PROFILE.PATH)
 	check(config.get_value("meta", "gold") == 777, "save retains currency")
-	check(config.get_value("profile_cosmetics", "avatar_id") == "original_female" and config.get_value("profile_cosmetics", "banner_id") == "original_female", "stable independent IDs persisted")
+	check(config.get_value("profile_cosmetics", "avatar_id") == REWARD and config.get_value("profile_cosmetics", "banner_id") == REWARD, "stable independent IDs persisted")
 	SCOPE.select_guest()
-	check(STORE.selected_id("avatar") == "original_female", "selection restores after scope reload")
+	check(STORE.selected_id("avatar") == REWARD, "selection restores after scope reload")
 	await root.get_node("PresentationWarmup").prepare_scene("res://src/lobby/Lobby.tscn")
 	var lobby = load("res://src/lobby/Lobby.tscn").instantiate()
 	lobby.gameplay_settings_path = folder.path_join("options.cfg")
@@ -98,17 +115,21 @@ func run() -> void:
 	await capture("female")
 	var old_card_id: int = view.card.get_instance_id()
 	var old_texture: Texture2D = view.banner.texture
+	# Banner/avatar use dedicated preview-confirm pickers since 10-11; only the representative uses view.picker.
 	await tap(view.actions.banner, true)
-	check(not view.picker.visible, "dragging a change button cannot open selector")
+	check(not view.banner_picker.overlay.visible, "dragging a change button cannot open selector")
 	await tap(view.actions.banner)
-	check(view.picker.visible and view.picker_slot == "banner", "real selector signal")
+	check(view.banner_picker.overlay.visible and view.banner_picker.cosmetic_slot == "banner", "real selector signal")
 	await frames()
 	await capture("banner-picker")
-	view.picker_buttons.original_male.emit_signal("confirmed")
-	check(not view.picker.visible and STORE.selected_id("banner") == "original_male", "picker saves actual selection")
+	pick(view.banner_picker, "original_male")
+	check(not view.banner_picker.overlay.visible and STORE.selected_id("banner") == "original_male", "picker saves actual selection")
 	view.actions.avatar.emit_signal("confirmed")
-	view.picker_buttons.original_male.emit_signal("confirmed")
+	check(view.icon_picker.overlay.visible, "avatar opens icon picker")
+	pick(view.icon_picker, "original_male")
+	check(not view.icon_picker.overlay.visible and STORE.selected_id("avatar") == "original_male", "icon picker saves actual selection")
 	view.actions.representative.emit_signal("confirmed")
+	check(view.picker.visible and view.picker_slot == "representative" and view.picker_buttons.original_female.disabled and view.picker_buttons.original_female.text.contains("잠김"), "other initial gender shown locked")
 	view.picker_buttons.original_male.emit_signal("confirmed")
 	check(PROFILE.appearance_id() == "original_male" and PROFILE.get_profile() == identity, "representative picker retains canonical gender and nickname")
 	await frames()
@@ -122,16 +143,17 @@ func run() -> void:
 	lobby.settings_view.show_menu()
 	lobby.settings_view.show_profile()
 	check(view.card.get_instance_id() == old_card_id, "reentry reuses controls")
-	STORE.select("banner", "original_female")
+	STORE.select("banner", REWARD)
 	view.refresh()
 	check(view.banner.texture == old_texture, "reentry reuses cached texture")
 	view.open_picker("banner")
+	view.banner_picker._select_slot(view.banner_picker.ids.find("original_male"))
 	var second_folder := folder + "_second"
 	DirAccess.make_dir_recursive_absolute(second_folder)
 	SCOPE.guest_directory = second_folder
 	SCOPE.select_guest()
-	view._choose("original_male")
-	check(not view.picker.visible and not FileAccess.file_exists(second_folder.path_join("stage_progress.cfg")), "stale selector cannot write another scope")
+	view.banner_picker._confirm()
+	check(not view.banner_picker.overlay.visible and not FileAccess.file_exists(second_folder.path_join("stage_progress.cfg")), "stale selector cannot write another scope")
 	SCOPE.guest_directory = folder
 	SCOPE.select_guest()
 	lobby.settings_view.show_menu()
@@ -141,14 +163,16 @@ func run() -> void:
 	var hex := Crypto.new().generate_random_bytes(16).hex_encode()
 	var account_id := "%s-%s-%s-%s-%s" % [hex.substr(0, 8), hex.substr(8, 4), hex.substr(12, 4), hex.substr(16, 4), hex.substr(20, 12)]
 	check(SCOPE.select_account(account_id), "isolated account scope")
+	# Offline local account fixture: no claimed cloud session, so lift the CloudStore write fence (10-17).
+	SCOPE.write_allowed = Callable()
 	SCOPE.install({"stage_progress.cfg": {"player_profile": {"value": {"nickname": "여마왕", "gender": "female", "completed": true, "required": false}}, "meta": {"gold": 123}}}, 1)
 	check(STORE.selected_id("banner") == "original_female", "legacy female default")
-	check(STORE.select("avatar", "original_male") and STORE.select("banner", "original_male"), "account saves both slots")
+	check(unlock_reward() and STORE.select("avatar", REWARD) and STORE.select("banner", REWARD), "account saves both slots")
 	var snapshot := SCOPE.files.duplicate(true)
 	SCOPE.select_account(account_id)
-	check(STORE.selected_id("banner") == "original_male", "account restart restores selection")
+	check(STORE.selected_id("banner") == REWARD, "account restart restores selection")
 	SCOPE.install(snapshot, 2)
-	check(STORE.selected_id("avatar") == "original_male" and PROFILE.get_profile().gender == "female", "snapshot round trip retains separate identity and cosmetics")
+	check(STORE.selected_id("avatar") == REWARD and PROFILE.get_profile().gender == "female", "snapshot round trip retains separate identity and cosmetics")
 	SCOPE.load_config(config, PROFILE.PATH)
 	check(config.get_value("meta", "gold") == 123, "account currency preserved")
 	SCOPE.select_guest()

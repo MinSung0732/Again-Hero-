@@ -44,7 +44,9 @@ func run() -> void:
 	check(view.pages.size() == 1,"lazy initial page")
 	for category in DATA.CATEGORIES: view.select_category(category[0])
 	check(view.pages.size() == 4,"four categories")
-	check(DATA.monster_ids(false).size() == 21 and DATA.monster_ids(true).size() == 5,"actual catalog counts")
+	var ordinary_ids := DATA.monster_ids(false)
+	var transcendent_ids := DATA.monster_ids(true)
+	check(ordinary_ids.size() > 16 and not transcendent_ids.is_empty() and ordinary_ids.size() + transcendent_ids.size() == DATA.MONSTERS.ORDER.size() and transcendent_ids.all(func(id): return DATA.MONSTERS.get_rarity(id) == "transcendent"),"actual catalog counts")
 	for total in [0,1,16,17,200,300]:
 		var ids: Array = []
 		for i in range(total): ids.append("fixture_%d" % i)
@@ -84,7 +86,10 @@ func run() -> void:
 					check(view.preview_root.visible and view.preview_image.texture != null,"art preview " + id + kind)
 					view.close_preview()
 					check(view.detail_root.visible,"art returns to details")
-				check(page.art_buttons.plus_banner.disabled == (id not in ["zeus","manticore"]),"only registered five-upgrade banners")
+				# Since 10-11 the five-upgrade banner stays locked until that monster is unlocked and upgraded 5 times.
+				var plus_path := DATA.artwork(id,"plus_banner")
+				check(not plus_path.is_empty() and ResourceLoader.exists(plus_path),"registered five-upgrade banner " + id)
+				check(not view.artwork_unlocked(id,"plus_banner",before) and page.art_buttons.plus_banner.disabled and page.art_buttons.plus_banner.text.contains("잠김"),"unearned five-upgrade banner locked " + id)
 			view.close_detail()
 		page.search.text = "does-not-exist"
 		page.search.text_changed.emit(page.search.text)
@@ -103,9 +108,11 @@ func run() -> void:
 	view.select_category("monsters")
 	var ordinary: Dictionary = view.monster_pages.monsters
 	parent.size = Vector2(740,700)
-	view.set_page("monsters",1)
+	var last_page := DATA.page_count(ordinary.ids.size()) - 1
+	var last_count: int = ordinary.ids.size() - last_page * 16
+	view.set_page("monsters",last_page)
 	await frames()
-	check(ordinary.cards.size() == 5 and ordinary.previous.disabled == false and ordinary.next.disabled,"last page has five real entries")
+	check(ordinary.cards.size() == last_count and ordinary.previous.disabled == false and ordinary.next.disabled,"last page has only its real entries")
 	view.set_page("monsters",0)
 	await frames()
 	view.scroll.scroll_vertical = 70
@@ -125,7 +132,7 @@ func run() -> void:
 	view.set_page("monsters",1)
 	view._select_slot("monsters",0)
 	view.detail_close.confirmed.emit()
-	check(ordinary.page_index == 1 and ordinary.cards.size() == 5 and not view.detail_root.visible,"close retains second page")
+	check(ordinary.page_index == 1 and ordinary.cards.size() == mini(16,ordinary.ids.size()-16) and not view.detail_root.visible,"close retains second page")
 	ordinary.search.text = DATA.MONSTERS.get_monster_name("slime")
 	ordinary.search.text_changed.emit(ordinary.search.text)
 	check(ordinary.page_index == 0 and ordinary.cards.has("slime"),"search resets page and shows matching entry")

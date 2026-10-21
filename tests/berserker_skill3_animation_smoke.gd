@@ -15,6 +15,53 @@ func check(ok: bool, message: String) -> void:
 		push_error("BERSERKER_SKILL3: " + message)
 
 
+# hero.gd forwards these coroutines to the berserker archetype runtime. Awaiting
+# the hero method must resume only after the whole skill finished (2026-10-20:
+# forwarders without `await` returned immediately). Wall-clock vs game-time
+# frame jitter gets a 10% margin.
+func check_coroutine_forwarders(battle: Node, hero: Node) -> void:
+	var layer: int = hero.collision_layer
+	var mask: int = hero.collision_mask
+	var skill3: Dictionary = hero.berserker_config["skill_3"]
+	hero.position = Vector2(700, 1000)
+	var destination: Vector2 = hero.global_position + Vector2.RIGHT * float(skill3["dash_distance"])
+	var monster = battle._spawn_monster("slime", destination + Vector2(0, 80))
+	monster.set_physics_process(false)
+	hero.velocity = Vector2.ZERO
+	hero.hit_pose_timer = 0.0
+	hero.berserker_skill3_active = true
+	hero.attack_pose_timer = 1.55
+	var started := Time.get_ticks_msec()
+	await hero._execute_berserker_skill3(Vector2.RIGHT, skill3)
+	var elapsed := float(Time.get_ticks_msec() - started) / 1000.0
+	check(not hero.berserker_skill3_active and hero.attack_pose_timer == 0.0, "awaited skill3 forwarder resumes after recovery")
+	check(elapsed >= 0.9 * (float(skill3["dash_duration"]) + float(skill3["orb_pickup_duration"])), "awaited skill3 covers dash and orb pickup (%.2fs)" % elapsed)
+	check(hero.global_position.is_equal_approx(destination), "skill3 dash reaches destination")
+	check(hero.collision_layer == layer and hero.collision_mask == mask, "skill3 forwarder restores collision")
+	check(hero.hero_sprite.animation == &"idle", "skill3 forwarder ends in idle")
+	if is_instance_valid(monster):
+		monster.free()
+
+	var skill2: Dictionary = hero.berserker_config["skill_2"]
+	started = Time.get_ticks_msec()
+	await hero._run_berserker_skill2_wave(hero.global_position, Vector2.UP, skill2)
+	elapsed = float(Time.get_ticks_msec() - started) / 1000.0
+	check(elapsed >= 0.9 * float(skill2["blood_duration"]), "awaited skill2 wave covers blood duration (%.2fs)" % elapsed)
+
+	hero.berserker_revive_used = false
+	hero.berserker_reviving = false
+	hero.current_hp = 1
+	started = Time.get_ticks_msec()
+	await hero._begin_berserker_revive()
+	elapsed = float(Time.get_ticks_msec() - started) / 1000.0
+	check(elapsed >= 0.9 * float(hero.berserker_config["revive_delay"]), "awaited revive covers revive delay (%.2fs)" % elapsed)
+	check(not hero.berserker_reviving and hero.berserker_revive_used, "revive forwarder resumes after revive")
+	check(hero.current_hp == maxi(int(round(float(hero.max_hp) * float(hero.berserker_config["revive_hp_ratio"]))), 1), "revive restores HP ratio")
+	check(hero.collision_layer == layer and hero.collision_mask == mask, "revive restores collision")
+	check(hero.hero_sprite.animation == &"idle", "revive ends in idle")
+	hero.current_hp = hero.max_hp
+
+
 func run() -> void:
 	root.get_node("LoginGateway").remember_session_enabled = false
 	SCOPE.guest_directory = "user://skill3_test_" + Crypto.new().generate_random_bytes(16).hex_encode()
@@ -49,7 +96,12 @@ func run() -> void:
 		check(hero.collision_layer == 0 and hero.collision_mask == 0, "dash collision disabled")
 		hero._play_stage1_animation("move")
 		check(hero.hero_sprite.animation == &"dash_start", "active dash cannot be interrupted by movement")
-		await create_timer(0.26).timeout
+		# Wait for the dash tween itself, not wall-clock time: the first cast loads
+		# audio/trail resources and that hitch frame can outrun a fixed timer.
+		for frame in range(120):
+			if hero.collision_layer == layer:
+				break
+			await process_frame
 		check(hero.hero_sprite.animation == &"dash_finish" and hero.berserker_skill3_active, "finish pose retained during recovery")
 		check(hero.collision_layer == layer and hero.collision_mask == mask, "collision restored after dash")
 		if iteration == 2:
@@ -79,6 +131,7 @@ func run() -> void:
 		await create_timer(0.5).timeout
 		if is_instance_valid(monster):
 			monster.free()
+	await check_coroutine_forwarders(battle, hero)
 	# Shared guard still protects another active dash owner and non-looping clips.
 	hero._restart_stage1_animation("dash_finish")
 	hero.fighter_charge_active = true

@@ -66,6 +66,9 @@ func run() -> void:
 	# Account bundle rollback: a directory blocks only the temporary save path.
 	var raw := Crypto.new().generate_random_bytes(16).hex_encode()
 	var id := "%s-%s-%s-%s-%s" % [raw.substr(0, 8), raw.substr(8, 4), raw.substr(12, 4), raw.substr(16, 4), raw.substr(20, 12)]
+	# Offline account scenario: CloudStore's session write fence is not under test.
+	var cloud_write_fence: Callable = SCOPE.write_allowed
+	SCOPE.write_allowed = Callable()
 	check(SCOPE.select_account(id), "isolated account selected")
 	account_folder = "user://accounts/" + id
 	write_state(54000, 1000)
@@ -75,6 +78,7 @@ func run() -> void:
 	DirAccess.remove_absolute(account_folder.path_join("save_bundle.json.tmp"))
 	check(STORE.claim(1000).success, "retry succeeds once storage recovers")
 	SCOPE.select_guest()
+	SCOPE.write_allowed = cloud_write_fence
 	check(STORE.snapshot().full, "guest accumulation isolated from account claim")
 	write_state(0, int(Time.get_unix_time_from_system()))
 	var service := SERVICE.new()
@@ -147,7 +151,10 @@ func run() -> void:
 	for i in range(20):
 		await process_frame
 	check(view._panel.size.is_equal_approx(VIEW.DESIGN_SIZE), "small-window layout does not grow panel")
-	check(view._panel.get_global_rect().size.x <= 477 and view._panel.get_global_rect().size.y <= 897, "popup fits smaller PC window")
+	# canvas_items stretch: canvas coordinates stay 1080x1920, so measure the
+	# popup in actual window pixels.
+	var window_rect: Rect2 = root.get_final_transform() * view._panel.get_global_rect()
+	check(window_rect.size.x <= 477 and window_rect.size.y <= 897, "popup fits smaller PC window")
 	check(view._panel.get_global_rect().encloses(view._claim.get_global_rect()), "scaled popup retains claim button")
 	var rect: Rect2 = view._panel.get_global_rect()
 	check(rect.size.x > rect.size.y, "popup is landscape")

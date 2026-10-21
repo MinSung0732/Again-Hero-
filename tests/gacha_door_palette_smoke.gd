@@ -47,7 +47,9 @@ func run() -> void:
 		overlay.skip_to_results()
 		overlay._confirm()
 	for i in range(1000):
-		check(SHOP.roll_rarity(float(i)/1000.0) in ["common", "uncommon", "legendary"], "empty rarity cannot select opening")
+		# The rarity pool grows with the catalog; only an empty pool is invalid.
+		var rolled := SHOP.roll_rarity(float(i)/1000.0)
+		check(not SHOP.get_monster_pool(rolled).is_empty(), "empty rarity cannot select opening")
 	overlay.free()
 	await create_timer(0.2).timeout
 	print("GACHA_DOOR_PALETTE_SMOKE_FAILED" if failed else "GACHA_DOOR_PALETTE_SMOKE_OK")
