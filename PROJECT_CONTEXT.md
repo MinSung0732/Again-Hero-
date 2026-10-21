@@ -1,3 +1,9 @@
+## 2026-10-21 — 깨진 테스트 정리 2차: 홉고블린 조사·초월 컷신 건너뛰기
+
+- 홉고블린 9개 실패는 게임 회귀가 아님: 실제 `fill_monsters_near`는 10/17부터 스냅샷 revision 기준 후보 캐시를 재사용하는데, 테스트의 가짜 `_ensure_monster_spatial_grid`가 그리드만 다시 만들고 revision을 올리지 않아 낡은 후보를 받음. 실제 `_rebuild_monster_spatial_grid`처럼 revision을 올리게 수정 → 102검사 통과. 진형 수치/동작 변경 없음.
+- 이자나미·만티코어·슈텐도지·제우스 컷신 테스트(10/08 작성)는 "건너뛰면 즉시 결과"를 기대했으나, 10/15 `preserve unseen transcendent cutscenes when skipping draws`로 재생 중 초월 컷신 유지 후 남은 미시청 컷신을 순서대로 재생하도록 의도 변경됨. 테스트를 새 설계(1→5→9 순서 후 결과, 컷신 숨김)로 갱신. `gacha_skip_transcendents_smoke`도 통과 확인.
+- 통과 복귀5, 기준선 79→74.
+
 ## 2026-10-21 — 깨진 테스트 정리 1차: Battle 스텁 드리프트·CRLF
 
 - Battle 함수 소스를 잘라 스텁과 함께 컴파일하는 몬스터 테스트들이 10/14 이후 `_get_demon_level_monster_*_multiplier(spawn_seconds)` 시그니처와 온라인 멤버 추가를 따라가지 못해 컴파일부터 실패하던 문제 수정. 스텁을 실제 선언과 같은 시그니처/멤버로 맞춤(게임 코드 변경 없음).

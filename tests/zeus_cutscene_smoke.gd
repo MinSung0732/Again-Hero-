@@ -129,13 +129,23 @@ func _run() -> void:
 	assert(seen == [1,5,9] and overlay._phase == "result")
 	assert(overlay._results == snapshot and rewards == snapshot)
 	assert(overlay._cutscene_seen.size() == 3)
-	# Global skip aborts a cutscene/loading coroutine, yields the whole batch once.
+	# Global skip (2026-10-15 design) keeps the playing transcendent cutscene,
+	# then plays the remaining unseen ones in order and yields the batch once.
 	overlay.present(rewards)
 	overlay._sequence_token += 1
 	overlay._show_reveal(1)
 	overlay.skip_to_results()
 	await process_frame
-	assert(overlay._phase == "result" and not overlay._cutscene.visible)
+	var skipped := []
+	for guard in 4:
+		if overlay._phase != "cutscene":
+			break
+		assert(overlay._cutscene.visible)
+		skipped.append(overlay._reveal_index)
+		await _wait_ready(overlay._cutscene)
+		overlay._cutscene.skip()
+		await process_frame
+	assert(skipped == [1,5,9] and overlay._phase == "result" and not overlay._cutscene.visible)
 	assert(overlay._results == snapshot)
 	overlay._confirm()
 	assert(not overlay.is_presenting())

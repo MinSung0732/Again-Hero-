@@ -73,7 +73,16 @@ func run():
 		overlay._sequence_token+=1
 		overlay._show_reveal(1)
 		overlay.skip_to_results()
-		assert(overlay._phase=="result" and not overlay._cutscene.visible)
+		# 2026-10-15 design: skip keeps the playing transcendent cutscene,
+		# then plays the remaining unseen ones in order before results.
+		var skipped=[]
+		for guard in range(4):
+			if overlay._phase!="cutscene":break
+			assert(overlay._cutscene.visible)
+			skipped.append(overlay._reveal_index)
+			overlay._cutscene.set_process(false)
+			overlay._cutscene.skip()
+		assert(skipped==[1,5,9] and overlay._phase=="result" and not overlay._cutscene.visible)
 	assert(snapshot.size()==outcomes.size())
 	if DisplayServer.get_name()!="headless":
 		overlay.hide()

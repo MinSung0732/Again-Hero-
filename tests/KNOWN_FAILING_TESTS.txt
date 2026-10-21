@@ -59,11 +59,8 @@ tests/hero_survival_enemy_balance_smoke.gd  # script error, never reaches quit()
 tests/hero_survival_identity_smoke.gd  # script error, never reaches quit(): 
 tests/hero_survival_revision_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'research' on a base object of type 'Dicti
 tests/hero_weapon_growth_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'evolution_secondary_data' on a base objec
-tests/hobgoblin_combat_smoke.gd  # assertion failure: Hobgoblin 102 checks, 9 failures (aura shield pulses 30/60, melee/ranged shield, diameter350 boundary, thrower entry) - stubs fixed 2026-10-21; needs gameplay investigation, not a test-only fix
 tests/initial_gender_cosmetics_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Parse Error: Identifier "_open_gender_change" not declared in the current sc
-tests/izanami_cutscene_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Assertion failed.
 tests/lobby_main_modes_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'icon' on a base object of type 'Nil'.
-tests/manticore_cutscene_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Assertion failed.
 tests/missions_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'stage_progress.cfg' on a base object of t
 tests/mobile_entry_memory_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid assignment of property or key 'previous' with value of type 'WeakRef
 tests/mode_unlock_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'ready_to_close' on a base object of type 
@@ -74,10 +71,8 @@ tests/pickup_probability_smoke.gd  # script error, never reaches quit(): SCRIPT 
 tests/pixel_panel_skin_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'texture' on a base object of type 'Nil'.
 tests/powwow_mummy_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid call. Nonexistent function 'set_physics_process' in base 'Nil'. SCRI
 tests/practice_presentation_smoke.gd  # script error, never reaches quit(): 
-tests/shuten_doji_cutscene_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Assertion failed.
 tests/stamina_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'stage_progress.cfg' on a base object of t
 tests/support_shield_visual_smoke.gd  # script error, never reaches quit(): 
 tests/test_forced_gacha_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Assertion failed.
-tests/zeus_cutscene_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Assertion failed.
 tests/hero_presentation_range_smoke.gd  # parse error: SCRIPT ERROR: Parse Error: Cannot find member "ROW_HEIGHT" in base "res://src/ui/hero_ches
 tests/player_prologue_smoke.gd  # parse error: SCRIPT ERROR: Parse Error: Cannot find member "FEMALE" in base "res://src/ui/player_prolog

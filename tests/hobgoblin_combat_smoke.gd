@@ -108,6 +108,9 @@ func _ensure_monster_spatial_grid() -> void:
   var cell = _spatial_cell_for_position(actor.global_position)
   if not monster_spatial_grid.has(cell): monster_spatial_grid[cell] = []
   monster_spatial_grid[cell].append(actor)
+ # Like Battle._rebuild_monster_spatial_grid: a rebuild invalidates the
+ # candidate cache that fill_monsters_near reuses per snapshot revision.
+ monster_spatial_snapshot_revision += 1
 func _spatial_cell_for_position(point: Vector2) -> Vector2i:
  return Vector2i(floori(point.x/256.0),floori(point.y/256.0))
 '''
