@@ -39,9 +39,9 @@ var summon_cost_multiplier := 1.0
 var bounded := false
 func _get_special_augment_config(id: String) -> Dictionary: return configs.get(id,{})
 func _get_monster_augment_multiplier(_id: String,_key: String) -> float: return 1.0
-func _get_demon_level_monster_hp_multiplier() -> float: return 1.0
-func _get_demon_level_monster_damage_multiplier() -> float: return 1.0
-func _get_demon_level_monster_speed_multiplier() -> float: return 1.0
+func _get_demon_level_monster_hp_multiplier(_spawn_seconds: float = -1.0) -> float: return 1.0
+func _get_demon_level_monster_damage_multiplier(_spawn_seconds: float = -1.0) -> float: return 1.0
+func _get_demon_level_monster_speed_multiplier(_spawn_seconds: float = -1.0) -> float: return 1.0
 func _clamp_manual_spawn_position(point: Vector2) -> Vector2:
  return Vector2(clampf(point.x,-1000,200),clampf(point.y,-1000,100)) if bounded else point
 func invalidate_monster_spatial_snapshot() -> void: pass

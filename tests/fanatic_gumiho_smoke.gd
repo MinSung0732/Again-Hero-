@@ -46,9 +46,9 @@ var hero: Node2D
 var gumiho_shared_runtime = preload("res://src/systems/gumiho_shared_runtime.gd").new()
 var configs: Dictionary = {}
 func _get_special_augment_config(_id: String) -> Dictionary: return configs
-func _get_demon_level_monster_hp_multiplier() -> float: return 1.0
-func _get_demon_level_monster_damage_multiplier() -> float: return 1.0
-func _get_demon_level_monster_speed_multiplier() -> float: return 1.0
+func _get_demon_level_monster_hp_multiplier(_spawn_seconds: float = -1.0) -> float: return 1.0
+func _get_demon_level_monster_damage_multiplier(_spawn_seconds: float = -1.0) -> float: return 1.0
+func _get_demon_level_monster_speed_multiplier(_spawn_seconds: float = -1.0) -> float: return 1.0
 func _clamp_manual_spawn_position(point: Vector2) -> Vector2: return point
 func invalidate_monster_spatial_snapshot() -> void: pass
 '''

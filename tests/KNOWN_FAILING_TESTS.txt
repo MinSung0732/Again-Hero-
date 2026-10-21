@@ -45,14 +45,9 @@ tests/transcendent_upgrade_smoke.gd  # assertion failure: TRANSCEND_UPGRADE: FAI
 tests/tutorial_focus_smoke.gd  # assertion failure: TUTORIAL_FOCUS: FAILED
 tests/tutorial_preview_smoke.gd  # assertion failure: SCRIPT ERROR: Invalid call to function 'change_scene (via call)' in base 'Node (EntryTrans
 tests/zeus_combat_smoke.gd  # assertion failure: ZEUS_COMBAT: FAIL
-tests/anubis_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid call. Nonexistent function 'add_child' in base 'Nil'. SCRIPT ERROR: 
 tests/beginner_bulgasal_guarantee_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access of index '9' on a base object of type: 'Array'.
-tests/boar_dark_elf_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid call. Nonexistent function 'new' in base 'GDScript'. SCRIPT ERROR: I
-tests/dark_elf_rogue_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid call. Nonexistent function 'new' in base 'GDScript'. SCRIPT ERROR: I
-tests/fanatic_gumiho_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid call. Nonexistent function 'new' in base 'GDScript'. SCRIPT ERROR: I
 tests/formation_card_presentation_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'texture' on a base object of type 'null i
 tests/frontier_art_export_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Assertion failed: source PNG must be absent
-tests/gacha_background_layout_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid call. Nonexistent function 'new' in base 'GDScript'. SCRIPT ERROR: I
 tests/guest_profile_flow_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Assertion failed.
 tests/gumiho_hero_status_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Parse Error: Identifier "player_control_policy" not declared in the current 
 tests/hero_aoe_coverage_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Compile Error: Failed to compile depended scripts. SCRIPT ERROR: Invalid cal
@@ -64,11 +59,9 @@ tests/hero_survival_enemy_balance_smoke.gd  # script error, never reaches quit()
 tests/hero_survival_identity_smoke.gd  # script error, never reaches quit(): 
 tests/hero_survival_revision_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'research' on a base object of type 'Dicti
 tests/hero_weapon_growth_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'evolution_secondary_data' on a base objec
-tests/hobgoblin_combat_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid call. Nonexistent function 'new' in base 'GDScript'. SCRIPT ERROR: I
+tests/hobgoblin_combat_smoke.gd  # assertion failure: Hobgoblin 102 checks, 9 failures (aura shield pulses 30/60, melee/ranged shield, diameter350 boundary, thrower entry) - stubs fixed 2026-10-21; needs gameplay investigation, not a test-only fix
 tests/initial_gender_cosmetics_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Parse Error: Identifier "_open_gender_change" not declared in the current sc
 tests/izanami_cutscene_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Assertion failed.
-tests/lizardman_fighter_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid call. Nonexistent function 'new' in base 'GDScript'. SCRIPT ERROR: I
-tests/lizardman_spearman_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid call. Nonexistent function 'new' in base 'GDScript'. SCRIPT ERROR: I
 tests/lobby_main_modes_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'icon' on a base object of type 'Nil'.
 tests/manticore_cutscene_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Assertion failed.
 tests/missions_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'stage_progress.cfg' on a base object of t
@@ -77,7 +70,6 @@ tests/mode_unlock_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: 
 tests/monster_buff_scale_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid call. Nonexistent function 'set_physics_process' in base 'Nil'.
 tests/monster_upgrade_balance_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'level' on a base object of type 'Dictiona
 tests/monster_upgrade_feedback_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Cannot call method 'get_parent' on a null value.
-tests/ogre_combat_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid call. Nonexistent function 'new' in base 'GDScript'. SCRIPT ERROR: I
 tests/pickup_probability_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Assertion failed.
 tests/pixel_panel_skin_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'texture' on a base object of type 'Nil'.
 tests/powwow_mummy_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid call. Nonexistent function 'set_physics_process' in base 'Nil'. SCRI

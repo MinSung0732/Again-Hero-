@@ -45,9 +45,9 @@ const MONSTER_SUPPORT_COMMON = preload("res://src/monsters/monster_runtime_commo
 var hero: Node2D
 var configs: Dictionary = {}
 func _get_special_augment_config(_id: String) -> Dictionary: return configs
-func _get_demon_level_monster_hp_multiplier() -> float: return 1.0
-func _get_demon_level_monster_damage_multiplier() -> float: return 1.0
-func _get_demon_level_monster_speed_multiplier() -> float: return 1.0
+func _get_demon_level_monster_hp_multiplier(_spawn_seconds: float = -1.0) -> float: return 1.0
+func _get_demon_level_monster_damage_multiplier(_spawn_seconds: float = -1.0) -> float: return 1.0
+func _get_demon_level_monster_speed_multiplier(_spawn_seconds: float = -1.0) -> float: return 1.0
 func _clamp_manual_spawn_position(point: Vector2) -> Vector2: return point
 func invalidate_monster_spatial_snapshot() -> void: pass
 '''
@@ -103,6 +103,9 @@ func run() -> void:
 	unit._enter_stealth(); reset_hit(hero); hero.hero_sprite.flip_h = false
 	unit.position = Vector2.ZERO; unit._attack_target(hero); unit._tick_followup(0.14)
 	check(hero.hits == [52,17] and hero.colors == [D.BACKSTAB_COLOR,D.BACKSTAB_COLOR],"300percent ambush and133percent rear red both hits")
+	# Hits merged into a live popup apply their colour in the popup's next _process (process_frame fires first).
+	await process_frame
+	await process_frame
 	check(hero.get_meta("damage_number_popup").get_node("Value").get_theme_color("font_color") == D.BACKSTAB_COLOR,"actual damage popup red color")
 	check(not hero.has_meta("damage_number_color_once"),"red metadata does not leak")
 	reset_hit(hero); hero.hero_sprite.flip_h = true; unit._attack_target(hero); unit._tick_followup(0.14)

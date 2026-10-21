@@ -9,7 +9,8 @@ func check(ok: bool,label: String) -> void:
 	checks += 1
 	if not ok: failures += 1; push_error(label)
 func make_view(id: String):
-	var source := FileAccess.get_file_as_string("res://src/ui/"+id+"_gacha_view.gd")
+	# Windows checkouts use CRLF; extracted bodies must not keep stray CRs.
+	var source := FileAccess.get_file_as_string("res://src/ui/"+id+"_gacha_view.gd").replace("\r","")
 	var start := source.find("func _layout(")
 	var end := source.find("\nfunc ",start+1)
 	var method := source.substr(start,end-start if end>=0 else source.length()-start)

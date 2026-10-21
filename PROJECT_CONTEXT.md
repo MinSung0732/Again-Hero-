@@ -1,3 +1,11 @@
+## 2026-10-21 — 깨진 테스트 정리 1차: Battle 스텁 드리프트·CRLF
+
+- Battle 함수 소스를 잘라 스텁과 함께 컴파일하는 몬스터 테스트들이 10/14 이후 `_get_demon_level_monster_*_multiplier(spawn_seconds)` 시그니처와 온라인 멤버 추가를 따라가지 못해 컴파일부터 실패하던 문제 수정. 스텁을 실제 선언과 같은 시그니처/멤버로 맞춤(게임 코드 변경 없음).
+- Windows CRLF 체크아웃에서 잘라낸 함수 끝에 `\r`이 남아 "Stray carriage return" 파싱 오류가 나던 가챠 배경 테스트는 읽은 소스의 CR 제거.
+- `dark_elf_rogue_smoke`의 팝업 색 검사: 10/17 성능 개선 뒤 합쳐진 피해 숫자 색은 팝업의 다음 `_process`에 적용(화면상 1프레임 지연, 동작 정상). 테스트가 2프레임 대기 후 검사하도록 수정.
+- 통과 복귀8: anubis, boar_dark_elf, dark_elf_rogue, fanatic_gumiho, gacha_background_layout, lizardman_fighter, lizardman_spearman, ogre_combat(기준선 87→79).
+- `hobgoblin_combat_smoke`는 컴파일은 되지만 오라 방패 30/60 누적·근접/원거리 방패·350 경계 등 9개 단언 실패. 10/18 이후 관련 정책 데이터화 커밋이 있어 테스트 기대값 문제인지 게임 회귀인지 조사 필요(수치 임의 변경 안 함), 기준선에 사유 기록.
+
 ## 2026-10-21 — 테스트 스위트 기준선 정리
 
 - 전체 SceneTree 테스트337개를 Windows Godot4.7.2 headless(8병렬·테스트별 user:// 분리)로 실행: 172 PASS, 165 실패/시간초과. 시간초과 대부분은 느린 테스트가 아니라 스크립트 오류 후 quit()에 도달하지 못한 경우.

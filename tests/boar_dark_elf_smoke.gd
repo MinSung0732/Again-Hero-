@@ -45,6 +45,8 @@ const MONSTER_CATALOG = preload("res://src/data/monster_catalog.gd")
 const MONSTER_SUPPORT_COMMON = preload("res://src/monsters/monster_runtime_common.gd")
 const MAX_PROJECTILE_POOL_PER_TYPE = 96
 var hero: Node2D
+var online_match_mode := false
+var online_visual_projectiles := {}
 var configs: Dictionary = {}
 var summon_cost_multiplier := 1.0
 var projectile_pools: Dictionary = {}
@@ -54,9 +56,9 @@ class Registry extends RefCounted:
 func _activate_battle_entity(_actor: Node) -> void: pass
 func _get_special_augment_config(id: String) -> Dictionary: return configs.get(id,{})
 func _get_monster_augment_multiplier(_id: String,_key: String) -> float: return 1.0
-func _get_demon_level_monster_hp_multiplier() -> float: return 1.0
-func _get_demon_level_monster_damage_multiplier() -> float: return 1.0
-func _get_demon_level_monster_speed_multiplier() -> float: return 1.0
+func _get_demon_level_monster_hp_multiplier(_spawn_seconds: float = -1.0) -> float: return 1.0
+func _get_demon_level_monster_damage_multiplier(_spawn_seconds: float = -1.0) -> float: return 1.0
+func _get_demon_level_monster_speed_multiplier(_spawn_seconds: float = -1.0) -> float: return 1.0
 func _clamp_manual_spawn_position(point: Vector2) -> Vector2: return point.clamp(Vector2(-5000,-5000),Vector2(5000,5000))
 func invalidate_monster_spatial_snapshot() -> void: pass
 '''

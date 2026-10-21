@@ -44,7 +44,24 @@ func make_battle():
 const MONSTER_SUPPORT_COMMON = preload("res://src/monsters/monster_runtime_common.gd")
 const MONSTER_CATALOG = preload("res://src/data/monster_catalog.gd")
 const DEMON_AUGMENTS = preload("res://src/data/demon_augment_catalog.gd")
+const HERO_SURVIVAL = preload("res://src/data/hero_mode_catalog.gd")
+const PERFORMANCE_PROBE = preload("res://src/systems/combat_performance_probe.gd")
+var combat_profile = PERFORMANCE_PROBE.new()
+# Mirrors of Battle members referenced by the extracted spawn/grid code.
+const CANDIDATE_CACHE = preload("res://src/systems/spatial_candidate_cache.gd")
+const CONTROL_SPAWNS = preload("res://src/hero_mode/hero_control_spawn_budget.gd")
+const ANUBIS_ARMY_RUNTIME = preload("res://src/systems/anubis_army_runtime.gd")
+var monster_candidate_cache = CANDIDATE_CACHE.new()
+var monster_spatial_snapshot_revision := 0
+var hero_control_spawns = CONTROL_SPAWNS.new()
+var hero_control_roster: Array = []
+var anubis_army_runtime = ANUBIS_ARMY_RUNTIME.new()
+var current_stage_data: Dictionary = {}
+var campaign_difficulty := "easy"
+var hero_player_mode := false
 var hero: Node2D
+# Non hero-player mode: Battle.hero_spawn_candidate returns the id unchanged.
+func hero_spawn_candidate(id: String, _roster: Array, _elite: bool = false) -> String: return id
 var goblin_formation_runtime
 var active_monsters: Dictionary = {}
 var monster_summon_costs: Dictionary = {}
@@ -78,9 +95,9 @@ func _apply_special_monster_modifiers(actor: Node, _id: String, _data: Dictionar
 func _emit_stats() -> void: pass
 func _queue_population_update() -> void: pass
 func _get_special_augment_config(id: String) -> Dictionary: return configs.get(id,{})
-func _get_demon_level_monster_hp_multiplier() -> float: return 1.0
-func _get_demon_level_monster_damage_multiplier() -> float: return 1.0
-func _get_demon_level_monster_speed_multiplier() -> float: return 1.0
+func _get_demon_level_monster_hp_multiplier(_spawn_seconds: float = -1.0) -> float: return 1.0
+func _get_demon_level_monster_damage_multiplier(_spawn_seconds: float = -1.0) -> float: return 1.0
+func _get_demon_level_monster_speed_multiplier(_spawn_seconds: float = -1.0) -> float: return 1.0
 func _refresh_alive_monsters_for_augments(ids: Array[String] = []) -> void: refreshed_ids = ids
 func _ensure_monster_spatial_grid() -> void:
  spatial_queries += 1

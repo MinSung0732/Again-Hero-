@@ -33,9 +33,9 @@ const MONSTER_SUPPORT_COMMON = preload("res://src/monsters/monster_runtime_commo
 var anubis_army_runtime
 var hero: Node2D
 func _get_special_stat_multiplier(_id: String,_key: String,_elite: bool = false) -> float: return 1.0
-func _get_demon_level_monster_hp_multiplier() -> float: return 1.0
-func _get_demon_level_monster_damage_multiplier() -> float: return 1.0
-func _get_demon_level_monster_speed_multiplier() -> float: return 1.0
+func _get_demon_level_monster_hp_multiplier(_spawn_seconds: float = -1.0) -> float: return 1.0
+func _get_demon_level_monster_damage_multiplier(_spawn_seconds: float = -1.0) -> float: return 1.0
+func _get_demon_level_monster_speed_multiplier(_spawn_seconds: float = -1.0) -> float: return 1.0
 '''
  var source := FileAccess.get_file_as_string("res://src/battle/battle.gd")
  for name in ["_apply_demon_level_scaling_to_monster","refresh_monster_runtime_stats"]:

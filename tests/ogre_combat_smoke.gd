@@ -41,9 +41,9 @@ var summon_cost_multiplier := 1.0
 var cost_normal_multiplier := 1.0
 func _get_special_augment_config(id: String) -> Dictionary: return configs.get(id,{})
 func _get_monster_augment_multiplier(_id: String,_stat: String) -> float: return cost_normal_multiplier
-func _get_demon_level_monster_hp_multiplier() -> float: return 1.0
-func _get_demon_level_monster_damage_multiplier() -> float: return 1.0
-func _get_demon_level_monster_speed_multiplier() -> float: return 1.0
+func _get_demon_level_monster_hp_multiplier(_spawn_seconds: float = -1.0) -> float: return 1.0
+func _get_demon_level_monster_damage_multiplier(_spawn_seconds: float = -1.0) -> float: return 1.0
+func _get_demon_level_monster_speed_multiplier(_spawn_seconds: float = -1.0) -> float: return 1.0
 '''
  var source := FileAccess.get_file_as_string("res://src/battle/battle.gd")
  for name in ["_apply_demon_level_scaling_to_monster","refresh_monster_runtime_stats","_get_special_stat_multiplier","_get_applicable_special_augment_config","_apply_special_augments_to_monster","_configure_summon_cadence","get_monster_cost","_apply_special_runtime_preview"]:
