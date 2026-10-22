@@ -18,10 +18,11 @@ var input_suspended_before_disconnect := false
 var winner := ""
 var reason := ""
 var move_age := 0.0
-var choice_age := 0.0
 var choice_revision := 0
 var choice: Array = []
-var demon_choice_age := 0.0
+var hero_holds: Array = []
+var demon_holds: Array = []
+var next_offer_number := 0
 var tick := 0
 var hero_last := Vector2.ZERO
 var ids := {}
@@ -61,7 +62,7 @@ func prepare() -> void:
 		if running and not finished and not connection_paused: feedback.publish("cast",battle.hero.position,0,Color(0.8,0.5,1.0),tick))
 	battle.transcendent_summoned.connect(func(_id: String,actor: Node2D):
 		if running and not finished and not connection_paused and is_instance_valid(actor): feedback.publish("transcend",actor.global_position,0,Color(1.0,0.75,0.35),tick))
-	battle.demon_augment_ready.connect(func(_candidates: Array,_rerolls: int,_level: int): demon_choice_age = 0.0)
+	battle.demon_augment_ready.connect(_demon_offer)
 
 	battle.battle_finished.connect(func(_message: String,demon_won: bool): finish("demon" if demon_won else "hero",_message))
 	battle.hero.player_augment_requested.connect(_choice)
@@ -79,7 +80,53 @@ func set_connection_paused(value: bool) -> void:
 	battle.hero.player_input_suspended = true if value else input_suspended_before_disconnect
 	battle.set_external_pause(value or not running)
 func _choice(candidates: Array) -> void:
-	choice_revision += 1; choice = candidates; choice_age = 0.0
+	_hold("hero",candidates,0)
+	_enforce_hold_limit("hero")
+func _demon_offer(candidates: Array,_rerolls: int,level: int) -> void:
+	_hold("demon",candidates,level)
+	battle.bank_online_demon_augment()
+	_enforce_hold_limit("demon")
+func _hold(role: String,candidates: Array,level: int) -> void:
+	if finished or candidates.is_empty(): return
+	next_offer_number += 1
+	var queue: Array = hero_holds if role == "hero" else demon_holds
+	var fixed_candidates: Array = candidates.duplicate(true)
+	var wire_candidates: Array = []
+	for candidate in fixed_candidates:
+		wire_candidates.append({"id":String(candidate.get("id","")),"name":String(candidate.get("name","")),"description":String(candidate.get("description",""))})
+	queue.append({"number":next_offer_number,"candidates":fixed_candidates,"wire_candidates":wire_candidates,"received":next_offer_number,"level":level})
+	choice_revision += 1
+	choice = hero_holds[0].candidates if not hero_holds.is_empty() else []
+func _enforce_hold_limit(role: String) -> void:
+	var queue: Array = hero_holds if role == "hero" else demon_holds
+	while queue.size() > RULES.AUGMENT_HOLD_LIMIT:
+		var oldest: Dictionary = queue.pop_front()
+		for candidate in oldest.candidates:
+			if _apply_offer(role,oldest,String(candidate.get("id",""))): break
+		choice_revision += 1
+		choice = hero_holds[0].candidates if not hero_holds.is_empty() else []
+func _apply_offer(role: String,offer: Dictionary,id: String) -> bool:
+	for candidate in offer.candidates:
+		if String(candidate.get("id","")) == id:
+			if role == "hero": return battle.hero.choose_player_augment(id,offer.candidates)
+			return battle.choose_held_demon_augment(id,offer.candidates,int(offer.level))
+	return false
+func _select_offer(role: String,argument: Dictionary) -> bool:
+	var number: Variant = argument.get("number",null)
+	var id: Variant = argument.get("id",null)
+	if not RULES.number(number) or float(number) != floorf(float(number)) or not id is String: return false
+	var queue: Array = hero_holds if role == "hero" else demon_holds
+	for index in queue.size():
+		var offer: Dictionary = queue[index]
+		if int(offer.number) != int(number): continue
+		queue.remove_at(index)
+		if not _apply_offer(role,offer,id):
+			queue.insert(index,offer)
+			return false
+		choice_revision += 1
+		choice = hero_holds[0].candidates if not hero_holds.is_empty() else []
+		return true
+	return false
 func apply(role: String,kind: String,argument: Variant) -> bool:
 	last_action_message = "사용할 수 없는 행동입니다."
 	if not running or finished or connection_paused or not is_instance_valid(battle.hero): return false
@@ -88,10 +135,7 @@ func apply(role: String,kind: String,argument: Variant) -> bool:
 		if direction.length_squared() > 1.001: return false
 		battle.hero.set_player_move_input(direction); move_age = 0.0; return true
 	if role == "hero" and kind == "choose" and argument is Dictionary:
-		if not RULES.number(argument.get("revision",null)) or argument.revision != choice_revision or not argument.get("id",null) is String: return false
-		var accepted: bool = battle.hero.choose_player_augment(argument.id)
-		if accepted and battle.hero.player_augment_candidates.is_empty(): choice = []; choice_revision += 1
-		return accepted
+		return _select_offer(role,argument)
 	if role == "demon" and kind == "summon" and argument is Dictionary:
 		# RULES.SUMMON_PLACEMENT: 랭크전 소환은 좌표를 지정한 수동 배치만 허용.
 		if not argument.get("id",null) is String: return false
@@ -109,10 +153,7 @@ func apply(role: String,kind: String,argument: Variant) -> bool:
 		if accepted: last_action_message = "마왕 스킬을 사용했습니다."
 		return accepted
 	if role == "demon" and kind == "demon_choose" and argument is Dictionary:
-		var revision: Variant = argument.get("revision",null)
-		var id: Variant = argument.get("id",null)
-		if not RULES.number(revision) or float(revision) != floorf(float(revision)) or not id is String: return false
-		return battle.choose_demon_augment(id,int(revision))
+		return _select_offer(role,argument)
 	if role == "demon" and kind == "transcend" and argument is Dictionary:
 		var point: Variant = argument.get("point",null)
 		if transcendence_id.is_empty() or not RULES.point(point): return false
@@ -124,26 +165,30 @@ func step(delta: float) -> void:
 	if not running or finished or connection_paused: return
 	tick += 1; move_age += delta
 	if move_age > RULES.INPUT_TIMEOUT and is_instance_valid(battle.hero): battle.hero.set_player_move_input(Vector2.ZERO)
-	if not choice.is_empty():
-		choice_age += delta
-		if choice_age >= RULES.CHOICE_TIMEOUT: apply("hero","choose",{"revision":choice_revision,"id":String(choice[0].id)})
-	if battle.demon_augment_selection_active and not battle.demon_augment_candidates.is_empty():
-		demon_choice_age += delta
-		if demon_choice_age >= RULES.CHOICE_TIMEOUT: battle.choose_demon_augment(String(battle.demon_augment_candidates[0].id),battle.get_demon_augment_revision())
 	if battle.mutation_director.is_active():
 		var candidates: Array = battle.mutation_director.get_candidates()
 		if not candidates.is_empty(): battle.try_choose_mutation(String(candidates[0]))
 func finish(won: String,why: String) -> void:
 	if finished: return
 	finished = true; running = false; winner = won; reason = why
+	hero_holds.clear(); demon_holds.clear(); choice = []
 	if is_instance_valid(battle): battle.set_external_pause(true)
 	completed.emit(winner,reason)
-func snapshot() -> Dictionary:
+func snapshot(role: String = "") -> Dictionary:
 	var profile = battle.get("combat_profile")
 	var started: int = Time.get_ticks_usec() if profile != null and profile.enabled else 0
 	var state := _build_snapshot()
 	if started: profile.record(profile.Scope.NETWORK_SNAPSHOT,started)
-	return state
+	return snapshot_for_role(role,state)
+func snapshot_for_role(role: String,state: Dictionary) -> Dictionary:
+	var own := state.duplicate()
+	if role == "hero": own["augment_holds"] = _wire_holds(hero_holds)
+	elif role == "demon": own["augment_holds"] = _wire_holds(demon_holds)
+	return own
+func _wire_holds(queue: Array) -> Array:
+	var result: Array = []
+	for offer in queue: result.append({"number":offer.number,"candidates":offer.wire_candidates})
+	return result
 
 func _feedback(target: Node2D,amount: int,color: Color,healing: bool) -> void:
 	if not running or finished or connection_paused: return
@@ -194,12 +239,8 @@ func _build_snapshot() -> Dictionary:
 	for id in skill_ids:
 		var skill: Dictionary = SKILLS.get_skill(String(id))
 		demon_ready[id] = battle.demon_ultimate_spawn_queue.is_empty() and battle.demon_ultimate_charge+0.001 >= float(skill.get("mana_cost",SKILLS.CHARGE_MAX)) and float(battle.demon_ultimate_cooldowns.get(id,0.0)) <= 0.001
-	var demon_choices: Array = []
-	if battle.demon_augment_selection_active:
-		for candidate in battle.demon_augment_candidates:
-			demon_choices.append({"id":String(candidate.get("id","")),"name":String(candidate.get("name","")),"description":String(candidate.get("description",""))})
 	# Bounded snapshot serialization and presentation sort at10Hz, not physics Hz.
-	return {"op":"state","tick":tick,"hero":[hero_last.x,hero_last.y,hp,maximum,level],"bounds":[battle.current_map_size.x,battle.current_map_size.y],"battlefield":battlefield_info,"seconds":battle.run_metrics.elapsed_seconds,"mana":battle.command_power,"demon_charge":battle.demon_ultimate_charge,"demon_charge_max":SKILLS.CHARGE_MAX,"demon_cooldowns":battle.demon_ultimate_cooldowns,"demon_ready":demon_ready,"transcend_ready":battle.transcendence.ready and not battle.transcendence.used,"transcend_used":battle.transcendence.used,"demon_choice_revision":battle.get_demon_augment_revision(),"demon_choices":demon_choices,"demon_choice_left":maxf(0.0,RULES.CHOICE_TIMEOUT-demon_choice_age) if battle.demon_augment_selection_active else 0.0,"actors":actors,"shots":shots,"visuals":visuals,"primitives":primitives,"feedback":feedback.snapshot(),"feedback_cursor":feedback.sequence,"choice_revision":choice_revision,"choices":choice,"winner":winner,"reason":reason}
+	return {"op":"state","tick":tick,"hero":[hero_last.x,hero_last.y,hp,maximum,level],"bounds":[battle.current_map_size.x,battle.current_map_size.y],"battlefield":battlefield_info,"seconds":battle.run_metrics.elapsed_seconds,"mana":battle.command_power,"demon_charge":battle.demon_ultimate_charge,"demon_charge_max":SKILLS.CHARGE_MAX,"demon_cooldowns":battle.demon_ultimate_cooldowns,"demon_ready":demon_ready,"transcend_ready":battle.transcendence.ready and not battle.transcendence.used,"transcend_used":battle.transcendence.used,"actors":actors,"shots":shots,"visuals":visuals,"primitives":primitives,"feedback":feedback.snapshot(),"feedback_cursor":feedback.sequence,"winner":winner,"reason":reason}
 
 func _visual_order(a: Array,b: Array) -> bool:
 	return PRESENTATION.visual_order(a,b)

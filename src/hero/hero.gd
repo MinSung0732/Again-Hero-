@@ -61,19 +61,23 @@ func reroll_player_augment() -> bool:
 	player_augment_candidates = next
 	player_augment_requested.emit(next)
 	return true
-func choose_player_augment(id: String) -> bool:
-	if not player_controlled or current_hp <= 0 or player_augment_candidates.is_empty(): return false
+func choose_player_augment(id: String, held_candidates: Array = []) -> bool:
+	var online_hold: bool = get_parent() != null and get_parent().get("online_match_mode") == true
+	var available: Array = held_candidates if online_hold and not held_candidates.is_empty() else player_augment_candidates
+	if not player_controlled or current_hp <= 0 or available.is_empty(): return false
 	var chosen: Dictionary = {}
-	for candidate in player_augment_candidates:
+	for candidate in available:
 		if String(candidate.get("id","")) == id: chosen = candidate; break
 	if chosen.is_empty(): return false
-	var candidates := player_augment_candidates
-	player_augment_candidates = []
+	var candidates := available
+	if not online_hold: player_augment_candidates = []
 	if player_weapons != null:
-		if not player_weapons.choose(id): player_augment_candidates = candidates; return false
+		if not player_weapons.choose(id):
+			if not online_hold: player_augment_candidates = candidates
+			return false
 	else: _apply_augment(chosen)
 	augment_selected.emit(level,candidates,String(chosen.get("name",id)),"플레이어 선택",get_build_summary())
-	while current_exp >= exp_to_next_level and player_augment_candidates.is_empty():
+	while not online_hold and current_exp >= exp_to_next_level and player_augment_candidates.is_empty():
 		current_exp -= exp_to_next_level
 		_level_up()
 	progression_changed.emit(level,current_exp,exp_to_next_level)
@@ -6251,7 +6255,7 @@ func gain_exp(amount: int) -> void:
 		gained_exp = maxi(1,int(round(float(amount)*maxf(exp_gain_multiplier,0.0))))
 	current_exp += gained_exp
 
-	while current_exp >= exp_to_next_level and (not player_controlled or player_augment_candidates.is_empty()):
+	while current_exp >= exp_to_next_level and (not player_controlled or player_augment_candidates.is_empty() or (get_parent() != null and get_parent().get("online_match_mode") == true)):
 		current_exp -= exp_to_next_level
 		_level_up()
 
@@ -6790,6 +6794,7 @@ func _level_up() -> void:
 		health_changed.emit(current_hp,max_hp)
 		leveled_up.emit(level)
 		player_augment_requested.emit(candidates)
+		if (get_parent() != null and get_parent().get("online_match_mode") == true): player_augment_candidates = []
 		queue_redraw()
 		return
 

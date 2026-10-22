@@ -63,10 +63,10 @@ func run() -> void:
 	hero._network_lost("fixture cable cut")
 	check(await until(func(): return room.connection_paused),"unexpected disconnect pauses room")
 	check(hero.reconnecting and not hero.command("move",[1,0]),"disconnected client cannot send gameplay")
-	var frozen := [room.tick,room.choice_age,room.battle.run_metrics.elapsed_seconds,room.battle.command_power,room.battle.hero.current_hp,room.battle.hero.level,room.choice_revision,room.battle.hero.build_counts.duplicate(true)]
+	var frozen := [room.tick,room.hero_holds.size(),room.battle.run_metrics.elapsed_seconds,room.battle.command_power,room.battle.hero.current_hp,room.battle.hero.level,room.choice_revision,room.battle.hero.build_counts.duplicate(true)]
 	check(room.battle.hero.player_move_input == Vector2.ZERO and room.battle.external_pause,"input zero and actual Battle paused")
 	await pump(0.2)
-	check(frozen == [room.tick,room.choice_age,room.battle.run_metrics.elapsed_seconds,room.battle.command_power,room.battle.hero.current_hp,room.battle.hero.level,room.choice_revision,room.battle.hero.build_counts],"clock/HP/mana/level/build/augment timeout frozen")
+	check(frozen == [room.tick,room.hero_holds.size(),room.battle.run_metrics.elapsed_seconds,room.battle.command_power,room.battle.hero.current_hp,room.battle.hero.level,room.choice_revision,room.battle.hero.build_counts],"clock/HP/mana/level/build/held augment frozen")
 	var mana: float = room.battle.command_power
 	demon.command("summon",{"id":"slime","point":[400,600]}); await pump(0.1)
 	check(room.battle.command_power == mana and room.battle.active_monsters.is_empty(),"paused server rejects opponent input")
@@ -78,7 +78,7 @@ func run() -> void:
 	check(hero.match_id == key and room.get_instance_id() == instance and hero.resume_token == saved_token,"same room/state and retry-safe token")
 	check(room.battle.hero.level == frozen[5] and room.choice_revision == frozen[6] and not room.choice.is_empty(),"pending augment restored")
 	var revision: int = room.choice_revision
-	hero.command("choose",{"revision":revision,"id":String(room.choice[0].id)})
+	hero.command("choose",{"number":int(room.hero_holds[0].number),"id":String(room.choice[0].id)})
 	check(await until(func(): return room.choice_revision > revision),"restored augment choice accepted")
 	var x: float = room.battle.hero.position.x
 	hero.command("move",[1,0]); await pump(0.12)

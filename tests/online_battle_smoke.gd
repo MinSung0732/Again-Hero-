@@ -47,10 +47,10 @@ func run() -> void:
 	check(not is_instance_valid(target) or target.current_hp < target_hp,"actual automatic weapon damages monster")
 	room.battle.hero.gain_exp(400)
 	check(not room.choice.is_empty(),"actual level-up choices")
-	check(not room.apply("hero","choose",{"revision":room.choice_revision-1,"id":room.choice[0].id}),"stale choice rejected")
-	var selected_revision: int = room.choice_revision
-	check(room.apply("hero","choose",{"revision":selected_revision,"id":room.choice[0].id}),"actual augment selection")
-	check(not room.apply("hero","choose",{"revision":selected_revision,"id":"invalid"}),"invalid/replayed choice rejected")
+	check(not room.apply("hero","choose",{"number":room.hero_holds[0].number-1,"id":room.choice[0].id}),"stale choice rejected")
+	var selected_number: int = room.hero_holds[0].number
+	check(room.apply("hero","choose",{"number":selected_number,"id":room.choice[0].id}),"actual augment selection")
+	check(not room.apply("hero","choose",{"number":selected_number,"id":"invalid"}),"invalid/replayed choice rejected")
 	var snapshot: Dictionary = room.snapshot()
 	check(snapshot.hero[3] > 0 and snapshot.bounds[0] > 0,"actual state serializes")
 	check(not JSON.stringify(snapshot).is_empty(),"JSON safe snapshot")

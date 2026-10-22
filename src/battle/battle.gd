@@ -4860,6 +4860,28 @@ func choose_demon_augment(augment_id: String, expected_revision: int = -1) -> bo
 		return _execute_choose_demon_augment(augment_id, revision)
 	return battle_command_router.submit_local(BATTLE_SESSION.Command.DEMON_AUGMENT_CHOOSE, augment_id, Vector2.ZERO, "", revision)
 
+func bank_online_demon_augment() -> void:
+	if not online_match_mode or not demon_augment_selection_active: return
+	demon_pending_augments = maxi(0,demon_pending_augments-1)
+	if not demon_pending_augment_levels.is_empty(): demon_pending_augment_levels.pop_front()
+	demon_active_augment_level = 0
+	demon_augment_selection_active = false
+	demon_augment_candidates = []
+	demon_augment_revision += 1
+	_open_next_demon_augment_if_needed()
+
+func choose_held_demon_augment(augment_id: String, candidates: Array, offer_level: int) -> bool:
+	if not online_match_mode or demon_augment_selection_active or candidates.is_empty(): return false
+	demon_pending_augments += 1
+	demon_pending_augment_levels.push_front(offer_level)
+	demon_active_augment_level = offer_level
+	demon_augment_candidates = candidates
+	demon_augment_selection_active = true
+	demon_augment_revision += 1
+	var accepted := _execute_choose_demon_augment(augment_id,demon_augment_revision)
+	if not accepted: bank_online_demon_augment()
+	return accepted
+
 func _execute_reroll_demon_augments(expected_revision: int) -> bool:
 	if expected_revision != demon_augment_revision:
 		return false

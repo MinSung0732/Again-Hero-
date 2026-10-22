@@ -16,6 +16,9 @@ func run() -> void:
 		check(scene.role == role,"requested role")
 		check(scene.queue_button.custom_minimum_size.y >= 72,"mobile button size")
 		check(scene.view.size.x > 500 and scene.view.size.y > 300,"battle panel expands")
+		scene.hold_toggle.pressed.emit(); await process_frame
+		check(scene.hold_scroll.visible and scene.view.size.y > 300 and scene.hold_toggle.get_global_rect().end.y < root.size.y,"held tray expands within portrait screen")
+		scene.hold_toggle.pressed.emit()
 		if role == "hero": check(scene.pad.mode == "free" and scene.pad.input_surface == scene.view,"touch binds battle only")
 		else:
 			# Since protocol 9 the demon's summon buttons come from the server's
@@ -42,9 +45,9 @@ func run() -> void:
 		scene.client.reconnecting = true; scene.client.connection_recovering.emit(true,20.0)
 		check(not scene.ended and scene.status.text.contains("연결 복구"),"local transport loss keeps scene alive")
 		scene.client.reconnecting = false; scene.client.connection_recovering.emit(false,0.0)
-		scene.last_tick = 99; scene.revision = 7
+		scene.last_tick = 99
 		scene._event({"op":"matched","match":"ui-recovery","resumed":true})
-		check(scene.last_tick == -1 and scene.revision == -1,"resume forces snapshot/choice refresh even at same tick")
+		check(scene.last_tick == -1,"resume forces snapshot refresh even at same tick")
 		scene._event({"op":"result","match":"ui-recovery","winner":role})
 		var result_text: String = scene.status.text
 		scene._event({"op":"result","match":"ui-recovery","winner":""})

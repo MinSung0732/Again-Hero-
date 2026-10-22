@@ -101,11 +101,14 @@ func _process(delta: float) -> void:
 					var peer_id: int = rooms[key].seats[role].peer
 					if peers.has(peer_id): state.ack[role]=peers[peer_id].seq
 				started=Time.get_ticks_usec()
-			var encoded := _encode_state(key,state)
-			if metrics.enabled:
-				metrics.samples.encode.push(float(Time.get_ticks_usec()-started)/1000.0)
-				bytes=encoded.to_utf8_buffer().size(); metrics.snapshot_bytes=bytes
-			for id in rooms[key].members: _send_encoded(id,encoded,bytes)
+			for id in rooms[key].members:
+				if not peers.has(id): continue
+				var own_state: Dictionary = room.snapshot_for_role(String(peers[id].role),state)
+				var encoded := _encode_state(key,own_state)
+				if metrics.enabled:
+					metrics.samples.encode.push(float(Time.get_ticks_usec()-started)/1000.0)
+					bytes=encoded.to_utf8_buffer().size(); metrics.snapshot_bytes=bytes
+				_send_encoded(id,encoded,bytes)
 	for id in queue.members:
 		if peers.has(id) and Time.get_ticks_msec()-int(peers[id].get("queue_ping",0)) > 5000:
 			peers[id]["queue_ping"] = Time.get_ticks_msec(); _send(id,{"op":"queued","role":peers[id].role})
@@ -238,7 +241,7 @@ func _resume(id: int,message: Dictionary) -> void:
 	_send_matched(id,key,true)
 	_sync_connection_state(key)
 	if match_data.node.is_prepared:
-		var state: Dictionary = match_data.node.snapshot(); state["match"] = key; _send_encoded(id,_encode_state(key,state))
+		var state: Dictionary = match_data.node.snapshot(String(peer.role)); state["match"] = key; _send_encoded(id,_encode_state(key,state))
 	if match_data.node.finished and not bool(match_data.get("result_pending",false)): _send_result(id,key)
 func _sync_connection_state(key: String) -> void:
 	if not rooms.has(key) or rooms[key].node.finished: return

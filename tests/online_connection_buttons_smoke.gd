@@ -59,17 +59,21 @@ func run() -> void:
 		check(scene.client.socket == null and scene.client.test_transport_paused and scene.client.reconnecting,"button really releases socket and holds retries")
 		check(scene.disconnect_button.disabled and not scene.reconnect_button.disabled and scene.status.text.contains("재접속 버튼"),"held connection UI")
 		check(await until(func(): return room.connection_paused),"server pauses instead of immediate forfeit")
-		var frozen := [room.tick,room.battle.hero.current_hp,room.battle.hero.level,room.choice_revision,room.choice_age]
+		var frozen := [room.tick,room.battle.hero.current_hp,room.battle.hero.level,room.choice_revision,room.hero_holds.size()]
 		await pump(RULES.RECONNECT_RETRY+0.2)
 		check(scene.client.socket == null and scene.client.reconnect_deadline == deadline,"manual hold suppresses automatic retries without extending deadline")
-		check(frozen == [room.tick,room.battle.hero.current_hp,room.battle.hero.level,room.choice_revision,room.choice_age],"real battle state stays frozen")
+		check(frozen == [room.tick,room.battle.hero.current_hp,room.battle.hero.level,room.choice_revision,room.hero_holds.size()],"real battle state stays frozen")
 		check(not scene.client.set_local_test_disconnected(true),"repeated disconnect rejected")
 		scene.reconnect_button.pressed.emit()
 		check(not scene.client.test_transport_paused and scene.reconnect_button.disabled,"resume button releases hold once")
 		check(await until(func(): return not scene.client.reconnecting and not room.connection_paused and not scene.waiting_for_start),"same seat ready resumes actual battle")
 		check(scene.client.match_id == key and room.get_instance_id() == instance and scene.client.resume_token == token,"same match instance and capability")
 		check(not scene.disconnect_button.disabled and scene.reconnect_button.disabled,"buttons reset after resume")
-		check(not room.choice.is_empty() and hero.choices.get_child_count() > 0,"pending augment UI restored")
+		check(not room.hero_holds.is_empty(),"held augment survives reconnect")
+		if scene.role == "hero":
+			check(await until(func(): return scene.hold_toggle.text.contains("%d개" % room.hero_holds.size())),"own held augment badge restored")
+		else:
+			check(scene.hold_toggle.text.contains("0개"),"opponent held count remains hidden")
 	# Leaving the button held never extends the authoritative grace.
 	hero.disconnect_button.pressed.emit()
 	check(await until(func(): return room.connection_paused),"timeout scenario paused")

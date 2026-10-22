@@ -1,6 +1,7 @@
 extends Control
 ## One retained background + bounded procedural animation; no particle nodes.
 signal cancelled
+signal rules_requested
 const DATA := preload("res://src/data/online_loading_catalog.gd")
 var role_theme := {}
 var clock := 0.0
@@ -30,6 +31,8 @@ func _ready() -> void:
 	var space := Control.new(); space.size_flags_vertical = Control.SIZE_EXPAND_FILL; rows.add_child(space)
 	meter = ProgressBar.new(); meter.custom_minimum_size.y = 12; meter.show_percentage = false; rows.add_child(meter)
 	hint = label(rows,23)
+	var rules := Button.new(); rules.text = "규칙 보기"; rules.custom_minimum_size.y = 68; rows.add_child(rules)
+	rules.pressed.connect(func(): rules_requested.emit())
 	cancel = Button.new(); cancel.text = "매칭 취소 · 로비로"; cancel.custom_minimum_size.y = 76; rows.add_child(cancel)
 	cancel.pressed.connect(func(): cancelled.emit())
 	visible = false; set_process(false)

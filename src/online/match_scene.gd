@@ -8,6 +8,7 @@ const MONSTERS := preload("res://src/data/monster_catalog.gd")
 const LOCAL_ACCESS := preload("res://src/online/local_test_access.gd")
 const LOADING := preload("res://src/online/match_loading_view.gd")
 const RANKED := preload("res://src/data/ranked_rules.gd")
+const RULES_GUIDE := preload("res://src/data/ranked_rules_guide.gd")
 const LOADOUT := preload("res://src/online/online_loadout.gd")
 const HEROES := preload("res://src/data/hero_character_catalog.gd")
 const HERO_STORE := preload("res://src/systems/hero_mode_store.gd")
@@ -33,6 +34,11 @@ var ranking_icon: TextureRect
 var ranking_label: Label
 var action_notice: Label
 var choices: VBoxContainer
+var hold_toggle: Button
+var hold_scroll: ScrollContainer
+var hold_expanded := false
+var hold_signature := ""
+var rules_popup: PopupPanel
 var action_row: HBoxContainer
 var skill_row: HBoxContainer
 var skill_buttons := {}
@@ -41,8 +47,6 @@ var skill_direction := "east"
 var transcend_button: Button
 var transcendence_id := ""
 var transcend_placement := false
-var demon_choices_label: Label
-var demon_revision := -1
 var demon_skills: Array = []
 var queue_button: Button
 var endpoint: LineEdit
@@ -58,7 +62,6 @@ var selected_monster := "slime"
 var movement := Vector2.ZERO
 var input_left := 0.0
 var last_tick := -1
-var revision := -1
 var initial_owner := ""
 var ended := false
 var connection_waiting := false
@@ -100,6 +103,7 @@ func _ready() -> void:
 		test_code.placeholder_text = "테스트 서버 입장코드"; test_code.max_length = LOCAL_ACCESS.TICKET_BYTES * 2
 		test_code.custom_minimum_size.y = 72; test_code.add_theme_font_size_override("font_size",25); rows.add_child(test_code)
 	queue_button = _button(rows,"매칭 시작",_join)
+	_button(rows,"규칙 보기",_show_rules)
 	if initial_local_test:
 		var connection_tests := HBoxContainer.new(); rows.add_child(connection_tests)
 		disconnect_button = _button(connection_tests,"연결 끊기 (테스트)",_test_connection.bind(true))
@@ -132,14 +136,16 @@ func _ready() -> void:
 			button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		transcend_button = _button(rows,"초월 소환 · 위치 지정",_select_transcendence)
 		transcend_button.disabled = true
-		demon_choices_label = _label(rows,"",21)
-		demon_choices_label.hide()
 	if role == "hero":
 		pad = PAD.new(); add_child(pad); pad.set_mode(PAD.MODE_FREE)
 		pad.input_surface = view; pad.movement_changed.connect(func(value: Vector2): movement = value)
-	choices = VBoxContainer.new(); rows.add_child(choices)
+	hold_toggle = _button(rows,"증강 보관함 · 0개 ▾",_toggle_holds)
+	hold_scroll = ScrollContainer.new(); hold_scroll.custom_minimum_size.y = 250; rows.add_child(hold_scroll)
+	hold_scroll.visible = false
+	choices = VBoxContainer.new(); choices.size_flags_horizontal = Control.SIZE_EXPAND_FILL; hold_scroll.add_child(choices)
 	_button(rows,"매칭 취소 · 로비로",_leave)
-	loading = LOADING.new(); add_child(loading); loading.cancelled.connect(_leave)
+	loading = LOADING.new(); add_child(loading); loading.cancelled.connect(_leave); loading.rules_requested.connect(_show_rules)
+	_build_rules_popup()
 	client = CLIENT.new(); add_child(client); client.event_received.connect(_event)
 	client.connection_recovering.connect(func(active: bool,remaining: float):
 		if ended: return
@@ -173,8 +179,39 @@ func _use_skill(id: String) -> void:
 func _select_transcendence() -> void:
 	transcend_placement = true
 	action_notice.text = "초월 소환 위치를 전장에서 터치해 주세요."
-func _demon_choose(id: String,choice_revision: int) -> void:
-	if not ended and not connection_waiting and not client.reconnecting: client.command("demon_choose",{"id":id,"revision":choice_revision})
+func _select_held(id: String,number: int) -> void:
+	if not ended and not connection_waiting and not client.reconnecting:
+		client.command("choose" if role == "hero" else "demon_choose",{"id":id,"number":number})
+func _toggle_holds() -> void:
+	hold_expanded = not hold_expanded
+	hold_scroll.visible = hold_expanded
+	hold_toggle.text = "증강 보관함 · %d개 %s" % [choices.get_meta("count",0),"▴" if hold_expanded else "▾"]
+func _update_holds(holds: Array) -> void:
+	var signature := JSON.stringify(holds)
+	if signature == hold_signature: return
+	hold_signature = signature
+	choices.set_meta("count",holds.size())
+	hold_toggle.text = "증강 보관함 · %d개 %s" % [holds.size(),"▴" if hold_expanded else "▾"]
+	hold_toggle.modulate = Color(1.0,0.82,0.4) if not holds.is_empty() else Color.WHITE
+	for child in choices.get_children(): choices.remove_child(child); child.queue_free()
+	for index in holds.size():
+		var offer: Dictionary = holds[index]
+		_label(choices,"보관 %d · %d번 선택지" % [index+1,int(offer.number)],20)
+		for option in offer.candidates:
+			var name := String(option.name)
+			var description := String(option.get("description",""))
+			_button(choices,name if description.is_empty() else "%s · %s" % [name,description],_select_held.bind(String(option.id),int(offer.number)))
+	_set_controls(not connection_waiting and not client.reconnecting)
+func _build_rules_popup() -> void:
+	rules_popup = PopupPanel.new(); add_child(rules_popup)
+	var scroll := ScrollContainer.new(); scroll.custom_minimum_size = Vector2(720,900); rules_popup.add_child(scroll)
+	var sections := VBoxContainer.new(); sections.size_flags_horizontal = Control.SIZE_EXPAND_FILL; scroll.add_child(sections)
+	for section in RULES_GUIDE.sections():
+		_label(sections,String(section.title),30)
+		for item in section.items: _label(sections,"• " + String(item),23)
+	_button(sections,"닫기",func(): rules_popup.hide())
+func _show_rules() -> void:
+	rules_popup.popup_centered(Vector2i(760,1000))
 func _demon_loadout() -> Dictionary:
 	var owned := COLLECTION.get_unlocked_ids(COLLECTION.load_state())
 	var available: Array = []
@@ -200,7 +237,8 @@ func _join() -> void:
 		if not LOCAL_ACCESS.valid_hex(test_code.text.strip_edges(),LOCAL_ACCESS.TICKET_BYTES): status.text = "서버에 표시된 테스트 입장코드를 입력하세요."; return
 	elif get_node("/root/LoginGateway").user_id.is_empty() or get_node("/root/LoginGateway").access_token.is_empty(): status.text = "Google 또는 카카오 로그인이 필요합니다."; return
 	if not RULES.endpoint_valid(endpoint.text.strip_edges()): status.text = "공용 대전 서버 주소(wss://)를 입력해 주세요."; return
-	ended = false; last_tick = -1; revision = -1; demon_revision = -1; transcend_placement = false; connection_waiting = false
+	ended = false; last_tick = -1; transcend_placement = false; connection_waiting = false
+	hold_signature = ""; _update_holds([])
 	ranking_row.hide()
 	view.clear_state()
 	if pad != null: pad.enabled = true; pad.reset()
@@ -230,7 +268,7 @@ func _event(event: Dictionary) -> void:
 					skill_buttons[String(id)] = button
 				direction_row.visible = "line_assault" in demon_skills
 				transcend_button.visible = not transcendence_id.is_empty()
-			last_tick = -1; revision = -1; view.resume_motion()
+			last_tick = -1; view.resume_motion()
 			_refresh_connection_test_controls()
 			status.text = "기존 경기로 복귀했습니다." if event.get("resumed",false) else "매칭 완료 · 전투 준비 중..."
 			if event.has("feedback_cursor") and not view.FEEDBACK_DATA.valid_cursor(event.feedback_cursor): return
@@ -250,18 +288,18 @@ func _event(event: Dictionary) -> void:
 		"state":
 			if local_preparing: return
 			if ended or event.get("match","") != client.match_id or not RULES.number(event.get("tick",null)): return
-			if not RULES.number(event.get("seconds",null)) or not RULES.number(event.get("mana",null)) or not RULES.number(event.get("choice_revision",null)): return
-			if not event.get("choices",null) is Array or event.choices.size() > 4: return
-			if not RULES.number(event.get("demon_charge",null)) or not RULES.number(event.get("demon_charge_max",null)) or not RULES.number(event.get("demon_choice_revision",null)) or not RULES.number(event.get("demon_choice_left",null),RULES.CHOICE_TIMEOUT): return
-			if not event.get("demon_cooldowns",null) is Dictionary or not event.get("demon_ready",null) is Dictionary or not event.get("demon_choices",null) is Array or event.demon_choices.size() > 4 or not event.get("transcend_ready",null) is bool or not event.get("transcend_used",null) is bool: return
-			for option in event.demon_choices:
-				if not option is Dictionary or not option.get("id",null) is String or not option.get("name",null) is String: return
+			if not RULES.number(event.get("seconds",null)) or not RULES.number(event.get("mana",null)): return
+			if not event.get("augment_holds",null) is Array or event.augment_holds.size() > RULES.AUGMENT_HOLD_LIMIT: return
+			if not RULES.number(event.get("demon_charge",null)) or not RULES.number(event.get("demon_charge_max",null)): return
+			if not event.get("demon_cooldowns",null) is Dictionary or not event.get("demon_ready",null) is Dictionary or not event.get("transcend_ready",null) is bool or not event.get("transcend_used",null) is bool: return
 			for cooldown in event.demon_cooldowns.values():
 				if not RULES.number(cooldown): return
 			for ready in event.demon_ready.values():
 				if not ready is bool: return
-			for option in event.choices:
-				if not option is Dictionary or not option.get("id",null) is String or not option.get("name",null) is String: return
+			for offer in event.augment_holds:
+				if not offer is Dictionary or not RULES.number(offer.get("number",null)) or float(offer.number) != floorf(float(offer.number)) or not offer.get("candidates",null) is Array or offer.candidates.is_empty() or offer.candidates.size() > 4: return
+				for option in offer.candidates:
+					if not option is Dictionary or not option.get("id",null) is String or not option.get("name",null) is String: return
 			if int(event.tick) <= last_tick or not view.update_state(event): return
 			last_tick = int(event.tick)
 			view.feedback.suspended = waiting_for_start or connection_waiting or client.reconnecting
@@ -269,11 +307,7 @@ func _event(event: Dictionary) -> void:
 				waiting_for_start = false; view.feedback.suspended = false; loading.finish(); _set_controls(true)
 			if event.has("feedback"): view.feedback.consume(event.feedback,event.feedback_cursor,event.tick)
 			if not connection_waiting: status.text = "%s · %.0f초 · 용사 HP %d/%d · 지휘력 %.0f" % ["마왕" if role == "demon" else "용사",maxf(0,RULES.DURATION-float(event.seconds)),int(event.hero[2]),int(event.hero[3]),float(event.mana)]
-			if role == "hero" and int(event.choice_revision) != revision:
-				revision = int(event.choice_revision)
-				for child in choices.get_children(): choices.remove_child(child); child.queue_free()
-				for option in event.choices: _button(choices,String(option.name),_choose.bind(String(option.id),revision))
-				_set_controls(not connection_waiting and not client.reconnecting)
+			_update_holds(event.augment_holds)
 			if role == "demon":
 				for id in skill_buttons:
 					var data: Dictionary = SKILLS.get_skill(id)
@@ -284,13 +318,6 @@ func _event(event: Dictionary) -> void:
 				transcend_button.disabled = connection_waiting or client.reconnecting or waiting_for_start or not event.transcend_ready or event.transcend_used
 				transcend_button.text = "초월 사용 완료" if event.transcend_used else "초월 소환 · 위치 지정" if event.transcend_ready else "초월 해금 조건 진행 중"
 				if event.transcend_used: transcend_placement = false
-				if int(event.demon_choice_revision) != demon_revision:
-					demon_revision = int(event.demon_choice_revision)
-					for child in choices.get_children(): choices.remove_child(child); child.queue_free()
-					for option in event.demon_choices: _button(choices,"%s · %s" % [String(option.name),String(option.get("description",""))],_demon_choose.bind(String(option.id),demon_revision))
-					demon_choices_label.visible = not event.demon_choices.is_empty()
-				if demon_choices_label.visible: demon_choices_label.text = "마왕 증강 선택 · %.0f초" % ceilf(float(event.demon_choice_left))
-				_set_controls(not connection_waiting and not client.reconnecting)
 		"result":
 			if event.get("match","") != client.match_id or ended: return
 			if event.has("feedback"): view.feedback.consume(event.feedback,event.get("feedback_cursor",null),event.get("tick",null))
@@ -298,7 +325,7 @@ func _event(event: Dictionary) -> void:
 			load_revision += 1; local_preparing = false; waiting_for_start = false; loading.finish()
 			ended = true; movement = Vector2.ZERO; connection_waiting = false; queue_button.disabled = false
 			_set_controls(false)
-			for child in choices.get_children(): child.queue_free()
+			_update_holds([])
 			status.text = "대전 종료 · "+("무효 경기" if String(event.get("winner","")).is_empty() else "승리" if event.winner == role else "패배")
 			var ranking: Variant = event.get("ranking",null)
 			if event.get("rated",false) == true and ranking is Dictionary and RULES.number(ranking.get("mmr",null)) and RULES.number(ranking.get("delta",null)):
@@ -341,7 +368,8 @@ func _set_controls(enabled: bool) -> void:
 		pad.enabled = enabled
 		if not enabled: pad.reset()
 	for button in action_row.get_children(): button.disabled = not enabled
-	for button in choices.get_children(): button.disabled = not enabled
+	for button in choices.get_children():
+		if button is Button: button.disabled = not enabled
 	if role == "demon":
 		for button in skill_row.get_children(): button.disabled = not enabled or button.disabled
 		if transcend_button != null: transcend_button.disabled = not enabled or transcend_button.disabled
@@ -353,8 +381,6 @@ func _refresh_connection_test_controls() -> void:
 func _test_connection(disconnected: bool) -> void:
 	if initial_local_test and not ended and client.set_local_test_disconnected(disconnected):
 		_refresh_connection_test_controls()
-func _choose(id: String,choice_revision: int) -> void:
-	if not ended and not connection_waiting and not client.reconnecting: client.command("choose",{"id":id,"revision":choice_revision})
 func _process(delta: float) -> void:
 	if client == null: return
 	if metrics_panel!=null and metrics_panel.visible:

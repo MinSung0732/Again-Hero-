@@ -24,7 +24,7 @@ func added_fields(before: Dictionary, after: Dictionary) -> Array:
 	for key in after:
 		if not before.has(key): result.append(key)
 	return result
-# Protocol 10 retains PNG path interning; decoding must restore the snapshot.
+# Protocol 11 retains PNG path interning; decoding must restore the snapshot.
 func codec_round_trip(codec, message: Dictionary) -> bool:
 	var wire: String = codec.encode(message)
 	var decoded: Variant = JSON.parse_string(wire)
@@ -37,7 +37,7 @@ func run() -> void:
 	root.get_node("CloudStore").stop(); root.get_node("LoginGateway").remember_session_enabled = false
 	var old_script = baseline(); var rooms: Array = []
 	var codec = CODEC.new()
-	var later_fields := ["battlefield", "demon_charge", "demon_charge_max", "demon_cooldowns", "demon_ready", "transcend_ready", "transcend_used", "demon_choice_revision", "demon_choices", "demon_choice_left", "visuals", "primitives", "feedback", "feedback_cursor"]
+	var later_fields := ["battlefield", "demon_charge", "demon_charge_max", "demon_cooldowns", "demon_ready", "transcend_ready", "transcend_used", "visuals", "primitives", "feedback", "feedback_cursor"]
 	for index in 2:
 		var room := ROOM.new(); root.add_child(room); room.prepare(); rooms.append(room)
 		var previous = old_script.new(); previous.battle = room.battle
@@ -55,6 +55,8 @@ func run() -> void:
 			if frame == 16:
 				var gone = room.battle.active_monsters.values()[-1]; gone.free()
 			var before: Dictionary = previous.snapshot(); var after := room.snapshot()
+			check(not after.has("choice_revision") and not after.has("choices"),"obsolete shared choice fields removed")
+			before.erase("choice_revision"); before.erase("choices")
 			var shared := baseline_fields(before, after)
 			check(shared.size() == before.size() and JSON.stringify(before) == SERVER._encode(shared),"wire/ID/order/generation parity")
 			check(added_fields(before, after) == later_fields,"only known later snapshot fields added")
