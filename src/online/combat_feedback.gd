@@ -54,7 +54,7 @@ func _draw() -> void:
 		var ratio: float = slot.left/DATA.LIFETIME
 		var point: Vector2 = view.map_offset+slot.point*view.scale_ratio
 		var color: Color = slot.color; color.a *= ratio
-		var radius: float = maxf(8,40*view.scale_ratio)*(1.4-ratio*0.4)
+		var radius: float = maxf(8,(95 if slot.kind=="transcend" else 40)*view.scale_ratio)*(1.4-ratio*0.4)
 		draw_arc(point,radius,0,TAU,16,color,2,false)
 		if not slot.text.is_empty():
 			var position := point+Vector2(-slot.width*0.5,-24-(DATA.LIFETIME-slot.left)*DATA.RISE_SPEED)

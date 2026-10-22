@@ -1,6 +1,6 @@
 extends RefCounted
-## Ranked loadouts require matching protocol 9 server and client.
-const VERSION := 9
+## Ranked demon abilities require matching protocol 10 server and client.
+const VERSION := 10
 const SUMMON_PLACEMENT := "manual" # 랭크전 마왕 소환은 수동 배치만, 자동 배치 금지.
 const ID := "duel_smoke_v1"
 const HERO := "ranged_rookie"

@@ -24,7 +24,7 @@ func added_fields(before: Dictionary, after: Dictionary) -> Array:
 	for key in after:
 		if not before.has(key): result.append(key)
 	return result
-# Protocol 7 interns PNG paths on the wire; decoding must restore the snapshot.
+# Protocol 10 retains PNG path interning; decoding must restore the snapshot.
 func codec_round_trip(codec, message: Dictionary) -> bool:
 	var wire: String = codec.encode(message)
 	var decoded: Variant = JSON.parse_string(wire)
@@ -37,7 +37,7 @@ func run() -> void:
 	root.get_node("CloudStore").stop(); root.get_node("LoginGateway").remember_session_enabled = false
 	var old_script = baseline(); var rooms: Array = []
 	var codec = CODEC.new()
-	var later_fields := ["battlefield", "visuals", "primitives", "feedback", "feedback_cursor"]
+	var later_fields := ["battlefield", "demon_charge", "demon_charge_max", "demon_cooldowns", "demon_ready", "transcend_ready", "transcend_used", "demon_choice_revision", "demon_choices", "demon_choice_left", "visuals", "primitives", "feedback", "feedback_cursor"]
 	for index in 2:
 		var room := ROOM.new(); root.add_child(room); room.prepare(); rooms.append(room)
 		var previous = old_script.new(); previous.battle = room.battle

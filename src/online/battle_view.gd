@@ -28,11 +28,19 @@ var texture_requests := 0
 var load_drain
 var state := {}
 var textures := {}
+var allowed_actor_ids: Array = RULES.ROSTER.duplicate()
 var hero_texture: Texture2D
 var scale_ratio := 1.0
 var map_offset := Vector2.ZERO
 var bounds := Vector2(3600,3600)
 signal placement(point: Vector2)
+func set_match_roster(roster: Array,transcendence_id: String = "") -> void:
+	allowed_actor_ids = roster.duplicate()
+	if not transcendence_id.is_empty(): allowed_actor_ids.append(transcendence_id)
+	for id in allowed_actor_ids:
+		if textures.has(id): continue
+		var path := String(MONSTERS.get_monster(String(id)).get("card_icon_path",""))
+		if not path.is_empty() and ResourceLoader.exists(path): textures[id] = load(path)
 func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	clip_contents = true
@@ -58,7 +66,7 @@ func update_state(value: Dictionary) -> bool:
 	if float(value.bounds[0]) > ART.MAX_WORLD_EXTENT or float(value.bounds[1]) > ART.MAX_WORLD_EXTENT: return false
 	actor_ids.clear()
 	for actor in value.actors:
-		if not actor is Array or actor.size() != 6 or not actor[1] is String or actor[1] not in RULES.ROSTER: return false
+		if not actor is Array or actor.size() != 6 or not actor[1] is String or actor[1] not in allowed_actor_ids: return false
 		for index in [0,2,3,4,5]:
 			if not RULES.number(actor[index]): return false
 		var id := int(actor[0])

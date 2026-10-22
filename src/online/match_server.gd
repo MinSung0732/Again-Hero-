@@ -156,7 +156,7 @@ func _receive(id: int,message: Dictionary) -> void:
 		peer.seq = sequence
 		if message.get("kind",null) is String:
 			var accepted: bool = match_data.node.apply(peer.role,message.kind,message.get("argument",null))
-			if message.kind == "summon": _send(id,{"op":"action","match":peer.room,"accepted":accepted,"message":match_data.node.last_action_message})
+			if message.kind in ["summon","skill","transcend"]: _send(id,{"op":"action","match":peer.room,"accepted":accepted,"message":match_data.node.last_action_message})
 func _authenticate(id: int,token: String,role: String,loadout: Dictionary,local_credentials: Dictionary = {}) -> void:
 	var uid := ""
 	if not local_credentials.is_empty():
@@ -215,7 +215,7 @@ func _match_waiters() -> void:
 		_send_matched(id,key,false)
 func _send_matched(id: int,key: String,resumed: bool) -> void:
 	var role: String = peers[id].role
-	_send(id,{"op":"matched","match":key,"role":role,"rules":RULES.ID,"hero":rooms[key].node.hero_id,"roster":rooms[key].node.roster,"duration":RULES.DURATION,"resume_token":rooms[key].seats[role].resume_token,"resumed":resumed,"feedback_cursor":rooms[key].node.feedback.sequence,"battlefield":rooms[key].node.battlefield_info})
+	_send(id,{"op":"matched","match":key,"role":role,"rules":RULES.ID,"hero":rooms[key].node.hero_id,"roster":rooms[key].node.roster,"skill_ids":rooms[key].node.skill_ids if role=="demon" else [],"transcendence_id":rooms[key].node.transcendence_id,"duration":RULES.DURATION,"resume_token":rooms[key].seats[role].resume_token,"resumed":resumed,"feedback_cursor":rooms[key].node.feedback.sequence,"battlefield":rooms[key].node.battlefield_info})
 func _resume(id: int,message: Dictionary) -> void:
 	if message.get("version",null) != RULES.VERSION or message.get("rules","") != RULES.ID: _reject(id,"version_mismatch"); return
 	var token_value: Variant = message.get("resume_token",null)

@@ -34,6 +34,16 @@ var ranking_label: Label
 var action_notice: Label
 var choices: VBoxContainer
 var action_row: HBoxContainer
+var skill_row: HBoxContainer
+var skill_buttons := {}
+var direction_row: HBoxContainer
+var skill_direction := "east"
+var transcend_button: Button
+var transcendence_id := ""
+var transcend_placement := false
+var demon_choices_label: Label
+var demon_revision := -1
+var demon_skills: Array = []
 var queue_button: Button
 var endpoint: LineEdit
 var test_code: LineEdit
@@ -56,9 +66,9 @@ var wait_deadline := 0
 var wait_seconds := -1
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var options: Dictionary = SceneTransition.consume_entry_options()
-	role = String(options.get("role","hero")); initial_owner = LoginGateway.user_id
-	initial_local_test = LocalTestMode.is_online_match_allowed()
+	var options: Dictionary = get_node("/root/SceneTransition").consume_entry_options()
+	role = String(options.get("role","hero")); initial_owner = get_node("/root/LoginGateway").user_id
+	initial_local_test = get_node("/root/LocalTestMode").is_online_match_allowed()
 	var rows := VBoxContainer.new(); add_child(rows); rows.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	rows.offset_left = 24; rows.offset_right = -24; rows.offset_top = 35; rows.offset_bottom = -30
 	_label(rows,"랭킹 매칭",34)
@@ -109,8 +119,21 @@ func _ready() -> void:
 			button.custom_minimum_size.y=56; button.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	view = VIEW.new(); view.size_flags_vertical = Control.SIZE_EXPAND_FILL; view.custom_minimum_size.y = 400; rows.add_child(view)
 	view.placement.connect(func(point: Vector2):
-		if role == "demon" and not ended and not local_preparing and not waiting_for_start and not connection_waiting and not client.reconnecting: client.command("summon",{"id":selected_monster,"point":[point.x,point.y]}))
+		if role == "demon" and not ended and not local_preparing and not waiting_for_start and not connection_waiting and not client.reconnecting:
+			if transcend_placement:
+				if client.command("transcend",{"point":[point.x,point.y]}): transcend_placement = false
+			else: client.command("summon",{"id":selected_monster,"point":[point.x,point.y]}))
 	action_row = HBoxContainer.new(); rows.add_child(action_row)
+	if role == "demon":
+		skill_row = HBoxContainer.new(); rows.add_child(skill_row)
+		direction_row = HBoxContainer.new(); rows.add_child(direction_row)
+		for direction in ["east","west","north","south"]:
+			var button := _button(direction_row,{"east":"동","west":"서","north":"북","south":"남"}[direction],_select_skill_direction.bind(direction))
+			button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		transcend_button = _button(rows,"초월 소환 · 위치 지정",_select_transcendence)
+		transcend_button.disabled = true
+		demon_choices_label = _label(rows,"",21)
+		demon_choices_label.hide()
 	if role == "hero":
 		pad = PAD.new(); add_child(pad); pad.set_mode(PAD.MODE_FREE)
 		pad.input_surface = view; pad.movement_changed.connect(func(value: Vector2): movement = value)
@@ -139,7 +162,19 @@ func _button(parent: Node,value: String,callback: Callable) -> Button:
 	parent.add_child(button); button.pressed.connect(callback); return button
 func _select_monster(id: String) -> void:
 	selected_monster = id
+	transcend_placement = false
 	action_notice.text = "소환 선택: %s · 전장 터치로 배치" % String(MONSTERS.get_monster(id).get("name",id))
+func _select_skill_direction(direction: String) -> void:
+	skill_direction = direction
+	action_notice.text = "직선 포위 방향: %s" % {"east":"동","west":"서","north":"북","south":"남"}.get(direction,direction)
+func _use_skill(id: String) -> void:
+	if not ended and not connection_waiting and not client.reconnecting:
+		client.command("skill",{"id":id,"direction":skill_direction if id == "line_assault" else ""})
+func _select_transcendence() -> void:
+	transcend_placement = true
+	action_notice.text = "초월 소환 위치를 전장에서 터치해 주세요."
+func _demon_choose(id: String,choice_revision: int) -> void:
+	if not ended and not connection_waiting and not client.reconnecting: client.command("demon_choose",{"id":id,"revision":choice_revision})
 func _demon_loadout() -> Dictionary:
 	var owned := COLLECTION.get_unlocked_ids(COLLECTION.load_state())
 	var available: Array = []
@@ -160,16 +195,16 @@ func _join() -> void:
 		_refresh_demon_summary()
 		var reason := ENTRY.blocked_reason(chosen.team_ids,chosen.skill_ids,false)
 		if not reason.is_empty(): status.text = reason; return
-	if LocalTestMode.is_online_match_allowed() != initial_local_test: status.text = "테스트 모드가 변경되었습니다. 로비에서 다시 입장하세요."; return
+	if get_node("/root/LocalTestMode").is_online_match_allowed() != initial_local_test: status.text = "테스트 모드가 변경되었습니다. 로비에서 다시 입장하세요."; return
 	if initial_local_test:
 		if not LOCAL_ACCESS.valid_hex(test_code.text.strip_edges(),LOCAL_ACCESS.TICKET_BYTES): status.text = "서버에 표시된 테스트 입장코드를 입력하세요."; return
-	elif LoginGateway.user_id.is_empty() or LoginGateway.access_token.is_empty(): status.text = "Google 또는 카카오 로그인이 필요합니다."; return
+	elif get_node("/root/LoginGateway").user_id.is_empty() or get_node("/root/LoginGateway").access_token.is_empty(): status.text = "Google 또는 카카오 로그인이 필요합니다."; return
 	if not RULES.endpoint_valid(endpoint.text.strip_edges()): status.text = "공용 대전 서버 주소(wss://)를 입력해 주세요."; return
-	ended = false; last_tick = -1; revision = -1; connection_waiting = false
+	ended = false; last_tick = -1; revision = -1; demon_revision = -1; transcend_placement = false; connection_waiting = false
 	ranking_row.hide()
 	view.clear_state()
 	if pad != null: pad.enabled = true; pad.reset()
-	var error: int = client.join_local_test(endpoint.text.strip_edges(),test_code.text.strip_edges(),role,chosen) if initial_local_test else client.join(endpoint.text.strip_edges(),LoginGateway.access_token,role,chosen)
+	var error: int = client.join_local_test(endpoint.text.strip_edges(),test_code.text.strip_edges(),role,chosen) if initial_local_test else client.join(endpoint.text.strip_edges(),get_node("/root/LoginGateway").access_token,role,chosen)
 	if test_code != null and error == OK: test_code.clear()
 	status.text = "서버에 연결 중..." if error == OK else "서버에 연결하지 못했습니다."
 	queue_button.disabled = error == OK
@@ -178,12 +213,23 @@ func _event(event: Dictionary) -> void:
 	match String(event.get("op","")):
 		"queued": status.text = "상대 역할 플레이어를 찾는 중..."
 		"matched":
+			transcendence_id = String(event.get("transcendence_id",""))
+			if event.get("roster",null) is Array: view.set_match_roster(event.roster,transcendence_id)
 			if role == "demon" and event.get("roster",null) is Array:
 				for child in action_row.get_children(): child.queue_free()
 				for id in event.roster:
 					var button := _button(action_row,String(MONSTERS.get_monster(String(id)).get("name",id)),_select_monster.bind(String(id)))
 					button.size_flags_horizontal = Control.SIZE_EXPAND_FILL; button.add_theme_font_size_override("font_size",21)
 				if not event.roster.is_empty(): selected_monster = String(event.roster[0])
+				for child in skill_row.get_children(): child.queue_free()
+				skill_buttons.clear()
+				demon_skills = event.get("skill_ids",[]) if event.get("skill_ids",[]) is Array else []
+				for id in demon_skills:
+					var button := _button(skill_row,String(SKILLS.get_skill(String(id)).get("name",id)),_use_skill.bind(String(id)))
+					button.size_flags_horizontal = Control.SIZE_EXPAND_FILL; button.add_theme_font_size_override("font_size",21)
+					skill_buttons[String(id)] = button
+				direction_row.visible = "line_assault" in demon_skills
+				transcend_button.visible = not transcendence_id.is_empty()
 			last_tick = -1; revision = -1; view.resume_motion()
 			_refresh_connection_test_controls()
 			status.text = "기존 경기로 복귀했습니다." if event.get("resumed",false) else "매칭 완료 · 전투 준비 중..."
@@ -206,6 +252,14 @@ func _event(event: Dictionary) -> void:
 			if ended or event.get("match","") != client.match_id or not RULES.number(event.get("tick",null)): return
 			if not RULES.number(event.get("seconds",null)) or not RULES.number(event.get("mana",null)) or not RULES.number(event.get("choice_revision",null)): return
 			if not event.get("choices",null) is Array or event.choices.size() > 4: return
+			if not RULES.number(event.get("demon_charge",null)) or not RULES.number(event.get("demon_charge_max",null)) or not RULES.number(event.get("demon_choice_revision",null)) or not RULES.number(event.get("demon_choice_left",null),RULES.CHOICE_TIMEOUT): return
+			if not event.get("demon_cooldowns",null) is Dictionary or not event.get("demon_ready",null) is Dictionary or not event.get("demon_choices",null) is Array or event.demon_choices.size() > 4 or not event.get("transcend_ready",null) is bool or not event.get("transcend_used",null) is bool: return
+			for option in event.demon_choices:
+				if not option is Dictionary or not option.get("id",null) is String or not option.get("name",null) is String: return
+			for cooldown in event.demon_cooldowns.values():
+				if not RULES.number(cooldown): return
+			for ready in event.demon_ready.values():
+				if not ready is bool: return
 			for option in event.choices:
 				if not option is Dictionary or not option.get("id",null) is String or not option.get("name",null) is String: return
 			if int(event.tick) <= last_tick or not view.update_state(event): return
@@ -219,6 +273,23 @@ func _event(event: Dictionary) -> void:
 				revision = int(event.choice_revision)
 				for child in choices.get_children(): choices.remove_child(child); child.queue_free()
 				for option in event.choices: _button(choices,String(option.name),_choose.bind(String(option.id),revision))
+				_set_controls(not connection_waiting and not client.reconnecting)
+			if role == "demon":
+				for id in skill_buttons:
+					var data: Dictionary = SKILLS.get_skill(id)
+					var cooldown := float(event.demon_cooldowns.get(id,0.0))
+					var button: Button = skill_buttons[id]
+					button.text = "%s\n마력 %.0f/%.0f · %s" % [String(data.get("name",id)),float(event.demon_charge),float(event.demon_charge_max),"%.0f초" % ceilf(cooldown) if cooldown > 0.01 else "필요 %.0f" % float(data.get("mana_cost",0.0))]
+					button.disabled = connection_waiting or client.reconnecting or waiting_for_start or not bool(event.demon_ready.get(id,false))
+				transcend_button.disabled = connection_waiting or client.reconnecting or waiting_for_start or not event.transcend_ready or event.transcend_used
+				transcend_button.text = "초월 사용 완료" if event.transcend_used else "초월 소환 · 위치 지정" if event.transcend_ready else "초월 해금 조건 진행 중"
+				if event.transcend_used: transcend_placement = false
+				if int(event.demon_choice_revision) != demon_revision:
+					demon_revision = int(event.demon_choice_revision)
+					for child in choices.get_children(): choices.remove_child(child); child.queue_free()
+					for option in event.demon_choices: _button(choices,"%s · %s" % [String(option.name),String(option.get("description",""))],_demon_choose.bind(String(option.id),demon_revision))
+					demon_choices_label.visible = not event.demon_choices.is_empty()
+				if demon_choices_label.visible: demon_choices_label.text = "마왕 증강 선택 · %.0f초" % ceilf(float(event.demon_choice_left))
 				_set_controls(not connection_waiting and not client.reconnecting)
 		"result":
 			if event.get("match","") != client.match_id or ended: return
@@ -271,9 +342,12 @@ func _set_controls(enabled: bool) -> void:
 		if not enabled: pad.reset()
 	for button in action_row.get_children(): button.disabled = not enabled
 	for button in choices.get_children(): button.disabled = not enabled
+	if role == "demon":
+		for button in skill_row.get_children(): button.disabled = not enabled or button.disabled
+		if transcend_button != null: transcend_button.disabled = not enabled or transcend_button.disabled
 func _refresh_connection_test_controls() -> void:
 	if disconnect_button == null: return
-	var allowed: bool = not ended and LocalTestMode.is_online_match_allowed() and client.local_test_connection and not client.match_id.is_empty() and not client.resume_token.is_empty() and not client.result_received
+	var allowed: bool = not ended and get_node("/root/LocalTestMode").is_online_match_allowed() and client.local_test_connection and not client.match_id.is_empty() and not client.resume_token.is_empty() and not client.result_received
 	disconnect_button.disabled = not allowed or client.reconnecting or client.socket == null or client.socket.get_ready_state() != WebSocketPeer.STATE_OPEN
 	reconnect_button.disabled = not allowed or not client.test_transport_paused
 func _test_connection(disconnected: bool) -> void:
@@ -287,8 +361,8 @@ func _process(delta: float) -> void:
 		metrics_left-=delta
 		if metrics_left<=0:
 			metrics_left=METRICS.PANEL_SECONDS; _refresh_metrics()
-	if not ended and LocalTestMode.is_online_match_allowed() != initial_local_test: client.close(); view.feedback.pause_feedback(); view.pause_motion(); status.text = "테스트 모드가 변경되어 대전을 종료했습니다."; ended = true; _set_controls(false)
-	if not ended and LoginGateway.user_id != initial_owner: client.close(); view.feedback.pause_feedback(); view.pause_motion(); status.text = "계정이 변경되어 대전을 종료했습니다."; ended = true; _set_controls(false)
+	if not ended and get_node("/root/LocalTestMode").is_online_match_allowed() != initial_local_test: client.close(); view.feedback.pause_feedback(); view.pause_motion(); status.text = "테스트 모드가 변경되어 대전을 종료했습니다."; ended = true; _set_controls(false)
+	if not ended and get_node("/root/LoginGateway").user_id != initial_owner: client.close(); view.feedback.pause_feedback(); view.pause_motion(); status.text = "계정이 변경되어 대전을 종료했습니다."; ended = true; _set_controls(false)
 	if connection_waiting and not ended and not client.reconnecting:
 		var seconds := maxi(0,int(ceil(float(wait_deadline-Time.get_ticks_msec())/1000.0)))
 		if seconds != wait_seconds:
@@ -307,7 +381,7 @@ func _leave() -> void:
 	load_revision += 1; ended = true; view.feedback.pause_feedback(); view.pause_motion(); loading.finish()
 	if client != null: client.close()
 	if role == "hero": get_tree().set_meta("hero_lobby_return",true)
-	SceneTransition.change_scene("res://src/lobby/Lobby.tscn","로비 준비 중...")
+	get_node("/root/SceneTransition").change_scene("res://src/lobby/Lobby.tscn","로비 준비 중...")
 func _exit_tree() -> void:
 	load_revision += 1
 	if client != null: client.close()

@@ -1,6 +1,7 @@
 extends Node
 ## Authoritative adapter over the shipped Battle/Hero/monster/weapon code.
 const RULES := preload("res://src/online/match_rules.gd")
+const SKILLS := preload("res://src/data/demon_ultimate_catalog.gd")
 const PRESENTATION := preload("res://src/online/presentation_snapshot.gd")
 var presentation = PRESENTATION.new()
 var battlefield_info := {}
@@ -20,6 +21,7 @@ var move_age := 0.0
 var choice_age := 0.0
 var choice_revision := 0
 var choice: Array = []
+var demon_choice_age := 0.0
 var tick := 0
 var hero_last := Vector2.ZERO
 var ids := {}
@@ -43,7 +45,7 @@ func prepare() -> void:
 	if scene == null: finish("","battle_load_failed"); return
 	battle = scene.instantiate(); battle.online_match_mode = true
 	battle.combat_popup_visuals_enabled = false
-	battle.online_match_rules = {"population":RULES.POPULATION,"roster":roster}
+	battle.online_match_rules = {"population":RULES.POPULATION,"roster":roster,"skill_ids":skill_ids,"transcendence_id":transcendence_id}
 	battle.hero_player_mode = true; battle.hero_player_stage = "stage_1"; battle.hero_player_hero_id = hero_id
 	world.add_child(battle); battle.set_external_pause(true)
 	battle.run_time_limit_seconds = RULES.DURATION
@@ -55,6 +57,11 @@ func prepare() -> void:
 	battle.online_combat_feedback.connect(_feedback)
 	battle.online_cast_feedback.connect(func(cue: String,point: Vector2):
 		if running and not finished and not connection_paused: feedback.publish(cue,point,0,Color.WHITE,tick))
+	battle.demon_ultimate_used.connect(func(_id: String,_name: String,_message: String):
+		if running and not finished and not connection_paused: feedback.publish("cast",battle.hero.position,0,Color(0.8,0.5,1.0),tick))
+	battle.transcendent_summoned.connect(func(_id: String,actor: Node2D):
+		if running and not finished and not connection_paused and is_instance_valid(actor): feedback.publish("transcend",actor.global_position,0,Color(1.0,0.75,0.35),tick))
+	battle.demon_augment_ready.connect(func(_candidates: Array,_rerolls: int,_level: int): demon_choice_age = 0.0)
 
 	battle.battle_finished.connect(func(_message: String,demon_won: bool): finish("demon" if demon_won else "hero",_message))
 	battle.hero.player_augment_requested.connect(_choice)
@@ -93,6 +100,25 @@ func apply(role: String,kind: String,argument: Variant) -> bool:
 		var accepted: bool = battle.try_summon_at_position(id,Vector2(point[0],point[1]))
 		if accepted: feedback.publish("summon",Vector2(point[0],point[1]),0,Color(0.8,0.5,1.0),tick)
 		return accepted
+	if role == "demon" and kind == "skill" and argument is Dictionary:
+		var id: Variant = argument.get("id",null)
+		var direction: Variant = argument.get("direction","")
+		if not id is String or id not in skill_ids or not direction is String or direction not in ["","east","west","north","south"]: return false
+		if argument.has("point") and not RULES.point(argument.point): return false
+		var accepted: bool = battle.try_use_demon_ultimate(id,direction)
+		if accepted: last_action_message = "마왕 스킬을 사용했습니다."
+		return accepted
+	if role == "demon" and kind == "demon_choose" and argument is Dictionary:
+		var revision: Variant = argument.get("revision",null)
+		var id: Variant = argument.get("id",null)
+		if not RULES.number(revision) or float(revision) != floorf(float(revision)) or not id is String: return false
+		return battle.choose_demon_augment(id,int(revision))
+	if role == "demon" and kind == "transcend" and argument is Dictionary:
+		var point: Variant = argument.get("point",null)
+		if transcendence_id.is_empty() or not RULES.point(point): return false
+		var accepted: bool = battle.try_summon_transcendent_at_position(Vector2(point[0],point[1]))
+		if accepted: last_action_message = "초월 몬스터를 소환했습니다."
+		return accepted
 	return false
 func step(delta: float) -> void:
 	if not running or finished or connection_paused: return
@@ -101,7 +127,9 @@ func step(delta: float) -> void:
 	if not choice.is_empty():
 		choice_age += delta
 		if choice_age >= RULES.CHOICE_TIMEOUT: apply("hero","choose",{"revision":choice_revision,"id":String(choice[0].id)})
-	if battle.demon_augment_selection_active and not battle.demon_augment_candidates.is_empty(): battle.choose_demon_augment(String(battle.demon_augment_candidates[0].id))
+	if battle.demon_augment_selection_active and not battle.demon_augment_candidates.is_empty():
+		demon_choice_age += delta
+		if demon_choice_age >= RULES.CHOICE_TIMEOUT: battle.choose_demon_augment(String(battle.demon_augment_candidates[0].id),battle.get_demon_augment_revision())
 	if battle.mutation_director.is_active():
 		var candidates: Array = battle.mutation_director.get_candidates()
 		if not candidates.is_empty(): battle.try_choose_mutation(String(candidates[0]))
@@ -162,8 +190,16 @@ func _build_snapshot() -> Dictionary:
 		if int(ids[instance].seen) != snapshot_revision: stale_wire_ids.append(instance)
 	for instance in stale_wire_ids:
 		ids.erase(instance); presentation.forget_node(instance)
+	var demon_ready := {}
+	for id in skill_ids:
+		var skill: Dictionary = SKILLS.get_skill(String(id))
+		demon_ready[id] = battle.demon_ultimate_spawn_queue.is_empty() and battle.demon_ultimate_charge+0.001 >= float(skill.get("mana_cost",SKILLS.CHARGE_MAX)) and float(battle.demon_ultimate_cooldowns.get(id,0.0)) <= 0.001
+	var demon_choices: Array = []
+	if battle.demon_augment_selection_active:
+		for candidate in battle.demon_augment_candidates:
+			demon_choices.append({"id":String(candidate.get("id","")),"name":String(candidate.get("name","")),"description":String(candidate.get("description",""))})
 	# Bounded snapshot serialization and presentation sort at10Hz, not physics Hz.
-	return {"op":"state","tick":tick,"hero":[hero_last.x,hero_last.y,hp,maximum,level],"bounds":[battle.current_map_size.x,battle.current_map_size.y],"battlefield":battlefield_info,"seconds":battle.run_metrics.elapsed_seconds,"mana":battle.command_power,"actors":actors,"shots":shots,"visuals":visuals,"primitives":primitives,"feedback":feedback.snapshot(),"feedback_cursor":feedback.sequence,"choice_revision":choice_revision,"choices":choice,"winner":winner,"reason":reason}
+	return {"op":"state","tick":tick,"hero":[hero_last.x,hero_last.y,hp,maximum,level],"bounds":[battle.current_map_size.x,battle.current_map_size.y],"battlefield":battlefield_info,"seconds":battle.run_metrics.elapsed_seconds,"mana":battle.command_power,"demon_charge":battle.demon_ultimate_charge,"demon_charge_max":SKILLS.CHARGE_MAX,"demon_cooldowns":battle.demon_ultimate_cooldowns,"demon_ready":demon_ready,"transcend_ready":battle.transcendence.ready and not battle.transcendence.used,"transcend_used":battle.transcendence.used,"demon_choice_revision":battle.get_demon_augment_revision(),"demon_choices":demon_choices,"demon_choice_left":maxf(0.0,RULES.CHOICE_TIMEOUT-demon_choice_age) if battle.demon_augment_selection_active else 0.0,"actors":actors,"shots":shots,"visuals":visuals,"primitives":primitives,"feedback":feedback.snapshot(),"feedback_cursor":feedback.sequence,"choice_revision":choice_revision,"choices":choice,"winner":winner,"reason":reason}
 
 func _visual_order(a: Array,b: Array) -> bool:
 	return PRESENTATION.visual_order(a,b)

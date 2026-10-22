@@ -694,7 +694,7 @@ func _ready() -> void:
 	goblin_formation_runtime.setup(self,MONSTER_CATALOG.MONSTERS)
 	anubis_army_runtime.setup(MONSTER_CATALOG.MONSTERS)
 	lizard_tail_runtime.setup(self)
-	if not online_match_mode: _cache_demon_ultimate_runtime_data()
+	_cache_demon_ultimate_runtime_data()
 	_start_battle()
 
 func _process(delta: float) -> void:
@@ -823,10 +823,7 @@ func _cache_demon_ultimate_runtime_data() -> void:
 		1.0
 	)
 	var valid_skill_ids: Array = DEMON_ULTIMATES.get_ordered_ids()
-	var selected_skill_ids := DEMON_SKILL_LOADOUT_STORE.load_ids(
-		valid_skill_ids,
-		valid_skill_ids
-	)
+	var selected_skill_ids: Array = online_match_rules.get("skill_ids",[]) if online_match_mode else DEMON_SKILL_LOADOUT_STORE.load_ids(valid_skill_ids,valid_skill_ids)
 	for raw_id in selected_skill_ids:
 		var skill_id := String(raw_id)
 		demon_ultimate_skill_ids.append(skill_id)
@@ -853,7 +850,7 @@ func _start_battle() -> void:
 	battle_entity_registry.begin_session(battle_command_router.get_session_id())
 	demon_augment_revision += 1
 	mutation_choice_revision += 1
-	var registered_id := "" if hero_player_mode else TRANSCENDENCE_STORE.load_id()
+	var registered_id := String(online_match_rules.get("transcendence_id","")) if online_match_mode else "" if hero_player_mode else TRANSCENDENCE_STORE.load_id()
 	transcendent_actor = null
 	raw_allied_summons = 0
 	raw_real_tank_summons = 0
@@ -1349,6 +1346,11 @@ func try_summon_transcendent() -> bool:
 		return _execute_summon_transcendent()
 	return battle_command_router.submit_local(BATTLE_SESSION.Command.SUMMON_TRANSCENDENT)
 
+func try_summon_transcendent_at_position(spawn_position: Vector2) -> bool:
+	if not online_match_mode or not battle_command_router.supports_local_execution():
+		return false
+	return _execute_summon_transcendent(spawn_position)
+
 func try_use_demon_ultimate(skill_id: String, direction: String = "") -> bool:
 	if not battle_command_router.supports_local_execution():
 		return false
@@ -1457,15 +1459,22 @@ func debug_unlock_transcendence() -> bool:
 	return true
 
 
-func _execute_summon_transcendent() -> bool:
+func _execute_summon_transcendent(manual_position: Variant = null) -> bool:
 	var id: String = transcendence.monster_id
 	if not _can_attempt_summon(id, true):
 		return false
+	if online_match_mode and (not manual_position is Vector2 or not manual_position.is_finite()):
+		return false
+	if manual_position is Vector2:
+		var placement_error := get_manual_spawn_error(id,manual_position,true)
+		if not placement_error.is_empty():
+			summon_result.emit(id,false,placement_error)
+			return false
 	var cost: float = get_monster_cost(id)
 	if command_power + 0.001 < cost:
 		summon_result.emit(id, false, "초월 소환에 필요한 지휘력이 부족합니다.")
 		return false
-	return _perform_summon(id, _get_auto_spawn_position(), cost, false)
+	return _perform_summon(id, _clamp_manual_spawn_position(manual_position) if manual_position is Vector2 else _get_auto_spawn_position(), cost, manual_position is Vector2)
 
 func _can_attempt_summon(monster_type: String, transcendence_attempt: bool = false) -> bool:
 	if not bool(MONSTER_CATALOG.MONSTERS.get(monster_type, {}).get("combat_enabled", true)):
@@ -1479,7 +1488,7 @@ func _can_attempt_summon(monster_type: String, transcendence_attempt: bool = fal
 		summon_result.emit(monster_type, false, "스테이지 메뉴를 닫은 뒤 소환해 주세요.")
 		return false
 
-	if demon_augment_selection_active:
+	if demon_augment_selection_active and not online_match_mode:
 		summon_result.emit(monster_type, false, "마왕 증강을 먼저 선택해 주세요.")
 		return false
 
@@ -1581,7 +1590,8 @@ func _perform_summon(monster_type: String, spawn_position: Vector2, cost: float,
 
 func get_manual_spawn_error(
 	monster_type: String,
-	spawn_position: Vector2
+	spawn_position: Vector2,
+	transcendence_attempt: bool = false
 ) -> String:
 	if not _is_spawn_position_inside_bounds(spawn_position):
 		return "배치 불가\n전장 안쪽을 터치"
@@ -1590,7 +1600,7 @@ func get_manual_spawn_error(
 		return "용사와 너무 가까움"
 
 	var cost := get_monster_cost(monster_type)
-	if cost <= 0.0:
+	if cost <= 0.0 and not (transcendence_attempt and TRANSCENDENCE_DATA.is_transcendent(monster_type)):
 		return "배치 불가"
 
 	if command_power + 0.001 < cost:
@@ -2191,7 +2201,7 @@ func _spawn_monster(
 	spawn_modifiers: Dictionary = {}
 ):
 	var reserved_boss := _is_reserved_hero_boss_request(monster_type,spawn_modifiers)
-	if online_match_mode and (active_monsters.size() >= get_population_limit() or monster_type not in online_match_rules.get("roster",[])): return null
+	if online_match_mode and (active_monsters.size() >= get_population_limit() or (monster_type not in online_match_rules.get("roster",[]) and not (bool(spawn_modifiers.get("transcendence_summon",false)) and monster_type == String(online_match_rules.get("transcendence_id",""))))): return null
 	# Online uses its explicit roster/population; solo survival supply pacing
 	# must not block the opposing player's paid summons (notably controllers).
 	var solo_hero_spawn := hero_player_mode and not online_match_mode
@@ -3777,7 +3787,7 @@ func _execute_demon_ultimate(
 	skill_id: String,
 	direction: String = ""
 ) -> bool:
-	if battle_over or external_pause or demon_augment_selection_active:
+	if battle_over or external_pause or (demon_augment_selection_active and not online_match_mode):
 		return false
 	if skill_id not in demon_ultimate_skill_ids:
 		return false
@@ -4768,11 +4778,9 @@ func _open_next_demon_augment_if_needed() -> void:
 
 	demon_augment_selection_active = true
 	demon_augment_revision += 1
-	flow_pause_manager.request_pause(
-		PAUSE_REASON_DEMON_AUGMENT,
-		FULL_MODAL_PAUSE_DOMAINS
-	)
-	_sync_combat_pause_state()
+	if not online_match_mode:
+		flow_pause_manager.request_pause(PAUSE_REASON_DEMON_AUGMENT,FULL_MODAL_PAUSE_DOMAINS)
+		_sync_combat_pause_state()
 
 	demon_augment_ready.emit(
 		demon_augment_candidates,

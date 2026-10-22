@@ -15,10 +15,11 @@ const CUES := {
 	"hero_hit":{"path":CONTEXT.ROOT+CONTEXT.HITS.ranged_kiter.file,"db":CONTEXT.HIT_DB,"interval":CONTEXT.HIT_INTERVAL_MS/1000.0},
 	"cast":{"path":"res://assets/audio/sfx/stage1_mage_v4_basic.wav","db":-23.0,"interval":0.18},
 	"summon":GAME.BATTLE_CUES.summon,
+	"transcend":GAME.BATTLE_CUES.summon,
 	"victory":CONTEXT.UI_CUES.victory,
 	"defeat":CONTEXT.UI_CUES.defeat,
 }
-const KINDS := ["hero_hit","monster_hit","heal","cast","summon"]
+const KINDS := ["hero_hit","monster_hit","heal","cast","summon","transcend"]
 const EMPTY := []
 static func valid_cursor(value: Variant) -> bool:
 	return (value is int or value is float) and is_finite(float(value)) and value >= 0 and value <= 2147483647 and value == floorf(value)
