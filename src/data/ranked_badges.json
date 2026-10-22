@@ -1,0 +1,286 @@
+{
+  "schema_version": 1,
+  "division_order": "ascending",
+  "division_min": 1,
+  "division_max": 4,
+  "division_rule": "1 is lowest, 4 is highest; division equals bottom jewel count. No Roman-numeral inversion.",
+  "tier_order": [
+    "bronze",
+    "silver",
+    "gold",
+    "diamond",
+    "demon_lord",
+    "hero"
+  ],
+  "initial_mmr": 1000,
+  "mmr_thresholds": null,
+  "hero_qualification": {
+    "authority": "server",
+    "eligible_tier": "demon_lord",
+    "top_count": 100,
+    "outside_top_count_tier": "demon_lord",
+    "display_fields": [
+      "mmr",
+      "server_rank"
+    ]
+  },
+  "rendering": {
+    "texture_filter": "nearest",
+    "load_policy": "load requested icon on demand; do not preload the whole collection",
+    "source_pixels": "approved generated originals, unmodified; alpha includes intermediate edge values"
+  },
+  "assets": [
+    {
+      "id": "bronze_1",
+      "tier_id": "bronze",
+      "division": 1,
+      "display_name": "브론즈 1",
+      "sort_order": 1,
+      "icon_path": "res://assets/art/ui/ranked_badges/bronze_1.png",
+      "size_px": [
+        1254,
+        1254
+      ],
+      "sha256": "3c74532f6de21c234797e5bf694573691cfcf94f14b5d4a4b0d06f10eaab4f4f",
+      "generation_source": "exec-1586332d-3b0d-428a-83d6-d3376ac3c7da.png"
+    },
+    {
+      "id": "bronze_2",
+      "tier_id": "bronze",
+      "division": 2,
+      "display_name": "브론즈 2",
+      "sort_order": 2,
+      "icon_path": "res://assets/art/ui/ranked_badges/bronze_2.png",
+      "size_px": [
+        1254,
+        1254
+      ],
+      "sha256": "f01f5661388c0bca62b1835252028f31e5cea5624c549e6562490e780042ca89",
+      "generation_source": "exec-84ace9c7-3d99-48a2-8010-6c9256ec25df.png"
+    },
+    {
+      "id": "bronze_3",
+      "tier_id": "bronze",
+      "division": 3,
+      "display_name": "브론즈 3",
+      "sort_order": 3,
+      "icon_path": "res://assets/art/ui/ranked_badges/bronze_3.png",
+      "size_px": [
+        1254,
+        1254
+      ],
+      "sha256": "156fcb7f3c85e757c746284388837f07b5832ee15d418e3ad2914afa4bc3e031",
+      "generation_source": "exec-52f6b46c-8feb-4358-8c40-ced9eb9b4152.png"
+    },
+    {
+      "id": "bronze_4",
+      "tier_id": "bronze",
+      "division": 4,
+      "display_name": "브론즈 4",
+      "sort_order": 4,
+      "icon_path": "res://assets/art/ui/ranked_badges/bronze_4.png",
+      "size_px": [
+        1254,
+        1254
+      ],
+      "sha256": "ceefa7fe2c431c0f168262fa679da81c2986324df7c99556c8139278553d8b2f",
+      "generation_source": "exec-13c26a9a-2c7c-43ef-ae40-b4dd0b898357.png"
+    },
+    {
+      "id": "silver_1",
+      "tier_id": "silver",
+      "division": 1,
+      "display_name": "실버 1",
+      "sort_order": 5,
+      "icon_path": "res://assets/art/ui/ranked_badges/silver_1.png",
+      "size_px": [
+        1254,
+        1254
+      ],
+      "sha256": "7bac161fb0257acee73817dcf408ac265de6dd639bfa925c07db88cc5b225ed9",
+      "generation_source": "exec-3afc68a1-3dec-4769-adca-79b3a64c6b73.png"
+    },
+    {
+      "id": "silver_2",
+      "tier_id": "silver",
+      "division": 2,
+      "display_name": "실버 2",
+      "sort_order": 6,
+      "icon_path": "res://assets/art/ui/ranked_badges/silver_2.png",
+      "size_px": [
+        1254,
+        1254
+      ],
+      "sha256": "b50b79e1110a4e7908eccc8125fe21dbca621672a09a08aba914f22444badbb3",
+      "generation_source": "exec-c95b333d-bf15-4590-9ada-3ab4f6312996.png"
+    },
+    {
+      "id": "silver_3",
+      "tier_id": "silver",
+      "division": 3,
+      "display_name": "실버 3",
+      "sort_order": 7,
+      "icon_path": "res://assets/art/ui/ranked_badges/silver_3.png",
+      "size_px": [
+        1254,
+        1254
+      ],
+      "sha256": "2a694bf8bd0edcbb9b18df5cdbc7032a82c5abdf3f4e246f90d28bee3ada3e68",
+      "generation_source": "exec-449bcae4-768c-40fe-b548-008e29cd22fc.png"
+    },
+    {
+      "id": "silver_4",
+      "tier_id": "silver",
+      "division": 4,
+      "display_name": "실버 4",
+      "sort_order": 8,
+      "icon_path": "res://assets/art/ui/ranked_badges/silver_4.png",
+      "size_px": [
+        1254,
+        1254
+      ],
+      "sha256": "ee2ebf007898e02de19916fe52b41c1db8e5f66742e2841e79b7af97c7c2a368",
+      "generation_source": "exec-5766456e-9aac-4333-bf5b-59b56ba63a34.png"
+    },
+    {
+      "id": "gold_1",
+      "tier_id": "gold",
+      "division": 1,
+      "display_name": "골드 1",
+      "sort_order": 9,
+      "icon_path": "res://assets/art/ui/ranked_badges/gold_1.png",
+      "size_px": [
+        1254,
+        1254
+      ],
+      "sha256": "375412176eb2965916f2b369eceb10ba3b151286be6e4c45d2ea0d51052ea7d6",
+      "generation_source": "exec-4619aa5f-1fbd-4388-939b-29136fddbfba.png"
+    },
+    {
+      "id": "gold_2",
+      "tier_id": "gold",
+      "division": 2,
+      "display_name": "골드 2",
+      "sort_order": 10,
+      "icon_path": "res://assets/art/ui/ranked_badges/gold_2.png",
+      "size_px": [
+        1254,
+        1254
+      ],
+      "sha256": "4d48f11bcff4d2bdc9966b826ba77a097ee0cf91b1cc5a9b099cf26dcbdd00b3",
+      "generation_source": "exec-7370d746-6ea6-4901-8a74-dc735c6e4048.png"
+    },
+    {
+      "id": "gold_3",
+      "tier_id": "gold",
+      "division": 3,
+      "display_name": "골드 3",
+      "sort_order": 11,
+      "icon_path": "res://assets/art/ui/ranked_badges/gold_3.png",
+      "size_px": [
+        1254,
+        1254
+      ],
+      "sha256": "11b44ad75462105397d4423022496d6340040aa98f5455b1c6aefc70f12262ca",
+      "generation_source": "exec-83320f24-88f4-451b-899a-86a2a0629dd7.png"
+    },
+    {
+      "id": "gold_4",
+      "tier_id": "gold",
+      "division": 4,
+      "display_name": "골드 4",
+      "sort_order": 12,
+      "icon_path": "res://assets/art/ui/ranked_badges/gold_4.png",
+      "size_px": [
+        1254,
+        1254
+      ],
+      "sha256": "f91dbc552dafbf8f4030c1b3846422b07c7ba378e02b29e4f2a006d70a52f497",
+      "generation_source": "exec-62d9925b-445d-4457-88e5-e053686d72b1.png"
+    },
+    {
+      "id": "diamond_1",
+      "tier_id": "diamond",
+      "division": 1,
+      "display_name": "다이아몬드 1",
+      "sort_order": 13,
+      "icon_path": "res://assets/art/ui/ranked_badges/diamond_1.png",
+      "size_px": [
+        1254,
+        1254
+      ],
+      "sha256": "963543370a459c97163aa1356874f1442eb88b7280ff63273559975549d9991f",
+      "generation_source": "exec-61da1a02-7dd2-4f4a-8704-a695dce07edf.png"
+    },
+    {
+      "id": "diamond_2",
+      "tier_id": "diamond",
+      "division": 2,
+      "display_name": "다이아몬드 2",
+      "sort_order": 14,
+      "icon_path": "res://assets/art/ui/ranked_badges/diamond_2.png",
+      "size_px": [
+        1254,
+        1254
+      ],
+      "sha256": "167386e2cae0824cf09105a22696f186e64326b4237968fac5b0d640c9bed0d0",
+      "generation_source": "exec-7f3012a9-cc7f-4d05-a0f5-c584daf13371.png"
+    },
+    {
+      "id": "diamond_3",
+      "tier_id": "diamond",
+      "division": 3,
+      "display_name": "다이아몬드 3",
+      "sort_order": 15,
+      "icon_path": "res://assets/art/ui/ranked_badges/diamond_3.png",
+      "size_px": [
+        1254,
+        1254
+      ],
+      "sha256": "a1dfc04d1ffd0f1e56bc1378fe8275bbae48260f2cd8b5c1d337d58f569872fa",
+      "generation_source": "exec-48585f44-2951-4b7c-a9b2-fee325813437.png"
+    },
+    {
+      "id": "diamond_4",
+      "tier_id": "diamond",
+      "division": 4,
+      "display_name": "다이아몬드 4",
+      "sort_order": 16,
+      "icon_path": "res://assets/art/ui/ranked_badges/diamond_4.png",
+      "size_px": [
+        1254,
+        1254
+      ],
+      "sha256": "a2196daa989889c377216a637c4dbbb7f612cf22f8564f1ee39c500a8aeb4a0d",
+      "generation_source": "exec-c449a05e-906f-4428-a2a0-d0225a9b330d.png"
+    },
+    {
+      "id": "demon_lord",
+      "tier_id": "demon_lord",
+      "division": null,
+      "display_name": "마왕",
+      "sort_order": 17,
+      "icon_path": "res://assets/art/ui/ranked_badges/demon_lord.png",
+      "size_px": [
+        1254,
+        1254
+      ],
+      "sha256": "261b2527f78791364f5c72aab40c3a0f9cd598b9db0d729dd2f6a4edca2953ce",
+      "generation_source": "exec-9449f568-9f70-4fc5-a549-e4619b18aef0.png"
+    },
+    {
+      "id": "hero",
+      "tier_id": "hero",
+      "division": null,
+      "display_name": "용사",
+      "sort_order": 18,
+      "icon_path": "res://assets/art/ui/ranked_badges/hero.png",
+      "size_px": [
+        1254,
+        1254
+      ],
+      "sha256": "b5ef8225cb4a0dc53f22408eb55b749daf586637e626d3b6f5632202640c9635",
+      "generation_source": "exec-fcf62bc4-f8e9-44bb-b5a1-febe5af80891.png"
+    }
+  ]
+}

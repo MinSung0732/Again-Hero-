@@ -1,3 +1,8 @@
+## 2026-10-22 — 랭킹 아이콘·등급 순서 확정
+
+- `src/data/ranked_badges.json`이 아트/정렬 메타데이터 정본. 각 일반 티어는 **1 < 2 < 3 < 4**(보석1~4개); 브론즈→실버→골드→다이아몬드→마왕→용사. 초기MMR1000, 경계값 미정.
+- 용사는 마왕 자격자 중 서버 상위100명, 벗어나면 마왕. 용사 UI는 MMR+서버순위. 서버 판정·UI 연결은 후속이며 현재 PNG18종과 데이터만 저장.
+
 ## 2026-10-22 — 깨진 테스트 정리 완료: 기준선 0개
 
 - 용사 모드 세션 마지막 5개(hero_reveal_presentation, hero_survival_enemy_balance, hero_survival_identity, practice_battle, practice_presentation) 재검증 PASS. `tests/KNOWN_FAILING_TESTS.txt` 87(10/21 시작)→0. 이제 저장소에서 실행 가능한 모든 테스트가 통과해야 하며, 실패는 모두 NEW로 보고됨. 저장소 밖 fixture가 필요한 테스트는 `tests/FIXTURE_ONLY_TESTS.txt`(80개)로 관리.
