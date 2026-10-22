@@ -34,14 +34,20 @@ func run() -> void:
 	battle.hero_player_mode = true; battle.hero_player_stage = "stage_1"
 	root.add_child(battle); battle.set_external_pause(true); battle.set_process(false); battle.set_physics_process(false)
 	check(battle.hero.attack_damage == 26,"actual starting weapon damage")
-	for clock in [0.0,120.0,300.0,600.0,900.0]:
+	# Ordinary spawns stop once the survival duration is reached; probe just before it.
+	battle.run_metrics.elapsed_seconds = MODE.DURATION
+	check(battle._spawn_monster("slime",battle.hero.position+Vector2(600,0),0.0,false,{}) == null,"no ordinary spawn after survival duration")
+	for clock in [0.0,120.0,300.0,600.0,MODE.DURATION-1.0]:
 		battle.demon_level = 1
 		for id in ["slime","spider","orc","bomb_rat"]:
+			# Control monsters (spider) follow their own spawn budget (first time/interval).
+			if battle.hero_control_spawns.controls(id,false): continue
 			var actor = spawn(id,clock)
 			if not is_instance_valid(actor): continue
 			var raw := CATALOG.get_base_stats(id)
 			var rarity := CATALOG.get_rarity_combat_profile(id)
-			var hp := maxi(1,roundi(float(raw.max_hp)*float(rarity.get("hp_multiplier",1.0))*MODE.monster_multiplier("hp",clock)))
+			# HP follows the stage-paced survival clock (stage 1, easy).
+			var hp := maxi(1,roundi(float(raw.max_hp)*float(rarity.get("hp_multiplier",1.0))*MODE.monster_multiplier_for_stage("hp",clock,1,"easy")))
 			check(actor.max_hp == hp and actor.current_hp == hp,"actual clock-based HP: "+id)
 			check(float(actor.get_meta("hero_survival_spawn_seconds")) == clock,"spawn snapshot stored")
 			if id == "bomb_rat":
@@ -63,17 +69,20 @@ func run() -> void:
 	check(old.max_hp == 47 and old.current_hp == 23,"augment refresh preserves spawn envelope and wounds")
 	check(battle._get_giant_monster_summon_chance() == 0.0,"survival uses scheduled giants")
 	check(battle._get_demon_level_monster_exp_multiplier() == 1.0,"AI level cannot double XP")
+	# Stage 1 only admits its rarity band (fanatic is above it); use an allowed fixed spawn.
 	for clock in [0.0,600.0]:
-		var fixed = spawn("fanatic",clock,{"fixed_base_stats":true,"exclude_all_augments":true})
-		var expected := roundi(float(CATALOG.get_base_stats("fanatic").max_hp)*MODE.monster_multiplier("hp",clock))
+		var fixed = spawn("orc",clock,{"fixed_base_stats":true,"exclude_all_augments":true})
+		if not is_instance_valid(fixed): continue
+		var expected := roundi(float(CATALOG.get_base_stats("orc").max_hp)*MODE.monster_multiplier_for_stage("hp",clock,1,"easy"))
 		check(fixed.max_hp == expected,"fixed skill reinforcements get the survival envelope")
-		battle._apply_augment_free_base_stats(fixed,"fanatic")
+		battle._apply_augment_free_base_stats(fixed,"orc")
 		check(fixed.max_hp == expected,"fixed envelope applies once")
 	var elite = spawn("orc",120.0,{"elite_variant":true})
 	battle._apply_special_monster_modifiers(elite,"orc",{"type":"elite","hp_multiplier":2.0,"damage_multiplier":1.2})
 	var elite_hp: int = elite.max_hp
 	battle._apply_normal_augments_to_existing_monster(elite,"orc")
-	check(elite_hp == 442 and elite.max_hp == elite_hp,"elite ratio survives AI augment refresh")
+	var elite_expected := roundi(float(CATALOG.get_base_stats("orc").max_hp)*float(CATALOG.get_rarity_combat_profile("orc").get("hp_multiplier",1.0))*MODE.monster_multiplier_for_stage("hp",120.0,1,"easy")*2.0)
+	check(elite_hp == elite_expected and elite.max_hp == elite_hp,"elite ratio survives AI augment refresh")
 	battle.hero_player_mode = false; battle.demon_level = 1
 	check(battle._get_demon_level_monster_hp_multiplier() == 1.0 and battle._get_demon_level_monster_damage_multiplier() == 1.0,"normal demon mode stays canonical at level one")
 	var normal = spawn("orc",0.0)

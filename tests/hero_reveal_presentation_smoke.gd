@@ -66,7 +66,9 @@ func run() -> void:
 		check(not screen._active and not screen.visible, "sequence completes and hides")
 		check(magic_captured and name_captured, "both reveal and preparation reached")
 		check(warmup.texture_load_count == loads_before, "no destination texture loads during reveal")
-		check(screen.true_name_label.text == ("진명 : 아스트라" if number == 10 else "진명 : ???"), "identity rules preserved")
+		# Unlocked true names include the Latin form since 2026-10-19 ("아스트라 (Astra)").
+		var expected_name := ("진명 : " + preload("res://src/data/hero_reveal_catalog.gd").true_name_label(String(stage.get("hero_id")))) if number == 10 else "진명 : ???"
+		check(screen.true_name_label.text == expected_name and (number != 10 or expected_name.contains("아스트라")), "identity rules preserved")
 		check(events == ["bgm", "finished"], "BGM starts once before completion")
 		events.clear()
 	screen.queue_free()

@@ -2,8 +2,3 @@
 # isolated user://). Baseline for regression checks, not an allow-list:
 # fix a test and delete its line. tools/run_godot_tests.sh reports any
 # failure NOT listed here as NEW. Format: <path>  # <kind>: <last output>
-tests/hero_reveal_presentation_smoke.gd  # assertion failure: REVEAL_TEST: FAILED
-tests/practice_battle_smoke.gd  # assertion failure: PRACTICE_BATTLE: FAIL failures=3
-tests/hero_survival_enemy_balance_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'max_hp' on a base object of type 'Nil'.
-tests/hero_survival_identity_smoke.gd  # script error, never reaches quit(): 
-tests/practice_presentation_smoke.gd  # script error, never reaches quit(): 

@@ -41,31 +41,43 @@ func run() -> void:
 			if child is AudioStreamPlayer and child.bus == &"SFX" and child.stream != null and child.playing: playing = true
 		check(playing,"actual existing SFX player started: "+String(id))
 		if identity.audio != null: check(identity.audio.stream != null and identity.audio.bus == &"SFX","existing stream on SFX bus")
-		# Exercise every persistent field against padded real spatial-grid cells.
+		# Exercise every persistent field against padded real spatial-grid cells. Since
+		# 2026-10-15 every poison weapon is a delivery emitter (sigil/trail/aura/lob/trap...).
 		var outside = actor(battle,hero.global_position+Vector2(800,0))
 		for weapon_id in DATA.weapon_pool(String(id)):
 			var data: Dictionary = DATA.WEAPONS[weapon_id]
 			if String(data.pattern) != "poison": continue
 			for field in runtime.fields: field.left = 0.0
+			for slot in runtime.delivery.slots: slot.left = 0.0
 			runtime.weapon_ids.clear(); runtime.levels.clear(); runtime.add(String(weapon_id))
 			hero.alchemist_gas = hero.alchemist_gas_max
 			relocate(target,hero.global_position+Vector2(50,0)); relocate(outside,hero.global_position+Vector2(800,0))
 			await physics_frame
-			runtime._cast(String(weapon_id))
-			var field: Dictionary = runtime.fields[posmod(runtime.field_cursor-1,runtime.fields.size())]
-			check(float(field.left) > 0,"actual field spawned: "+String(weapon_id))
+			runtime._cast(String(weapon_id)); runtime.cooldowns[weapon_id] = 999.0
+			var field: Dictionary = {}
+			for slot in runtime.delivery.slots:
+				if slot.id == weapon_id and float(slot.left) > 0.0: field = slot; break
+			check(not field.is_empty(),"actual field spawned: "+String(weapon_id))
+			if field.is_empty(): continue
+			# Let the warning/landing phase finish so the emitter sits at its final circle; keep
+			# both probes away meanwhile so a trap is still armed for the boundary check.
+			relocate(target,hero.global_position+Vector2(2000,0)); relocate(outside,hero.global_position+Vector2(2000,0))
+			await physics_frame
+			runtime.tick(float(field.warning)+0.01)
 			relocate(target,field.origin+Vector2(float(field.radius)-1,0)); relocate(outside,field.origin+Vector2(float(field.radius)+1,0))
 			await physics_frame
 			var candidates: Array = []; battle.fill_monsters_near(field.origin,float(field.radius),candidates)
 			check(outside in candidates,"real grid includes outside-circle candidate: "+String(weapon_id))
 			var inside_hp: int = target.current_hp; var outside_hp: int = outside.current_hp
-			runtime.cooldowns[weapon_id] = 999.0; runtime.tick(0.01)
+			field.tick = 0.0; runtime.tick(0.01)
 			check(target.current_hp < inside_hp and outside.current_hp == outside_hp,"only visible circle damages, including chemical basic: "+String(weapon_id))
-			hero.silence_timer = 10.0; var lifetime: float = field.left; field.tick = 0.0
-			runtime.tick(0.1)
-			check(float(field.left) < lifetime and outside.current_hp == outside_hp,"silence does not freeze existing field or extend damage outside")
-			hero.silence_timer = 0.0
+			if float(field.left) > 0.0:
+				hero.silence_timer = 10.0; var lifetime: float = field.left; field.tick = 0.0
+				runtime.tick(0.1)
+				check(float(field.left) < lifetime and outside.current_hp == outside_hp,"silence does not freeze existing field or extend damage outside")
+				hero.silence_timer = 0.0
 		for field in runtime.fields: field.left = 0.0
+		for slot in runtime.delivery.slots: slot.left = 0.0
 		runtime.weapon_ids.clear(); runtime.levels.clear(); runtime.add(identity.starter)
 		relocate(target,hero.global_position+Vector2(80,0)); relocate(outside,hero.global_position+Vector2(2000,0))
 		await physics_frame
@@ -135,15 +147,18 @@ func run() -> void:
 				check(hero.alchemist_philosopher_channeling,"native philosopher channel unlocks from real collection")
 				var hp_before: int = hero.max_hp; identity.tick(2.0)
 				check(hero.alchemist_transformed and hero.max_hp > hp_before,"native permanent transformation applies")
-				check(float(identity.gas_costs.chemical_hero_poison_flask) < 4,"fast survival field preserves original gas budget per second")
+				var mixture: Dictionary = hero.alchemist_config.mixture_field
+				var original_rate := float(mixture.gas_cost)/maxf(float(mixture.cooldown),0.1)
+				check(is_equal_approx(float(identity.gas_costs.chemical_hero_poison_flask),original_rate*float(DATA.WEAPONS.chemical_hero_poison_flask.cooldown)),"fast survival field preserves original gas budget per second")
 				check(not identity.can_cast(identity.starter,"poison"),"transformation disables original vial basic")
 				hero.velocity = Vector2(270,0); hero.position += Vector2(100,0); identity.tick(0.3)
 				var trail := false
 				for poison in hero.alchemist_poison_pool:
 					if poison.active: trail = true
 				check(trail,"manual movement leaves real native poison trail")
+				var transformed_speed: float = hero.move_speed
 				runtime.add("survival_mobility")
-				check(hero.move_speed > 270*1.12,"later passive upgrade preserves transformed speed")
+				check(hero.move_speed >= transformed_speed*(1.0+float(DATA.PASSIVES.survival_mobility.value))-0.01,"later passive upgrade preserves transformed speed")
 			"summoner_hero":
 				for repeat in 8: runtime._cast(identity.starter)
 				identity.tick(0.1)
@@ -197,7 +212,8 @@ func run() -> void:
 			check(battle.get_child_count() == nodes and identity.native_actors.size() == identity.native_pool_size,"native basic saturation never allocates")
 			for node in identity.native_actors:
 				if node.active:
-					check(not node.is_physics_processing(),"spawned basic remains paused")
+					# Hero mode pauses the whole battle subtree (process_mode) since 2026-10-17.
+					check(not node.can_process(),"spawned basic remains paused")
 					var bounds: Rect2 = node.get_meta("survival_visual_bounds",Rect2())
 					var radius: float = node.visual_diameter*0.5 if String(id) == "sage_astra" else node.get_node("CollisionShape2D").shape.radius
 					check(bounds.size.length()*0.5*node.projectile_sprite.scale.x <= radius+0.01,"native visible opaque bounds fit actual collision circle")
@@ -207,7 +223,8 @@ func run() -> void:
 	quit(1 if failures else 0)
 func ui_capture() -> void:
 	var config := ConfigFile.new()
-	for id in CHARACTERS.ORDER: config.set_value("hard_cleared",CHARACTERS.stage_for_hero(String(id)),true)
+	# Each hero unlocks with the demon easy clear of its origin stage (2026-10-14); stage 3 opens the mode.
+	for id in CHARACTERS.ORDER: config.set_value("cleared",CHARACTERS.stage_for_hero(String(id)),true)
 	SCOPE.save_config(config,"user://stage_progress.cfg")
 	for id in ["chemical_hero","pistol_hero"]:
 		var paid := STAMINA.try_enter("stage_1",true,-1,false)

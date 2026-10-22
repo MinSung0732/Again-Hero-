@@ -32,8 +32,10 @@ func run():
 	overlay._cutscene.advance(4.6)
 	check(view.label.text=="불가살" and view.label.modulate.a>0.99,"bottom name visible")
 	check(overlay._cutscene.z_index>overlay._flash.z_index and not overlay._door_flash.visible,"cutscene above production flash")
-	await RenderingServer.frame_post_draw
-	root.get_texture().get_image().save_png("/tmp/practice_gacha_layering.png")
+	# Visual capture only with a real renderer: frame_post_draw never fires under --headless.
+	if DisplayServer.get_name() != "headless":
+		await RenderingServer.frame_post_draw
+		root.get_texture().get_image().save_png(OS.get_environment("TEMP").path_join("practice_gacha_layering.png"))
 	overlay._cutscene.skip()
 	check(overlay._phase=="reveal" and overlay._reveal_icon.texture==icon,"skip returns to actual pixel reveal")
 	overlay.skip_to_results()

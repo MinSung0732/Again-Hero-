@@ -1,3 +1,9 @@
+## 2026-10-22 — 깨진 테스트 정리 완료: 기준선 0개
+
+- 용사 모드 세션 마지막 5개(hero_reveal_presentation, hero_survival_enemy_balance, hero_survival_identity, practice_battle, practice_presentation) 재검증 PASS. `tests/KNOWN_FAILING_TESTS.txt` 87(10/21 시작)→0. 이제 저장소에서 실행 가능한 모든 테스트가 통과해야 하며, 실패는 모두 NEW로 보고됨. 저장소 밖 fixture가 필요한 테스트는 `tests/FIXTURE_ONLY_TESTS.txt`(80개)로 관리.
+- 원인: 10/14 용사 모드·영웅 해금 규칙(마왕 쉬움3 클리어·출신 스테이지·연속 쉬움 승리), 10/15 딜리버리 무기·룬 링 고정 원, 10/16 소환형 무기, 10/17 용사 모드 일괄 일시정지·무기 아트 크롭, 10/19 진명 라틴 표기, 10/11 공용 성장 표준, 스테이지별 HP 시계, 헤드리스 렌더 프레임 미발생·Windows 임시 경로.
+- 게임 버그 미발견. 참고 로그(무해 판단): hero_pause_view/hero_result_view의 다음 프레임 `fit()`가 패널 해제 후 실행 시 오류 로그, 일시정지 중 `_physics_process_actions` 직접 호출 시 물리 공간 로그(게임은 호출 안 함).
+
 ## 2026-10-22 — 사용하지 않는 코드 파일 삭제
 
 - 삭제: `src/ui/zeus_assembled_portrait.gd`·`src/ui/zeus_assembled_reveal.gdshader`(10/07 조립형 제우스 컷인, 같은 날 e39bdfae 삼각형 컷인으로 교체된 뒤 참조 없음), `src/monsters/bomb_rat_visual.gd`(09/22 ada93969 이후 참조 없음, 폭탄쥐는 bomb_rat.gd 내부 처리) 및 각 .uid. 경로·클래스명·uid 참조 0건 확인.
