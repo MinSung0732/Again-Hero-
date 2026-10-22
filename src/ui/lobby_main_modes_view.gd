@@ -249,6 +249,9 @@ func blocks_entry() -> bool:
 	if (ranked and not UNLOCKS.unlocked("rank", current_stage())) or (perspective == "hero" and not UNLOCKS.unlocked("hero", current_stage())) or (not ranked and difficulty == "hard" and not UNLOCKS.unlocked("hard", current_stage(),perspective)):
 		return true
 	if ranked:
+		if perspective == "demon":
+			var reason := preload("res://src/systems/dungeon_entry_policy.gd").blocked_reason(lobby.team_selected_ids,lobby.demon_skill_selected_ids,false)
+			if not reason.is_empty(): lobby.stamina_view.show_entry_notice(reason); return true
 		lobby.get_node("/root/SceneTransition").change_scene("res://src/online/OnlineMatch.tscn","대전 준비 중...",{"role":perspective})
 		return true # Consume entry before solo stamina/account writes.
 	if not ranked and perspective == "demon":
@@ -292,7 +295,7 @@ func refresh() -> void:
 	if not ranked: ranked_profile_row.hide()
 	var section: Control = lobby.get_node("SafeArea/Layout/Content/MainTab/StageLayout/SectionHeaderBox")
 	section.get_node("SectionTitle").text = "랭킹 매칭" if ranked else "침입자 기록"
-	section.get_node("SectionSubtitle").text = "역할을 선택하세요 · 견습마도사 고정 연결 테스트" if ranked else "대상 용사를 선택하고, 던전에 입장하세요."
+	section.get_node("SectionSubtitle").text = "역할을 선택하고 출전 편성을 확인하세요" if ranked else "대상 용사를 선택하고, 던전에 입장하세요."
 	if not ranked:
 		if perspective == "hero":
 			var stage := current_stage()

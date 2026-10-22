@@ -1,6 +1,6 @@
 extends RefCounted
-## Ranked results require matching protocol 8 server and client.
-const VERSION := 8
+## Ranked loadouts require matching protocol 9 server and client.
+const VERSION := 9
 const ID := "duel_smoke_v1"
 const HERO := "ranged_rookie"
 const ROSTER := ["slime","spider","orc","bomb_rat","skeleton_archer"]
@@ -38,6 +38,8 @@ const ERROR_MESSAGES := {
 	"version_mismatch":"대전 버전이 다릅니다. 같은 버전으로 업데이트해 주세요.",
 	"battle_load_failed":"서버가 전투를 준비하지 못했습니다.",
 	"invalid_role":"대전 역할을 확인해 주세요.",
+	"invalid_loadout":"대전 편성을 확인해 주세요.",
+	"loadout_mismatch":"저장된 보유/편성과 다릅니다. 로비에서 저장 상태를 확인해 주세요.",
 }
 static func endpoint_valid(url: String) -> bool:
 	return url.begins_with("wss://") or url.begins_with("ws://127.0.0.1:") or url.begins_with("ws://localhost:")

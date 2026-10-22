@@ -17,7 +17,13 @@ func run() -> void:
 		check(scene.queue_button.custom_minimum_size.y >= 72,"mobile button size")
 		check(scene.view.size.x > 500 and scene.view.size.y > 300,"battle panel expands")
 		if role == "hero": check(scene.pad.mode == "free" and scene.pad.input_surface == scene.view,"touch binds battle only")
-		else: check(scene.action_row.get_child_count() == 5,"five roster choices")
+		else:
+			# Since protocol 9 the demon's summon buttons come from the server's
+			# validated loadout on "matched", not a fixed roster.
+			check(scene.action_row.get_child_count() == 0,"no roster before matching")
+			scene._event({"op":"matched","roster":["slime","orc","spider"]})
+			await process_frame
+			check(scene.action_row.get_child_count() == 3 and scene.selected_monster == "slime","matched loadout builds roster choices")
 		scene._join()
 		check(scene.client.socket == null,"guest without token never queues")
 		check(scene.test_code == null,"ordinary account screen has no test invitation field")

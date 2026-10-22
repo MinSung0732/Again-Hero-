@@ -27,6 +27,15 @@ var next_id := 0
 var snapshot_revision := 0
 var stale_wire_ids: Array[int] = []
 var last_action_message := ""
+var hero_id := preload("res://src/data/hero_character_catalog.gd").DEFAULT_HERO
+var roster: Array = RULES.ROSTER.duplicate() # Isolated room fixtures; the server sets the verified roster before prepare().
+var skill_ids: Array = []
+var transcendence_id := ""
+func set_loadouts(hero_loadout: Dictionary,demon_loadout: Dictionary) -> void:
+	hero_id = String(hero_loadout.hero_id)
+	roster = demon_loadout.team_ids.duplicate()
+	skill_ids = demon_loadout.skill_ids.duplicate()
+	transcendence_id = String(demon_loadout.transcendence_id)
 func prepare() -> void:
 	world = SubViewport.new(); world.world_2d = World2D.new(); world.size = Vector2i(1080,1600)
 	world.render_target_update_mode = SubViewport.UPDATE_DISABLED; add_child(world)
@@ -34,13 +43,13 @@ func prepare() -> void:
 	if scene == null: finish("","battle_load_failed"); return
 	battle = scene.instantiate(); battle.online_match_mode = true
 	battle.combat_popup_visuals_enabled = false
-	battle.online_match_rules = {"population":RULES.POPULATION,"roster":RULES.ROSTER}
-	battle.hero_player_mode = true; battle.hero_player_stage = "stage_1"; battle.hero_player_hero_id = RULES.HERO
+	battle.online_match_rules = {"population":RULES.POPULATION,"roster":roster}
+	battle.hero_player_mode = true; battle.hero_player_stage = "stage_1"; battle.hero_player_hero_id = hero_id
 	world.add_child(battle); battle.set_external_pause(true)
 	battle.run_time_limit_seconds = RULES.DURATION
 	battle.run_metrics.reset(RULES.DURATION,int(battle.hero.current_hp),int(battle.hero.max_hp))
 	battle.command_power = RULES.OPENING_MANA; battle.command_regen_per_second = RULES.MANA_PER_SECOND
-	battle.set_allowed_monster_ids(RULES.ROSTER)
+	battle.set_allowed_monster_ids(roster)
 	battlefield_info = {"stage":battle.current_stage_id,"bounds":[battle.current_map_size.x,battle.current_map_size.y]}
 	battle.online_visual_entity_exited.connect(presentation.forget_node)
 	battle.online_combat_feedback.connect(_feedback)
@@ -79,7 +88,7 @@ func apply(role: String,kind: String,argument: Variant) -> bool:
 	if role == "demon" and kind == "summon" and argument is Dictionary:
 		if not argument.get("id",null) is String: return false
 		var id: String = argument.id; var point: Variant = argument.get("point",null)
-		if id not in RULES.ROSTER or not RULES.point(point): return false
+		if id not in roster or not RULES.point(point): return false
 		var accepted: bool = battle.try_summon_at_position(id,Vector2(point[0],point[1]))
 		if accepted: feedback.publish("summon",Vector2(point[0],point[1]),0,Color(0.8,0.5,1.0),tick)
 		return accepted

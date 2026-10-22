@@ -8,6 +8,15 @@ const MONSTERS := preload("res://src/data/monster_catalog.gd")
 const LOCAL_ACCESS := preload("res://src/online/local_test_access.gd")
 const LOADING := preload("res://src/online/match_loading_view.gd")
 const RANKED := preload("res://src/data/ranked_rules.gd")
+const LOADOUT := preload("res://src/online/online_loadout.gd")
+const HEROES := preload("res://src/data/hero_character_catalog.gd")
+const HERO_STORE := preload("res://src/systems/hero_mode_store.gd")
+const COLLECTION := preload("res://src/systems/monster_collection_store.gd")
+const TEAM := preload("res://src/systems/team_loadout_store.gd")
+const SKILL_STORE := preload("res://src/systems/demon_skill_loadout_store.gd")
+const SKILLS := preload("res://src/data/demon_ultimate_catalog.gd")
+const TRANSCENDENCE := preload("res://src/systems/transcendence_loadout_store.gd")
+const ENTRY := preload("res://src/systems/dungeon_entry_policy.gd")
 var loading
 var local_preparing := false
 var waiting_for_start := false
@@ -33,6 +42,8 @@ var reconnect_button: Button
 var initial_local_test := false
 var pad
 var role := "hero"
+var hero_selector: OptionButton
+var demon_summary: Label
 var selected_monster := "slime"
 var movement := Vector2.ZERO
 var input_left := 0.0
@@ -51,8 +62,20 @@ func _ready() -> void:
 	var rows := VBoxContainer.new(); add_child(rows); rows.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	rows.offset_left = 24; rows.offset_right = -24; rows.offset_top = 35; rows.offset_bottom = -30
 	_label(rows,"랭킹 매칭",34)
-	_label(rows,"견습마도사 ↔ 마왕 · 3분 생존 · 보상/스테미너 변동 없음",22)
+	_label(rows,"선택 용사 ↔ 마왕 · 3분 생존 · 보상/스테미너 변동 없음",22)
 	status = _label(rows,"마왕으로 대기합니다." if role == "demon" else "용사로 대기합니다.",26)
+	if role == "hero":
+		_label(rows,"출전 용사 선택",22)
+		hero_selector = OptionButton.new(); hero_selector.custom_minimum_size.y = 68; rows.add_child(hero_selector)
+		var available := LOADOUT.unlocked_heroes()
+		for id in available:
+			hero_selector.add_item(String(HEROES.get_character(id).get("name",id)))
+			hero_selector.set_item_metadata(hero_selector.item_count-1,id)
+			if id == HERO_STORE.selected_hero(): hero_selector.selected = hero_selector.item_count-1
+		if hero_selector.selected < 0 and hero_selector.item_count > 0: hero_selector.selected = 0
+	else:
+		demon_summary = _label(rows,"",20)
+		_refresh_demon_summary()
 	ranking_row = HBoxContainer.new(); ranking_row.visible = false; rows.add_child(ranking_row)
 	ranking_icon = TextureRect.new(); ranking_icon.custom_minimum_size = Vector2(56,56)
 	ranking_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; ranking_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
@@ -88,11 +111,7 @@ func _ready() -> void:
 	view.placement.connect(func(point: Vector2):
 		if role == "demon" and not ended and not local_preparing and not waiting_for_start and not connection_waiting and not client.reconnecting: client.command("summon",{"id":selected_monster,"point":[point.x,point.y]}))
 	action_row = HBoxContainer.new(); rows.add_child(action_row)
-	if role == "demon":
-		for id in RULES.ROSTER:
-			var button := _button(action_row,String(MONSTERS.get_monster(id).get("name",id)),_select_monster.bind(id))
-			button.size_flags_horizontal = Control.SIZE_EXPAND_FILL; button.add_theme_font_size_override("font_size",21)
-	else:
+	if role == "hero":
 		pad = PAD.new(); add_child(pad); pad.set_mode(PAD.MODE_FREE)
 		pad.input_surface = view; pad.movement_changed.connect(func(value: Vector2): movement = value)
 	choices = VBoxContainer.new(); rows.add_child(choices)
@@ -121,7 +140,26 @@ func _button(parent: Node,value: String,callback: Callable) -> Button:
 func _select_monster(id: String) -> void:
 	selected_monster = id
 	action_notice.text = "소환 선택: %s · 전장 터치로 배치" % String(MONSTERS.get_monster(id).get("name",id))
+func _demon_loadout() -> Dictionary:
+	var owned := COLLECTION.get_unlocked_ids(COLLECTION.load_state())
+	var available: Array = []
+	for id in owned:
+		if MONSTERS.get_rarity(String(id)) != "transcendent": available.append(id)
+	var team := TEAM.load_ids(available,TEAM.default_ids(available))
+	var skills := SKILL_STORE.load_ids(SKILLS.get_ordered_ids(),SKILLS.get_ordered_ids())
+	return {"team_ids":team,"skill_ids":skills,"transcendence_id":TRANSCENDENCE.load_id()}
+func _refresh_demon_summary() -> void:
+	var chosen := _demon_loadout()
+	var names: Array[String] = []
+	for id in chosen.team_ids: names.append(String(MONSTERS.get_monster(id).get("name",id)))
+	demon_summary.text = "편성: %s\n마왕 스킬: %s · 초월: %s" % [", ".join(names),", ".join(chosen.skill_ids),chosen.transcendence_id if not chosen.transcendence_id.is_empty() else "미등록"]
 func _join() -> void:
+	var chosen: Dictionary = {"hero_id":String(hero_selector.get_item_metadata(hero_selector.selected))} if role == "hero" and hero_selector.selected >= 0 else _demon_loadout() if role == "demon" else {}
+	if role == "hero" and (not LOADOUT.valid(role,chosen) or chosen.hero_id not in LOADOUT.unlocked_heroes()): status.text = "보유한 용사를 선택해 주세요."; return
+	if role == "demon":
+		_refresh_demon_summary()
+		var reason := ENTRY.blocked_reason(chosen.team_ids,chosen.skill_ids,false)
+		if not reason.is_empty(): status.text = reason; return
 	if LocalTestMode.is_online_match_allowed() != initial_local_test: status.text = "테스트 모드가 변경되었습니다. 로비에서 다시 입장하세요."; return
 	if initial_local_test:
 		if not LOCAL_ACCESS.valid_hex(test_code.text.strip_edges(),LOCAL_ACCESS.TICKET_BYTES): status.text = "서버에 표시된 테스트 입장코드를 입력하세요."; return
@@ -131,7 +169,7 @@ func _join() -> void:
 	ranking_row.hide()
 	view.clear_state()
 	if pad != null: pad.enabled = true; pad.reset()
-	var error: int = client.join_local_test(endpoint.text.strip_edges(),test_code.text.strip_edges(),role) if initial_local_test else client.join(endpoint.text.strip_edges(),LoginGateway.access_token,role)
+	var error: int = client.join_local_test(endpoint.text.strip_edges(),test_code.text.strip_edges(),role,chosen) if initial_local_test else client.join(endpoint.text.strip_edges(),LoginGateway.access_token,role,chosen)
 	if test_code != null and error == OK: test_code.clear()
 	status.text = "서버에 연결 중..." if error == OK else "서버에 연결하지 못했습니다."
 	queue_button.disabled = error == OK
@@ -140,6 +178,12 @@ func _event(event: Dictionary) -> void:
 	match String(event.get("op","")):
 		"queued": status.text = "상대 역할 플레이어를 찾는 중..."
 		"matched":
+			if role == "demon" and event.get("roster",null) is Array:
+				for child in action_row.get_children(): child.queue_free()
+				for id in event.roster:
+					var button := _button(action_row,String(MONSTERS.get_monster(String(id)).get("name",id)),_select_monster.bind(String(id)))
+					button.size_flags_horizontal = Control.SIZE_EXPAND_FILL; button.add_theme_font_size_override("font_size",21)
+				if not event.roster.is_empty(): selected_monster = String(event.roster[0])
 			last_tick = -1; revision = -1; view.resume_motion()
 			_refresh_connection_test_controls()
 			status.text = "기존 경기로 복귀했습니다." if event.get("resumed",false) else "매칭 완료 · 전투 준비 중..."

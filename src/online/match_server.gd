@@ -7,7 +7,10 @@ const ROOM := preload("res://src/online/battle_room.gd")
 const CODEC := preload("res://src/online/snapshot_codec.gd")
 const RANKED := preload("res://src/data/ranked_rules.gd")
 const RESULT_STORE := preload("res://src/online/ranked_result_store.gd")
+const LOADOUT := preload("res://src/online/online_loadout.gd")
+const LOADOUT_STORE := preload("res://src/online/ranked_loadout_store.gd")
 var result_store
+var loadout_store
 var metrics = preload("res://src/online/network_metrics.gd").new()
 var metrics_report_at := -1
 var metrics_cache := {}
@@ -35,6 +38,7 @@ func start(port: int,bind: String = "127.0.0.1",development_auth: bool = false,i
 	local_test_ticket = invitation
 	auth = AUTH.new(); add_child(auth)
 	result_store = RESULT_STORE.new(); add_child(result_store)
+	loadout_store = LOADOUT_STORE.new(); add_child(loadout_store)
 	return listener.listen(port,bind)
 func _process(delta: float) -> void:
 	metrics.tick_rates()
@@ -121,8 +125,9 @@ func _receive(id: int,message: Dictionary) -> void:
 		if not message.get("role",null) is String or not message.get("token",null) is String: _reject(id,"invalid_request"); return
 		var role: String = message.role
 		if role not in ["hero","demon"]: _reject(id,"invalid_role"); return
+		if not LOADOUT.valid(role,message.get("loadout",null)): _reject(id,"invalid_loadout"); return
 		if message.has("local_test") and (not message.local_test is Dictionary or not message.token.is_empty()): _reject(id,"invalid_request"); return
-		peer.authenticating = true; _authenticate(id,message.token,role,message.get("local_test",{})); return
+		peer.authenticating = true; _authenticate(id,message.token,role,message.loadout,message.get("local_test",{})); return
 	if op == "ping" and not peer.uid.is_empty():
 		var pong := {"op":"pong"}
 		if preload("res://src/data/online_metrics_catalog.gd").sequence(message.get("probe",null)):
@@ -152,7 +157,7 @@ func _receive(id: int,message: Dictionary) -> void:
 		if message.get("kind",null) is String:
 			var accepted: bool = match_data.node.apply(peer.role,message.kind,message.get("argument",null))
 			if message.kind == "summon": _send(id,{"op":"action","match":peer.room,"accepted":accepted,"message":match_data.node.last_action_message})
-func _authenticate(id: int,token: String,role: String,local_credentials: Dictionary = {}) -> void:
+func _authenticate(id: int,token: String,role: String,loadout: Dictionary,local_credentials: Dictionary = {}) -> void:
 	var uid := ""
 	if not local_credentials.is_empty():
 		uid = LOCAL_ACCESS.session_uid(local_credentials,local_test_ticket)
@@ -165,14 +170,21 @@ func _authenticate(id: int,token: String,role: String,local_credentials: Diction
 	token = ""
 	if not peers.has(id): return
 	if uid.is_empty(): _reject(id,"authentication_failed"); return
+	var rated: bool = _loadout_verification_required(local_credentials)
+	if rated and not await loadout_store.verify(uid,role,loadout):
+		if peers.has(id): _reject(id,"loadout_mismatch")
+		return
+	if not peers.has(id): return
 	if reserved_uids.has(uid): _reject(id,"duplicate_account"); return
 	for other in peers:
 		if other != id and peers[other].uid == uid:
 			var prior: Dictionary = peers[other]
 			if not rooms.has(prior.room) or not rooms[prior.room].node.finished: _reject(id,"duplicate_account"); return
-	peers[id].uid = uid; peers[id].role = role; peers[id].created = Time.get_ticks_msec()
+	peers[id].uid = uid; peers[id].role = role; peers[id].loadout = loadout.duplicate(true); peers[id].rated = rated; peers[id].created = Time.get_ticks_msec()
 	if not queue.enqueue(id,uid,role): _reject(id,"queue_rejected"); return
 	_send(id,{"op":"queued","role":role})
+func _loadout_verification_required(local_credentials: Dictionary = {}) -> bool:
+	return not test_auth and local_credentials.is_empty() and loadout_store != null and loadout_store.configured()
 func _match_waiters() -> void:
 	if rooms.size() >= RULES.MAX_ROOMS: return
 	var pair: Array = queue.pair()
@@ -187,7 +199,9 @@ func _match_waiters() -> void:
 		seats[peer.role] = {"uid":peer.uid,"peer":id,"resume_token":resume_token,"deadline":0}
 		reserved_uids[peer.uid] = key
 		resume_tokens[resume_token] = {"match":key,"role":peer.role}
-	rooms[key] = {"node":room,"members":pair,"seats":seats,"codec":CODEC.new(),"created":Time.get_ticks_msec(),"ended":0,"result_started":false,"result_pending":false,"rated_result":{}}
+	room.set_loadouts(peers[pair[0]].loadout if peers[pair[0]].role == "hero" else peers[pair[1]].loadout,
+		peers[pair[0]].loadout if peers[pair[0]].role == "demon" else peers[pair[1]].loadout)
+	rooms[key] = {"node":room,"members":pair,"seats":seats,"codec":CODEC.new(),"created":Time.get_ticks_msec(),"ended":0,"result_started":false,"result_pending":false,"rated_result":{},"rated":bool(peers[pair[0]].rated) and bool(peers[pair[1]].rated)}
 	room.completed.connect(_completed.bind(key)); room.prepare()
 	if room.finished:
 		for id in pair: _reject(id,"battle_load_failed")
@@ -201,7 +215,7 @@ func _match_waiters() -> void:
 		_send_matched(id,key,false)
 func _send_matched(id: int,key: String,resumed: bool) -> void:
 	var role: String = peers[id].role
-	_send(id,{"op":"matched","match":key,"role":role,"rules":RULES.ID,"hero":RULES.HERO,"roster":RULES.ROSTER,"duration":RULES.DURATION,"resume_token":rooms[key].seats[role].resume_token,"resumed":resumed,"feedback_cursor":rooms[key].node.feedback.sequence,"battlefield":rooms[key].node.battlefield_info})
+	_send(id,{"op":"matched","match":key,"role":role,"rules":RULES.ID,"hero":rooms[key].node.hero_id,"roster":rooms[key].node.roster,"duration":RULES.DURATION,"resume_token":rooms[key].seats[role].resume_token,"resumed":resumed,"feedback_cursor":rooms[key].node.feedback.sequence,"battlefield":rooms[key].node.battlefield_info})
 func _resume(id: int,message: Dictionary) -> void:
 	if message.get("version",null) != RULES.VERSION or message.get("rules","") != RULES.ID: _reject(id,"version_mismatch"); return
 	var token_value: Variant = message.get("resume_token",null)
@@ -263,6 +277,7 @@ func _completed(winner: String,reason: String,key: String) -> void:
 	for id in rooms[key].members: _send_result(id,key)
 
 func _result_can_record(match_data: Dictionary,winner: String,reason: String) -> bool:
+	if not bool(match_data.get("rated",true)): return false
 	if bool(match_data.get("result_started",false)) or result_store == null: return false
 	var seats: Dictionary = match_data.get("seats",{})
 	if not seats.has("demon") or not seats.has("hero"): return false

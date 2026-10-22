@@ -12,6 +12,7 @@ var token := ""
 var local_ticket := ""
 var local_session := ""
 var role := "hero"
+var loadout := {}
 var sequence := 0
 var match_id := ""
 var greeted := false
@@ -30,9 +31,12 @@ func _ready() -> void:
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_PAUSED and not match_id.is_empty() and not resume_token.is_empty() and not result_received:
 		_network_lost("백그라운드에서 돌아오면 경기에 다시 연결합니다.")
-func join(endpoint: String,access_token: String,requested_role: String) -> Error:
+func join(endpoint: String,access_token: String,requested_role: String,requested_loadout: Dictionary = {}) -> Error:
 	close(); metrics.enabled=false; metrics.reset(); token = access_token; role = requested_role
-	if not RULES.endpoint_valid(endpoint) or requested_role not in ["hero","demon"]: token = ""; return ERR_INVALID_PARAMETER
+	if requested_loadout.is_empty():
+		requested_loadout = {"hero_id":preload("res://src/data/hero_character_catalog.gd").DEFAULT_HERO} if role == "hero" else preload("res://src/online/online_loadout.gd").default_demon()
+	if not RULES.endpoint_valid(endpoint) or requested_role not in ["hero","demon"] or not preload("res://src/online/online_loadout.gd").valid(role,requested_loadout): token = ""; return ERR_INVALID_PARAMETER
+	loadout = requested_loadout.duplicate(true)
 	endpoint_url = endpoint
 	var error := _connect_transport()
 	if error != OK: _reset_transport(); return error
@@ -42,9 +46,9 @@ func _connect_transport() -> Error:
 	metrics.transport_reset()
 	greeted = false; heartbeat_left = 0.0; last_message = Time.get_ticks_msec()
 	return socket.connect_to_url(endpoint_url)
-func join_local_test(endpoint: String,invitation: String,requested_role: String) -> Error:
+func join_local_test(endpoint: String,invitation: String,requested_role: String,requested_loadout: Dictionary = {}) -> Error:
 	if not LOCAL_ACCESS.valid_hex(invitation,LOCAL_ACCESS.TICKET_BYTES): close(); return ERR_INVALID_PARAMETER
-	var error := join(endpoint,"",requested_role)
+	var error := join(endpoint,"",requested_role,requested_loadout)
 	if error == OK:
 		metrics.enabled=true
 		local_test_connection = true
@@ -114,7 +118,7 @@ func _process(delta: float) -> void:
 	var state := socket.get_ready_state()
 	if state == WebSocketPeer.STATE_OPEN and not greeted:
 		greeted = true
-		var request := {"op":"join","version":RULES.VERSION,"rules":RULES.ID,"role":role,"token":token}
+		var request := {"op":"join","version":RULES.VERSION,"rules":RULES.ID,"role":role,"token":token,"loadout":loadout}
 		if reconnecting:
 			request = {"op":"resume","version":RULES.VERSION,"rules":RULES.ID,"match":match_id,"resume_token":resume_token}
 		elif not local_ticket.is_empty(): request["local_test"] = {"ticket":local_ticket,"session":local_session}
