@@ -4154,3 +4154,7 @@ CloudStore 직렬화 대기는 operation_released 신호로 한다. 정상 완�
 ## 로컬 Godot 테스트 병렬 실행 (2026-10-20)
 
 `tools/run_godot_tests.sh GODOT_BIN OUT_FILE [JOBS] [TIMEOUT] < 테스트경로목록`으로 SceneTree 테스트를 병렬 실행한다. 테스트마다 APPDATA/XDG_DATA_HOME을 임시 폴더로 바꿔 `user://`를 분리하므로 실제 플레이어 저장 데이터를 건드리지 않는다. 실행 결과의 NEW 실패만 회귀로 본다(`tests/KNOWN_FAILING_TESTS.txt` 기준선, `tests/FIXTURE_ONLY_TESTS.txt`는 SKIP). 기준선 테스트를 고치면 해당 줄을 지운다. 수정 전/후 비교는 `git stash`를 쓰지 않고 파일 복사로 교체 후 반드시 복원한다(stash pop이 오래된 stash를 꺼내 project.godot 충돌을 낸 사고 재발 방지). `hero_starting_balance_smoke`는 `docs/HERO_STARTING_STATS_20261014.tsv`를 다시 쓰므로 실행 후 의도치 않은 변경이면 되돌린다.
+
+## 랭크 PvP 최종 설계 (사용자 확정 2026-10-22)
+
+사람 대 사람: 한 명은 용사, 한 명은 마왕으로 솔로 모드와 같은 게임을 한다. ① 용사는 매칭 전 보유 용사 중 선택(뽑기로 늘어나는 용사도 카탈로그 기반으로 자동 포함) ② 용사의 이동·무기·상자·증강은 솔로와 같게, 로비 연구 효과는 미적용 ③ 마왕은 매칭 전 편성한 팀·마왕 스킬·초월 몬스터를 그대로 가져가고 마왕 증강 포함, 연구 효과 미적용 ④ 랭크 전용 맵 3~4종(용사 유리/마왕 유리) 랜덤, 맵별 8·10·15분 ⑤ 승패 MMR + 주간 MMR 등급별 차등 보상. 보유 여부는 서버가 클라우드 정본 저장으로 검증한다. 진행 순서: 로드아웃 → 마왕 능력 → 용사 능력 → 맵 → 주간 보상.
