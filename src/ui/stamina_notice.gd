@@ -16,6 +16,9 @@ static func show_notice(host: Node, message: String) -> AcceptDialog:
 		style.border_color = Color("eac14d"); style.set_border_width_all(3)
 		style.set_corner_radius_all(12); style.set_content_margin_all(24)
 		panel.add_theme_stylebox_override("panel",style)
+		# AcceptDialog resets its buttons' minimum size from this theme constant,
+		# overriding custom_minimum_size; set both to keep the 84px touch target.
+		panel.add_theme_constant_override("buttons_min_height",84)
 		var button := panel.get_ok_button(); button.custom_minimum_size.y = 84
 		button.add_theme_font_size_override("font_size",28)
 		for state in ["normal","hover","pressed"]: button.add_theme_stylebox_override(state,style)

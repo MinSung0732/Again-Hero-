@@ -1,3 +1,9 @@
+## 2026-10-22 — 스태미나 안내창 확인 버튼 터치 영역 84px 복구
+
+- 버그: `src/ui/stamina_notice.gd`가 확인 버튼 `custom_minimum_size.y = 84`를 지정하지만 AcceptDialog가 테마 상수 `buttons_min_height`로 버튼 최소 크기를 다시 설정해 실제 높이 81px.
+- 수정: 대화상자에 `buttons_min_height = 84` 테마 상수 지정(기존 지정 유지). 문구·스타일·동작 불변.
+- 검증: Windows Godot4.7.2 headless `stamina_notice_smoke`·`stamina_smoke` PASS, 기준선 6→5. 실기 화면 미확인.
+
 ## 2026-10-22 — 깨진 테스트 정리 5차: 34개 복구, 기준선 6개
 
 - 병렬 세션(초월·몬스터, 로비·UI, 경제·가챠, 용사 모드 일부) 수정 테스트35개를 6병렬 재검증: 34 PASS(monster_upgrade_balance는 6병렬 부하에서만 간헐 실패, 단독 통과), NEW 실패0. 게임 코드 변경 없음. 기준선 42→6.
