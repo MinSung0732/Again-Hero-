@@ -1,16 +1,29 @@
 # AGENTS.md
 
-이 저장소를 수정하는 AI/코딩 에이전트는 작업 전에 반드시 다음 파일을 읽는다.
+이 저장소를 수정하는 AI/코딩 에이전트(Codex·Claude 공통)는 작업 전에 다음을 읽는다. 사용자는 구독 요금제 사용량을 아껴야 하므로 아래 "토큰 예산 규칙"을 반드시 지킨다.
 
-1. `PROJECT_CONTEXT.md`
-2. `README.md`
-3. `docs/ROADMAP.md`
-4. `CHANGELOG.md`
-5. `docs/AI_DEVELOPMENT_WORKFLOW.md`
+1. `docs/AI_DEVELOPMENT_WORKFLOW.md`, `README.md` (전체, 짧음)
+2. `PROJECT_CONTEXT.md`·`CHANGELOG.md`: **전체를 읽지 않는다**(각 0.5~0.9MB). 맨 위 최신 항목 3개(`head -c 6000`)와 작업 주제 키워드 `rg -n`/`grep -n` 결과 주변만 읽는다. 설계 규칙 절은 `grep -n "^## " PROJECT_CONTEXT.md`로 목차를 본 뒤 필요한 절만 읽는다.
+3. `docs/ROADMAP.md`: 맨 위 체크포인트 블록만 읽는다.
 
 캐릭터 픽셀아트 생성·수정·검수 작업이면 추가로 반드시 읽는다.
 
-6. `docs/PIXEL_ART_CHARACTER_STANDARD.md`
+4. `docs/PIXEL_ART_CHARACTER_STANDARD.md`
+
+## 토큰 예산 규칙 (Codex·Claude 공통)
+- 큰 파일(`src/hero/hero.gd`, `src/battle/battle.gd`, `src/lobby/lobby.gd`, `src/main/main.gd`, 카탈로그, CHANGELOG/PROJECT_CONTEXT)은 통째로 읽지 않는다. `rg -n`으로 위치를 찾고 필요한 줄 범위만 읽는다. 직업 로직은 `src/hero/archetypes/hero_<직업>_archetype.gd`에 있다.
+- 같은 파일을 반복해서 다시 읽지 않는다. 수정 후 확인용 재읽기 대신 `git diff -- <파일>`의 해당 부분만 본다.
+- 테스트는 변경과 관련된 것만 `tools/run_godot_tests.sh`로 돌린다(목록을 `rg -l`로 골라 파이프). 전체 스위트(337개)는 사용자가 요청했거나 공용 코드(`monster_runtime_common.gd`, `battle.gd`, `hero.gd` 공통부)를 바꿨을 때만 돌린다. 판단은 출력의 `NEW` 실패만 본다. 로그 전문을 붙여넣지 말고 요약 줄과 실패 줄만 본다.
+- 수정 전/후 비교가 필요하면 `git stash`를 쓰지 말고 파일을 복사해 바꿔 끼운 뒤 반드시 되돌린다.
+- 기록은 짧게: `CHANGELOG.md` 새 항목은 6줄 이내(무엇·왜·수치 변화·검증·미검증), `PROJECT_CONTEXT.md`는 설계 규칙이 바뀔 때만 5줄 이내로 추가. 작업마다 별도 docs/*.md 보고서·벤치마크 JSON을 만들지 않는다(사용자가 요청할 때만).
+- 최종 보고는 15줄 이내: 바뀐 것, 검증(실행한 테스트와 결과), 미검증, 커밋 해시.
+- 스크린샷·화면 조작(computer-use)·이미지 생성은 사용자가 요청할 때만 쓴다.
+- 추론 강도: 일상 수정은 medium, 원인 불명 버그·설계 변경만 high. 사용자가 요청하지 않으면 최고 단계를 쓰지 않는다.
+
+## Claude가 Codex에 맡길 때 (역할 분담)
+- Claude: 요구 정리, 작업 지시서 작성, 결과 diff 검토·테스트·커밋. Codex: 지시서 범위의 구현과 관련 테스트 실행.
+- 호출은 구독 로그인(ChatGPT)된 로컬 Codex만 사용한다. API 키를 쓰지 않는다: `codex exec -C <repo> -s workspace-write -c model_reasoning_effort=medium -o <결과파일> "<지시서>"`.
+- 지시서에는 목표, 건드릴 파일/금지 파일, 완료 조건, 돌릴 테스트를 적는다. Codex는 커밋·push하지 않고, 마지막 메시지에 15줄 이내로 바뀐 파일·검증 결과·미해결 문제만 남긴다.
 
 핵심 규칙:
 - 게임명은 **「용사, 또 너야? / Again, Hero?」**.

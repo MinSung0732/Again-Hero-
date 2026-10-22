@@ -1,3 +1,8 @@
+## 2026-10-22 — AI 에이전트 토큰 예산 규칙
+
+- `AGENTS.md`: 작업 전 필수 읽기를 PROJECT_CONTEXT/CHANGELOG 전체(약 1.5MB) → 최신 3개 항목+키워드 검색으로 축소. Codex·Claude 공통 토큰 예산 규칙(큰 파일 부분 읽기, 관련 테스트만 실행, 짧은 기록·보고, 추론 강도 medium 기본)과 Claude→Codex 위임 절차(구독 로그인 로컬 `codex exec`, API 키 미사용) 추가.
+- 검증: Codex CLI(ChatGPT 로그인, low)가 규칙을 읽고 요약하는 시험 작업 7,499토큰. 게임 코드 변경 없음.
+
 ## 2026-10-22 — 깨진 테스트 정리 완료: 기준선 0개
 
 - 용사 모드 세션 마지막 5개(hero_reveal_presentation, hero_survival_enemy_balance, hero_survival_identity, practice_battle, practice_presentation) 재검증 PASS. `tests/KNOWN_FAILING_TESTS.txt` 87(10/21 시작)→0. 이제 저장소에서 실행 가능한 모든 테스트가 통과해야 하며, 실패는 모두 NEW로 보고됨. 저장소 밖 fixture가 필요한 테스트는 `tests/FIXTURE_ONLY_TESTS.txt`(80개)로 관리.
