@@ -37,6 +37,10 @@ func run() -> void:
 	root.get_node("CloudStore").stop(); root.get_node("LoginGateway").remember_session_enabled = false
 	SCOPE.select_guest(); SCOPE.guest_directory = "user://hero_pad_"+str(Time.get_ticks_usec())
 	DirAccess.make_dir_recursive_absolute(SCOPE.guest_directory)
+	# Hero mode opens after demon easy stage 3 (2026-10-14 unlock rules).
+	var unlocks := ConfigFile.new()
+	for stage_id in ["stage_1","stage_2","stage_3"]: unlocks.set_value("cleared",stage_id,true)
+	check(SCOPE.save_config(unlocks,"user://stage_progress.cfg") == OK,"isolated hero mode unlock")
 	var paid := STAMINA.try_enter("stage_1",true,-1,false)
 	check(paid.success,"isolated entry")
 	root.get_node("SceneTransition").set("_entry_options",{"stage_id":"stage_1","hero_id":"ranged_rookie","hero_entry":paid})
@@ -76,7 +80,8 @@ func run() -> void:
 	# HUD and decorative margins cannot create a free pad.
 	touch(Vector2(10,10),true,3); check(pad.touch_id == -1 and not pad.visible,"HUD touch ignored")
 	touch(Vector2(10,10),false,3)
-	var margin := viewport_point(scene,Vector2(20,500))
+	# Probe below the HeroStats panel (an input exclusion since 2026-10-14) so only the frame decides.
+	var margin := viewport_point(scene,Vector2(20,1200))
 	touch(margin,true,3); check(pad.touch_id == -1 and not pad.visible,"frame margin touch ignored")
 	touch(margin,false,3)
 	touch(origin,true,7)
@@ -121,7 +126,7 @@ func run() -> void:
 	saved.load(good_path)
 	check(saved.get_value("gameplay","hero_pad_mode","") == PAD.MODE_FREE and not saved.get_value("gameplay","battle_frame_enabled",true),"frame save preserves pad setting")
 	scene._resume(); await process_frame
-	var expanded := viewport_point(scene,Vector2(20,500))
+	var expanded := viewport_point(scene,Vector2(20,1200))
 	touch(expanded,true,11)
 	check(pad.visible and pad.touch_id == 11,"free input follows actual expanded battle panel after frame toggle")
 	touch(expanded,false,11)

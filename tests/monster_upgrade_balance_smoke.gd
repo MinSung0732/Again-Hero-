@@ -23,17 +23,19 @@ func check(condition: bool, message: String) -> void:
 func run() -> void:
 	root.get_node("LoginGateway").remember_session_enabled = false
 	root.get_node("LocalTestMode").active = true # Fixture retains free test draws.
+	# Offline account fixture: CloudStore's session write fence is not under test.
+	SCOPE.write_allowed = Callable()
 	var hex := Crypto.new().generate_random_bytes(16).hex_encode()
 	var id := "%s-%s-%s-%s-%s" % [hex.substr(0,8),hex.substr(8,4),hex.substr(12,4),hex.substr(16,4),hex.substr(20,12)]
 	check(SCOPE.select_account(id), "isolated account")
 	var folder := SCOPE.resolve("user://save_bundle.json").get_base_dir()
-	var expected := {"common": [0.02,30], "advanced": [0.035,30], "uncommon": [0.035,30], "rare": [0.05,30], "legendary": [0.07,25], "transcendent": [0.10,15]}
+	var expected := {"common": [0.02,30], "advanced": [0.035,30], "uncommon": [0.035,30], "rare": [0.05,30], "legendary": [0.07,25], "transcendent": [0.10,1]} # transcendence caps at Lv5, 1 shard per level (e075371a)
 	for rarity in expected:
 		var profile: Dictionary = CATALOG.RARITY_UPGRADE_PROFILES[rarity]
 		check(is_equal_approx(profile.hp_per_level, expected[rarity][0]) and is_equal_approx(profile.damage_per_level, expected[rarity][0]), rarity + " growth")
 		check(profile.shards_required == expected[rarity][1] and profile.configured, rarity + " cost/enabled")
 	for monster_id in CATALOG.ORDER:
-		check(CATALOG.get_shards_required(monster_id) == 30, "common cost " + monster_id)
+		check(CATALOG.get_shards_required(monster_id) == expected[CATALOG.get_rarity(monster_id)][1], "rarity cost " + monster_id)
 	check(SHOP.RARITIES.common.shard_min == 5 and SHOP.RARITIES.common.shard_max == 8, "common roll range")
 	var state := STORE.load_state()
 	state.slime = {"unlocked": true, "level": 29, "shards": 35}
@@ -76,6 +78,10 @@ func run() -> void:
 	root.add_child(lobby)
 	current_scene = lobby
 	lobby._on_team_tab_pressed()
+	# Cold collection cards are built across frames by the formation card cache.
+	await process_frame
+	while lobby._formation_card_cache.pending:
+		await process_frame
 	var found_max := false
 	for button in lobby.team_monster_grid.find_children("*", "Button", true, false):
 		if button.text == "최대강화":

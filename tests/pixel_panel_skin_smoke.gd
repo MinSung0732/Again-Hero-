@@ -27,18 +27,32 @@ func run() -> void:
 	source.border_color = Color("d8ad55")
 	source.set_border_width_all(3)
 	source.set_content_margin_all(4)
+	# Panels take the pixel nine-patch; since 10-06 (486a6960) buttons take one continuous authored frame instead.
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", source)
+	var caption := Label.new()
+	caption.text = "강화하기"
+	panel.add_child(caption)
+	root.add_child(panel)
+	var minimum := panel.get_combined_minimum_size()
+	var filter := panel.texture_filter
+	var children := panel.get_child_count()
+	SKIN.apply(panel)
+	check(panel.get_theme_stylebox("panel") is StyleBoxTexture, "pixel nine-patch style")
+	check(panel.get_combined_minimum_size() == minimum and panel.texture_filter == filter and panel.get_child_count() == children, "no layout/font-filter/input-node change")
 	var button := Button.new()
 	button.text = "강화하기"
 	button.add_theme_stylebox_override("normal", source)
 	button.add_theme_stylebox_override("disabled", source)
 	root.add_child(button)
-	var minimum := button.get_combined_minimum_size()
-	var filter := button.texture_filter
-	var children := button.get_child_count()
+	var button_minimum := button.get_combined_minimum_size()
+	var button_children := button.get_child_count()
 	SKIN.apply(button)
-	check(button.get_theme_stylebox("normal") is StyleBoxTexture, "pixel nine-patch style")
-	check(button.get_combined_minimum_size() == minimum and button.texture_filter == filter and button.get_child_count() == children, "no layout/font-filter/input-node change")
-	var first := button.get_theme_stylebox("normal") as StyleBoxTexture
+	var authored := load("res://assets/art/UI/clean_frames/button_frame.tres") as StyleBoxFlat
+	var frame := button.get_theme_stylebox("normal") as StyleBoxFlat
+	check(frame != null and frame.bg_color == source.bg_color and frame.border_width_top == authored.border_width_top and frame.border_width_left == authored.border_width_left, "button keeps color on the continuous authored frame")
+	check(button.get_combined_minimum_size() == button_minimum and button.get_child_count() == button_children, "button layout and input nodes unchanged")
+	var first := panel.get_theme_stylebox("panel") as StyleBoxTexture
 	var again := SKIN.skin_style(source) as StyleBoxTexture
 	check(first.texture == again.texture, "same palette reuses texture")
 	for color in [Color("171020"), Color("8543c8"), Color("ef3f96")]:
@@ -50,13 +64,16 @@ func run() -> void:
 			check(pixels.get_pixelv(corner).a == 0.0, "highlight palette preserves transparent outer corners")
 		check(pixels.get_pixel(32, 32).is_equal_approx(color), "interior keeps requested highlight color")
 		check(pixels.get_pixel(32, 1).a > 0.0, "authored top edge remains visible")
-	SKIN.apply(button)
-	check(button.get_theme_stylebox("normal") == first, "idempotent application")
+	SKIN.apply(panel)
+	check(panel.get_theme_stylebox("panel") == first, "idempotent application")
 	check(SKIN.skin_style(StyleBoxEmpty.new()) is StyleBoxEmpty, "transparent style preserved")
 	button.free()
+	panel.free()
 	var hex := Crypto.new().generate_random_bytes(16).hex_encode()
 	var id := "%s-%s-%s-%s-%s" % [hex.substr(0,8),hex.substr(8,4),hex.substr(12,4),hex.substr(16,4),hex.substr(20,12)]
 	check(SCOPE.select_account(id), "isolated account")
+	# Offline local account fixture: lift the CloudStore write fence (10-17).
+	SCOPE.write_allowed = Callable()
 	var folder := SCOPE.resolve("user://save_bundle.json").get_base_dir()
 	var state := STORE.load_state()
 	state.slime = {"unlocked": true, "level": 0, "shards": 90}
@@ -69,8 +86,11 @@ func run() -> void:
 	await process_frame
 	var grid_size: Vector2 = lobby.team_monster_grid.size
 	for card in lobby.team_monster_grid.get_children():
-		check(card.get_theme_stylebox("panel") is StyleBoxTexture, "dynamic monster card themed")
-	check(lobby.team_mode_button.get_theme_stylebox("disabled") is StyleBoxTexture, "active mode remains themed")
+		# Since 10-08 (aa9056db) cards are framed by a rarity PNG nine-patch instead of a panel texture.
+		var rarity_frame := card.get_node_or_null("FormationRarityFrame") as NinePatchRect
+		check(rarity_frame != null and rarity_frame.visible and rarity_frame.texture != null, "dynamic monster card themed")
+	var mode_frame := lobby.team_mode_button.get_theme_stylebox("disabled") as StyleBoxFlat
+	check(mode_frame != null and mode_frame.border_width_top == authored.border_width_top, "active mode remains themed")
 	await capture("team")
 	lobby._upgrade_team_monster("slime")
 	await process_frame

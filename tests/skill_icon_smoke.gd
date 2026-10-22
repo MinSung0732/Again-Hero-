@@ -86,8 +86,12 @@ func run() -> void:
  for id in load("res://src/data/monster_catalog.gd").ORDER:
   if load("res://src/data/monster_catalog.gd").get_elite_skills(id).is_empty(): continue
   lobby._populate_monster_detail(id)
-  for entry in lobby._elite_detail_slots:
-   if entry.row.visible: check(entry.icon.image.texture != null and not entry.icon.placeholder.visible,"actual elite detail icon " + id)
+  # Monsters added after 10-09 have elite skills without authored icons yet; those keep the placeholder.
+  var elite_skills: Array = load("res://src/data/monster_catalog.gd").get_elite_skills(id)
+  for i in range(elite_skills.size()):
+   var entry: Dictionary = lobby._elite_detail_slots[i]
+   var registered := not ART.path("elite",id,String(elite_skills[i].get("id",elite_skills[i].name))).is_empty()
+   check(entry.row.visible and (entry.icon.image.texture != null and not entry.icon.placeholder.visible) == registered,"actual elite detail icon " + id)
  lobby._populate_monster_detail("manticore")
  check(lobby._transcendent_detail.rows.filter(func(row):return row.visible).size() == 4,"manticore combined into four entries")
  check(lobby._transcendent_detail.descriptions[3].text.contains("사냥 / 추적") and lobby._transcendent_detail.descriptions[3].text.contains("살을 찢는 공포"),"hunt and passive share description")

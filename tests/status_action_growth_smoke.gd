@@ -99,8 +99,11 @@ func run() -> void:
 	izanami.configure_transcendence(count,0)
 	var shuten = SHUTEN.instantiate()
 	shuten.configure_transcendence(count,0)
-	check(izanami.attack_damage==55+count and izanami.max_hp==int(round(1080+count*1.5)),"Izanami snapshot formula")
-	check(shuten.attack_damage==220+count and shuten.max_hp==2500+count,"Shuten snapshot formula")
+	# 10-11: both use the shared CONTROL role growth and catalog base stats.
+	var iz_data := preload("res://src/data/izanami_behavior_catalog.gd")
+	var sh_data := preload("res://src/data/shuten_doji_behavior_catalog.gd")
+	check(izanami.attack_damage==int(round(iz_data.BASE.attack_damage+count*iz_data.STATUS_GROWTH.attack_damage)) and izanami.max_hp==int(round(iz_data.BASE.max_hp+count*iz_data.STATUS_GROWTH.max_hp)),"Izanami snapshot formula")
+	check(shuten.attack_damage==int(round(sh_data.BASE.attack_damage+count*sh_data.STATUS_GROWTH.attack_damage)) and shuten.max_hp==int(round(sh_data.BASE.max_hp+count*sh_data.STATUS_GROWTH.max_hp)),"Shuten snapshot formula")
 	var iza_before: int = izanami.attack_damage
 	var shu_before: int = shuten.attack_damage
 	hero.apply_silence(1)

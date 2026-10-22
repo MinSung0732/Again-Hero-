@@ -23,25 +23,40 @@ func rendered_image() -> Image:
 	await RenderingServer.frame_post_draw
 	return root.get_texture().get_image()
 
+# Headless runs have no rasterizer (frame_post_draw never arrives), so they check the
+# exact row/ratio draw_status_bars() draws from; windowed runs also check real pixels.
+func rendered() -> bool:
+	return DisplayServer.get_name() != "headless"
+
+func shield_row_ratio(monster: Node2D) -> float:
+	if not COMMON.sync_bar_order(monster).has("shield"):
+		return -1.0
+	return COMMON.shield_value(monster, "shield") / maxf(COMMON.shield_value(monster, "shield", true), 1.0)
+
 func run() -> void:
 	var monster = load("res://src/monsters/Orc.tscn").instantiate()
 	root.add_child(monster)
 	monster.position = Vector2(300, 300)
 	monster.set_physics_process(false)
 	var buffs := BUFFS.new()
-	check(not is_shield_pixel(monster, await rendered_image(), 25), "absent without buff")
+	check(shield_row_ratio(monster) < 0.0, "absent without buff")
+	if rendered(): check(not is_shield_pixel(monster, await rendered_image(), 25), "absent without buff (pixels)")
 	monster.max_hp = 1000
 	monster.current_hp = 1000
 	buffs.apply_courage(monster, 10, 0.15, 0.1)
 	check(monster.get_meta("support_shield_hp") == 100, "actual shield ten percent HP")
-	check(is_shield_pixel(monster, await rendered_image(), 25), "ten percent shield renders full visible row immediately")
+	check(is_equal_approx(shield_row_ratio(monster), 1.0), "ten percent shield renders full visible row immediately")
+	if rendered(): check(is_shield_pixel(monster, await rendered_image(), 25), "full row (pixels)")
 	check(COMMON.consume_support_shield(monster, 50) == 0, "half shield absorbed")
-	var image: Image = await rendered_image()
-	check(is_shield_pixel(monster, image, -25) and not is_shield_pixel(monster, image, 25), "rendered bar shrinks with absorption")
+	check(is_equal_approx(shield_row_ratio(monster), 0.5), "rendered bar shrinks with absorption")
+	if rendered():
+		var image: Image = await rendered_image()
+		check(is_shield_pixel(monster, image, -25) and not is_shield_pixel(monster, image, 25), "bar shrinks (pixels)")
 	buffs.tick(10)
 	check(monster.get_meta("support_shield_hp") == 50, "shield persists after attack buff expiry")
 	check(COMMON.consume_support_shield(monster, 60) == 10, "remaining shield absorbed and excess damage returned")
-	check(not is_shield_pixel(monster, await rendered_image(), -25), "row disappears at zero shield")
+	check(shield_row_ratio(monster) < 0.0, "row disappears at zero shield")
+	if rendered(): check(not is_shield_pixel(monster, await rendered_image(), -25), "row disappears (pixels)")
 	monster.free()
 	await process_frame
 	print("SUPPORT_SHIELD_VISUAL: " + ("FAILED" if failed else "PASS"))

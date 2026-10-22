@@ -97,7 +97,11 @@ func run() -> void:
 		view.advance()
 	view.name_input.text = "테스트"
 	view._validate_name(view.name_input.text)
-	check(view.error_label.text.contains("서버 등록/중복 검사 없음"), "no fake uniqueness promise")
+	check(view.error_label.text.contains("서버 등록 없음"), "no fake uniqueness promise")
+	# Since 10-17 (d8f2266d) 결정 needs a passed duplicate check; preview names are checked locally only.
+	check(view.confirm.disabled, "decide waits for a name check")
+	await view._check_name()
+	check(not view.confirm.disabled and view.error_label.text.contains("사용 가능한 이름"), "local preview check passes")
 	await capture("name")
 	await view._register_name()
 	check(PROFILE.display_name() == "마왕(테스트)" and PROFILE.get_profile().gender == "female", "real choice stored locally")

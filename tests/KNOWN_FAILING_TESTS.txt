@@ -2,45 +2,9 @@
 # isolated user://). Baseline for regression checks, not an allow-list:
 # fix a test and delete its line. tools/run_godot_tests.sh reports any
 # failure NOT listed here as NEW. Format: <path>  # <kind>: <last output>
-tests/campaign_experience_smoke.gd  # assertion failure: CAMPAIGN_EXPERIENCE_SMOKE checks=52 failures=3
-tests/combat_phase3_online_smoke.gd  # assertion failure: COMBAT_PHASE3_ONLINE checks=263 failures=80
-tests/demon_appearance_smoke.gd  # assertion failure: DEMON_APPEARANCE_TEST: FAILED
-tests/hero_loading_gate_smoke.gd  # assertion failure: 
-tests/hero_player_mode_smoke.gd  # assertion failure: HERO_PLAYER_MODE_SMOKE checks=45 failures=6
 tests/hero_reveal_presentation_smoke.gd  # assertion failure: REVEAL_TEST: FAILED
-tests/hero_survival_progression_smoke.gd  # assertion failure: HERO_SURVIVAL_PROGRESSION_SMOKE checks=1606 failures=14
-tests/loading_pipeline_smoke.gd  # assertion failure: LOADING_PIPELINE: FAIL
-tests/monster_first_unlock_smoke.gd  # assertion failure: MONSTER_FIRST_UNLOCK_FAILED
-tests/optimization_network_smoke.gd  # assertion failure: OPTIMIZATION_NETWORK: FAIL
 tests/practice_battle_smoke.gd  # assertion failure: PRACTICE_BATTLE: FAIL failures=3
-tests/skill_icon_smoke.gd  # assertion failure: SKILL_ICONS: FAIL
-tests/stamina_notice_smoke.gd  # assertion failure: 
-tests/status_action_growth_smoke.gd  # assertion failure: STATUS_ACTION_GROWTH FAIL
-tests/transcendent_upgrade_smoke.gd  # assertion failure: TRANSCEND_UPGRADE: FAIL
-tests/tutorial_focus_smoke.gd  # assertion failure: TUTORIAL_FOCUS: FAILED
-tests/tutorial_preview_smoke.gd  # assertion failure: prologue name/uniqueness/completion persistence (4 checks) after 10-17 nickname policy; transition double fixed 2026-10-21, needs investigation
-tests/frontier_art_export_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Assertion failed: source PNG must be absent
-tests/guest_profile_flow_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Assertion failed.
-tests/gumiho_hero_status_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Parse Error: Identifier "player_control_policy" not declared in the current 
-tests/hero_aoe_coverage_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Compile Error: Failed to compile depended scripts. SCRIPT ERROR: Invalid cal
-tests/hero_lobby_mode_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Assertion failed.
-tests/hero_lobby_startup_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'ranged_rookie' on a base object of type '
-tests/hero_mode_startup_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'build' on a base object of type 'Control 
-tests/hero_move_pad_smoke.gd  # script error, never reaches quit(): 
+tests/stamina_notice_smoke.gd  # assertion failure: GAME BUG - stamina notice OK button touch target 81px instead of 84px (AcceptDialog buttons_min_height overrides custom_minimum_size in src/ui/stamina_notice.gd)
 tests/hero_survival_enemy_balance_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'max_hp' on a base object of type 'Nil'.
 tests/hero_survival_identity_smoke.gd  # script error, never reaches quit(): 
-tests/hero_survival_revision_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'research' on a base object of type 'Dicti
-tests/hero_weapon_growth_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'evolution_secondary_data' on a base objec
-tests/initial_gender_cosmetics_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Parse Error: Identifier "_open_gender_change" not declared in the current sc
-tests/lobby_main_modes_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'icon' on a base object of type 'Nil'.
-tests/mobile_entry_memory_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid assignment of property or key 'previous' with value of type 'WeakRef
-tests/mode_unlock_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'ready_to_close' on a base object of type 
-tests/monster_upgrade_balance_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'level' on a base object of type 'Dictiona
-tests/monster_upgrade_feedback_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Cannot call method 'get_parent' on a null value.
-tests/pickup_probability_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Assertion failed.
-tests/pixel_panel_skin_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Invalid access to property or key 'texture' on a base object of type 'Nil'.
 tests/practice_presentation_smoke.gd  # script error, never reaches quit(): 
-tests/support_shield_visual_smoke.gd  # script error, never reaches quit(): 
-tests/test_forced_gacha_smoke.gd  # script error, never reaches quit(): SCRIPT ERROR: Assertion failed.
-tests/hero_presentation_range_smoke.gd  # parse error: SCRIPT ERROR: Parse Error: Cannot find member "ROW_HEIGHT" in base "res://src/ui/hero_ches
-tests/player_prologue_smoke.gd  # parse error: SCRIPT ERROR: Parse Error: Cannot find member "FEMALE" in base "res://src/ui/player_prolog

@@ -41,6 +41,10 @@ var wander_timer := 0.0
 var slow_timer := 0.0
 var move_multiplier := 1.0
 var move_speed := 100.0
+# Mirrors hero.gd since the player-controlled hero mode: AI heroes skip the policy.
+const PLAYER_CONTROL_POLICY = preload("res://src/hero_mode/hero_control_policy.gd")
+var player_control_policy := PLAYER_CONTROL_POLICY.new()
+var player_controlled := false
 func get_status_resistance(_kind) -> float: return 0.0
 func _get_external_skill_cooldown_properties(): return []
 func record_status_effect_event(_kind): pass

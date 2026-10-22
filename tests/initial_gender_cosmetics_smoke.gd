@@ -3,9 +3,6 @@ extends SceneTree
 var checks := 0
 var failures := 0
 var files: Array[String] = []
-class Cloud extends Node:
-	var busy := false
-	var conflict := false
 class Warmup extends Node:
 	func get_texture(path: String) -> Texture2D: return load(path) as Texture2D if ResourceLoader.exists(path) else null
 func _initialize() -> void: run.call_deferred()
@@ -31,7 +28,7 @@ func run() -> void:
 	var scope_path := fixture("scope", "extends RefCounted\nstatic var user_id := \"fixture-account\"\nstatic var guest_directory := \"fixture\"\nstatic var text := \"\"\nstatic var saves := 0\nstatic var fail_save := false\nstatic func load_config(config: ConfigFile, _path: String) -> int: return config.parse(text) if not text.is_empty() else ERR_FILE_NOT_FOUND\nstatic func save_config(config: ConfigFile, _path: String) -> int:\n\tif fail_save: return ERR_CANT_CREATE\n\ttext = config.encode_to_text(); saves += 1; return OK\n")
 	var catalog_path := fixture("appearances", art_source("res://src/data/demon_appearance_catalog.gd",art))
 	var appearance_path := fixture("appearance", FileAccess.get_file_as_string("res://src/systems/demon_appearance_store.gd").replace("res://src/systems/account_save_scope.gd",scope_path).replace("res://src/data/demon_appearance_catalog.gd",catalog_path))
-	var profile_path := fixture("profile", "extends RefCounted\nconst SCOPE = preload(\""+scope_path+"\")\nconst APPEARANCE = preload(\""+appearance_path+"\")\nstatic func get_profile() -> Dictionary:\n\tvar config := ConfigFile.new()\n\tSCOPE.load_config(config,\"fixture\")\n\treturn config.get_value(\"player_profile\",\"value\",{})\nstatic func appearance_id() -> String: return APPEARANCE.equipped_id(String(get_profile().get(\"gender\",\"male\")))\n")
+	var profile_path := fixture("profile", "extends RefCounted\nconst SCOPE = preload(\""+scope_path+"\")\nconst APPEARANCE = preload(\""+appearance_path+"\")\nconst GENDERS = preload(\"res://src/data/profile_gender_catalog.gd\")\nconst NAMES = preload(\"res://src/data/nickname_catalog.gd\")\nstatic func can_rename() -> bool: return false\nstatic func can_change_gender() -> bool: return false\nstatic func get_profile() -> Dictionary:\n\tvar config := ConfigFile.new()\n\tSCOPE.load_config(config,\"fixture\")\n\treturn config.get_value(\"player_profile\",\"value\",{})\nstatic func appearance_id() -> String: return APPEARANCE.equipped_id(String(get_profile().get(\"gender\",\"male\")))\n")
 	var collection_path := fixture("collection", "extends RefCounted\nstatic func load_state() -> Dictionary: return {}\nstatic func is_unlocked(id: String, _state: Dictionary) -> bool: return id == \"zeus\"\nstatic func get_upgrade_level(_id: String, _state: Dictionary) -> int: return 5\n")
 	var monsters_path := fixture("monsters", "extends RefCounted\nstatic func get_rarity(_id: String) -> String: return \"transcendent\"\n")
 	var cosmetics_path := fixture("cosmetics", art_source("res://src/data/profile_cosmetic_catalog.gd",art).replace("res://src/data/demon_appearance_catalog.gd",catalog_path))
@@ -41,7 +38,8 @@ func run() -> void:
 	var icon_path := fixture("icon-picker", FileAccess.get_file_as_string("res://src/ui/lobby_profile_icon_picker.gd").replace("res://src/systems/profile_cosmetic_store.gd",store_path).replace("res://src/data/profile_cosmetic_catalog.gd",cosmetics_path).replace("res://src/ui/commerce_frame_skin.gd",frames_path).replace("res://src/ui/drag_safe_button.gd",button_path))
 	var view_source := FileAccess.get_file_as_string("res://src/ui/lobby_profile_view.gd").replace("res://src/systems/player_profile.gd",profile_path).replace("res://src/systems/profile_cosmetic_store.gd",store_path).replace("res://src/data/profile_cosmetic_catalog.gd",cosmetics_path).replace("res://src/systems/demon_appearance_store.gd",appearance_path).replace("res://src/data/demon_appearance_catalog.gd",catalog_path).replace("res://src/ui/commerce_frame_skin.gd",frames_path).replace("res://src/ui/drag_safe_button.gd",button_path).replace("res://src/ui/lobby_profile_icon_picker.gd",icon_path)
 	var refresh_start := view_source.find("func refresh() -> void:")
-	var refresh_end := view_source.find("\nfunc show()", refresh_start)
+	# Replace only refresh(); the name/gender change handlers added after it on 10-17 must stay.
+	var refresh_end := view_source.find("\nfunc ", refresh_start + 1)
 	view_source = view_source.substr(0, refresh_start) + "func refresh() -> void: test_refreshes += 1\n" + view_source.substr(refresh_end) + "\nvar test_refreshes := 0\n"
 	var view_path := fixture("view", view_source)
 	var scope: GDScript = load(scope_path)
@@ -49,7 +47,9 @@ func run() -> void:
 	var store: GDScript = load(store_path)
 	var view_script: GDScript = load(view_path)
 	check(appearance != null and store != null and view_script != null, "actual complete scripts compile")
-	var cloud := Cloud.new(); cloud.name = "CloudStore"; root.add_child(cloud)
+	# The CloudStore autoload owns /root/CloudStore, so drive its busy flag instead of a renamed stand-in.
+	var cloud: Node = root.get_node("CloudStore")
+	cloud.stop()
 	var warmup := Warmup.new(); warmup.name = "PresentationWarmup"; root.add_child(warmup)
 	var host := Control.new(); root.add_child(host)
 	var view: RefCounted = view_script.new(); view.lobby = host; view._build_picker()
@@ -255,7 +255,8 @@ func run() -> void:
 	scope.text = ""; scope.user_id = "fixture-account"
 	check(appearance.owned_ids() == ["original_male"], "legacy missing profile fallback")
 	check(view._lock_texture() == view._lock_texture(), "lock texture reused")
-	host.free(); cloud.free(); warmup.free()
+	cloud.busy = false
+	host.free(); warmup.free()
 	for path in files: DirAccess.remove_absolute(path)
 	await process_frame
 	print("INITIAL_GENDER_COSMETICS: %s (%d checks)" % ["PASS" if failures==0 else "FAIL",checks])

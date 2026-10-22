@@ -70,11 +70,14 @@ func run() -> void:
 	var ids: Array = DATA.WEAPONS.keys(); ids.append_array(DATA.PASSIVES.keys())
 	for id in ids:
 		var icon := ICONS.texture(String(id)) as AtlasTexture
-		check(icon != null and icon.region.size == Vector2(128,128) and icon.filter_clip,"normalized cached atlas: "+String(id))
+		# Unique v2 weapon icons (icon_index_v2) use 64px cells; the original sheets use 128px.
+		var cell := 64 if DATA.WEAPONS.get(id,{}).has("icon_index_v2") else 128
+		check(icon != null and icon.region.size == Vector2(cell,cell) and icon.filter_clip,"normalized cached atlas: "+String(id))
 		var image := icon.atlas.get_image().get_region(Rect2i(icon.region))
 		var used := image.get_used_rect()
-		check(Rect2i(9,9,110,110).encloses(used) and used.has_area(),"entire icon fits with padding: "+String(id))
-		check(used.get_center().distance_to(Vector2i(64,64)) <= 2,"icon centered: "+String(id))
+		var pad := cell*9/128
+		check(Rect2i(pad,pad,cell-2*pad,cell-2*pad).encloses(used) and used.has_area(),"entire icon fits with padding: "+String(id))
+		check(Rect2(used).get_center().distance_to(Vector2(cell,cell)*0.5) <= 2.0*cell/128,"icon centered: "+String(id))
 		check(ICONS.texture(String(id)) == icon,"texture reused: "+String(id))
 	# All 60 items, each possible slot and upgrade/evolution/recovery landing.
 	for owner in CHARACTERS.ORDER:
@@ -86,7 +89,8 @@ func run() -> void:
 				var reel := REEL.new(); root.add_child(reel); reel.size = Vector2(844,258); reel.configure(owned,receipt)
 				reel.advance(0.91); reel.advance(0.999); reel.advance(1)
 				check(reel.displayed_id == id and reel.center_label.text == receipt.name,"receipt is exact landing: "+String(id))
-				check(reel.center_label.position.y == REEL.ROW_HEIGHT and reel.get_child_count() == 6,"stable center row / bounded side animation nodes")
+				# Card reel (2026-10-14/16): five reusable cards; the landed center card fills the fixed marker.
+				check(reel.cards[REEL.CENTER_SLOT].get_rect() == reel._selection_rect() and reel.get_child_count() == REEL.CARD_COUNT,"stable center row / bounded side animation nodes")
 				reel.free()
 	for size in range(1,4):
 		var pool: Array = DATA.weapon_pool().slice(0,size)
@@ -122,6 +126,9 @@ func actual_hits() -> void:
 	for id in DATA.WEAPONS:
 		var data: Dictionary = DATA.WEAPONS[id]; var pattern := String(data.pattern)
 		if pattern not in ["slash","beam","orbit","nova","frost","guard","heal"]: continue
+		# Persistent delivery emitters (2026-10-15: lob/sigil/orbit/bombard...) hit over time
+		# through their own slot radius; hero_survival_variety/hero_weapon_remake cover them.
+		if not RUNTIME.DELIVERY.RULES.spec(String(id),data).is_empty(): continue
 		hero.hero_id = String(data.owner)
 		var runtime := RUNTIME.new(); runtime.install(hero)
 		runtime.weapon_ids.clear(); runtime.levels.clear(); runtime.add(String(id))
@@ -134,6 +141,13 @@ func actual_hits() -> void:
 		elif pattern == "beam":
 			inside = Vector2(radius*0.5,GEOMETRY.beam_half_width(1)-0.01)
 			outside = Vector2(radius*0.5,GEOMETRY.beam_half_width(1)+0.01)
+			var lines := mini(5,int(data.get("fan_lines",1)))
+			if lines > 1:
+				# Fan beams fire rays 0.32 rad apart; probe the outer edge of the outermost ray.
+				var aim := Vector2.RIGHT.rotated(-(lines-1)*0.5*0.32)
+				var outward := aim.rotated(-PI/2)
+				inside = aim*radius*0.5+outward*(GEOMETRY.beam_half_width(1)-0.01)
+				outside = aim*radius*0.5+outward*(GEOMETRY.beam_half_width(1)+0.01)
 		elif pattern == "orbit":
 			inside = Vector2(GEOMETRY.orbit_outer(radius,float(data.get("orbit_ratio",0.7)))-0.01,0)
 			outside = Vector2(GEOMETRY.orbit_outer(radius,float(data.get("orbit_ratio",0.7)))+0.01,0)
@@ -150,19 +164,28 @@ func actual_hits() -> void:
 	runtime._launch_projectile(boundary,Vector2.ZERO,100,1,Color.WHITE,{},0,false,200)
 	boundary.position = Vector2(1000,0); runtime._tick_projectiles(1)
 	check(boundary.current_hp == 1000000 and not runtime.projectiles[0].active and float(runtime.projectiles[0].traveled) == 200,"homing shot stops at actual visible travel limit")
-	# Following fields move their drawn center and hit center together.
-	hero.hero_id = "ranged_rookie"; runtime = RUNTIME.new(); runtime.install(hero)
-	runtime.weapon_ids.clear(); runtime.levels.clear(); runtime.add("ranged_rookie_rune_ring")
-	runtime._cast("ranged_rookie_rune_ring")
-	var field: Dictionary = runtime.fields[0]
-	check(bool(field.follow),"fixture is a following field")
+	# Following emitters move their drawn center and hit center together. Since 2026-10-15
+	# rune_ring is a fixed sigil; the hero-following area is the blood_thorns aura emitter.
+	var follow_id := "madness_hero_blood_thorns"
+	hero.hero_id = "madness_hero"; runtime = RUNTIME.new(); runtime.install(hero)
+	runtime.weapon_ids.clear(); runtime.levels.clear(); runtime.add(follow_id)
+	hero.position = Vector2.ZERO; anchor.position = Vector2(20,0)
+	runtime._cast(follow_id)
+	var field: Dictionary = {}
+	for slot in runtime.delivery.slots:
+		if slot.id == follow_id and float(slot.left) > 0.0: field = slot
+	check(not field.is_empty() and field.mode == "aura","fixture is a following field")
 	hero.position = Vector2(500,500); anchor.position = hero.position; boundary.position = Vector2(-500,-500)
-	runtime.cooldowns["ranged_rookie_rune_ring"] = 100
+	runtime.cooldowns[follow_id] = 100
 	var before := anchor.current_hp; runtime.tick(0.1)
-	check(field.origin == hero.global_position and anchor.current_hp < before,"following field visual center is actual damage origin")
-	runtime.tick(float(field.left)+0.1); check(float(field.left) == 0,"field disappears when its actual lifetime expires")
+	check(not field.is_empty() and Vector2(field.origin) == hero.global_position and anchor.current_hp < before,"following field visual center is actual damage origin")
+	if not field.is_empty(): runtime.tick(float(field.left)+0.1); check(float(field.left) == 0,"field disappears when its actual lifetime expires")
 	arena.free()
 func actual_ui() -> void:
+	# Hero mode opens after demon easy stage 3 (2026-10-14 unlock rules).
+	var unlocks := ConfigFile.new()
+	for stage_id in ["stage_1","stage_2","stage_3"]: unlocks.set_value("cleared",stage_id,true)
+	check(SCOPE.save_config(unlocks,"user://stage_progress.cfg") == OK,"isolated hero mode unlock")
 	var paid := STAMINA.try_enter("stage_1",true,-1,false)
 	root.get_node("SceneTransition").set("_entry_options",{"stage_id":"stage_1","hero_id":"ranged_rookie","hero_entry":paid})
 	var scene = load("res://src/hero_mode/HeroMode.tscn").instantiate(); root.add_child(scene)
@@ -193,7 +216,8 @@ func actual_ui() -> void:
 		var receipt: Dictionary = scene.roulette_receipt
 		check(scene.roulette_reel.displayed_id == receipt.id and scene.roulette_label.text == receipt.name,"actual final item equals applied receipt")
 		for id in runtime.weapon_ids: check(int(runtime.levels[id]) == int(before[id])+(1 if id == receipt.id else 0),"only displayed item upgraded")
-		check(scene.overlay.size.y <= 640 and scene.get_global_rect().encloses(scene.overlay.get_global_rect()),"compact modal fits viewport")
+		# Redesigned chest reel modal (2026-10-14) is capped at 920x740.
+		check(scene.overlay.size.y <= 740 and scene.get_global_rect().encloses(scene.overlay.get_global_rect()),"compact modal fits viewport (%s)" % scene.overlay.size)
 		check(scene.overlay.get_global_rect().encloses(scene.roulette_reel.get_global_rect()),"reel stays inside modal")
 		scene._finish_roulette(); check(int(runtime.levels[receipt.id]) == int(before[receipt.id])+1,"duplicate finish cannot grant twice")
 		await capture("hero-reel-result"); scene._close_roulette(); scene._pause()

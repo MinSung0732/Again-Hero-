@@ -38,6 +38,10 @@ func run() -> void:
 	for key in ["hard:stage_1", "hero", "rank"]:
 		cfg.set_value("mode_unlock_seen", key, true)
 	SCOPE.save_config(cfg, "user://stage_progress.cfg")
+	# Since 10-14 (667ff0e8) ranked also requires the hero-mode Stage 10 easy clear.
+	var hero_cfg := ConfigFile.new()
+	hero_cfg.set_value("hero_progress", "stage_10_easy_wins", 1)
+	SCOPE.save_config(hero_cfg, "user://team_loadout.cfg")
 	root.get_node("AudioSettings").config_path = folder.path_join("audio.cfg")
 	await root.get_node("PresentationWarmup").prepare_scene("res://src/lobby/Lobby.tscn")
 	var lobby = load("res://src/lobby/Lobby.tscn").instantiate()
@@ -48,7 +52,8 @@ func run() -> void:
 	var before: Dictionary = lobby.STAGE_PROGRESS.load_state().duplicate(true)
 	check(not view.ranked and view.perspective == "demon" and view.difficulty == "easy", "default keeps existing battle route")
 	check(not view.blocks_entry(), "normal demon entry remains available")
-	for target in [view.demon_button, view.hero_button, view.ranked_button, view.easy_button, view.hard_button, view.character_button]:
+	# Since 10-13 (bfac549e) character selection lives in the formation tab, so the lobby has no character button.
+	for target in [view.demon_button, view.hero_button, view.ranked_button, view.easy_button, view.hard_button]:
 		check(target.icon != null and target.icon.get_width() == 64, "crisp native icon installed")
 		check(target.icon.get_image().get_pixel(0, 0).a == 0, "transparent icon padding")
 	check(view.demon_button.get_theme_stylebox("normal").bg_color == Color("523068") and view.hero_button.get_theme_stylebox("normal").bg_color == Color("281832"), "continuous frame preserves selected state")
@@ -59,30 +64,20 @@ func run() -> void:
 	view.choose_difficulty("hard")
 	check(view.difficulty == "easy" and not lobby._scene_load_pending, "hard preparation rejects selection")
 	view.notice.hide()
-	view.choose_difficulty("easy")
-	view.choose_perspective("hero")
-	check(view.blocks_entry(), "hero stage is UI only")
-	view.notice.hide()
+	check(view.character_button == null, "no separate lobby character picker")
+	view.open_characters()
+	check(lobby.team_tab.visible, "character selection routes to the formation tab")
+	lobby._switch_tab("main")
+	await process_frame
 	view.toggle_ranked()
-	check(view.ranked_button.button_pressed and lobby.enter_stage_button.text == "매칭 시작", "ranked pressed and entry relabeled")
+	check(view.ranked_button.button_pressed and lobby.enter_stage_button.text == "매칭 연결 테스트", "ranked pressed and entry relabeled")
 	check(view.ranked_button.get_theme_stylebox("normal").bg_color == Color("523068"), "ranked skin follows toggle")
-	check(lobby.hero_name_label.text == "달빛마왕" and lobby.stage_status_label.text.contains("미배치"), "real nickname and no fabricated ranking")
-	check(view.character_button.visible and view.heroes.size() == 1, "only known unlocked hero selectable")
+	check(lobby.hero_name_label.text == "달빛마왕" and lobby.stage_status_label.text.contains("변동 없음"), "real nickname and no fabricated ranking")
 	var selected: int = lobby.selected_stage_index
 	lobby._change_stage(1)
-	check(lobby.selected_stage_index == selected, "rank arrows never alter stages")
-	await capture("ranked-hero")
-	view.open_characters()
-	await capture("characters")
-	for child in lobby.get_children():
-		if child is AcceptDialog and child != view.notice:
-			child.queue_free()
-	await process_frame
-	view.choose_perspective("demon")
-	check(not view.character_button.visible and lobby.prev_stage_button.disabled and lobby.next_stage_button.disabled, "demon portrait has no hero cycling")
-	check(view.blocks_entry(), "matching is preview only")
-	view.notice.hide()
+	check(lobby.selected_stage_index == selected and lobby.prev_stage_button.disabled and lobby.next_stage_button.disabled, "rank arrows never alter stages")
 	await capture("ranked-demon")
+	# Ranked entry now starts the online match scene (blocks_entry -> SceneTransition), covered by the online tests.
 	view.toggle_ranked()
 	check(not view.ranked_button.button_pressed and lobby.stage_selector_button.text.begins_with("STAGE"), "second click restores stages")
 	check(view.ranked_button.get_theme_stylebox("normal").bg_color == Color("281832"), "idle skin restored after ranked")

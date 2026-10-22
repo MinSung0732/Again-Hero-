@@ -80,6 +80,8 @@ func run() -> void:
 	# Logged-in account bundles isolate data and stage+collection advance in one serial.
 	var uid := "12345678-1234-1234-1234-"+Crypto.new().generate_random_bytes(6).hex_encode()
 	check(S.select_account(uid),"account namespace selected")
+	# Offline local account fixture: lift the CloudStore write fence (10-17).
+	S.write_allowed = Callable()
 	var serial_before := S.serial
 	var account := P.complete_stage("stage_1",1,"stage_2",2,300)
 	check(account.success and S.serial == serial_before+1 and S.files.has("monster_collection.cfg") and S.files.has("stage_progress.cfg"),"account single bundle transaction")

@@ -78,6 +78,8 @@ func run() -> void:
 	var hex := Crypto.new().generate_random_bytes(16).hex_encode()
 	var owner := "%s-%s-%s-%s-%s" % [hex.substr(0,8),hex.substr(8,4),hex.substr(12,4),hex.substr(16,4),hex.substr(20,12)]
 	check(SCOPE.select_account(owner), "isolated active account for cancellation")
+	# Offline local account fixture: lift the CloudStore write fence (10-17).
+	SCOPE.write_allowed = Callable()
 	var flow := root.get_node("TutorialFlow")
 	flow.account_owner = owner
 	flow.status = "active"

@@ -29,6 +29,8 @@ func run() -> void:
 	root.content_scale_mode = Window.CONTENT_SCALE_MODE_CANVAS_ITEMS
 	root.get_node("LoginGateway").remember_session_enabled = false
 	root.get_node("CloudStore").stop()
+	# Offline account fixture: CloudStore's session write fence is not under test.
+	SCOPE.write_allowed = Callable()
 	var hex := Crypto.new().generate_random_bytes(16).hex_encode()
 	var id := "%s-%s-%s-%s-%s" % [hex.substr(0,8), hex.substr(8,4), hex.substr(12,4), hex.substr(16,4), hex.substr(20,12)]
 	check(SCOPE.select_account(id), "isolated fixture account")

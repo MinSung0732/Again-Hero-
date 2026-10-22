@@ -20,7 +20,8 @@ func run():
 		if not await warm.prepare_scene(path): failed = true
 		if warm._busy: failed = true
 		if warm.get_texture("res://assets/art/UI/logo/AgainHeroLogo.png") == null and path.contains("Lobby"): failed = true
-		if path.contains("Lobby") and warm.get_cropped("res://assets/art/Transcendent_monster/zeus/zeus_icon.png") == null: failed = true
+		# Since 10-09 lobby cards show the combat idle sprite (MonsterCatalog.get_ui_icon_path), so that is what gets warmed.
+		if path.contains("Lobby") and warm.get_cropped(preload("res://src/data/monster_catalog.gd").get_ui_icon_path("zeus")) == null: failed = true
 		if before > 100 and path.contains("Lobby") and warm.texture_load_count != before: failed = true
 		print("LOAD ",path," ms=",Time.get_ticks_msec()-start," textures=",warm.texture_load_count-before)
 	print("LOADING_PIPELINE: ", "FAIL" if failed else "PASS")

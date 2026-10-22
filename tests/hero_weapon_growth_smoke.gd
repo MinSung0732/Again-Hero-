@@ -14,6 +14,7 @@ func relocate(actor, position: Vector2) -> void:
 	actor.global_position = position; COMMON.notify_forced_position_change(actor)
 func reset(runtime, hero) -> void:
 	for field in runtime.fields: field.left = 0.0
+	for slot in runtime.delivery.slots: slot.left = 0.0
 	for pulse in runtime.pulses: pulse.active = false
 	for shot in runtime.projectiles: shot.active = false
 	for pattern in runtime.native_skills.actors_by_pattern:
@@ -40,7 +41,7 @@ func run() -> void:
 		for rank in [3,6,10]:
 			check(not GROWTH.PROFILES[id][[3,6,10].find(rank)+1].is_empty(),"mechanical milestone "+id+str(rank))
 		var base := GROWTH.resolve(id,DATA.WEAPONS[id],1,false)
-		check(is_equal_approx(base.damage_scale,1.0) and not base.has("bonus_hits"),"Lv1 preserved "+id)
+		check(is_equal_approx(base.damage_scale,1.0) and int(base.get("bonus_hits",0)) == 0,"Lv1 preserved "+id)
 		check(not GROWTH.evolution_description(id).is_empty() and not DATA.description(id,10).contains("상자") and not DATA.description(id,10).contains("진화"),"player-facing progression "+id)
 	for hero_id in DATA.HERO_WEAPONS:
 		var battle = load("res://src/battle/Battle.tscn").instantiate()
@@ -78,15 +79,24 @@ func run() -> void:
 					if field.left > 0: fields += 1
 				for shot in runtime.projectiles:
 					if shot.active: shots += 1
-				check(pulses == int(data.get("pulse_count",0)),"actual secondary pulse count "+String(id))
-				if pattern == "poison": check(fields == int(data.get("field_count",1)),"actual multi-field count "+String(id))
+				# Persistent delivery emitters (2026-10-15) replace follow-up pulses and poison fields.
+				var rule: Dictionary = runtime.DELIVERY.RULES.spec(String(id),data)
+				check(pulses == (0 if not rule.is_empty() else int(data.get("pulse_count",0))),"actual secondary pulse count "+String(id))
+				if not rule.is_empty():
+					var emitters := 0
+					for slot in runtime.delivery.slots:
+						if slot.id == id and float(slot.left) > 0.0: emitters += 1
+					check(fields == 0 and emitters == expected_emitters(rule,data),"actual multi-field count "+String(id))
+				elif pattern == "poison": check(fields == int(data.get("field_count",1)),"actual multi-field count "+String(id))
 				if runtime.native_skills.SCENES.has(pattern):
 					var native_active := 0
 					for actor in runtime.native_skills.actors_by_pattern[pattern]:
 						if (bool(actor.active) if pattern in ["piercer","ice_pillar"] else int(actor.state) != 0): native_active += 1
 					check(native_active == mini(int(runtime.native_skills.SCENES[pattern][2]),int(data.base_hits)+int(data.get("bonus_hits",0))),"actual native multi-actor count "+String(id))
-				if pattern in ["burst","combo"] and not (runtime.identity.spec.has("native_basic") and id == runtime.identity.starter):
-					check(shots == mini(6,int(data.base_hits)+int(data.get("bonus_hits",0))),"actual delayed sequence "+String(id))
+				if pattern in ["burst","combo"] and rule.is_empty() and not (runtime.identity.spec.has("native_basic") and id == runtime.identity.starter):
+					# MAX awakenings (2026-10-16) may launch their own extra shots on top of the sequence.
+					var sequence := mini(6,int(data.base_hits)+int(data.get("bonus_hits",0)))
+					check(shots >= sequence if awakened else shots == sequence,"actual delayed sequence "+String(id))
 				if pattern == "summon":
 					var active = null
 					for actor in hero.get("summoner_"+String(data.summon_kind)+"_pool"):
@@ -112,6 +122,17 @@ func run() -> void:
 	print("HERO_WEAPON_GROWTH_SMOKE checks=",checks," failures=",failures)
 	quit(1 if failures else 0)
 
+# Emitter count per cast, mirroring hero_weapon_delivery_runtime.cast().
+func expected_emitters(rule: Dictionary, data: Dictionary) -> int:
+	if String(rule.mode) == "orbit": return 1
+	if String(rule.mode) == "sentry": return clampi(int(rule.get("count",1))+int(data.get("bonus_hits",0))/3,1,2)
+	return clampi(int(rule.get("count",1))+maxi(0,int(data.get("field_count",1))-1),1,3)
+
+# Production casts always use runtime.stats_for(), which adds evolution_secondary_data.
+func max_stats(runtime, id: String) -> Dictionary:
+	runtime.levels[id] = 10; runtime.evolved[id] = true
+	return runtime.stats_for(id)
+
 func exact_effects() -> void:
 	var battle = load("res://src/battle/Battle.tscn").instantiate()
 	battle.hero_player_mode = true; battle.hero_player_stage = "stage_1"; battle.hero_player_hero_id = "ranged_rookie"
@@ -122,7 +143,7 @@ func exact_effects() -> void:
 	for actor in [a,b]: actor.max_hp = 1000000; actor.current_hp = 1000000; actor.set_physics_process(false)
 	await physics_frame
 	# Broad grid candidates outside a splash circle must remain untouched.
-	var data := GROWTH.resolve("ranged_rookie_arcane_bolt",DATA.WEAPONS.ranged_rookie_arcane_bolt,10,true)
+	var data: Dictionary = max_stats(runtime,"ranged_rookie_arcane_bolt")
 	relocate(b,a.position+Vector2(111,0)); await physics_frame
 	runtime._splash(a.position,100,110,a,data)
 	check(a.current_hp == 1000000 and b.current_hp == 1000000,"splash excludes primary and radius+1")
@@ -131,10 +152,14 @@ func exact_effects() -> void:
 	check(b.current_hp == 999900,"splash includes radius-1 and cannot recurse")
 	# Pulse delay, exact footprint and fixed saturation without node allocation.
 	for actor in [a,b]: actor.current_hp = 1000000
-	data = GROWTH.resolve("ranged_rookie_pulse_staff",DATA.WEAPONS.ranged_rookie_pulse_staff,10,true)
+	# pulse_staff became a delivery sigil (2026-10-15); rift_pulse keeps follow-up pulses.
+	data = max_stats(runtime,"summoner_hero_rift_pulse")
+	var pulse_radius: float = 100.0*float(data.pulse_radius_ratio)
+	relocate(b,a.position+Vector2(pulse_radius+1.0,0)); await physics_frame
 	runtime._after_cast(data,a.position,Vector2.RIGHT,a,100,100,10)
 	runtime._tick_pulses(0.1); check(a.current_hp == 1000000,"secondary pulse waits for delay")
-	runtime._tick_pulses(0.15); check(a.current_hp == 999935 and b.current_hp == 1000000,"secondary pulse exact radius and ratio")
+	runtime._tick_pulses(float(data.get("pulse_interval",0.24)))
+	check(a.current_hp == 1000000-maxi(1,roundi(100*float(data.pulse_ratio))) and b.current_hp == 1000000,"secondary pulse exact radius and ratio")
 	var nodes: int = battle.get_child_count()
 	for index in 30: runtime._after_cast(data,a.position,Vector2.RIGHT,a,100,100,10)
 	var active := 0
@@ -144,12 +169,12 @@ func exact_effects() -> void:
 	# Overlapping fan rays hit once, and all rays share the rendered geometry.
 	reset(runtime,hero); runtime.scratch.clear(); runtime.scratch.append(a)
 	a.current_hp = 1000000; relocate(a,hero.position+Vector2(50,0))
-	data = GROWTH.resolve("purifier_hero_holy_lance",DATA.WEAPONS.purifier_hero_holy_lance,10,true)
+	data = max_stats(runtime,"purifier_hero_holy_lance")
 	runtime._cast_fan(data,hero.position,Vector2.RIGHT,500,10,100)
 	check(a.current_hp == 999900,"overlapping five-ray fan hits one actor once")
 	# Final shot explodes only on the last live, actually landed shot.
 	a.current_hp = 1000000; b.current_hp = 1000000; relocate(b,a.position+Vector2(80,0)); await physics_frame
-	data = GROWTH.resolve("pistol_hero_revolver",DATA.WEAPONS.pistol_hero_revolver,10,true)
+	data = max_stats(runtime,"pistol_hero_revolver")
 	var shot := {"data":data,"finisher":false,"damage":100}
 	runtime._finish_shot(shot,a); check(a.current_hp == 1000000,"non-final shot has no finisher")
 	shot.finisher = true; runtime._finish_shot(shot,a)
@@ -164,7 +189,9 @@ func exact_effects() -> void:
 
 func presentation() -> void:
 	var capture: bool = "--capture" in OS.get_cmdline_user_args() and DisplayServer.get_name() != "headless"
-	var unlocks := ConfigFile.new(); unlocks.set_value("hard_cleared","stage_7",true)
+	# Hero mode needs demon easy stage 3; the chemical hero needs demon easy stage 7 (2026-10-14).
+	var unlocks := ConfigFile.new()
+	for stage_id in ["stage_1","stage_2","stage_3","stage_7"]: unlocks.set_value("cleared",stage_id,true)
 	SCOPE.save_config(unlocks,"user://stage_progress.cfg")
 	var stamina := preload("res://src/systems/stamina_store.gd")
 	var paid := stamina.try_enter("stage_1",true,-1,false)
@@ -183,12 +210,13 @@ func presentation() -> void:
 		root.get_texture().get_image().save_png(OS.get_environment("TEMP").path_join("again-hero-weapon-growth-cards.png"))
 	scene.choosing = false; scene.pending_chests = 1; scene._begin_roulette(); scene.roulette_tween.kill(); scene._finish_roulette()
 	await process_frame
-	check(scene.overlay.size.y <= 640 and scene.overlay.get_global_rect().encloses(scene.roulette_reel.get_global_rect()),"evolved description and reel fit actual rendered modal")
+	# Redesigned chest reel modal (2026-10-14) is capped at 920x740.
+	check(scene.overlay.size.y <= 740 and scene.overlay.get_global_rect().encloses(scene.roulette_reel.get_global_rect()),"evolved description and reel fit actual rendered modal")
 	if capture:
 		await RenderingServer.frame_post_draw
 		root.get_texture().get_image().save_png(OS.get_environment("TEMP").path_join("again-hero-weapon-growth-evolution.png"))
 	for weapon_id in DATA.WEAPONS:
 		runtime.weapon_ids.clear(); runtime.weapon_ids.append(String(weapon_id)); runtime.levels.clear(); runtime.levels[weapon_id] = 10; runtime.evolved.clear()
 		scene.pending_chests = 1; scene._begin_roulette(); scene.roulette_tween.kill(); scene._finish_roulette(); await process_frame
-		check(scene.overlay.size.y <= 640 and scene.overlay.get_global_rect().encloses(scene.roulette_reel.get_global_rect()),"all sixty evolved receipts fit modal "+String(weapon_id))
+		check(scene.overlay.size.y <= 740 and scene.overlay.get_global_rect().encloses(scene.roulette_reel.get_global_rect()),"all evolved receipts fit modal "+String(weapon_id))
 	scene.queue_free(); await process_frame

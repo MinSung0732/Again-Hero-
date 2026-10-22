@@ -5,6 +5,7 @@ const STORE := preload("res://src/systems/hero_mode_store.gd")
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
 const STAMINA := preload("res://src/systems/stamina_store.gd")
 const MONSTERS := preload("res://src/data/monster_catalog.gd")
+const GEOMETRY := preload("res://src/hero_mode/hero_weapon_geometry.gd")
 var checks := 0
 var failures := 0
 func _initialize() -> void: call_deferred("run")
@@ -26,8 +27,10 @@ func run() -> void:
 	var config := ConfigFile.new(); config.set_value("hero_loadout","battle_stage","stage_10")
 	check(SCOPE.save_config(config,STORE.PATH) == OK,"legacy selection fixture")
 	check(STORE.selected_battle_stage() == "stage_1" and not STORE.select_battle_stage("stage_2"),"legacy free maps no longer bypass progression")
-	var milestone := ConfigFile.new(); milestone.set_value("cleared","stage_10",true)
-	check(SCOPE.save_config(milestone,"user://stage_progress.cfg") == OK,"demon easy10 opens hero mode")
+	# Hero mode opens after demon easy stage 3; the apprentice needs demon stage 1 (2026-10-14).
+	var milestone := ConfigFile.new()
+	for stage_id in ["stage_1","stage_2","stage_3","stage_10"]: milestone.set_value("cleared",stage_id,true)
+	check(SCOPE.save_config(milestone,"user://stage_progress.cfg") == OK,"demon easy3 opens hero mode")
 	var entry := ticket("stage_1")
 	check(not STORE.award_run("stage_1",entry,899.0,100,true).success,"early victory rejected")
 	check(STORE.award_run("stage_1",entry,200.0,100,false).success and not STORE.hard_stage_unlocked("stage_1"),"abandonment cannot unlock hero hard")
@@ -38,10 +41,11 @@ func run() -> void:
 	check(DirAccess.remove_absolute(blocked_journal) == OK,"restore isolated transaction target")
 	var reward := STORE.award_run("stage_1",entry,900,100,true)
 	check(reward.success and int(reward.research) == MODE.WIN_RESEARCH,"victory and reward commit together")
-	check(STORE.highest_battle_stage() == 10 and STORE.battle_stage_cleared("stage_1"),"victory records easy clear and opens matching hard")
-	check(STORE.award_run("stage_1",entry,900,100,true).research == 0 and STORE.highest_battle_stage() == 10,"duplicate receipt cannot pay or unlock twice")
+	# Battlefields open one at a time through contiguous easy wins (2026-10-15).
+	check(STORE.highest_battle_stage() == 2 and STORE.battle_stage_cleared("stage_1") and STORE.hard_stage_unlocked("stage_1"),"victory records easy clear and opens matching hard")
+	check(STORE.award_run("stage_1",entry,900,100,true).research == 0 and STORE.highest_battle_stage() == 2,"duplicate receipt cannot pay or unlock twice")
 	var campaign := ConfigFile.new(); SCOPE.load_config(campaign,"user://stage_progress.cfg")
-	check(int(campaign.get_value("progress","highest_unlocked_stage",1)) == 1 and bool(campaign.get_value("cleared","stage_10",false)) and not bool(campaign.get_value("cleared","stage_1",false)),"hero wins do not advance demon campaign")
+	check(int(campaign.get_value("progress","highest_unlocked_stage",1)) == 1 and bool(campaign.get_value("cleared","stage_10",false)) and not bool(campaign.get_value("cleared","stage_4",false)),"hero wins do not advance demon campaign")
 	var original := SCOPE.guest_directory; SCOPE.guest_directory += "_other"; DirAccess.make_dir_recursive_absolute(SCOPE.guest_directory)
 	check(STORE.highest_battle_stage() == 0,"progression account isolation")
 	SCOPE.guest_directory = original
@@ -100,24 +104,46 @@ func run() -> void:
 		for id in WEAPONS.weapon_pool(hero_id):
 			if runtime.identity != null:
 				if runtime.identity.archetype == "pistol_gunner": hero.gunner_ammo = hero.gunner_magazine_size; hero.gunner_reloading = false; hero.gunner_reload_timer = 0
+				# Like ammo above: each weapon is judged alone, so earlier casts must not starve its gas.
+				if runtime.identity.archetype == "alchemist_chemical": hero.alchemist_gas = hero.alchemist_gas_max
 				for actor in runtime.identity.native_actors:
 					if is_instance_valid(actor) and actor.active: battle.recycle_projectile(actor,String(actor.get_meta("identity_pool_key","")))
 			runtime.weapon_ids.clear(); runtime.levels.clear(); runtime.cooldowns.clear()
 			for field in runtime.fields: field.left = 0.0
 			for shot in runtime.projectiles: shot.active = false
+			# Delivery emitters (2026-10-15) persist like fields; clear them so each weapon is judged alone.
+			for slot in runtime.delivery.slots: slot.left = 0.0
 			check(runtime.add(String(id)),"equips own weapon: "+String(id))
 			patterns[WEAPONS.WEAPONS[id].pattern] = true
 			var weapon: Dictionary = WEAPONS.WEAPONS[id]
 			var distance: float = float(weapon.range)*float(weapon.get("orbit_ratio",0.7)) if String(weapon.pattern) == "orbit" else 120.0
 			if String(weapon.pattern) == "poison" and bool(weapon.get("field_follow",false)): distance = minf(distance,float(weapon.range)*float(weapon.get("field_radius_ratio",0.45))*0.5)
+			# Persistent delivery emitters (2026-10-15) damage inside clampf(reach*0.32,45,180).
+			var delivery_rule: Dictionary = runtime.DELIVERY.RULES.spec(String(id),weapon)
+			var delivery_reach: float = GEOMETRY.reach(runtime.stats_for(String(id)),1,false)
+			if not delivery_rule.is_empty():
+				distance = delivery_reach*float(weapon.get("orbit_ratio",0.7)) if String(delivery_rule.mode) == "orbit" else minf(distance,clampf(delivery_reach*0.32,45.0,180.0)*0.5)
+			# Since 2026-10-16 summoner non-summon weapons cast from a rotating active summon;
+			# park the summons on the hero so the cast origin is the hero for this probe.
+			if String(weapon.owner) == "summoner_hero" and String(weapon.pattern) != "summon":
+				for key in battle.active_hero_summons:
+					var summon = battle.active_hero_summons[key]
+					if is_instance_valid(summon): summon.global_position = hero.global_position
 			target.position = hero.position+Vector2(distance,0)
 			preload("res://src/monsters/monster_runtime_common.gd").notify_forced_position_change(target)
 			await physics_frame
-			var uses_native_art: bool = runtime.native_skills.SCENES.has(String(weapon.pattern)) or String(weapon.pattern) == "summon"
+			# Summon weapons ship their own effect sequence since 2026-10-14; only native scenes reuse art.
+			var uses_native_art: bool = runtime.native_skills.SCENES.has(String(weapon.pattern))
 			check(runtime.art[id].is_empty() if uses_native_art else not runtime.art[id].is_empty(),"native art reused or shipped sequence cached: "+String(id))
 			var before: int = target.current_hp
 			runtime.tick(0.01)
 			for step in 12: runtime.tick(0.1)
+			# Delivery emitters hit after their warning/landing delay or when an orbiting orb's
+			# contact tick lines up with the target; give them up to 3 more seconds.
+			if not delivery_rule.is_empty():
+				for step in 60:
+					if target.current_hp < before: break
+					runtime.tick(0.05)
 			var native_basic: bool = runtime.identity != null and runtime.identity.spec.has("native_basic") and id == runtime.identity.starter
 			var native: bool = native_basic or String(WEAPONS.WEAPONS[id].pattern) in ["piercer","meteor","ice_pillar","singularity","summon"]
 			if native_basic:
@@ -141,8 +167,11 @@ func run() -> void:
 							check(size.x <= 116.001 and size.y <= 56.001,"piercing visual inside real collision rectangle")
 					if actor.visual is AnimatedSprite2D: check(actor.visual.sprite_frames.get_frame_count(actor.visual.animation) > 0,"native animation has real textures: "+String(id))
 					else: check(actor.visual.texture != null,"native effect has real texture: "+String(id))
+				# Baseline at the pause itself: the manual ticks above also run identity skills
+				# (e.g. the sage's periodic phase), which may legitimately hit before this point.
+				var paused_hp: int = target.current_hp
 				await create_timer(0.1).timeout
-				check(target.current_hp == before,"paused native skill cannot deal damage: "+String(id))
+				check(target.current_hp == paused_hp,"paused native skill cannot deal damage: "+String(id))
 				battle.set_external_pause(false); hero.set_physics_process(false); target.set_physics_process(false)
 				await create_timer(1.6).timeout
 				battle.set_external_pause(true)

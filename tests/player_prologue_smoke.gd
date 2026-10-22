@@ -60,6 +60,8 @@ func run() -> void:
 	var hex := Crypto.new().generate_random_bytes(16).hex_encode()
 	var id := "%s-%s-%s-%s-%s" % [hex.substr(0,8),hex.substr(8,4),hex.substr(12,4),hex.substr(16,4),hex.substr(20,12)]
 	check(SCOPE.select_account(id), "isolated account")
+	# Offline local account fixture: lift the CloudStore write fence (10-17).
+	SCOPE.write_allowed = Callable()
 	gateway.user_id = id
 	var config := ConfigFile.new()
 	config.set_value("meta", "gold", 777)
@@ -93,7 +95,8 @@ func run() -> void:
 	check(view.index == 19, "tap cannot bypass gender")
 	await shot("gender")
 	view._select_gender("female")
-	check(view.portrait.texture == PROLOGUE.FEMALE, "female portrait selected")
+	# Portraits moved to the appearance catalog on 10-17 (6e607c87).
+	check(view.portrait.texture == preload("res://src/data/demon_appearance_catalog.gd").base_portrait("female"), "female portrait selected")
 	for i in range(21, 29):
 		view.index = i
 		view._show_line()
@@ -183,7 +186,8 @@ func run() -> void:
 	check(lobby.settings_view.profile_portrait.global_position.x - card.global_position.x >= 40.0, "portrait has frame-safe left padding")
 	check(absf(lobby.settings_view.profile_label.get_global_rect().get_center().y - lobby.settings_view.profile_portrait.get_global_rect().get_center().y) <= 1.0, "portrait and profile text vertically centered")
 	var withdrawal: Button = lobby.settings_view.pages.account.get_node("AccountWithdrawal")
-	check(withdrawal.disabled and withdrawal.pressed.get_connections().is_empty(), "withdrawal presentation only, no deletion handler")
+	# Withdrawal is real since 10-11 (6c6912ba, see account_withdrawal_smoke): it only opens a confirmation, and is disabled without a ready cloud session.
+	check(withdrawal.disabled and withdrawal.pressed.is_connected(lobby.settings_view._confirm_withdrawal) and not lobby.settings_view.withdrawal_dialog.visible, "withdrawal gated behind session and confirmation")
 	await shot("account")
 	lobby.queue_free()
 	await process_frame

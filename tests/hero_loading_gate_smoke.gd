@@ -20,7 +20,8 @@ func run() -> void:
 	SCOPE.guest_directory = "user://hero_loading_"+str(Time.get_ticks_usec())
 	DirAccess.make_dir_recursive_absolute(SCOPE.guest_directory)
 	var unlocks := ConfigFile.new()
-	unlocks.set_value("hard_cleared","stage_10",true)
+	# Hero mode opens after demon easy stage 3; sage_astra needs demon easy stage 10.
+	for stage_id in ["stage_1","stage_2","stage_3","stage_10"]: unlocks.set_value("cleared",stage_id,true)
 	check(SCOPE.save_config(unlocks,"user://stage_progress.cfg") == OK,"isolated sage unlock")
 	var transition := root.get_node("SceneTransition")
 	var warmup := root.get_node("PresentationWarmup")
@@ -36,7 +37,8 @@ func run() -> void:
 			check(scene.entry_started_ms == -1,"early exit wall clock excludes loading")
 			if is_instance_valid(scene.battle):
 				paused_frames += 1
-				check(scene.battle.external_pause and not scene.battle.hero.is_physics_processing(),"hero physics frozen during monster warmup")
+				# Hero mode freezes the whole battle subtree (process_mode), not per-actor flags.
+				check(scene.battle.external_pause and not scene.battle.hero.can_process(),"hero physics frozen during monster warmup")
 				check(scene.battle.run_metrics.elapsed_seconds == 0 and scene.battle.get_population_count() == 0,"no survival time or enemy spawn consumed under overlay")
 		await process_frame
 	check(not transition.is_transitioning(),"loading completes before deadline")
@@ -53,7 +55,9 @@ func run() -> void:
 		var directory := String(WEAPONS.WEAPONS[id].get("effect_dir",""))
 		var sequence := ART.sequence(directory)
 		for texture in sequence:
-			check(texture in warmup._destination.values(),"weapon art reuses warmed texture without duplicate upload")
+			# Baked layouts wrap the warmed frame in an AtlasTexture crop (2026-10-14).
+			var source: Texture2D = texture.atlas if texture is AtlasTexture else texture
+			check(source in warmup._destination.values() or source in warmup._common.values(),"weapon art reuses warmed texture without duplicate upload")
 	var load_count: int = warmup.texture_load_count
 	await scene.prepare_presentation()
 	check(warmup.texture_load_count == load_count,"repeated prepare is idempotent")

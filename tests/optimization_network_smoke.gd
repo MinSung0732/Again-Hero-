@@ -45,6 +45,12 @@ func run() -> void:
 	var folder := SCOPE.resolve("user://save_bundle.json").get_base_dir()
 	var cloud := FixtureCloud.new()
 	root.add_child(cloud)
+	# Cloud work now runs only for the signed-in account that owns the save
+	# scope; the fixture replaces transport, so the session write fence is off.
+	var gateway := root.get_node("LoginGateway")
+	gateway.user_id = id
+	root.get_node("LocalTestMode").active = false
+	SCOPE.write_allowed = Callable()
 	cloud.ready_for_play = true
 	SCOPE.dirty = true
 	capture_flush(cloud)
@@ -77,6 +83,7 @@ func run() -> void:
 	check(cloud._valid_revision(2.0) and not cloud._valid_revision(INF) and not cloud._valid_revision(null), "JSON integer-compatible revision rules")
 	cloud.stop()
 	cloud.queue_free()
+	gateway.user_id = ""
 	var client = load("res://src/network/supabase_client.gd").new()
 	root.add_child(client)
 	client.request_completed.connect(func(tag: String, status: int, payload: Variant): replies.append([tag, status, payload]))

@@ -16,6 +16,8 @@ func run() -> void:
 	root.get_node("LoginGateway").remember_session_enabled = false
 	var hex := Crypto.new().generate_random_bytes(16).hex_encode()
 	var id := "%s-%s-%s-%s-%s" % [hex.substr(0,8),hex.substr(8,4),hex.substr(12,4),hex.substr(16,4),hex.substr(20,12)]
+	# Offline account fixture: CloudStore's session write fence is not under test.
+	SCOPE.write_allowed = Callable()
 	check(SCOPE.select_account(id), "isolated account")
 	var folder := SCOPE.resolve("user://save_bundle.json").get_base_dir()
 	var state := STORE.load_state()

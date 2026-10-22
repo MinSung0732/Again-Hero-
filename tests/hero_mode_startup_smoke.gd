@@ -23,9 +23,12 @@ func run() -> void:
 	var progress := ConfigFile.new()
 	progress.set_value("progress", "highest_unlocked_stage", 1)
 	progress.set_value("progress", "current_stage_id", "stage_1")
+	# Hero mode opens after demon easy stage 3 (2026-10-14 unlock rules).
+	for stage_id in ["stage_1","stage_2","stage_3"]: progress.set_value("cleared", stage_id, true)
 	check(SCOPE.save_config(progress, "user://stage_progress.cfg") == OK, "isolated fixture")
 	var hero_progress := ConfigFile.new()
-	for number in range(1,10): hero_progress.set_value("hero_progress","stage_%d_wins" % number,1)
+	# Battlefields unlock through contiguous hero easy wins (2026-10-15).
+	for number in range(1,10): hero_progress.set_value("hero_progress","stage_%d_easy_wins" % number,1)
 	check(SCOPE.save_config(hero_progress,"user://team_loadout.cfg") == OK,"prior hero stage clears, independent of campaign")
 	var pad_script: Script = load("res://src/hero_mode/hero_move_pad.gd")
 	check(pad_script != null and pad_script.can_instantiate(), "pad compiles without native method collision")
@@ -37,7 +40,8 @@ func run() -> void:
 	root.get_node("SceneTransition").set("_entry_options", {"stage_id":"stage_10","hero_id":"ranged_rookie", "hero_entry":ticket})
 	var scene = load("res://src/hero_mode/HeroMode.tscn").instantiate()
 	root.add_child(scene)
-	check(is_instance_valid(scene.pad) and is_instance_valid(scene.build) and is_instance_valid(scene.overlay), "all UI creation completes")
+	# The build Label became the collapsible stats panel (2026-10-14).
+	check(is_instance_valid(scene.pad) and is_instance_valid(scene.stats_panel) and is_instance_valid(scene.overlay), "all UI creation completes")
 	check(not scene.entry_ready and not scene.is_processing() and not scene.pad.enabled, "loading gates simulation and input")
 	var deadline := Time.get_ticks_msec()+45000
 	while not scene.entry_ready and Time.get_ticks_msec() < deadline:

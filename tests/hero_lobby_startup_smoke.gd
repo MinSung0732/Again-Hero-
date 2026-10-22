@@ -13,7 +13,10 @@ func check(ok: bool,message: String) -> void:
 func run() -> void:
 	root.get_node("CloudStore").stop(); root.get_node("LoginGateway").remember_session_enabled = false
 	SCOPE.select_guest(); SCOPE.guest_directory = "user://hero_lobby_smoke_"+str(Time.get_ticks_usec()); DirAccess.make_dir_recursive_absolute(SCOPE.guest_directory)
-	var progress := ConfigFile.new(); progress.set_value("progress","highest_unlocked_stage",1); progress.set_value("cleared","stage_2",true)
+	# Hero mode opens after demon easy stage 3; each hero needs the demon easy clear of
+	# its origin stage (2026-10-14). Stage 2 stays uncleared so swift_hunter is locked.
+	var progress := ConfigFile.new(); progress.set_value("progress","highest_unlocked_stage",1)
+	for stage_id in ["stage_1","stage_3"]: progress.set_value("cleared",stage_id,true)
 	for key in ["hard:stage_1","hero","rank"]: progress.set_value("mode_unlock_seen",key,true)
 	check(SCOPE.save_config(progress,"user://stage_progress.cfg") == OK,"isolated fixture")
 	var script: Script = load("res://src/ui/hero_lobby_view.gd")
@@ -24,7 +27,8 @@ func run() -> void:
 	check(lobby.stamina_view != null and lobby.main_tools_view != null and lobby.exploration_rewards_view != null and lobby.missions_view != null,"shared lobby UI installed")
 	var backdrop := lobby.get_node("LobbyBackground") as TextureRect; var original_texture: Texture2D = backdrop.texture
 	var original_team: String = lobby.team_button.text
-	lobby.main_modes_view.choose_perspective("hero")
+	# Perspective switches load through SceneTransition.prepare_in_place (2026-10-15).
+	await lobby.main_modes_view.choose_perspective("hero")
 	lobby.gameplay_settings_path = SCOPE.guest_directory+"/options.cfg"
 	var options := ConfigFile.new(); options.set_value("gameplay","camera_view_locked",false); options.save(lobby.gameplay_settings_path)
 	lobby.settings_view._sync_game()
@@ -41,16 +45,18 @@ func run() -> void:
 	lobby.team_button.pressed.emit()
 	check(lobby.current_tab == "team" and lobby.hero_lobby_view.panels.team.is_visible_in_tree(),"actual navigation opens character formation")
 	check(lobby.hero_lobby_view.hero_cards.size() == 10,"all ten hero cards displayed")
-	for id in CHARACTERS.ORDER: check(lobby.hero_lobby_view.hero_cards[id].disabled == (id != CHARACTERS.DEFAULT_HERO),"default roster lock: "+id)
+	for id in CHARACTERS.ORDER: check(lobby.hero_lobby_view.hero_cards[id].disabled == (id not in [CHARACTERS.DEFAULT_HERO,"sword_shield_hero"]),"roster lock follows demon easy clears: "+id)
 	check(lobby.hero_lobby_view.selected_hero_panel.get_index() < lobby.hero_lobby_view.hero_roster_panel.get_index(),"selected hero above scrollable roster")
 	check(lobby.hero_lobby_view.selected_hero_label.text.contains("견습마도사"),"top selected hero summary")
 	lobby.hero_lobby_view.hero_cards.swift_hunter.pressed.emit()
 	check(STORE.selected_hero() == CHARACTERS.DEFAULT_HERO,"locked card signal cannot select hero")
-	check(PROGRESS.complete_hard_stage("stage_2").success,"hard clear unlock fixture")
+	progress.set_value("cleared","stage_2",true)
+	check(SCOPE.save_config(progress,"user://stage_progress.cfg") == OK,"demon easy clear unlock fixture")
 	lobby.hero_lobby_view.rebuild("team")
-	check(not lobby.hero_lobby_view.hero_cards.swift_hunter.disabled,"hard clear unlock appears in roster")
+	check(not lobby.hero_lobby_view.hero_cards.swift_hunter.disabled,"demon easy clear unlock appears in roster")
 	var hero_progress := ConfigFile.new(); SCOPE.load_config(hero_progress,"user://team_loadout.cfg")
-	for number in range(1,10): hero_progress.set_value("hero_progress","stage_%d_wins" % number,1)
+	# Battlefields unlock through contiguous hero easy wins (2026-10-15).
+	for number in range(1,10): hero_progress.set_value("hero_progress","stage_%d_easy_wins" % number,1)
 	check(SCOPE.save_config(hero_progress,"user://team_loadout.cfg") == OK,"prior hero victories unlock Stage10")
 	lobby.selected_stage_index = 9; lobby._refresh_stage_card()
 	lobby.hero_lobby_view._select_character("swift_hunter")
@@ -61,7 +67,7 @@ func run() -> void:
 	lobby._switch_tab("main")
 	check(not lobby.enter_stage_button.disabled and not lobby.stage_selector_buttons[9].disabled,"Stage10 remains selectable with low campaign progress")
 	check(backdrop.texture != original_texture and lobby.main_tools_view.is_visible_in_tree(),"hero backdrop and shared tools preserved")
-	lobby.main_modes_view.choose_perspective("demon")
+	await lobby.main_modes_view.choose_perspective("demon")
 	lobby.settings_view._sync_game()
 	check(not lobby.settings_view.game_checks.camera_view_locked.disabled and not lobby.settings_view.game_checks.camera_view_locked.button_pressed,"demon camera preference and interaction restored")
 	check(lobby.team_button.text == original_team and not lobby.team_button.disabled and backdrop.texture == original_texture,"demon navigation and background restored")

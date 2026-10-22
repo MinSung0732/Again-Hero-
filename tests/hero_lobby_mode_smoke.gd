@@ -3,10 +3,6 @@ const VIEW := preload("res://src/ui/hero_lobby_view.gd")
 const MODES := preload("res://src/ui/lobby_main_modes_view.gd")
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
 const STORE := preload("res://src/systems/hero_mode_store.gd")
-class TestMode extends Node:
-	func has_all_heroes_unlocked() -> bool: return true
-class Warmup extends Node:
-	func prepare_hero_lobby() -> void: await get_tree().process_frame
 class Host extends Control:
 	const STAGE_PROGRESS := preload("res://src/systems/stage_progress.gd")
 	var hero_lobby_view
@@ -36,8 +32,11 @@ func _initialize() -> void: call_deferred("run")
 func run() -> void:
 	SCOPE.select_guest(); SCOPE.guest_directory = "user://lobby_mode_"+str(Time.get_ticks_usec())
 	DirAccess.make_dir_recursive_absolute(SCOPE.guest_directory)
-	var test_mode := TestMode.new(); test_mode.name = "LocalTestMode"; root.add_child(test_mode)
-	var warmup := Warmup.new(); warmup.name = "PresentationWarmup"; root.add_child(warmup)
+	# LocalTestMode/PresentationWarmup are real autoloads (a same-named fake node would be
+	# renamed and ignored), so unlock hero mode the real way: demon easy stage 3 cleared.
+	var unlocks := ConfigFile.new()
+	for stage_id in ["stage_1","stage_2","stage_3"]: unlocks.set_value("cleared",stage_id,true)
+	assert(SCOPE.save_config(unlocks,"user://stage_progress.cfg") == OK)
 	var host := Host.new(); root.add_child(host)
 	var backdrop := TextureRect.new(); backdrop.name = "LobbyBackground"; backdrop.texture = PlaceholderTexture2D.new(); host.add_child(backdrop)
 	var original := backdrop.texture
@@ -58,7 +57,9 @@ func run() -> void:
 	assert(view.bodies.shop.find_child("HeroPickupSection",true,false) != null)
 	var shop_buttons: Array[Node] = view.bodies.shop.find_children("*","Button",true,false)
 	assert(shop_buttons.size() == 5)
-	for button in shop_buttons: assert(button.disabled and button.pressed.get_connections().is_empty())
+	# GameAudio (autoload) attaches its global click sound to every Button; nothing else may.
+	var game_audio := root.get_node("GameAudio")
+	for button in shop_buttons: assert(button.disabled and button.pressed.get_connections().all(func(link): return link.callable.get_object() == game_audio))
 	var single := view.bodies.shop.find_child("SingleSummonArt",true,false) as TextureRect
 	var multi := view.bodies.shop.find_child("MultiSummonArt",true,false) as TextureRect
 	assert(single.texture != null and multi.texture != null and single.texture != multi.texture)
@@ -76,6 +77,6 @@ func run() -> void:
 	assert(not view.active and backdrop.texture == original and host.team_tab.get_child(0).visible)
 	host.hero_lobby_view = null
 	assert(not await modes._prepare_perspective("hero",STORE.owner()) and modes.perspective == "demon")
-	host.queue_free(); warmup.queue_free(); test_mode.queue_free(); await process_frame
+	host.queue_free(); await process_frame
 	print("HERO_LOBBY_MODE_SMOKE PASS: actual mode preparation, theme/nav/panels/research and missing-extension gate")
 	quit()

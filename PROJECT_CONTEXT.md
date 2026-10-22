@@ -1,3 +1,11 @@
+## 2026-10-22 — 깨진 테스트 정리 5차: 34개 복구, 기준선 6개
+
+- 병렬 세션(초월·몬스터, 로비·UI, 경제·가챠, 용사 모드 일부) 수정 테스트35개를 6병렬 재검증: 34 PASS(monster_upgrade_balance는 6병렬 부하에서만 간헐 실패, 단독 통과), NEW 실패0. 게임 코드 변경 없음. 기준선 42→6.
+- 주요 원인: 10/13 로비 캐릭터 버튼 제거·10/14 랭크전 해금 조건, 10/14 용사 모드 해금(마왕 3스테이지 쉬움), 10/06~08 버튼 연속 테두리·희귀도 프레임, 10/09 이후 몬스터 엘리트 아이콘 미제작(자리표시 유지가 의도), 10/17 닉네임 확인 후 결정·게스트 랜덤 이름·외형 카탈로그 이동, 10/11 계정 탈퇴 기능화, 10/17 클라우드 쓰기 차단, 실제 자동로드와 가짜 노드 이름 충돌.
+- fixture 전용으로 이동2: `mobile_entry_memory_smoke`(tools/build_mobile_entry_fixture.py, ffmpeg 필요), `frontier_art_export_smoke`(패킹 내보내기에서 원본 PNG 부재를 검사).
+- 게임 버그(미수정): 스태미나 안내창 확인 버튼 터치 영역이 84px가 아닌 81px — `src/ui/stamina_notice.gd`가 버튼 `custom_minimum_size.y=84`를 지정하지만 AcceptDialog의 `buttons_min_height` 테마 값이 덮어씀. 콘텐츠 미제작: 신규 몬스터(anubis·boar·cave_ant·gumiho 등) 엘리트 스킬 아이콘.
+- 남은 기준선6: 용사 모드 세션 미완료5(hero_reveal_presentation, hero_survival_enemy_balance, hero_survival_identity, practice_battle, practice_presentation), stamina_notice(게임 버그).
+
 ## 2026-10-21 — 몬스터 쉴드 소모 순서 규칙화
 
 - 변경 전: 걸린 순서와 무관한 고정 순서(자체 임시 쉴드 → 원거리/근거리 → 아서 축복 → 지원 쉴드 → 엘리트). 공용 쉴드 출처(아서·불가살·프런티어 수호·이자나미·만티코어·슈텐도지·제우스·파우와우 용기·아누비스·아발론)가 `support_shield_hp` 한 칸을 덮어쓰기/더하기로 공유해 출처·순서 정보가 없었음. 탱커6종 스폰 쉴드가 나중에 걸린 지원 쉴드보다 항상 먼저 소모됨.

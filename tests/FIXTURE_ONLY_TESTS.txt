@@ -21,6 +21,7 @@ tests/delayed_hero_skill_smoke.gd  # helper res://tests/actor_before.gd was neve
 tests/dungeon_entry_input_smoke.gd  # helper res://tests/stamina_view_before.gd was never committed (cloud-session only)
 tests/elemental_projectile_smoke.gd  # helper res://tests/elemental_projectile_before.gd was never committed (cloud-session only)
 tests/elite_spawn_policy_smoke.gd  # built by tools/build_elite_spawn_policy_fixture.py
+tests/frontier_art_export_smoke.gd  # packed-export check: asserts source PNGs are absent, only valid in an exported/packed fixture
 tests/ghost_empower_policy_smoke.gd  # built by tools/build_ghost_empower_policy_fixture.py
 tests/giant_scaling_policy_smoke.gd  # built by tools/build_giant_scaling_policy_fixture.py
 tests/heal_item_resource_smoke.gd  # built by tools/build_heal_resource_fixture.py
@@ -64,6 +65,7 @@ tests/izanami_status_receipt_smoke.gd  # helper res://tests/hero_status_receipt_
 tests/lobby_formation_startup_smoke.gd  # helper res://tests/formation_ was never committed (cloud-session only)
 tests/lobby_ui_policy_smoke.gd  # built by tools/build_nickname_fixture.py
 tests/manticore_receipt_special_smoke.gd  # helper res://tests/manticore_receipt_helper.gd was never committed (cloud-session only)
+tests/mobile_entry_memory_smoke.gd  # built by tools/build_mobile_entry_fixture.py (fake PresentationWarmup and destination scenes; needs ffmpeg)
 tests/mode_progression_smoke.gd  # built by tools/build_mode_progression_fixture.py
 tests/monster_scaling_policy_smoke.gd  # built by tools/build_monster_scaling_policy_fixture.py
 tests/multicast_lifetime_smoke.gd  # helper res://tests/multi_before.gd was never committed (cloud-session only)

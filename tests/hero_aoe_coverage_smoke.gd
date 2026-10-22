@@ -18,6 +18,9 @@ func run() -> void:
 	for id in DATA.WEAPONS:
 		var pattern := String(DATA.WEAPONS[id].pattern)
 		if pattern not in ["slash","beam","orbit","nova","frost","guard","heal","poison"]: continue
+		# Persistent delivery emitters (2026-10-15) resolve over time; covered below with the
+		# real Battle grid and by hero_survival_variety/hero_weapon_remake.
+		if not RUNTIME.DELIVERY.RULES.spec(String(id),DATA.WEAPONS[id]).is_empty(): continue
 		for rank in [1,10]:
 			for evolution in [false,true]:
 				fighter.hero_id = String(DATA.WEAPONS[id].owner)
@@ -61,14 +64,15 @@ func run() -> void:
 		if arena.actors[index].current_hp < 1000000: chained += 1
 	check(chained == int(DATA.WEAPONS.ranged_rookie_star_wand.base_hits),"targeted chain retains its authored count")
 	arena.queue_free(); await process_frame
-	# Real Battle registry/grid and real Hero: crowded following field receives all hits.
+	# Real Battle registry/grid and real Hero: a crowded delivery sigil receives all hits.
+	# Since 2026-10-15 rune_ring is a fixed sigil emitter (warning, then interval ticks).
 	var battle = load("res://src/battle/Battle.tscn").instantiate()
 	battle.hero_player_mode = true; battle.hero_player_stage = "stage_1"; root.add_child(battle); battle.set_external_pause(true)
 	var hero = battle.hero; var actual = hero.player_weapons
 	var id := "ranged_rookie_rune_ring"
-	check(actual.add(id),"actual hero learns the following field")
+	check(actual.add(id),"actual hero learns the sigil field")
 	var stats: Dictionary = actual.stats_for(id)
-	var radius: float = GEOMETRY.reach(stats,1,false)*float(stats.get("field_radius_ratio",0.45))
+	var radius: float = clampf(GEOMETRY.reach(stats,1,false)*0.32,45.0,180.0)
 	var targets: Array = []
 	for index in 72:
 		var actor = battle._spawn_monster("slime",hero.position+Vector2(radius*0.7+index*0.01,0),0.0,false,{})
@@ -76,7 +80,12 @@ func run() -> void:
 			actor.set_physics_process(false); actor.max_hp = 1000000; actor.current_hp = 1000000; targets.append(actor)
 	check(targets.size() == 72,"72 actual actors registered")
 	await physics_frame
-	actual._cast(id); actual.tick(0.01)
+	actual._cast(id)
+	var sigil: Dictionary = {}
+	for slot in actual.delivery.slots:
+		if slot.id == id and float(slot.left) > 0.0: sigil = slot
+	check(not sigil.is_empty() and is_equal_approx(float(sigil.radius),radius),"sigil footprint uses delivery radius")
+	actual.tick(float(sigil.get("warning",0.0))+0.01,false); actual.tick(0.01,false)
 	for actor in targets: check(actor.current_hp < 1000000,"real grid field includes every crowded actor")
 	battle.queue_free(); await process_frame
 	print("HERO_AOE_COVERAGE_SMOKE checks=",checks," failures=",failures)
