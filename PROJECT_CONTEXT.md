@@ -1,3 +1,9 @@
+## 2026-10-22 — 사용하지 않는 코드 파일 삭제
+
+- 삭제: `src/ui/zeus_assembled_portrait.gd`·`src/ui/zeus_assembled_reveal.gdshader`(10/07 조립형 제우스 컷인, 같은 날 e39bdfae 삼각형 컷인으로 교체된 뒤 참조 없음), `src/monsters/bomb_rat_visual.gd`(09/22 ada93969 이후 참조 없음, 폭탄쥐는 bomb_rat.gd 내부 처리) 및 각 .uid. 경로·클래스명·uid 참조 0건 확인.
+- 유지(사용자 결정): 에디터용 몬스터 미리보기 씬, 에셋(동적 경로 사용 확인으로 실제 미사용 확정분 없음).
+- 검증: 폭탄쥐·제우스 관련 테스트47개 NEW 실패0.
+
 ## 2026-10-22 — 스태미나 안내창 확인 버튼 터치 영역 84px 복구
 
 - 버그: `src/ui/stamina_notice.gd`가 확인 버튼 `custom_minimum_size.y = 84`를 지정하지만 AcceptDialog가 테마 상수 `buttons_min_height`로 버튼 최소 크기를 다시 설정해 실제 높이 81px.
