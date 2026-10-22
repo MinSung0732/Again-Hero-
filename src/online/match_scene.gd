@@ -7,6 +7,7 @@ const PAD := preload("res://src/hero_mode/hero_move_pad.gd")
 const MONSTERS := preload("res://src/data/monster_catalog.gd")
 const LOCAL_ACCESS := preload("res://src/online/local_test_access.gd")
 const LOADING := preload("res://src/online/match_loading_view.gd")
+const RANKED := preload("res://src/data/ranked_rules.gd")
 var loading
 var local_preparing := false
 var waiting_for_start := false
@@ -18,6 +19,9 @@ var metrics_left := 0.0
 var client
 var view
 var status: Label
+var ranking_row: HBoxContainer
+var ranking_icon: TextureRect
+var ranking_label: Label
 var action_notice: Label
 var choices: VBoxContainer
 var action_row: HBoxContainer
@@ -46,9 +50,14 @@ func _ready() -> void:
 	initial_local_test = LocalTestMode.is_online_match_allowed()
 	var rows := VBoxContainer.new(); add_child(rows); rows.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	rows.offset_left = 24; rows.offset_right = -24; rows.offset_top = 35; rows.offset_bottom = -30
-	_label(rows,"랭킹 매칭 · 연결 테스트",34)
-	_label(rows,"견습마도사 ↔ 마왕 · 3분 생존 · 점수/보상/스테미너 변동 없음",22)
+	_label(rows,"랭킹 매칭",34)
+	_label(rows,"견습마도사 ↔ 마왕 · 3분 생존 · 보상/스테미너 변동 없음",22)
 	status = _label(rows,"마왕으로 대기합니다." if role == "demon" else "용사로 대기합니다.",26)
+	ranking_row = HBoxContainer.new(); ranking_row.visible = false; rows.add_child(ranking_row)
+	ranking_icon = TextureRect.new(); ranking_icon.custom_minimum_size = Vector2(56,56)
+	ranking_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; ranking_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	ranking_row.add_child(ranking_icon)
+	ranking_label = _label(ranking_row,"",22)
 	action_notice = _label(rows,"용사: WASD/방향키 또는 전장 드래그 · 마왕: 몬스터 선택 후 전장 터치",22)
 	endpoint = LineEdit.new(); endpoint.placeholder_text = "대전 서버 주소 (wss://...)"; endpoint.text = CONFIG.endpoint()
 	endpoint.custom_minimum_size.y = 72; endpoint.add_theme_font_size_override("font_size",25); rows.add_child(endpoint)
@@ -119,6 +128,7 @@ func _join() -> void:
 	elif LoginGateway.user_id.is_empty() or LoginGateway.access_token.is_empty(): status.text = "Google 또는 카카오 로그인이 필요합니다."; return
 	if not RULES.endpoint_valid(endpoint.text.strip_edges()): status.text = "공용 대전 서버 주소(wss://)를 입력해 주세요."; return
 	ended = false; last_tick = -1; revision = -1; connection_waiting = false
+	ranking_row.hide()
 	view.clear_state()
 	if pad != null: pad.enabled = true; pad.reset()
 	var error: int = client.join_local_test(endpoint.text.strip_edges(),test_code.text.strip_edges(),role) if initial_local_test else client.join(endpoint.text.strip_edges(),LoginGateway.access_token,role)
@@ -174,7 +184,17 @@ func _event(event: Dictionary) -> void:
 			ended = true; movement = Vector2.ZERO; connection_waiting = false; queue_button.disabled = false
 			_set_controls(false)
 			for child in choices.get_children(): child.queue_free()
-			status.text = "대전 종료 · "+("무효 경기" if String(event.get("winner","")).is_empty() else "승리" if event.winner == role else "패배")+"\n테스트 경기 · 점수/보상 변동 없음"
+			status.text = "대전 종료 · "+("무효 경기" if String(event.get("winner","")).is_empty() else "승리" if event.winner == role else "패배")
+			var ranking: Variant = event.get("ranking",null)
+			if event.get("rated",false) == true and ranking is Dictionary and RULES.number(ranking.get("mmr",null)) and RULES.number(ranking.get("delta",null)):
+				var tier_id := String(ranking.get("tier",""))
+				var icon := RANKED.icon_path(tier_id)
+				if not icon.is_empty() and ResourceLoader.exists(icon):
+					ranking_icon.texture = load(icon)
+					ranking_label.text = "MMR %s%d → %d · %s" % ["+" if int(ranking.delta) >= 0 else "",int(ranking.delta),int(ranking.mmr),RANKED.display_name(tier_id)]
+					ranking_row.show()
+			if not ranking_row.visible:
+				status.text += "\n점수 변동 없음"
 			if pad != null: pad.enabled = false; pad.reset()
 		"action":
 			if event.get("match","") == client.match_id and event.get("message",null) is String: action_notice.text = event.message

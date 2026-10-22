@@ -5,6 +5,9 @@ const AUTH := preload("res://src/online/auth_verifier.gd")
 const LOCAL_ACCESS := preload("res://src/online/local_test_access.gd")
 const ROOM := preload("res://src/online/battle_room.gd")
 const CODEC := preload("res://src/online/snapshot_codec.gd")
+const RANKED := preload("res://src/data/ranked_rules.gd")
+const RESULT_STORE := preload("res://src/online/ranked_result_store.gd")
+var result_store
 var metrics = preload("res://src/online/network_metrics.gd").new()
 var metrics_report_at := -1
 var metrics_cache := {}
@@ -31,6 +34,7 @@ func start(port: int,bind: String = "127.0.0.1",development_auth: bool = false,i
 	bind_address = bind; test_auth = development_auth
 	local_test_ticket = invitation
 	auth = AUTH.new(); add_child(auth)
+	result_store = RESULT_STORE.new(); add_child(result_store)
 	return listener.listen(port,bind)
 func _process(delta: float) -> void:
 	metrics.tick_rates()
@@ -69,7 +73,7 @@ func _process(delta: float) -> void:
 		var match_data: Dictionary = rooms[key]; var room = match_data.node
 		_expire_disconnections(key,Time.get_ticks_msec())
 		if not room.running and not room.finished and not room.connection_paused and (Time.get_ticks_msec()-int(match_data.created))/1000.0 > RULES.READY_TIMEOUT: room.finish("","ready_timeout")
-		if room.finished and (Time.get_ticks_msec()-int(match_data.ended))/1000.0 > RULES.RESULT_RETENTION: remove_rooms.append(key)
+		if room.finished and not bool(match_data.get("result_pending",false)) and (Time.get_ticks_msec()-int(match_data.ended))/1000.0 > RULES.RESULT_RETENTION: remove_rooms.append(key)
 	for key in remove_rooms:
 		for id in rooms[key].members: _drop(id)
 		for seat in rooms[key].seats.values():
@@ -183,7 +187,7 @@ func _match_waiters() -> void:
 		seats[peer.role] = {"uid":peer.uid,"peer":id,"resume_token":resume_token,"deadline":0}
 		reserved_uids[peer.uid] = key
 		resume_tokens[resume_token] = {"match":key,"role":peer.role}
-	rooms[key] = {"node":room,"members":pair,"seats":seats,"codec":CODEC.new(),"created":Time.get_ticks_msec(),"ended":0}
+	rooms[key] = {"node":room,"members":pair,"seats":seats,"codec":CODEC.new(),"created":Time.get_ticks_msec(),"ended":0,"result_started":false,"result_pending":false,"rated_result":{}}
 	room.completed.connect(_completed.bind(key)); room.prepare()
 	if room.finished:
 		for id in pair: _reject(id,"battle_load_failed")
@@ -221,7 +225,7 @@ func _resume(id: int,message: Dictionary) -> void:
 	_sync_connection_state(key)
 	if match_data.node.is_prepared:
 		var state: Dictionary = match_data.node.snapshot(); state["match"] = key; _send_encoded(id,_encode_state(key,state))
-	if match_data.node.finished: _send_result(id,key)
+	if match_data.node.finished and not bool(match_data.get("result_pending",false)): _send_result(id,key)
 func _sync_connection_state(key: String) -> void:
 	if not rooms.has(key) or rooms[key].node.finished: return
 	var match_data: Dictionary = rooms[key]
@@ -243,12 +247,43 @@ func _expire_disconnections(key: String,now: int) -> void:
 	if expired: match_data.node.finish(connected_role,"both_disconnected" if connected_role.is_empty() else "reconnect_timeout")
 func _send_result(id: int,key: String) -> void:
 	var room = rooms[key].node
-	_send(id,{"op":"result","match":key,"winner":room.winner,"reason":room.reason,"rated":false,"tick":room.tick,"feedback":room.feedback.snapshot(),"feedback_cursor":room.feedback.sequence})
+	var ranked: Dictionary = rooms[key].get("rated_result",{})
+	var role: String = String(peers[id].role) if peers.has(id) else ""
+	_send(id,{"op":"result","match":key,"winner":room.winner,"reason":room.reason,"rated":not ranked.is_empty(),"ranking":ranked.get(role,{}),"tick":room.tick,"feedback":room.feedback.snapshot(),"feedback_cursor":room.feedback.sequence})
 func _completed(winner: String,reason: String,key: String) -> void:
 	if not rooms.has(key): return
+	if bool(rooms[key].get("result_pending",false)): return
 	rooms[key].ended = Time.get_ticks_msec()
 	for seat in rooms[key].seats.values():
 		if reserved_uids.get(seat.uid,"") == key: reserved_uids.erase(seat.uid)
+	if _result_can_record(rooms[key],winner,reason):
+		rooms[key].result_started = true; rooms[key].result_pending = true
+		_record_result(key,winner,reason)
+		return
+	for id in rooms[key].members: _send_result(id,key)
+
+func _result_can_record(match_data: Dictionary,winner: String,reason: String) -> bool:
+	if bool(match_data.get("result_started",false)) or result_store == null: return false
+	var seats: Dictionary = match_data.get("seats",{})
+	if not seats.has("demon") or not seats.has("hero"): return false
+	return RANKED.rated_allowed(test_auth,local_test_ticket,winner,reason,result_store.configured(),
+		String(seats.demon.uid),String(seats.hero.uid))
+
+func _record_result(key: String,winner: String,reason: String) -> void:
+	var match_data: Dictionary = rooms[key]
+	var room = match_data.node
+	var elapsed := 0.0
+	var hp_ratio := 0.0
+	if is_instance_valid(room.battle) and is_instance_valid(room.battle.hero):
+		elapsed = float(room.battle.run_metrics.elapsed_seconds)
+		hp_ratio = float(room.battle.hero.current_hp) / maxf(1.0,float(room.battle.hero.max_hp))
+	var margins: Dictionary = RANKED.margins(winner,reason,elapsed,RULES.DURATION,hp_ratio)
+	var result: Dictionary = await result_store.record(key,String(match_data.seats.demon.uid),
+		String(match_data.seats.hero.uid),winner,reason,margins)
+	if not rooms.has(key): return
+	rooms[key].rated_result = result
+	rooms[key].result_pending = false
+	rooms[key].ended = Time.get_ticks_msec()
 	for id in rooms[key].members: _send_result(id,key)
 static func _encode(message: Dictionary) -> String:
 	var encoded := JSON.stringify(message)

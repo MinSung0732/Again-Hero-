@@ -7,6 +7,8 @@ const UNLOCK_DATA := preload("res://src/data/mode_unlock_catalog.gd")
 const UNLOCK_FEEDBACK := preload("res://src/ui/mode_unlock_feedback.gd")
 const HERO_STORE := preload("res://src/systems/hero_mode_store.gd")
 const CHARACTERS := preload("res://src/data/hero_character_catalog.gd")
+const RANKED := preload("res://src/data/ranked_rules.gd")
+const SUPABASE := preload("res://src/network/supabase_client.gd")
 const ART := "res://assets/art/UI/main_modes/"
 var idle_style: StyleBoxTexture
 var active_style: StyleBoxTexture
@@ -22,6 +24,11 @@ var mode_row: HBoxContainer
 var demon_button: Button
 var hero_button: Button
 var ranked_button: Button
+var ranked_profile_row: HBoxContainer
+var ranked_profile_icon: TextureRect
+var ranked_profile_label: Label
+var ranked_profile_client
+var ranked_profile_owner := ""
 var easy_button: Button
 var hard_button: Button
 var character_button: Button
@@ -49,7 +56,9 @@ func install(host) -> void:
 	mode_row = HBoxContainer.new()
 	mode_row.name = "MainModeSelector"
 	mode_row.add_theme_constant_override("separation", 12)
-	bottom.add_child(mode_row)
+	var mode_column := VBoxContainer.new()
+	bottom.add_child(mode_column)
+	mode_column.add_child(mode_row)
 	mode_row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var sides := HBoxContainer.new()
 	sides.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -58,6 +67,16 @@ func install(host) -> void:
 	demon_button = button(sides, "마왕", func(): choose_perspective("demon"))
 	hero_button = button(sides, "용사", func(): choose_perspective("hero"))
 	ranked_button = button(mode_row, "랭킹 매칭", toggle_ranked)
+	ranked_profile_row = HBoxContainer.new(); ranked_profile_row.visible = false
+	mode_column.add_child(ranked_profile_row)
+	ranked_profile_icon = TextureRect.new(); ranked_profile_icon.custom_minimum_size = Vector2(42,42)
+	ranked_profile_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	ranked_profile_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	ranked_profile_row.add_child(ranked_profile_icon)
+	ranked_profile_label = Label.new(); ranked_profile_label.add_theme_font_size_override("font_size",20)
+	ranked_profile_row.add_child(ranked_profile_label)
+	ranked_profile_client = SUPABASE.new(); lobby.add_child(ranked_profile_client)
+	ranked_profile_client.request_completed.connect(_on_ranked_profile)
 	notice = AcceptDialog.new()
 	notice.title = "준비 중"
 	skin_dialog(notice)
@@ -176,8 +195,34 @@ func toggle_ranked() -> void:
 		refresh()
 		return
 	ranked = not ranked
+	if ranked: _request_ranked_profile()
+	else: ranked_profile_row.hide()
 	lobby._close_stage_selector()
 	lobby._refresh_stage_card()
+
+# Autoload looked up by path: the bare identifier fails when this script is
+# compiled outside the running game (tests, previews).
+func _gateway() -> Node:
+	return lobby.get_node("/root/LoginGateway")
+
+func _request_ranked_profile() -> void:
+	ranked_profile_row.hide()
+	ranked_profile_owner = _gateway().user_id
+	if ranked_profile_owner.is_empty() or _gateway().access_token.is_empty(): return
+	ranked_profile_client.set_access_token(_gateway().access_token)
+	if ranked_profile_client.request_json("/rest/v1/rpc/get_my_ranked_profile",HTTPClient.METHOD_POST,{},"ranked_profile") != OK:
+		ranked_profile_row.hide()
+
+func _on_ranked_profile(tag: String,status_code: int,payload: Variant) -> void:
+	if tag != "ranked_profile" or not ranked or ranked_profile_owner != _gateway().user_id: return
+	ranked_profile_row.hide()
+	if status_code != 200 or not payload is Dictionary or not (payload.get("mmr",null) is int or payload.get("mmr",null) is float): return
+	var tier_id := String(payload.get("tier",""))
+	var icon_path := RANKED.icon_path(tier_id)
+	if icon_path.is_empty() or not ResourceLoader.exists(icon_path): return
+	ranked_profile_icon.texture = load(icon_path)
+	ranked_profile_label.text = "MMR %d · %s · 서버 %d위" % [int(payload.mmr),RANKED.display_name(tier_id),int(payload.get("server_rank",0))]
+	ranked_profile_row.show()
 
 func change_character(_direction: int) -> void:
 	# Character selection belongs to the formation tab, including ranked previews.
@@ -218,6 +263,9 @@ func refresh() -> void:
 	# locked context. UI-disabled states and direct handlers both enforce gates.
 	if not UNLOCKS.unlocked("rank", current_stage()):
 		ranked = false
+	if ranked_profile_owner != _gateway().user_id:
+		ranked_profile_row.hide()
+		if ranked: _request_ranked_profile()
 	if not UNLOCKS.unlocked("hero", current_stage()):
 		perspective = "demon"
 	if perspective == "hero":
@@ -241,6 +289,7 @@ func refresh() -> void:
 		hard_button.tooltip_text = UNLOCK_DATA.HARD_NOTICE+"\n"+String(UNLOCK_DATA.RULES.hard.condition)
 	schedule_unlock()
 	difficulty_row.visible = not ranked
+	if not ranked: ranked_profile_row.hide()
 	var section: Control = lobby.get_node("SafeArea/Layout/Content/MainTab/StageLayout/SectionHeaderBox")
 	section.get_node("SectionTitle").text = "랭킹 매칭" if ranked else "침입자 기록"
 	section.get_node("SectionSubtitle").text = "역할을 선택하세요 · 견습마도사 고정 연결 테스트" if ranked else "대상 용사를 선택하고, 던전에 입장하세요."

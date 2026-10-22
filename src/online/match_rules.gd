@@ -1,6 +1,6 @@
 extends RefCounted
-## Separate versioned experiment; no rating or account-reward writer.
-const VERSION := 7
+## Ranked results require matching protocol 8 server and client.
+const VERSION := 8
 const ID := "duel_smoke_v1"
 const HERO := "ranged_rookie"
 const ROSTER := ["slime","spider","orc","bomb_rat","skeleton_archer"]

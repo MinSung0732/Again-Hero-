@@ -1,0 +1,57 @@
+extends RefCounted
+## Shared display/rating rules; the database migration stores the same thresholds.
+const BADGES_PATH := "res://src/data/ranked_badges.json"
+static var _data: Dictionary = {}
+
+static func data() -> Dictionary:
+	if _data.is_empty():
+		var file := FileAccess.open(BADGES_PATH, FileAccess.READ)
+		if file != null:
+			var parsed: Variant = JSON.parse_string(file.get_as_text())
+			if parsed is Dictionary: _data = parsed
+	return _data
+
+static func tier(mmr: int, server_rank: int = 0) -> String:
+	var rules := data()
+	var thresholds: Array = rules.get("mmr_thresholds", [])
+	var found := ""
+	for entry in thresholds:
+		if mmr >= int(entry.get("mmr", 0)): found = String(entry.get("id", ""))
+		else: break
+	if found == "demon_lord" and server_rank > 0 and server_rank <= int(rules.get("hero_qualification", {}).get("top_count", 0)):
+		return "hero"
+	return found
+
+static func icon_path(tier_id: String) -> String:
+	for asset in data().get("assets", []):
+		if String(asset.get("id", "")) == tier_id: return String(asset.get("icon_path", ""))
+	return ""
+
+static func display_name(tier_id: String) -> String:
+	for asset in data().get("assets", []):
+		if String(asset.get("id", "")) == tier_id: return String(asset.get("display_name", tier_id))
+	return tier_id
+
+static func delta(won: bool, margin: float) -> int:
+	var scoring: Dictionary = data().get("scoring", {})
+	var part: Dictionary = scoring.get("win" if won else "loss", {})
+	var amount := int(round(float(part.get("base", 0)) + float(part.get("margin_scale", 0)) * clampf(margin, 0.0, 1.0)))
+	return amount if won else -amount
+
+static func margins(winner: String, reason: String, elapsed: float, duration: float, hero_hp_ratio: float) -> Dictionary:
+	if winner not in ["demon", "hero"]: return {}
+	if reason in ["opponent_left", "reconnect_timeout"]:
+		var disconnect: Dictionary = data().get("scoring", {}).get("disconnect", {})
+		var winner_margin := float(disconnect.winner_margin)
+		var leaver_margin := float(disconnect.leaver_margin)
+		return {"demon": winner_margin if winner == "demon" else leaver_margin, "hero": winner_margin if winner == "hero" else leaver_margin}
+	# One decisiveness value per match: a decisive result gives the winner more
+	# (+10..30) and costs the loser more (-10..25); a close one moves both less.
+	var decisive := clampf(1.0 - elapsed / maxf(duration, 0.001), 0.0, 1.0) if winner == "demon" else clampf(hero_hp_ratio, 0.0, 1.0)
+	return {"demon": decisive, "hero": decisive}
+
+static func rated_allowed(test_auth: bool, local_test_ticket: String, winner: String, reason: String, has_credentials: bool, demon_uid: String, hero_uid: String) -> bool:
+	return not test_auth and local_test_ticket.is_empty() and has_credentials and winner in ["demon", "hero"] and reason not in ["practice", "preparation_cancelled", "ready_timeout", "peer_left", "both_disconnected", "battle_load_failed"] and _uid_valid(demon_uid) and _uid_valid(hero_uid) and demon_uid != hero_uid
+
+static func _uid_valid(uid: String) -> bool:
+	return uid.length() == 36 and uid[8] == "-" and uid[13] == "-" and uid[18] == "-" and uid[23] == "-" and uid.replace("-", "").is_valid_hex_number(false)

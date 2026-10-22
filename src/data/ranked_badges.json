@@ -13,7 +13,27 @@
     "hero"
   ],
   "initial_mmr": 1000,
-  "mmr_thresholds": null,
+  "mmr_thresholds": [
+    {"mmr": 0, "id": "bronze_1"},
+    {"mmr": 1100, "id": "bronze_2"},
+    {"mmr": 1200, "id": "bronze_3"},
+    {"mmr": 1300, "id": "bronze_4"},
+    {"mmr": 1400, "id": "silver_1"},
+    {"mmr": 1500, "id": "silver_2"},
+    {"mmr": 1600, "id": "silver_3"},
+    {"mmr": 1700, "id": "silver_4"},
+    {"mmr": 1800, "id": "gold_1"},
+    {"mmr": 1900, "id": "gold_2"},
+    {"mmr": 2000, "id": "gold_3"},
+    {"mmr": 2100, "id": "gold_4"},
+    {"mmr": 2200, "id": "diamond_1"},
+    {"mmr": 2300, "id": "diamond_2"},
+    {"mmr": 2400, "id": "diamond_3"},
+    {"mmr": 2500, "id": "diamond_4"},
+    {"mmr": 2600, "id": "demon_lord"}
+  ],
+  "scoring": {"win": {"base": 10, "margin_scale": 20}, "loss": {"base": 10, "margin_scale": 15}, "minimum_mmr": 0,
+    "disconnect": {"winner_margin": 0.5, "leaver_margin": 1.0}},
   "hero_qualification": {
     "authority": "server",
     "eligible_tier": "demon_lord",
