@@ -86,6 +86,7 @@ func apply(role: String,kind: String,argument: Variant) -> bool:
 		if accepted and battle.hero.player_augment_candidates.is_empty(): choice = []; choice_revision += 1
 		return accepted
 	if role == "demon" and kind == "summon" and argument is Dictionary:
+		# RULES.SUMMON_PLACEMENT: 랭크전 소환은 좌표를 지정한 수동 배치만 허용.
 		if not argument.get("id",null) is String: return false
 		var id: String = argument.id; var point: Variant = argument.get("point",null)
 		if id not in roster or not RULES.point(point): return false

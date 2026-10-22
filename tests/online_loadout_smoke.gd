@@ -4,6 +4,7 @@ const HEROES := preload("res://src/data/hero_character_catalog.gd")
 const HERO_STORE := preload("res://src/systems/hero_mode_store.gd")
 const MONSTERS := preload("res://src/data/monster_catalog.gd")
 const ROOM := preload("res://src/online/battle_room.gd")
+const RULES := preload("res://src/online/match_rules.gd")
 const SERVER := preload("res://src/online/match_server.gd")
 var checks := 0
 func check(ok: bool,message: String) -> void:
@@ -31,6 +32,13 @@ func run() -> void:
 	room.prepare()
 	check(room.is_prepared and room.battle.hero_player_hero_id == other_hero and room.battle.online_match_rules.roster == demon.team_ids,"battle loadout applied")
 	check(room.battle.permanent_research_levels.is_empty() and room.battle.current_hero_profile.get("hero_research_bonuses",{}).is_empty(),"online research absent")
+	check(RULES.SUMMON_PLACEMENT == "manual","ranked summon placement rule")
+	room.start()
+	check(not room.apply("demon","summon",{"id":"slime"}),"summon without point rejected")
+	check(not room.battle.try_summon("slime"),"online automatic summon rejected")
+	check(not room.battle.try_summon_transcendent(),"online automatic transcendence rejected")
+	var spawn: Vector2 = room.battle.hero.position + Vector2(300,0)
+	check(room.apply("demon","summon",{"id":"slime","point":[spawn.x,spawn.y]}),"manual summon accepted")
 	var server = SERVER.new(); root.add_child(server)
 	check(not server._loadout_verification_required(),"missing service key skips verification")
 	var seat_data := {"seats":{"demon":{"uid":"demon"},"hero":{"uid":"hero"}},"rated":false}

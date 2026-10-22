@@ -1325,6 +1325,8 @@ func set_allowed_monster_ids(monster_ids: Array) -> void:
 	loadout_restriction_enabled = not allowed_monster_ids.is_empty()
 
 func try_summon(monster_type: String) -> bool:
+	if online_match_mode:
+		return false
 	if not battle_command_router.supports_local_execution():
 		return false
 	if not command_routing_enabled:
@@ -1339,6 +1341,8 @@ func try_summon_at_position(monster_type: String, spawn_position: Vector2) -> bo
 	return battle_command_router.submit_local(BATTLE_SESSION.Command.SUMMON_AT, monster_type, spawn_position)
 
 func try_summon_transcendent() -> bool:
+	if online_match_mode:
+		return false
 	if not battle_command_router.supports_local_execution():
 		return false
 	if not command_routing_enabled:
