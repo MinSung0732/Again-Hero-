@@ -8,7 +8,7 @@ func check(ok: bool,message: String) -> void:
 	if not ok: push_error(message); quit(1); assert(ok,message)
 func _initialize() -> void: run.call_deferred()
 func run() -> void:
-	check(RULES.VERSION == 12,"server and client protocol 12")
+	check(RULES.VERSION == 13,"server and client protocol 13")
 	var room = ROOM.new(); root.add_child(room); room.prepare(); room.start()
 	room.battle.process_mode = Node.PROCESS_MODE_DISABLED
 	var runtime = room.battle.hero.player_weapons
@@ -38,8 +38,17 @@ func run() -> void:
 	var demon_state: Dictionary = room.snapshot("demon")
 	check(hero_state.hero_inventory.weapons.size() > 0 and hero_state.hero_inventory.rerolls_left == 0,"own snapshot has weapon levels and rerolls")
 	check(hero_state.hero_inventory.has("passives") and hero_state.hero_inventory.has("exp") and hero_state.hero_inventory.has("level"),"own snapshot has passives and level EXP")
-	check(hero_state.chest_receipts.size() == 2 and not demon_state.has("chest_receipts") and not demon_state.has("hero_inventory"),"private rewards and build never reach demon")
+	check(demon_state.has("hero_build") and demon_state.hero_build.weapons == hero_state.hero_inventory.weapons and demon_state.hero_build.passives == hero_state.hero_inventory.passives and demon_state.hero_build.level == hero_state.hero_inventory.level,"demon sees public weapon, passive, and hero level")
+	check(demon_state.hero_build.augments is Array and demon_state.hero_build.augments.is_empty(),"unselected augments are not public")
+	check(demon_state.hero_build.keys().size() == 4,"public build contains only approved fields")
+	check(not demon_state.has("chest_receipts") and not demon_state.has("hero_inventory") and not demon_state.has("hero_holds") and not demon_state.has("hero_hold_count"),"private chest and held choice state never reach demon")
+	check(not demon_state.hero_build.has("augment_holds") and not demon_state.hero_build.has("hold_count") and not demon_state.hero_build.has("rerolls_left") and not demon_state.hero_build.has("reroll_limit") and not demon_state.hero_build.has("chest_receipts"),"public build excludes held choices, count, rerolls and chest details")
+	check(JSON.stringify(demon_state).to_utf8_buffer().size() <= RULES.MAX_SNAPSHOT,"public build fits snapshot limit")
+	var chosen: Dictionary = room.hero_holds[0].candidates[0]
+	check(room.apply("hero","choose",{"number":number,"id":String(chosen.id)}),"held augment can be selected")
+	check(String(chosen.name) in room.snapshot("demon").hero_build.augments,"selected augment name reaches demon")
 	check(JSON.stringify(GUIDE.sections()).contains("상자 골드 없음") and JSON.stringify(GUIDE.sections()).contains("새로고침 3회"),"ranked guide explains chest and rerolls")
+	check(JSON.stringify(GUIDE.sections()).contains("보관 중인 선택지는 비공개"),"ranked guide explains public build boundary")
 	check(not room.battle.external_pause and room.running,"reroll and HUD do not pause combat")
 	room.queue_free()
 	await create_timer(0.2).timeout

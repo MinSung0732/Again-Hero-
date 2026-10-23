@@ -1,6 +1,6 @@
 extends RefCounted
-## Hero chest, reroll, and private inventory require matching protocol 12 peers.
-const VERSION := 12
+## Public hero build and private held choices require matching protocol 13 peers.
+const VERSION := 13
 const SUMMON_PLACEMENT := "manual" # 랭크전 마왕 소환은 수동 배치만, 자동 배치 금지.
 const ID := "duel_smoke_v1"
 const HERO := "ranged_rookie"

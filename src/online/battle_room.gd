@@ -22,6 +22,9 @@ var choice_revision := 0
 var choice: Array = []
 var hero_holds: Array = []
 var chest_receipts: Array = []
+var selected_hero_augments: Array[String] = []
+var public_hero_build: Dictionary = {}
+var public_hero_build_dirty := true
 var demon_holds: Array = []
 var next_offer_number := 0
 var tick := 0
@@ -67,6 +70,10 @@ func prepare() -> void:
 
 	battle.battle_finished.connect(func(_message: String,demon_won: bool): finish("demon" if demon_won else "hero",_message))
 	battle.hero.player_augment_requested.connect(_choice)
+	battle.hero.augment_selected.connect(func(_level: int,_candidates: Array,chosen_name: String,_reason: String,_summary: String):
+		selected_hero_augments.append(chosen_name)
+		public_hero_build_dirty = true)
+	battle.hero.progression_changed.connect(func(_level: int,_exp: int,_next: int): public_hero_build_dirty = true)
 	battle.hero_chest_opened.connect(_chest_opened)
 	battle.summon_result.connect(func(_id: String,_accepted: bool,message: String): last_action_message = message)
 	is_prepared = true
@@ -89,6 +96,7 @@ func _chest_opened() -> void:
 	var runtime = battle.hero.player_weapons
 	var receipt: Dictionary = runtime.roll_chest()
 	if not runtime.apply_chest(receipt): return
+	public_hero_build_dirty = true
 	# The server applies the reward before sending a display-only receipt.
 	chest_receipts.append({"serial":int(receipt.serial),"id":String(receipt.id),"kind":String(receipt.kind),"name":String(receipt.name),"description":String(receipt.description),"evolution":bool(receipt.evolution)})
 	if chest_receipts.size() > RULES.CHEST_HISTORY_LIMIT: chest_receipts.pop_front()
@@ -218,8 +226,17 @@ func snapshot_for_role(role: String,state: Dictionary) -> Dictionary:
 		own["augment_holds"] = _wire_holds(hero_holds)
 		own["chest_receipts"] = chest_receipts.duplicate(true)
 		own["hero_inventory"] = _hero_inventory()
-	elif role == "demon": own["augment_holds"] = _wire_holds(demon_holds)
+	elif role == "demon":
+		own["augment_holds"] = _wire_holds(demon_holds)
+		if public_hero_build_dirty:
+			public_hero_build = _public_hero_build()
+			public_hero_build_dirty = false
+		own["hero_build"] = public_hero_build
 	return own
+func _public_hero_build() -> Dictionary:
+	var inventory := _hero_inventory()
+	if inventory.is_empty(): return {}
+	return {"level":inventory.level,"weapons":inventory.weapons,"passives":inventory.passives,"augments":selected_hero_augments.duplicate()}
 func _hero_inventory() -> Dictionary:
 	if not is_instance_valid(battle.hero) or battle.hero.player_weapons == null: return {}
 	var hero = battle.hero

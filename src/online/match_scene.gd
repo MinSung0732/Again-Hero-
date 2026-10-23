@@ -43,6 +43,13 @@ var hold_signature := ""
 var hero_level_label: Label
 var hero_inventory_rows: VBoxContainer
 var inventory_signature := ""
+var hero_build_toggle: Button
+var hero_build_scroll: ScrollContainer
+var hero_build_panel: VBoxContainer
+var hero_build_rows: VBoxContainer
+var hero_build_level: Label
+var hero_build_augments: Label
+var hero_build_signature := ""
 var inventory_detail: AcceptDialog
 var chest_notice: Label
 var chest_queue: Array = []
@@ -139,6 +146,15 @@ func _ready() -> void:
 			if transcend_placement:
 				if client.command("transcend",{"point":[point.x,point.y]}): transcend_placement = false
 			else: client.command("summon",{"id":selected_monster,"point":[point.x,point.y]}))
+	if role == "demon":
+		hero_build_toggle = _button(rows,"용사 빌드 ▾",_toggle_hero_build)
+		hero_build_toggle.custom_minimum_size.y = 48
+		hero_build_scroll = ScrollContainer.new(); hero_build_scroll.custom_minimum_size.y = 160
+		hero_build_scroll.visible = false; rows.add_child(hero_build_scroll)
+		hero_build_panel = VBoxContainer.new(); hero_build_scroll.add_child(hero_build_panel)
+		hero_build_level = _label(hero_build_panel,"용사 Lv.1",20)
+		hero_build_rows = VBoxContainer.new(); hero_build_panel.add_child(hero_build_rows)
+		hero_build_augments = _label(hero_build_panel,"선택한 증강: 없음",18)
 	action_row = HBoxContainer.new(); rows.add_child(action_row)
 	if role == "demon":
 		skill_row = HBoxContainer.new(); rows.add_child(skill_row)
@@ -154,7 +170,7 @@ func _ready() -> void:
 		hero_inventory_rows = VBoxContainer.new(); rows.add_child(hero_inventory_rows)
 		hero_level_label = _label(hero_inventory_rows,"용사 Lv.1 · EXP 0/1 · 새로고침 0/0",21)
 		chest_notice = _label(hero_inventory_rows,"",23)
-		inventory_detail = AcceptDialog.new(); inventory_detail.title = "장착 정보"; add_child(inventory_detail)
+	inventory_detail = AcceptDialog.new(); inventory_detail.title = "장착 정보"; add_child(inventory_detail)
 	hold_toggle = _button(rows,"증강 보관함 · 0개 ▾",_toggle_holds)
 	hold_scroll = ScrollContainer.new(); hold_scroll.custom_minimum_size.y = 250; rows.add_child(hold_scroll)
 	hold_scroll.visible = false
@@ -208,6 +224,22 @@ func _show_hero_item(id: String,level: int,evolved: bool) -> void:
 	var title := WEAPONS.GROWTH.evolution_name(id) if evolved else String(data.get("name",id))
 	inventory_detail.dialog_text = "%s · %s\n%s" % [title,"MAX" if evolved else "Lv.%d" % level,WEAPONS.description(id,rank)]
 	inventory_detail.popup_centered(Vector2i(700,320))
+func _toggle_hero_build() -> void:
+	hero_build_scroll.visible = not hero_build_scroll.visible
+	hero_build_toggle.text = "용사 빌드 %s" % ("▴" if hero_build_scroll.visible else "▾")
+func _update_hero_build(build: Dictionary) -> void:
+	if not RULES.number(build.get("level",null)) or not build.get("augments",null) is Array: return
+	if not build.get("weapons",null) is Array or not build.get("passives",null) is Array: return
+	if build.weapons.size() > WEAPONS.WEAPON_SLOTS or build.passives.size() > WEAPONS.PASSIVE_SLOTS: return
+	var signature := JSON.stringify(build)
+	if signature == hero_build_signature: return
+	hero_build_signature = signature
+	hero_build_level.text = "용사 Lv.%d" % int(build.level)
+	var names := PackedStringArray()
+	for name in build.augments:
+		if name is String: names.append(name)
+	hero_build_augments.text = "선택한 증강: %s" % ("없음" if names.is_empty() else ", ".join(names))
+	_render_hero_items(hero_build_rows,build)
 func _update_hero_inventory(inventory: Dictionary) -> void:
 	if not RULES.number(inventory.get("level",null)) or not RULES.number(inventory.get("exp",null)) or not RULES.number(inventory.get("exp_next",null)): return
 	if not RULES.number(inventory.get("rerolls_left",null)) or not RULES.number(inventory.get("reroll_limit",null)): return
@@ -218,10 +250,12 @@ func _update_hero_inventory(inventory: Dictionary) -> void:
 	var signature := JSON.stringify([inventory.weapons,inventory.passives])
 	if signature == inventory_signature: return
 	inventory_signature = signature
-	for child in hero_inventory_rows.get_children():
+	_render_hero_items(hero_inventory_rows,inventory)
+func _render_hero_items(target: VBoxContainer,inventory: Dictionary) -> void:
+	for child in target.get_children():
 		if child is HBoxContainer: child.queue_free()
 	for kind in ["weapons","passives"]:
-		var row := HBoxContainer.new(); hero_inventory_rows.add_child(row)
+		var row := HBoxContainer.new(); target.add_child(row)
 		for item in inventory[kind]:
 			if not item is Array or item.size() < 2 or not item[0] is String or not RULES.number(item[1]): continue
 			var id: String = item[0]
@@ -375,6 +409,7 @@ func _event(event: Dictionary) -> void:
 			if role == "hero" and event.get("hero_inventory",null) is Dictionary and event.get("chest_receipts",null) is Array:
 				_update_hero_inventory(event.hero_inventory)
 				_receive_chests(event.chest_receipts)
+			if role == "demon" and event.get("hero_build",null) is Dictionary: _update_hero_build(event.hero_build)
 			view.feedback.suspended = waiting_for_start or connection_waiting or client.reconnecting
 			if waiting_for_start and last_tick > 0 and not connection_waiting and not client.reconnecting:
 				waiting_for_start = false; view.feedback.suspended = false; loading.finish(); _set_controls(true)
