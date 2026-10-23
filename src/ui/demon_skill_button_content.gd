@@ -1,6 +1,18 @@
 extends Control
 # Fixed icon and two text lines; parent Button keeps all input/disabled handling.
 const UNAVAILABLE_ICON_SHADER := preload("res://src/ui/demon_skill_icon_disabled.gdshader")
+const SKILL_ART := preload("res://src/data/skill_icon_catalog.gd")
+static func attach(button: Button,index: int,skill_id: String,skill_name: String) -> Control:
+ button.icon = null
+ button.text = ""
+ var content: Control = button.get_node_or_null("SkillContent")
+ if content == null:
+  content = preload("res://src/ui/demon_skill_button_content.gd").new()
+  content.name = "SkillContent"
+  button.add_child(content)
+  content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+ content.configure(SKILL_ART.texture("demon","demon",skill_id),"%d %s" % [index+1,skill_name])
+ return content
 static var _unavailable_icon_material: ShaderMaterial
 var icon: TextureRect
 var title: Label

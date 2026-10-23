@@ -246,6 +246,10 @@ func snapshot_for_role(role: String,state: Dictionary) -> Dictionary:
 		own.erase("demon_charge_max")
 		own.erase("demon_cooldowns")
 		own.erase("demon_ready")
+		own.erase("summon_costs")
+		own.erase("demon_level")
+		own.erase("demon_exp")
+		own.erase("demon_exp_next")
 		own.erase("transcend_ready")
 		own.erase("transcend_used")
 		own["augment_holds"] = _wire_holds(hero_holds)
@@ -332,11 +336,13 @@ func _build_snapshot() -> Dictionary:
 	for instance in stale_wire_ids:
 		ids.erase(instance); presentation.forget_node(instance)
 	var demon_ready := {}
+	var summon_costs := {}
+	for id in roster: summon_costs[id] = battle.get_monster_cost(String(id))
 	for id in skill_ids:
 		var skill: Dictionary = SKILLS.get_skill(String(id))
 		demon_ready[id] = battle.demon_ultimate_spawn_queue.is_empty() and battle.demon_ultimate_charge+0.001 >= float(skill.get("mana_cost",SKILLS.CHARGE_MAX)) and float(battle.demon_ultimate_cooldowns.get(id,0.0)) <= 0.001
 	# Bounded snapshot serialization and presentation sort at10Hz, not physics Hz.
-	return {"op":"state","tick":tick,"hero":[hero_last.x,hero_last.y,hp,maximum,level],"bounds":[battle.current_map_size.x,battle.current_map_size.y],"battlefield":battlefield_info,"seconds":battle.run_metrics.elapsed_seconds,"mana":battle.command_power,"demon_charge":battle.demon_ultimate_charge,"demon_charge_max":SKILLS.CHARGE_MAX,"demon_cooldowns":battle.demon_ultimate_cooldowns,"demon_ready":demon_ready,"transcend_ready":battle.transcendence.ready and not battle.transcendence.used,"transcend_used":battle.transcendence.used,"actors":actors,"shots":shots,"visuals":visuals,"primitives":primitives,"feedback":feedback.snapshot(),"feedback_cursor":feedback.sequence,"winner":winner,"reason":reason}
+	return {"op":"state","tick":tick,"hero":[hero_last.x,hero_last.y,hp,maximum,level],"bounds":[battle.current_map_size.x,battle.current_map_size.y],"battlefield":battlefield_info,"seconds":battle.run_metrics.elapsed_seconds,"mana":battle.command_power,"summon_costs":summon_costs,"demon_level":battle.demon_level,"demon_exp":battle.demon_exp,"demon_exp_next":battle.demon_exp_to_next_level,"demon_charge":battle.demon_ultimate_charge,"demon_charge_max":SKILLS.CHARGE_MAX,"demon_cooldowns":battle.demon_ultimate_cooldowns,"demon_ready":demon_ready,"transcend_ready":battle.transcendence.ready and not battle.transcendence.used,"transcend_used":battle.transcendence.used,"actors":actors,"shots":shots,"visuals":visuals,"primitives":primitives,"feedback":feedback.snapshot(),"feedback_cursor":feedback.sequence,"winner":winner,"reason":reason}
 
 func _visual_order(a: Array,b: Array) -> bool:
 	return PRESENTATION.visual_order(a,b)

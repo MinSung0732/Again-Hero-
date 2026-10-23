@@ -1,6 +1,6 @@
 extends RefCounted
-## Role-only demon hints require matching protocol 14 peers.
-const VERSION := 14
+## Live summon costs require matching protocol 15 peers.
+const VERSION := 15
 const HINT_DETAIL := "role" # "role" or "monster"
 const ROLE_HINT_LABELS := {"melee":"근접"}
 const TARGET_HINT_LABELS := {"demon":"마왕 운영","all_monsters":"모든 몬스터"}

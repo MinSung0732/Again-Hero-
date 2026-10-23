@@ -27,7 +27,6 @@ const DEMON_SKILL_LOADOUT_STORE := preload(
 )
 const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
 const HERO_AUGMENTS := preload("res://src/data/hero_augment_catalog.gd")
-const SKILL_ART := preload("res://src/data/skill_icon_catalog.gd")
 const HERO_SKILL_COOLDOWN_BADGE := preload("res://src/ui/hero_skill_cooldown_badge.gd")
 const BATTLE_PIXEL_FRAME_ASSEMBLER := preload("res://src/ui/battle_pixel_frame_assembler.gd")
 const PIXEL_PANEL_SKIN := preload("res://src/ui/pixel_panel_skin.gd")
@@ -2745,13 +2744,7 @@ func _cache_demon_ultimate_ui_data() -> void:
 		var skill_id := String(
 			demon_ultimate_ui_skills[index].get("id", "")
 		)
-		button.icon = null
-		button.text = ""
-		var content := preload("res://src/ui/demon_skill_button_content.gd").new()
-		content.name = "SkillContent"
-		button.add_child(content)
-		content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		content.configure(SKILL_ART.texture("demon","demon",skill_id),"%d %s" % [index+1,String(demon_ultimate_ui_skills[index].get("name","마력 기술"))])
+		var content: Control = preload("res://src/ui/demon_skill_button_content.gd").attach(button,index,skill_id,String(demon_ultimate_ui_skills[index].get("name","마력 기술")))
 		demon_ultimate_ui_content.append(content)
 		button.pressed.connect(
 			_on_demon_ultimate_pressed.bind(skill_id)

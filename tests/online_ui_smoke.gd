@@ -6,6 +6,19 @@ func check(ok: bool,message: String) -> void:
 	if not ok: push_error(message); quit(1); assert(ok,message)
 func _initialize() -> void: run.call_deferred()
 func run() -> void:
+	for path in ["res://src/main/main.gd","res://src/online/match_scene.gd","res://src/online/battle_room.gd"]:
+		var script: Script = load(path)
+		check(script != null and script.can_instantiate(),"modified script loads: "+path)
+	var solo_packed: PackedScene = load("res://src/main/Main.tscn")
+	check(solo_packed != null and solo_packed.can_instantiate(),"solo scene loads")
+	var solo := solo_packed.instantiate()
+	check(solo.get_node_or_null("HUD/BottomBar/CommandBar") != null and solo.get_node_or_null("HUD/DemonUltimatePanel/UltimateButtons") != null,"solo paths survive shared scene extraction")
+	solo.free()
+	var online_packed: PackedScene = load("res://src/online/OnlineMatch.tscn")
+	check(online_packed != null and online_packed.can_instantiate(),"online scene loads")
+	var online := online_packed.instantiate()
+	check(online.get_node_or_null("BottomBar/CommandBar") != null and online.get_node_or_null("DemonUltimatePanel/UltimateButtons") != null,"online shared lower scenes instantiate")
+	online.free()
 	var local = root.get_node("LocalTestMode")
 	var old_active: bool = local.active
 	var old_preview: bool = local.tutorial_preview
@@ -33,10 +46,18 @@ func run() -> void:
 		else:
 			# Since protocol 9 the demon's summon buttons come from the server's
 			# validated loadout on "matched", not a fixed roster.
-			check(scene.action_row.get_child_count() == 0,"no roster before matching")
-			scene._event({"op":"matched","roster":["slime","orc","spider"]})
+			check(scene.summon_buttons.is_empty(),"no roster before matching")
+			scene._event({"op":"matched","roster":["slime","orc","spider","bomb_rat","skeleton_archer"],"skill_ids":["line_assault"]})
 			await process_frame
-			check(scene.action_row.get_child_count() == 3 and scene.selected_monster == "slime","matched loadout builds roster choices")
+			check(scene.summon_buttons.size() == 5 and scene.selected_monster == "slime","matched loadout builds solo summon cards")
+			check(scene.summon_buttons[0].get_node("Icon").texture != null and scene.summon_buttons[0].get_node("Cost").text != "","catalog icon and cost on summon cards")
+			scene.local_preparing = false; scene.waiting_for_start = false
+			scene._update_demon_controls({"mana":0.0,"summon_costs":{"slime":9.0,"orc":12.0,"spider":8.0,"bomb_rat":9.0,"skeleton_archer":12.0},"demon_charge":0.0,"demon_charge_max":100.0,"demon_cooldowns":{"line_assault":5.0},"demon_ready":{"line_assault":false},"transcend_ready":false,"transcend_used":false})
+			check(scene.summon_buttons.all(func(button): return button.disabled) and scene.skill_buttons.line_assault.disabled,"cost and cooldown disable buttons")
+			scene._update_demon_controls({"mana":100.0,"summon_costs":{"slime":9.0,"orc":12.0,"spider":8.0,"bomb_rat":9.0,"skeleton_archer":12.0},"demon_charge":100.0,"demon_charge_max":100.0,"demon_cooldowns":{"line_assault":0.0},"demon_ready":{"line_assault":true},"transcend_ready":true,"transcend_used":false})
+			check(not scene.summon_buttons[0].disabled and not scene.skill_buttons.line_assault.disabled,"ready cards and skill enable")
+			scene._update_demon_controls({"mana":100.0,"summon_costs":{"slime":200.0,"orc":12.0,"spider":8.0,"bomb_rat":9.0,"skeleton_archer":12.0},"demon_charge":100.0,"demon_charge_max":100.0,"demon_cooldowns":{"line_assault":0.0},"demon_ready":{"line_assault":true},"transcend_ready":true,"transcend_used":false})
+			check(scene.summon_buttons[0].disabled and scene.summon_buttons[0].get_node("Cost").text == "200.0","server adjusted cost overrides catalog base")
 		scene._join()
 		check(scene.client.socket == null,"guest without token never queues")
 		check(scene.test_code == null,"ordinary account screen has no test invitation field")
@@ -49,7 +70,7 @@ func run() -> void:
 		check(scene.connection_waiting and scene.status.text.contains("일시정지"),"server grace countdown displayed")
 		if role == "hero": check(not scene.pad.enabled,"grace disables touch movement")
 		else:
-			for button in scene.action_row.get_children(): check(button.disabled,"grace disables summon buttons")
+			for button in scene.summon_buttons: check(button.disabled,"grace disables summon buttons")
 		scene._event({"op":"connection","match":"ui-recovery","paused":false,"remaining":0.0})
 		check(not scene.connection_waiting,"server resume clears pause")
 		scene.client.reconnecting = true; scene.client.connection_recovering.emit(true,20.0)
@@ -72,11 +93,22 @@ func run() -> void:
 		if role == "hero":
 			scene._update_hud_progress(3,24,50)
 			check(scene.top_bar.get_node("ExpBar").value == 24 and scene.top_bar.get_node("ExpBar").visible,"hero EXP shown")
+			scene._update_hero_inventory({"level":3,"exp":24,"exp_next":50,"rerolls_left":1,"reroll_limit":2,"weapons":[["ranged_rookie_arcane_bolt",2,false]],"passives":[["survival_power",1]]})
+			check(scene.weapon_buttons[0].get_node("Icon").texture != null and scene.weapon_buttons[0].get_node("Rank").text == "Lv.2" and scene.passive_buttons[0].get_node("Icon").texture != null,"snapshot fills shared hero slots")
 		else: check(not scene.top_bar.get_node("ExpBar").visible and scene.top_bar.get_node("HeroLevel").text.contains("3"),"demon sees level without EXP")
 		root.size = Vector2i(1080,1920); await process_frame; await process_frame
 		check(scene.top_bar.get_global_rect().end.x <= root.size.x and scene.view.get_global_rect().position.y >= scene.top_bar.get_global_rect().end.y,"phone top bar fits above battlefield")
+		var lower: Control = scene.demon_panel if role == "demon" else scene.hero_slots
+		check(lower.get_global_rect().end.y <= root.size.y and scene.view.get_global_rect().end.y <= lower.get_global_rect().position.y,"phone lower HUD fits below battlefield")
+		if role == "demon":
+			check(scene.bottom_bar.get_global_rect().end.y <= root.size.y and scene.summon_buttons[-1].get_global_rect().end.x <= root.size.x and scene.hold_toggle.get_global_rect().end.y <= lower.get_global_rect().position.y,"phone cards and hold control fit")
+			scene.hold_toggle.pressed.emit(); await process_frame
+			check(scene.hold_scroll.get_global_rect().end.y <= lower.get_global_rect().position.y and scene.view.get_global_rect().end.y <= lower.get_global_rect().position.y,"expanded hold tray stays above lower HUD")
+			scene.hold_toggle.pressed.emit(); await process_frame
 		root.size = Vector2i(1536,1920); await process_frame; await process_frame
 		check(scene.top_bar.get_global_rect().end.x <= root.size.x and scene.top_bar.get_node("Monsters").get_global_rect().end.x <= root.size.x and scene.view.get_global_rect().position.y >= scene.top_bar.get_global_rect().end.y,"tablet top bar fits above battlefield")
+		check(lower.get_global_rect().end.y <= root.size.y and lower.get_global_rect().end.x <= root.size.x and scene.view.get_global_rect().end.y <= lower.get_global_rect().position.y,"tablet lower HUD fits below battlefield")
+		if role == "demon": check(scene.bottom_bar.get_global_rect().end.y <= root.size.y and scene.summon_buttons[-1].get_global_rect().end.x <= root.size.x and scene.hold_toggle.get_global_rect().end.y <= lower.get_global_rect().position.y,"tablet cards and hold control fit")
 		scene.queue_free(); await process_frame
 	local.active = true; local.tutorial_preview = false; SCOPE.user_id = ""; SCOPE.guest_directory = local.test_directory
 	check(local.is_online_match_allowed(),"isolated localtest has online permission")

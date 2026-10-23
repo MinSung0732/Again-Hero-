@@ -60,8 +60,6 @@ var hold_toggle: Button
 var hold_scroll: ScrollContainer
 var hold_expanded := false
 var hold_signature := ""
-var hero_level_label: Label
-var hero_inventory_rows: VBoxContainer
 var inventory_signature := ""
 var hero_build_toggle: Button
 var hero_build_scroll: ScrollContainer
@@ -84,6 +82,18 @@ var rules_popup: PopupPanel
 var action_row: HBoxContainer
 var skill_row: HBoxContainer
 var skill_buttons := {}
+var summon_ids: Array[String] = []
+var summon_buttons: Array[Button] = []
+var summon_mana := -1.0
+var summon_costs := {}
+var summon_cost_signature := ""
+var skill_state_signature := ""
+var inventory_items := {"weapons":[],"passives":[]}
+@onready var demon_panel: Control = $DemonUltimatePanel
+@onready var bottom_bar: Control = $BottomBar
+var hero_slots: Control
+var weapon_buttons: Array[Button] = []
+var passive_buttons: Array[Button] = []
 var direction_row: HBoxContainer
 var skill_direction := "east"
 var transcend_button: Button
@@ -171,6 +181,12 @@ func _ready() -> void:
 	var panel_art := TOP_LAYOUT.texture(self,TOP_LAYOUT.ROOT + "gold_panel.png")
 	for name in ["StageFrame","TimerFrame","HeroStatusFrame","MonsterFrame","StageMenuButton"]:
 		PANEL.install(top_bar.get_node(name),panel_art)
+	if role == "demon":
+		for target in [demon_panel.get_node("Frame"),bottom_bar.get_node("AutoFrame")]: PANEL.install(target,panel_art)
+		for button in demon_panel.get_node("UltimateButtons").get_children():
+			PANEL.install(button,panel_art)
+			button.add_theme_font_size_override("font_size",24)
+		for button in bottom_bar.get_node("SummonButtons").get_children(): PANEL.install(button,panel_art)
 	for child in top_bar.get_children():
 		if child is Control and is_zero_approx(child.anchor_left) and is_zero_approx(child.anchor_right):
 			top_rects.append(child.get_rect())
@@ -206,21 +222,35 @@ func _ready() -> void:
 		_label(demon_info_panel,"스킬 ?",18)
 		_label(demon_info_panel,"초월 ?",18)
 		demon_info_hints = _label(demon_info_panel,"증강 방향: 없음",18)
-	action_row = HBoxContainer.new(); rows.add_child(action_row)
 	if role == "demon":
-		skill_row = HBoxContainer.new(); rows.add_child(skill_row)
+		action_row = bottom_bar.get_node("SummonButtons")
+		skill_row = demon_panel.get_node("UltimateButtons")
+		for button in action_row.get_children(): button.hide()
+		for button in skill_row.get_children(): button.hide()
+		bottom_bar.get_node("PlacementModeToggle").hide()
+		transcend_button = Button.new(); transcend_button.text = "초월 소환 · 위치 지정"
+		transcend_button.position = Vector2(810,14); transcend_button.size = Vector2(218,56)
+		transcend_button.pressed.connect(_select_transcendence); bottom_bar.add_child(transcend_button)
+		PANEL.install(transcend_button,panel_art)
+		transcend_button.disabled = true; transcend_button.hide()
 		direction_row = HBoxContainer.new(); rows.add_child(direction_row)
 		for direction in ["east","west","north","south"]:
 			var button := _button(direction_row,{"east":"동","west":"서","north":"북","south":"남"}[direction],_select_skill_direction.bind(direction))
 			button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		transcend_button = _button(rows,"초월 소환 · 위치 지정",_select_transcendence)
-		transcend_button.disabled = true
 	if role == "hero":
 		pad = PAD.new(); add_child(pad); pad.set_mode(PAD.MODE_FREE)
 		pad.input_surface = view; pad.movement_changed.connect(func(value: Vector2): movement = value)
-		hero_inventory_rows = VBoxContainer.new(); rows.add_child(hero_inventory_rows)
-		hero_level_label = _label(hero_inventory_rows,"용사 Lv.1 · EXP 0/1 · 새로고침 0/0",21)
-		chest_notice = _label(hero_inventory_rows,"",23)
+		hero_slots = VBoxContainer.new(); hero_slots.name = "HeroInventory"
+		hero_slots.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+		hero_slots.offset_left = 24; hero_slots.offset_right = -24; hero_slots.offset_top = -210
+		add_child(hero_slots)
+		weapon_buttons = HERO_HUD.inventory_row(hero_slots,"무기",WEAPONS.WEAPON_SLOTS)
+		passive_buttons = HERO_HUD.inventory_row(hero_slots,"보조",WEAPONS.PASSIVE_SLOTS)
+		for index in weapon_buttons.size(): weapon_buttons[index].pressed.connect(_show_slot_info.bind(true,index))
+		for index in passive_buttons.size(): passive_buttons[index].pressed.connect(_show_slot_info.bind(false,index))
+		for button in weapon_buttons + passive_buttons: HERO_HUD.update_slot(button,null,"+",""); button.disabled = true
+		hero_slots.hide()
+		chest_notice = _label(rows,"",23)
 	inventory_detail = AcceptDialog.new(); inventory_detail.title = "장착 정보"; add_child(inventory_detail)
 	hold_toggle = _button(rows,"증강 보관함 · 0개 ▾",_toggle_holds)
 	hold_scroll = ScrollContainer.new(); hold_scroll.custom_minimum_size.y = 250; rows.add_child(hold_scroll)
@@ -259,6 +289,17 @@ func _layout_top_bar() -> void:
 			child.position = rect.position
 			child.size = rect.size
 			index += 1
+	if role == "demon":
+		for panel in [demon_panel,bottom_bar]:
+			for child in panel.get_children():
+				if child is Control and is_zero_approx(child.anchor_left) and is_zero_approx(child.anchor_right):
+					var design: Rect2 = child.get_meta("design_rect",child.get_rect())
+					child.set_meta("design_rect",design)
+					var rect := RESPONSIVE.horizontal_rect(design,width)
+					child.position = rect.position; child.size = rect.size
+		for button in summon_buttons:
+			button.custom_minimum_size.x = 0
+			button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 
 func _show_match_layout() -> void:
 	for control in setup_controls: control.hide()
@@ -266,6 +307,10 @@ func _show_match_layout() -> void:
 	rows.offset_top = 350
 	rows.offset_left = 0
 	rows.offset_right = 0
+	rows.offset_bottom = -465 if role == "demon" else -220
+	if role == "demon":
+		demon_panel.show(); bottom_bar.show()
+	else: hero_slots.show()
 	status.autowrap_mode = TextServer.AUTOWRAP_OFF
 	status.clip_text = true
 	status.add_theme_font_size_override("font_size",21)
@@ -303,6 +348,112 @@ func _update_match_hud(event: Dictionary) -> void:
 		hud_monsters = monsters
 		_set_hud_text("Monsters","몬스터 %d" % monsters)
 	if role == "demon": _update_hud_progress(int(event.hero[4]),0,0)
+
+func _build_summon_cards(roster: Array) -> void:
+	if roster.size() == summon_ids.size():
+		var same := true
+		for index in roster.size():
+			if String(roster[index]) != summon_ids[index]: same = false; break
+		if same: return
+	summon_ids.clear()
+	for id in roster: summon_ids.append(String(id))
+	var template := action_row.get_node("Slot1") as Button
+	while action_row.get_child_count() < summon_ids.size():
+		var button := template.duplicate() as Button
+		button.name = "Slot"+str(action_row.get_child_count()+1)
+		action_row.add_child(button)
+	summon_buttons.clear()
+	for index in action_row.get_child_count():
+		var button := action_row.get_child(index) as Button
+		button.visible = index < summon_ids.size()
+		if not button.visible: continue
+		var id := summon_ids[index]
+		var data: Dictionary = MONSTERS.get_monster(id)
+		button.custom_minimum_size.x = 0
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.get_node("Name").text = String(data.get("name",id))
+		button.get_node("Cost").text = ("%.1f" % MONSTERS.get_base_cost(id)) if summon_ids.size() > 3 else "%s · %.1f" % [MONSTERS.get_role_label(MONSTERS.get_role(id)),MONSTERS.get_base_cost(id)]
+		if summon_ids.size() > 3:
+			TOP_LAYOUT.place(button.get_node("Icon"),Rect2(12,14,76,85))
+			TOP_LAYOUT.place(button.get_node("Name"),Rect2(92,21,90,50),19)
+			TOP_LAYOUT.place(button.get_node("Cost"),Rect2(92,84,90,36),19)
+		else:
+			TOP_LAYOUT.place(button.get_node("Icon"),Rect2(26,27,110,108))
+			TOP_LAYOUT.place(button.get_node("Name"),Rect2(138,36,176,42),24)
+			TOP_LAYOUT.place(button.get_node("Cost"),Rect2(138,86,176,40),24)
+		var icon_path := MONSTERS.get_ui_icon_path(id)
+		button.get_node("Icon").texture = load(icon_path) if ResourceLoader.exists(icon_path) else null
+		if button.pressed.get_connections().size() > 0:
+			for connection in button.pressed.get_connections(): button.pressed.disconnect(connection.callable)
+		button.pressed.connect(_select_monster.bind(id))
+		summon_buttons.append(button)
+	if not summon_ids.is_empty(): selected_monster = summon_ids[0]
+	_layout_top_bar()
+
+func _update_summon_cards(mana: float,costs: Dictionary) -> void:
+	var signature := JSON.stringify(costs)
+	if is_equal_approx(mana,summon_mana) and signature == summon_cost_signature: return
+	summon_mana = mana
+	summon_costs = costs
+	summon_cost_signature = signature
+	var maximum := 100.0
+	var label := bottom_bar.get_node("CommandLabel") as Label
+	label.text = "지휘력 %d / %d" % [roundi(mana),roundi(maximum)]
+	var bar := bottom_bar.get_node("CommandBar") as ProgressBar
+	bar.max_value = maximum; bar.value = mana
+	for index in summon_buttons.size():
+		var cost := float(costs.get(summon_ids[index],MONSTERS.get_base_cost(summon_ids[index])))
+		summon_buttons[index].get_node("Cost").text = ("%.1f" % cost) if summon_ids.size() > 3 else "%s · %.1f" % [MONSTERS.get_role_label(MONSTERS.get_role(summon_ids[index])),cost]
+		summon_buttons[index].disabled = ended or connection_waiting or client.reconnecting or local_preparing or waiting_for_start or mana + 0.001 < cost
+
+func _show_slot_info(weapon: bool,index: int) -> void:
+	var items: Array = inventory_items.weapons if weapon else inventory_items.passives
+	if index < items.size():
+		var item: Array = items[index]
+		_show_hero_item(String(item[0]),int(item[1]),weapon and item.size() > 2 and item[2] == true)
+
+func _update_hero_slots(inventory: Dictionary) -> void:
+	inventory_items = {"weapons":inventory.weapons,"passives":inventory.passives}
+	for kind in ["weapons","passives"]:
+		var buttons: Array[Button] = weapon_buttons if kind == "weapons" else passive_buttons
+		var items: Array = inventory[kind]
+		for index in buttons.size():
+			var button := buttons[index]
+			if index >= items.size():
+				HERO_HUD.update_slot(button,null,"+",""); button.disabled = true; continue
+			var item: Array = items[index]
+			if item.size() < 2 or not item[0] is String or not RULES.number(item[1]): continue
+			var id := String(item[0])
+			var evolved: bool = kind == "weapons" and item.size() > 2 and item[2] == true
+			var data: Dictionary = WEAPONS.WEAPONS.get(id,WEAPONS.PASSIVES.get(id,{}))
+			if data.is_empty(): continue
+			HERO_HUD.update_slot(button,ICONS.texture(id),"MAX" if evolved else "Lv.%d" % int(item[1]),String(data.get("name",id)))
+			button.disabled = false
+
+func _update_demon_controls(event: Dictionary) -> void:
+	_update_summon_cards(float(event.mana),event.summon_costs)
+	var skill_signature := JSON.stringify([event.get("demon_level",1),event.get("demon_exp",0.0),event.get("demon_exp_next",1.0),event.demon_charge,event.demon_charge_max,event.demon_cooldowns,event.demon_ready,event.transcend_ready,event.transcend_used,connection_waiting,waiting_for_start])
+	if skill_signature != skill_state_signature:
+		skill_state_signature = skill_signature
+		(demon_panel.get_node("DemonLevelLabel") as Label).text = "마왕 Lv.%d" % int(event.get("demon_level",1))
+		(demon_panel.get_node("DemonProgressLabel") as Label).text = "EXP %.1f / %.1f" % [float(event.get("demon_exp",0.0)),float(event.get("demon_exp_next",1.0))]
+		var exp_bar := demon_panel.get_node("DemonExpBar") as ProgressBar
+		exp_bar.max_value = maxf(1.0,float(event.get("demon_exp_next",1.0))); exp_bar.value = float(event.get("demon_exp",0.0))
+		(demon_panel.get_node("UltimateLabel") as Label).text = "필살기 %d / %d" % [roundi(float(event.demon_charge)),roundi(float(event.demon_charge_max))]
+		var charge_bar := demon_panel.get_node("UltimateBar") as ProgressBar
+		charge_bar.max_value = maxf(1.0,float(event.demon_charge_max)); charge_bar.value = float(event.demon_charge)
+		for id in skill_buttons:
+			var data: Dictionary = SKILLS.get_skill(id)
+			var cooldown := float(event.demon_cooldowns.get(id,0.0))
+			var button: Button = skill_buttons[id]
+			button.get_node("SkillContent").update_state("쿨 %.0f초" % ceilf(cooldown) if cooldown > 0.01 else "사용 가능" if bool(event.demon_ready.get(id,false)) else "필요 %.0f" % float(data.get("mana_cost",0.0)),bool(event.demon_ready.get(id,false)))
+			button.disabled = connection_waiting or client.reconnecting or waiting_for_start or not bool(event.demon_ready.get(id,false))
+			var cooldown_bar := button.get_node("CooldownBar") as ProgressBar
+			cooldown_bar.max_value = maxf(0.1,float(data.get("cooldown",0.0)))
+			cooldown_bar.visible = cooldown > 0.01; cooldown_bar.value = cooldown
+		transcend_button.disabled = connection_waiting or client.reconnecting or waiting_for_start or not event.transcend_ready or event.transcend_used
+		transcend_button.text = "초월 소환 완료" if event.transcend_used else "초월 소환 · 위치 지정" if event.transcend_ready else "초월 해금 대기"
+		if event.transcend_used: transcend_placement = false
 
 func _select_monster(id: String) -> void:
 	selected_monster = id
@@ -361,12 +512,11 @@ func _update_hero_inventory(inventory: Dictionary) -> void:
 	if not inventory.get("weapons",null) is Array or not inventory.get("passives",null) is Array: return
 	if inventory.weapons.size() > WEAPONS.WEAPON_SLOTS or inventory.passives.size() > WEAPONS.PASSIVE_SLOTS: return
 	rerolls_left = int(inventory.rerolls_left); reroll_limit = int(inventory.reroll_limit)
-	hero_level_label.text = "용사 Lv.%d · EXP %d/%d · 새로고침 %d/%d" % [int(inventory.level),int(inventory.exp),int(inventory.exp_next),rerolls_left,reroll_limit]
 	_update_hud_progress(int(inventory.level),int(inventory.exp),int(inventory.exp_next))
 	var signature := JSON.stringify([inventory.weapons,inventory.passives])
 	if signature == inventory_signature: return
 	inventory_signature = signature
-	_render_hero_items(hero_inventory_rows,inventory)
+	_update_hero_slots(inventory)
 func _render_hero_items(target: VBoxContainer,inventory: Dictionary) -> void:
 	for child in target.get_children():
 		if child is HBoxContainer: child.queue_free()
@@ -486,18 +636,19 @@ func _event(event: Dictionary) -> void:
 			transcendence_id = String(event.get("transcendence_id",""))
 			if event.get("roster",null) is Array: view.set_match_roster(event.roster,transcendence_id)
 			if role == "demon" and event.get("roster",null) is Array:
-				for child in action_row.get_children(): child.queue_free()
-				for id in event.roster:
-					var button := _button(action_row,String(MONSTERS.get_monster(String(id)).get("name",id)),_select_monster.bind(String(id)))
-					button.size_flags_horizontal = Control.SIZE_EXPAND_FILL; button.add_theme_font_size_override("font_size",21)
-				if not event.roster.is_empty(): selected_monster = String(event.roster[0])
-				for child in skill_row.get_children(): child.queue_free()
+				_build_summon_cards(event.roster)
+				summon_mana = -1.0; skill_state_signature = ""
 				skill_buttons.clear()
 				demon_skills = event.get("skill_ids",[]) if event.get("skill_ids",[]) is Array else []
-				for id in demon_skills:
-					var button := _button(skill_row,String(SKILLS.get_skill(String(id)).get("name",id)),_use_skill.bind(String(id)))
-					button.size_flags_horizontal = Control.SIZE_EXPAND_FILL; button.add_theme_font_size_override("font_size",21)
-					skill_buttons[String(id)] = button
+				for index in skill_row.get_child_count():
+					var button := skill_row.get_child(index) as Button
+					button.visible = index < demon_skills.size()
+					if not button.visible: continue
+					var id := String(demon_skills[index])
+					preload("res://src/ui/demon_skill_button_content.gd").attach(button,index,id,String(SKILLS.get_skill(id).get("name",id)))
+					for connection in button.pressed.get_connections(): button.pressed.disconnect(connection.callable)
+					button.pressed.connect(_use_skill.bind(id))
+					skill_buttons[id] = button
 				direction_row.visible = "line_assault" in demon_skills
 				transcend_button.visible = not transcendence_id.is_empty()
 			last_tick = -1; view.resume_motion()
@@ -524,7 +675,10 @@ func _event(event: Dictionary) -> void:
 			if not event.get("augment_holds",null) is Array or event.augment_holds.size() > RULES.AUGMENT_HOLD_LIMIT: return
 			if role == "demon":
 				if not RULES.number(event.get("demon_charge",null)) or not RULES.number(event.get("demon_charge_max",null)): return
-				if not event.get("demon_cooldowns",null) is Dictionary or not event.get("demon_ready",null) is Dictionary or not event.get("transcend_ready",null) is bool or not event.get("transcend_used",null) is bool: return
+				if not event.get("demon_cooldowns",null) is Dictionary or not event.get("demon_ready",null) is Dictionary or not event.get("summon_costs",null) is Dictionary or not event.get("transcend_ready",null) is bool or not event.get("transcend_used",null) is bool: return
+				if not RULES.number(event.get("demon_level",null)) or not RULES.number(event.get("demon_exp",null)) or not RULES.number(event.get("demon_exp_next",null)): return
+				for id in summon_ids:
+					if not RULES.number(event.summon_costs.get(id,null)) or float(event.summon_costs[id]) < 0.0: return
 				for cooldown in event.demon_cooldowns.values():
 					if not RULES.number(cooldown): return
 				for ready in event.demon_ready.values():
@@ -554,16 +708,7 @@ func _event(event: Dictionary) -> void:
 					hud_mana = mana_value
 					status.text = "마력 %d" % mana_value
 			_update_holds(event.augment_holds)
-			if role == "demon":
-				for id in skill_buttons:
-					var data: Dictionary = SKILLS.get_skill(id)
-					var cooldown := float(event.demon_cooldowns.get(id,0.0))
-					var button: Button = skill_buttons[id]
-					button.text = "%s\n마력 %.0f/%.0f · %s" % [String(data.get("name",id)),float(event.demon_charge),float(event.demon_charge_max),"%.0f초" % ceilf(cooldown) if cooldown > 0.01 else "필요 %.0f" % float(data.get("mana_cost",0.0))]
-					button.disabled = connection_waiting or client.reconnecting or waiting_for_start or not bool(event.demon_ready.get(id,false))
-				transcend_button.disabled = connection_waiting or client.reconnecting or waiting_for_start or not event.transcend_ready or event.transcend_used
-				transcend_button.text = "초월 사용 완료" if event.transcend_used else "초월 소환 · 위치 지정" if event.transcend_ready else "초월 해금 조건 진행 중"
-				if event.transcend_used: transcend_placement = false
+			if role == "demon": _update_demon_controls(event)
 		"result":
 			if event.get("match","") != client.match_id or ended: return
 			if event.has("feedback"): view.feedback.consume(event.feedback,event.get("feedback_cursor",null),event.get("tick",null))
@@ -613,7 +758,8 @@ func _set_controls(enabled: bool) -> void:
 	if pad != null:
 		pad.enabled = enabled
 		if not enabled: pad.reset()
-	for button in action_row.get_children(): button.disabled = not enabled
+	if role == "demon":
+		for index in summon_buttons.size(): summon_buttons[index].disabled = not enabled or summon_mana + 0.001 < float(summon_costs.get(summon_ids[index],MONSTERS.get_base_cost(summon_ids[index])))
 	for button in choices.get_children():
 		if button is Button: button.disabled = not enabled
 	if role == "demon":

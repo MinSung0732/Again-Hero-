@@ -84,3 +84,5 @@ tests/summon_fusion_policy_smoke.gd  # built by tools/build_summon_fusion_policy
 tests/wave_projectile_smoke.gd  # helper res://tests/wave_projectile_before.gd was never committed (cloud-session only)
 tests/wave_receipt_smoke.gd  # helper res://tests/wave_projectile_before.gd was never committed (cloud-session only)
 tests/zeus_receipt_audio_smoke.gd  # helper res://tests/zeus_receipt_helper.gd was never committed (cloud-session only)
+tests/hero_pause_ui_host.gd  # helper scene script loaded by hero_pause_resume_smoke.gd, not a SceneTree test
+tests/hero_voice_smoke.gd  # built by tools/build_hero_voice_fixture.py with res://battle_fixture.gd

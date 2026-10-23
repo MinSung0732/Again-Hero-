@@ -1,0 +1,303 @@
+[gd_scene load_steps=10 format=3]
+
+
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cooldown_bg"]
+bg_color = Color(0, 0, 0, 0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cooldown_fill"]
+bg_color = Color(0.56, 0.57, 0.63, 0.46)
+
+corner_radius_top_left = 7
+corner_radius_top_right = 7
+corner_radius_bottom_right = 7
+corner_radius_bottom_left = 7
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hud_bar_bg"]
+bg_color = Color(0.018, 0.02, 0.05, 0.98)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.38, 0.18, 0.52, 1)
+
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hud_exp_fill"]
+bg_color = Color(0.08, 0.55, 1, 1)
+
+corner_radius_top_left = 7
+corner_radius_top_right = 7
+corner_radius_bottom_right = 7
+corner_radius_bottom_left = 7
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hud_ultimate_fill"]
+bg_color = Color(1, 0.55, 0.03, 1)
+
+corner_radius_top_left = 7
+corner_radius_top_right = 7
+corner_radius_bottom_right = 7
+corner_radius_bottom_left = 7
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ultimate_normal"]
+bg_color = Color(0.05, 0.035, 0.095, 0.92)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.25, 0.12, 0.35, 0.88)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+content_margin_left = 10.0
+content_margin_top = 8.0
+content_margin_right = 10.0
+content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ultimate_disabled"]
+bg_color = Color(0.032, 0.024, 0.058, 0.8)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.18, 0.1, 0.25, 0.72)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+content_margin_left = 10.0
+content_margin_top = 8.0
+content_margin_right = 10.0
+content_margin_bottom = 8.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_action_hover"]
+bg_color = Color(0.14, 0.075, 0.23, 0.98)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.72, 0.3, 0.95, 1)
+corner_radius_top_left = 7
+corner_radius_top_right = 7
+corner_radius_bottom_right = 7
+corner_radius_bottom_left = 7
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_action_pressed"]
+bg_color = Color(0.32, 0.17, 0.055, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(1, 0.74, 0.2, 1)
+corner_radius_top_left = 7
+corner_radius_top_right = 7
+corner_radius_bottom_right = 7
+corner_radius_bottom_left = 7
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 1.0
+content_margin_bottom = 1.0
+
+[node name="DemonUltimatePanel" type="Control"]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -465.0
+offset_bottom = -255.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="Frame" type="TextureRect" parent="."]
+offset_left = 20.0
+offset_top = 4.0
+offset_right = 1060.0
+offset_bottom = 203.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 0
+texture_filter = 1
+
+[node name="DemonLevelLabel" type="Label" parent="."]
+offset_left = 96.0
+offset_top = 28.0
+offset_right = 474.0
+offset_bottom = 56.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(1, 0.78, 0.32, 1)
+theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 22
+text = "마왕 Lv.1"
+clip_text = true
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DemonExpBar" type="ProgressBar" parent="."]
+offset_left = 96.0
+offset_top = 61.0
+offset_right = 474.0
+offset_bottom = 83.0
+max_value = 15.0
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_hud_bar_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_hud_exp_fill")
+show_percentage = false
+
+[node name="DemonProgressLabel" type="Label" parent="."]
+offset_left = 96.0
+offset_top = 58.0
+offset_right = 474.0
+offset_bottom = 86.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.9, 0.88, 1, 1)
+theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 17
+text = "EXP 0.0 / 15.0"
+clip_text = true
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="UltimateLabel" type="Label" parent="."]
+offset_left = 520.0
+offset_top = 28.0
+offset_right = 1021.0
+offset_bottom = 56.0
+theme_override_colors/font_color = Color(0.97, 0.92, 0.88, 1)
+theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 22
+text = "필살기   0 / 100"
+clip_text = true
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="UltimateBar" type="ProgressBar" parent="."]
+offset_left = 520.0
+offset_top = 61.0
+offset_right = 1021.0
+offset_bottom = 83.0
+max_value = 100.0
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_hud_bar_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_hud_ultimate_fill")
+show_percentage = false
+
+[node name="UltimateButtons" type="HBoxContainer" parent="."]
+offset_left = 54.0
+offset_top = 100.0
+offset_right = 1026.0
+offset_bottom = 184.0
+theme_override_constants/separation = 26
+alignment = 1
+
+[node name="Ultimate1" type="Button" parent="UltimateButtons"]
+focus_mode = 0
+theme_override_colors/font_pressed_color = Color(1, 0.9, 0.58, 1)
+custom_minimum_size = Vector2(0, 84)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.95, 0.91, 0.98, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxFlat_ultimate_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_ultimate_disabled")
+text = "1  원형 포위\n코스트 70 필요"
+disabled = true
+
+[node name="CooldownBar" type="ProgressBar" parent="UltimateButtons/Ultimate1"]
+offset_bottom = -4.0
+offset_right = -4.0
+offset_left = 4.0
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 4.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_cooldown_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_cooldown_fill")
+show_percentage = false
+
+[node name="Ultimate2" type="Button" parent="UltimateButtons"]
+focus_mode = 0
+theme_override_colors/font_pressed_color = Color(1, 0.9, 0.58, 1)
+custom_minimum_size = Vector2(0, 84)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.95, 0.91, 0.98, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxFlat_ultimate_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_ultimate_disabled")
+text = "2  일직선 공세\n코스트 40 필요"
+disabled = true
+
+[node name="CooldownBar" type="ProgressBar" parent="UltimateButtons/Ultimate2"]
+offset_bottom = -4.0
+offset_right = -4.0
+offset_left = 4.0
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 4.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_cooldown_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_cooldown_fill")
+show_percentage = false
+
+[node name="Ultimate3" type="Button" parent="UltimateButtons"]
+focus_mode = 0
+theme_override_colors/font_pressed_color = Color(1, 0.9, 0.58, 1)
+custom_minimum_size = Vector2(0, 84)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.95, 0.91, 0.98, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxFlat_ultimate_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_ultimate_disabled")
+text = "3  사각 포위\n코스트 100 필요"
+disabled = true
+
+[node name="CooldownBar" type="ProgressBar" parent="UltimateButtons/Ultimate3"]
+offset_bottom = -4.0
+offset_right = -4.0
+offset_left = 4.0
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 4.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_styles/background = SubResource("StyleBoxFlat_cooldown_bg")
+theme_override_styles/fill = SubResource("StyleBoxFlat_cooldown_fill")
+show_percentage = false
+
+[node name="ActionChoiceGrid" type="GridContainer" parent="."]
+visible = false
+offset_left = 54.0
+offset_top = 100.0
+offset_right = 1026.0
+offset_bottom = 184.0
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 8
+columns = 5
+

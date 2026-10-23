@@ -1,6 +1,8 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=5 format=3]
 [ext_resource type="Script" path="res://src/online/match_scene.gd" id="1"]
 [ext_resource type="PackedScene" path="res://src/ui/battle_top_bar.tscn" id="2_top_bar"]
+[ext_resource type="PackedScene" path="res://src/ui/demon_ultimate_panel.tscn" id="3_ultimate"]
+[ext_resource type="PackedScene" path="res://src/ui/battle_bottom_bar.tscn" id="4_bottom"]
 [node name="OnlineMatch" type="Control"]
 layout_mode = 3
 anchors_preset = 15
@@ -11,4 +13,10 @@ grow_vertical = 2
 script = ExtResource("1")
 
 [node name="TopBar" parent="." instance=ExtResource("2_top_bar")]
+visible = false
+
+[node name="DemonUltimatePanel" parent="." instance=ExtResource("3_ultimate")]
+visible = false
+
+[node name="BottomBar" parent="." instance=ExtResource("4_bottom")]
 visible = false

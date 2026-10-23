@@ -1,0 +1,287 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/summon_card.svg" id="15_card"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hud_bar_bg"]
+bg_color = Color(0.018, 0.02, 0.05, 0.98)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.38, 0.18, 0.52, 1)
+
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hud_command_fill"]
+bg_color = Color(0.16, 0.72, 0.92, 1)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_card"]
+texture = ExtResource("15_card")
+texture_margin_left = 22.0
+texture_margin_top = 20.0
+texture_margin_right = 22.0
+texture_margin_bottom = 20.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_action_pressed"]
+bg_color = Color(0.32, 0.17, 0.055, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(1, 0.74, 0.2, 1)
+corner_radius_top_left = 7
+corner_radius_top_right = 7
+corner_radius_bottom_right = 7
+corner_radius_bottom_left = 7
+content_margin_left = 5.0
+content_margin_top = 5.0
+content_margin_right = 1.0
+content_margin_bottom = 1.0
+
+[node name="BottomBar" type="Control"]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -255.0
+grow_horizontal = 2
+grow_vertical = 0
+
+[node name="AutoFrame" type="TextureRect" parent="."]
+offset_left = 20.0
+offset_top = 2.0
+offset_right = 1060.0
+offset_bottom = 82.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 0
+texture_filter = 1
+
+[node name="BuildLabel" type="Label" parent="."]
+visible = false
+
+[node name="Status" type="Label" parent="."]
+offset_left = 52.0
+offset_top = 17.0
+offset_right = 328.0
+offset_bottom = 67.0
+theme_override_colors/font_color = Color(1, 0.84, 0.5, 1)
+theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 18
+text = "자동 배치 · 용사 주변 반경 소환"
+vertical_alignment = 1
+clip_text = true
+
+[node name="PlacementModeToggle" type="CheckButton" parent="."]
+metadata/audio_cue = "click"
+offset_left = 838.0
+offset_top = 15.0
+offset_right = 1028.0
+offset_bottom = 68.0
+theme_override_font_sizes/font_size = 18
+button_pressed = true
+text = "자동 배치"
+
+[node name="CommandLabel" type="Label" parent="."]
+vertical_alignment = 1
+horizontal_alignment = 1
+text = "지휘력 0 / 100"
+theme_override_font_sizes/font_size = 18
+theme_override_constants/outline_size = 3
+theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
+theme_override_colors/font_color = Color(0.72, 0.92, 1, 1)
+offset_bottom = 67.0
+offset_right = 584.0
+offset_top = 17.0
+offset_left = 344.0
+visible = true
+
+[node name="CommandBar" type="ProgressBar" parent="."]
+show_percentage = false
+theme_override_styles/fill = SubResource("StyleBoxFlat_hud_command_fill")
+theme_override_styles/background = SubResource("StyleBoxFlat_hud_bar_bg")
+mouse_filter = 2
+max_value = 100.0
+offset_bottom = 54.0
+offset_right = 806.0
+offset_top = 32.0
+offset_left = 604.0
+visible = true
+
+[node name="SummonButtons" type="HBoxContainer" parent="."]
+offset_left = 20.0
+offset_top = 96.0
+offset_right = 1060.0
+offset_bottom = 254.0
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="Slot1" type="Button" parent="SummonButtons"]
+focus_mode = 0
+custom_minimum_size = Vector2(332, 158)
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_styles/normal = SubResource("StyleBoxTexture_card")
+theme_override_styles/hover = SubResource("StyleBoxTexture_card")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_card")
+text = ""
+
+[node name="Icon" type="TextureRect" parent="SummonButtons/Slot1"]
+layout_mode = 1
+offset_left = 24.0
+offset_top = 30.0
+offset_right = 116.0
+offset_bottom = 130.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
+
+[node name="Name" type="Label" parent="SummonButtons/Slot1"]
+layout_mode = 1
+offset_left = 144.0
+offset_top = 40.0
+offset_right = 306.0
+offset_bottom = 74.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.96, 0.93, 1, 1)
+theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 22
+text = "몬스터"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+
+[node name="Cost" type="Label" parent="SummonButtons/Slot1"]
+layout_mode = 1
+offset_left = 144.0
+offset_top = 88.0
+offset_right = 306.0
+offset_bottom = 122.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.95, 0.9, 0.98, 1)
+theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 20
+text = "비용 0"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+
+[node name="Slot2" type="Button" parent="SummonButtons"]
+focus_mode = 0
+custom_minimum_size = Vector2(332, 158)
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_styles/normal = SubResource("StyleBoxTexture_card")
+theme_override_styles/hover = SubResource("StyleBoxTexture_card")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_card")
+text = ""
+
+[node name="Icon" type="TextureRect" parent="SummonButtons/Slot2"]
+layout_mode = 1
+offset_left = 24.0
+offset_top = 30.0
+offset_right = 116.0
+offset_bottom = 130.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
+
+[node name="Name" type="Label" parent="SummonButtons/Slot2"]
+layout_mode = 1
+offset_left = 144.0
+offset_top = 40.0
+offset_right = 306.0
+offset_bottom = 74.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.96, 0.93, 1, 1)
+theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 22
+text = "몬스터"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+
+[node name="Cost" type="Label" parent="SummonButtons/Slot2"]
+layout_mode = 1
+offset_left = 144.0
+offset_top = 88.0
+offset_right = 306.0
+offset_bottom = 122.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.95, 0.9, 0.98, 1)
+theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 20
+text = "비용 0"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+
+[node name="Slot3" type="Button" parent="SummonButtons"]
+focus_mode = 0
+custom_minimum_size = Vector2(332, 158)
+layout_mode = 2
+size_flags_horizontal = 0
+theme_override_styles/normal = SubResource("StyleBoxTexture_card")
+theme_override_styles/hover = SubResource("StyleBoxTexture_card")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
+theme_override_styles/disabled = SubResource("StyleBoxTexture_card")
+text = ""
+
+[node name="Icon" type="TextureRect" parent="SummonButtons/Slot3"]
+layout_mode = 1
+offset_left = 24.0
+offset_top = 30.0
+offset_right = 116.0
+offset_bottom = 130.0
+mouse_filter = 2
+expand_mode = 1
+stretch_mode = 5
+texture_filter = 1
+
+[node name="Name" type="Label" parent="SummonButtons/Slot3"]
+layout_mode = 1
+offset_left = 144.0
+offset_top = 40.0
+offset_right = 306.0
+offset_bottom = 74.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.96, 0.93, 1, 1)
+theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 22
+text = "몬스터"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+
+[node name="Cost" type="Label" parent="SummonButtons/Slot3"]
+layout_mode = 1
+offset_left = 144.0
+offset_top = 88.0
+offset_right = 306.0
+offset_bottom = 122.0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.95, 0.9, 0.98, 1)
+theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
+theme_override_constants/outline_size = 3
+theme_override_font_sizes/font_size = 20
+text = "비용 0"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+
