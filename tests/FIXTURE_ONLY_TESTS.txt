@@ -86,3 +86,11 @@ tests/wave_receipt_smoke.gd  # helper res://tests/wave_projectile_before.gd was 
 tests/zeus_receipt_audio_smoke.gd  # helper res://tests/zeus_receipt_helper.gd was never committed (cloud-session only)
 tests/hero_pause_ui_host.gd  # helper scene script loaded by hero_pause_resume_smoke.gd, not a SceneTree test
 tests/hero_voice_smoke.gd  # built by tools/build_hero_voice_fixture.py with res://battle_fixture.gd
+tests/player_prologue_startup_probe.gd  # helper probe, not a SceneTree test (opens an alert when run directly)
+tests/hero_effect_export_smoke.gd  # not a SceneTree test (opens an alert when run directly)
+tests/inherited_damage_receipt_smoke.gd  # base res://tests/wolf_receipt_smoke.gd was never committed
+tests/mummy_shield_receipt_smoke.gd  # base res://tests/mummy_receipt_smoke.gd was never committed
+tests/orc_receipt_augment_smoke.gd  # base res://tests/orc_receipt_smoke.gd was never committed
+tests/ranged_revival_smoke.gd  # base res://tests/skeleton_archer_receipt_smoke.gd was never committed
+tests/reviving_tank_receipt_smoke.gd  # base res://tests/dullahan_receipt_smoke.gd was never committed
+tests/skeleton_revival_smoke.gd  # base res://tests/skeleton_receipt_smoke.gd was never committed

@@ -26,6 +26,7 @@ const DEMON_SKILL_LOADOUT_STORE := preload(
 	"res://src/systems/demon_skill_loadout_store.gd"
 )
 const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
+const AUGMENT_COMPARE := preload("res://src/ui/augment_compare_view.gd")
 const HERO_AUGMENTS := preload("res://src/data/hero_augment_catalog.gd")
 const HERO_SKILL_COOLDOWN_BADGE := preload("res://src/ui/hero_skill_cooldown_badge.gd")
 const BATTLE_PIXEL_FRAME_ASSEMBLER := preload("res://src/ui/battle_pixel_frame_assembler.gd")
@@ -3186,6 +3187,20 @@ func _on_demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: 
 			name_label.offset_top = 64.0
 			name_label.offset_bottom = 118.0
 			description_label.offset_top = 126.0
+		var comparison_view := buttons[index].get_node_or_null("AugmentCompare") as RichTextLabel
+		if comparison_view == null:
+			comparison_view = AUGMENT_COMPARE.add(buttons[index],[],13)
+			comparison_view.set_anchors_preset(Control.PRESET_TOP_WIDE)
+			comparison_view.offset_left = 18.0
+			comparison_view.offset_right = -18.0
+			comparison_view.fit_content = false
+			comparison_view.scroll_active = true
+			comparison_view.mouse_filter = Control.MOUSE_FILTER_PASS
+		comparison_view.offset_top = 228.0
+		comparison_view.offset_bottom = 344.0
+		description_label.offset_bottom = 224.0 if candidate.has("compare") and not candidate.compare.is_empty() else 332.0
+		var comparison: Array = candidate.get("compare",[])
+		AUGMENT_COMPARE.update(comparison_view,comparison)
 
 	var reroll_max := 3
 	if battle.has_method("get_demon_reroll_max"):

@@ -3,6 +3,12 @@ const RULES := preload("res://src/online/match_rules.gd")
 const ICONS := preload("res://src/ui/hero_augment_icons.gd")
 const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
 const MONSTERS := preload("res://src/data/monster_catalog.gd")
+const AUGMENT_COMPARE := preload("res://src/ui/augment_compare_view.gd")
+# New held offer: the slot glows soft yellow once (fade in, then out).
+const NEW_HOLD_GLOW_COLOR := Color(1.0,0.86,0.3,0.55)
+const NEW_HOLD_GLOW_IN := 0.18
+const NEW_HOLD_GLOW_OUT := 0.5
+const NEW_HOLD_GLOW_MARGIN := 10.0
 signal choose(number: int,id: String)
 signal reroll(number: int)
 signal oldest_auto_chosen
@@ -13,10 +19,13 @@ var reroll_limit := 0
 var controls_enabled := true
 var holds: Array = []
 var dots: Array[Button] = []
+var dot_glows: Array[Panel] = []
+var dot_glow_tweens: Array = []
 var cards: Array[Button] = []
 var card_icons: Array[TextureRect] = []
 var card_names: Array[Label] = []
 var card_descriptions: Array[Label] = []
+var card_comparisons: Array[RichTextLabel] = []
 var dot_row: HBoxContainer
 var popup: PanelContainer
 var popup_rows: VBoxContainer
@@ -36,6 +45,13 @@ func _ready() -> void:
 		var dot := Button.new(); dot.name = "Dot%d" % index; dot.text = "●"
 		dot.custom_minimum_size = Vector2(60,60); dot.add_theme_font_size_override("font_size",34)
 		dot_row.add_child(dot); dot.pressed.connect(open_index.bind(index)); dot.hide(); dots.append(dot)
+		# Glow panels are built once per slot and only tweened when an offer arrives.
+		var glow := Panel.new(); glow.name = "NewGlow"; glow.mouse_filter = Control.MOUSE_FILTER_IGNORE; glow.show_behind_parent = true
+		var glow_style := StyleBoxFlat.new(); glow_style.bg_color = NEW_HOLD_GLOW_COLOR; glow_style.set_corner_radius_all(int(30.0+NEW_HOLD_GLOW_MARGIN))
+		glow.add_theme_stylebox_override("panel",glow_style)
+		dot.add_child(glow); glow.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		glow.offset_left = -NEW_HOLD_GLOW_MARGIN; glow.offset_top = -NEW_HOLD_GLOW_MARGIN; glow.offset_right = NEW_HOLD_GLOW_MARGIN; glow.offset_bottom = NEW_HOLD_GLOW_MARGIN
+		glow.modulate.a = 0.0; dot_glows.append(glow); dot_glow_tweens.append(null)
 	popup = PanelContainer.new(); popup.name = "HoldPopup"; popup.mouse_filter = Control.MOUSE_FILTER_STOP
 	add_child(popup); popup.hide()
 	var margin := MarginContainer.new(); popup.add_child(margin)
@@ -62,6 +78,12 @@ func _ready() -> void:
 		var description := Label.new(); description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		description.add_theme_font_size_override("font_size",21); labels.add_child(description)
 		card_descriptions.append(description); card.hide()
+		var comparison := AUGMENT_COMPARE.add(labels,[],15)
+		comparison.fit_content = false
+		comparison.scroll_active = true
+		comparison.mouse_filter = Control.MOUSE_FILTER_PASS
+		comparison.custom_minimum_size.y = 60
+		card_comparisons.append(comparison)
 	reroll_button = Button.new(); reroll_button.name = "Reroll"; reroll_button.custom_minimum_size.y = 64
 	popup_rows.add_child(reroll_button); reroll_button.pressed.connect(_reroll_open)
 	lower_button = Button.new(); lower_button.name = "Lower"; lower_button.text = "내리기"; lower_button.custom_minimum_size.y = 64
@@ -91,9 +113,16 @@ func set_holds(next_holds: Array) -> void:
 		else: close_popup()
 	_layout()
 	if holds.size() > old.size() and holds.size() > 0:
-		var dot := dots[holds.size()-1]
-		var tween := create_tween(); tween.tween_property(dot,"modulate",Color(1.0,0.8,0.3),0.12)
-		tween.tween_property(dot,"modulate",Color.WHITE,0.2)
+		_glow_slot(holds.size()-1)
+
+func _glow_slot(index: int) -> void:
+	var previous: Tween = dot_glow_tweens[index]
+	if previous != null and previous.is_valid(): previous.kill()
+	var glow := dot_glows[index]; glow.modulate.a = 0.0
+	var tween := create_tween()
+	tween.tween_property(glow,"modulate:a",1.0,NEW_HOLD_GLOW_IN)
+	tween.tween_property(glow,"modulate:a",0.0,NEW_HOLD_GLOW_OUT)
+	dot_glow_tweens[index] = tween
 
 func open_index(index: int) -> void:
 	if index < 0 or index >= holds.size(): return
@@ -129,6 +158,8 @@ func _show_offer() -> void:
 			var option: Dictionary = options[index]
 			card_names[index].text = String(option.get("name",""))
 			card_descriptions[index].text = String(option.get("description",""))
+			var comparison: Array = option.get("compare",[])
+			AUGMENT_COMPARE.update(card_comparisons[index],comparison)
 			card_icons[index].texture = _candidate_icon(String(option.get("id","")))
 			cards[index].disabled = not controls_enabled or bool(option.get("unavailable",false))
 		_refresh_reroll(); _layout(); return

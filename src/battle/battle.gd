@@ -4836,6 +4836,7 @@ func _roll_demon_augment_candidates(is_reroll: bool) -> Array:
 
 	demon_last_candidate_ids.clear()
 	for candidate in candidates:
+		candidate["compare"] = DEMON_AUGMENTS.compare(candidate,int(demon_build_counts.get(String(candidate.get("id","")),0)))
 		demon_last_candidate_ids.append(String(candidate.get("id", "")))
 
 	return candidates

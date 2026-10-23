@@ -230,7 +230,33 @@ func offer_card(id: String) -> Dictionary:
 func _card(id: String, next_level: int) -> Dictionary:
 	var data: Dictionary = DATA.WEAPONS.get(id,DATA.PASSIVES.get(id,{}))
 	if bool(data.get("one_shot",false)): return {"id":id,"name":String(data.name),"description":DATA.description(id,1)}
-	return {"id":id,"name":("무기" if DATA.is_weapon(id) else "보조")+" · "+String(data.name)+" Lv.%d" % next_level,"description":DATA.description(id,next_level)}
+	var comparison: Array = []
+	if DATA.is_weapon(id):
+		var current: Dictionary = stats_for(id) if levels.has(id) else {}
+		var had_level := levels.has(id)
+		var previous_level := int(levels.get(id,0))
+		var previous_cache: Dictionary = resolved.get(id,{})
+		levels[id] = next_level
+		resolved.erase(id)
+		var projected: Dictionary = stats_for(id)
+		projected = projected.duplicate()
+		projected["display_damage"] = _cast_damage(id,projected)
+		var next_cooldown := float(projected.cooldown)*haste*float(projected.cooldown_scale)
+		projected["display_cooldown"] = identity.cooldown_for(id,next_cooldown) if identity != null else next_cooldown
+		if not current.is_empty():
+			current = current.duplicate()
+			current["display_damage"] = _cast_damage(id,current)
+			var old_cooldown := float(current.cooldown)*haste*float(current.cooldown_scale)
+			current["display_cooldown"] = identity.cooldown_for(id,old_cooldown) if identity != null else old_cooldown
+		if had_level: levels[id] = previous_level
+		else: levels.erase(id)
+		if previous_cache.is_empty(): resolved.erase(id)
+		else: resolved[id] = previous_cache
+		var base_damage: float = identity.attack_damage() if identity != null else float(hero.attack_damage)
+		comparison = DATA.compare(id,next_level,current,projected,base_damage*power)
+	else:
+		comparison = DATA.compare(id,next_level)
+	return {"id":id,"name":("무기" if DATA.is_weapon(id) else "보조")+" · "+String(data.name)+" Lv.%d" % next_level,"description":DATA.description(id,next_level),"compare":comparison}
 
 func choose(id: String) -> bool:
 	if id == "survival_restore": hero.heal_direct(roundi(hero.max_hp*0.15)); return true

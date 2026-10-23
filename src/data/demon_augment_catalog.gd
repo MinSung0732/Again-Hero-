@@ -10,6 +10,37 @@ const BASE_REROLLS := 3 # 연구 보너스 전 마왕 증강 새로고침 기본
 const NORMAL_MAX_LEVEL := 10
 const SPECIAL_MAX_LEVEL := 1
 
+const COMPARE_LABELS := {"command_regen_per_second":"지휘력 회복/초","death_refund_ratio":"사망 환급","summon_cost_multiplier":"생산비용 배율","demon_exp_gain_multiplier":"마왕 EXP 배율","damage":"공격력 배율","hp":"체력 배율","speed":"이속 배율","attack_cooldown":"공격 간격 배율","cost":"생산비용 배율"}
+const COMPARE_BASES := {"command_regen_per_second":3.0,"demon_exp_gain_multiplier":1.0}
+
+static func compare(augment: Dictionary, stacks: int) -> Array:
+	if String(augment.get("augment_type",TYPE_NORMAL)) == TYPE_SPECIAL: return []
+	var result: Array = []
+	for raw_effect in augment.get("effects",[]):
+		var effect: Dictionary = raw_effect
+		var op := String(effect.get("op",""))
+		var key := String(effect.get("target",effect.get("stat","")))
+		var base := float(COMPARE_BASES.get(key,1.0 if op in ["multiply_runtime","monster_multiplier"] else 100.0 if op == "add_command_capacity" else 0.0))
+		var current := base
+		for index in stacks:
+			current = _compare_step(current,effect,op)
+		var next := _compare_step(current,effect,op)
+		var label := "최대 지휘력" if op == "add_command_capacity" else String(COMPARE_LABELS.get(key,key))
+		if label.is_empty(): continue
+		var suffix := "" if op == "add_command_capacity" or key == "command_regen_per_second" else "%"
+		var scale := 1.0 if suffix.is_empty() else 100.0
+		result.append({"label":label,"current":_compare_number(current*scale)+suffix,"next":_compare_number(next*scale)+suffix})
+	return result
+
+static func _compare_step(current: float,effect: Dictionary,op: String) -> float:
+	var next := current*float(effect.get("value",1.0)) if op in ["multiply_runtime","monster_multiplier"] else current+float(effect.get("value",0.0))
+	if effect.has("min"): next = maxf(next,float(effect.min))
+	if effect.has("max"): next = minf(next,float(effect.max))
+	return next
+
+static func _compare_number(value: float) -> String:
+	return str(roundi(value)) if is_equal_approx(value,roundf(value)) else ("%.2f" % value).trim_suffix("0")
+
 # Index immutable catalog entries once; callers still receive isolated copies.
 static var augment_lookup: Dictionary = {}
 

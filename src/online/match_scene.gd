@@ -685,6 +685,11 @@ func _event(event: Dictionary) -> void:
 				if not offer is Dictionary or not RULES.number(offer.get("number",null)) or float(offer.number) != floorf(float(offer.number)) or not offer.get("candidates",null) is Array or offer.candidates.is_empty() or offer.candidates.size() > RULES.MAX_OFFER_CANDIDATES: return
 				for option in offer.candidates:
 					if not option is Dictionary or not option.get("id",null) is String or not option.get("name",null) is String: return
+					if not option.get("compare",null) is Array or option.compare.size() > RULES.MAX_COMPARE_ROWS: return
+					for row in option.compare:
+						if not row is Dictionary: return
+						for field in ["label","current","next"]:
+							if not row.get(field,null) is String or String(row[field]).length() > RULES.MAX_COMPARE_FIELD_LENGTH: return
 			if int(event.tick) <= last_tick or not view.update_state(event): return
 			last_tick = int(event.tick)
 			_update_match_hud(event)

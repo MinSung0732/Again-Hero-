@@ -10,6 +10,7 @@ const BATTLE_SCENE := preload("res://src/battle/Battle.tscn")
 const MOVE_PAD := preload("res://src/hero_mode/hero_move_pad.gd")
 const WEAPONS := preload("res://src/data/hero_weapon_catalog.gd")
 const ICONS := preload("res://src/ui/hero_augment_icons.gd")
+const AUGMENT_COMPARE := preload("res://src/ui/augment_compare_view.gd")
 const DIRECTOR := preload("res://src/hero_mode/ai_demon_director.gd")
 const SETTINGS := preload("res://src/ui/BattleSettings.tscn")
 const HUD := preload("res://src/ui/hero_survival_hud.gd")
@@ -359,6 +360,9 @@ func _choice_card(parent: HBoxContainer, candidate: Dictionary, action: Callable
 	var name_label := _label(rows,String(candidate.get("name",id)),26)
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var description := _label(rows,String(candidate.get("description","")),22)
+	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	var comparison: Array = candidate.get("compare",[])
+	AUGMENT_COMPARE.add(rows,comparison,16)
 	description.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var hint := _label(rows,"탭하여 선택",20); hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	return button

@@ -50,6 +50,9 @@ func run() -> void:
 			holds.append({"number":number+1,"candidates":[{"id":"survival_power","name":"생존력","description":"체력 증가"}]})
 		scene._update_holds(holds); await process_frame
 		check(scene.hold_popup.dots.filter(func(dot): return dot.visible).size() == 3 and not scene.hold_popup.popup.visible,"three holds add three dots without opening")
+		check(scene.hold_popup.dot_glows.size() == RULES.AUGMENT_HOLD_LIMIT and scene.hold_popup.dot_glow_tweens[2] != null and scene.hold_popup.dot_glow_tweens[2].is_valid(),"newest held slot glows once")
+		await create_timer(scene.hold_popup.NEW_HOLD_GLOW_IN+scene.hold_popup.NEW_HOLD_GLOW_OUT+0.1).timeout
+		check(scene.hold_popup.dot_glows[2].modulate.a <= 0.01 and scene.hold_popup.dot_glows[2].mouse_filter == Control.MOUSE_FILTER_IGNORE,"glow fades out and never blocks taps")
 		scene.hold_popup.dots[1].pressed.emit(); await process_frame
 		check(scene.hold_popup.popup.visible and scene.hold_popup.opened_number == 2 and scene.hold_popup.card_names[0].text == "생존력","dot opens its own candidate popup")
 		scene.hold_popup.lower_button.pressed.emit()

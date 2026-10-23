@@ -2589,6 +2589,49 @@ static func description(id: String, next_level: int, with_tags: bool = true) -> 
 		var before := GROWTH.resolve(id,WEAPONS[id],rank if awakened else rank-1,false)
 		text = CARD_TEXT.changes(before,after,rank)
 	return text+("\n"+card_tags(id,after) if with_tags else "")
+
+static func compare(id: String, next_level: int, current_stats: Dictionary = {}, next_stats: Dictionary = {}, base_damage: float = 1.0) -> Array:
+	if PASSIVES.has(id):
+		var passive: Dictionary = PASSIVES[id]
+		if bool(passive.get("one_shot",false)): return []
+		var rank := clampi(next_level,1,passive_limit(id))
+		var unit := float(passive.value)
+		var stat := String(passive.stat)
+		var old := unit*float(rank-1)
+		var new := unit*float(rank)
+		if stat == "armor":
+			old = minf(old,0.30); new = minf(new,0.30)
+		if stat == "multishot": return [{"label":String(passive.name),"current":"+%d개" % mini(2,rank-1),"next":"+%d개" % mini(2,rank)}]
+		return [{"label":String(passive.name),"current":"+%s%%" % CARD_TEXT.number(old*100.0),"next":"+%s%%" % CARD_TEXT.number(new*100.0)}]
+	if not WEAPONS.has(id): return []
+	var rank := clampi(next_level,1,MAX_LEVEL)
+	var after: Dictionary = next_stats if not next_stats.is_empty() else GROWTH.resolve(id,WEAPONS[id],rank,next_level > MAX_LEVEL)
+	var before: Dictionary = current_stats if not current_stats.is_empty() else GROWTH.resolve(id,WEAPONS[id],maxi(1,rank-1),false)
+	var first := next_level == 1
+	var result: Array = []
+	if String(after.get("pattern","")) not in ["guard","heal"]:
+		var old_damage := int(before.get("display_damage",maxi(1,roundi(base_damage*float(before.power)*float(before.damage_scale)))))
+		var new_damage := int(after.get("display_damage",maxi(1,roundi(base_damage*float(after.power)*float(after.damage_scale)))))
+		result.append({"label":"피해","current":"없음" if first else str(old_damage),"next":str(new_damage)})
+	result.append({"label":"공격 간격","current":"없음" if first else "%s초" % CARD_TEXT.number(float(before.get("display_cooldown",float(before.cooldown)*float(before.cooldown_scale)))),"next":"%s초" % CARD_TEXT.number(float(after.get("display_cooldown",float(after.cooldown)*float(after.cooldown_scale))))})
+	if String(after.get("pattern","")) != "summon":
+		result.append({"label":"사거리","current":"없음" if first else CARD_TEXT.number(float(before.get("range",0.0))*float(before.reach_scale)),"next":CARD_TEXT.number(float(after.get("range",0.0))*float(after.reach_scale))})
+	else:
+		result.append({"label":"소환 유지","current":"없음" if first else "%s초" % CARD_TEXT.number(float(before.summon_duration)),"next":"%s초" % CARD_TEXT.number(float(after.summon_duration))})
+	var fields: Dictionary = CARD_TEXT.SUMMON_FIELDS if String(after.get("pattern","")) == "summon" else CARD_TEXT.EXTRA_FIELDS
+	var old_fields: Dictionary = before
+	var new_fields: Dictionary = after
+	if fields == CARD_TEXT.SUMMON_FIELDS:
+		old_fields = before.get("summon_config",before.get("summon_patch",{}))
+		new_fields = after.get("summon_config",after.get("summon_patch",{}))
+	for key in fields:
+		if not new_fields.has(key): continue
+		var old_value := float(old_fields.get(key,0.0))
+		var new_value := float(new_fields[key])
+		if not first and is_equal_approx(old_value,new_value): continue
+		var field: Array = fields[key]
+		result.append({"label":String(field[0]),"current":"없음" if first else CARD_TEXT.number(old_value*float(field[1]))+String(field[2]),"next":CARD_TEXT.number(new_value*float(field[1]))+String(field[2])})
+	return result
 static func profile_for_survival(source: Dictionary) -> Dictionary:
 	var result := source.duplicate(true)
 	var stats := preload("res://src/data/hero_mode_catalog.gd").starting_stats(String(source.get("id","ranged_rookie")))

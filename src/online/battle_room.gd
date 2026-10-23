@@ -125,6 +125,13 @@ func _wire_candidates(candidates: Array) -> Array:
 	var result: Array = []
 	for candidate in candidates:
 		var wire := {"id":String(candidate.get("id","")),"name":String(candidate.get("name","")),"description":String(candidate.get("description",""))}
+		var comparison: Array = []
+		for raw_row in candidate.get("compare",[]):
+			if comparison.size() >= RULES.MAX_COMPARE_ROWS: break
+			if not raw_row is Dictionary: continue
+			var row: Dictionary = raw_row
+			comparison.append({"label":String(row.get("label","")).substr(0,RULES.MAX_COMPARE_FIELD_LENGTH),"current":String(row.get("current","")).substr(0,RULES.MAX_COMPARE_FIELD_LENGTH),"next":String(row.get("next","")).substr(0,RULES.MAX_COMPARE_FIELD_LENGTH)})
+		wire["compare"] = comparison
 		if bool(candidate.get("unavailable",false)): wire["unavailable"] = true
 		result.append(wire)
 	return result
@@ -156,6 +163,20 @@ func _refresh_hero_holds() -> void:
 	if changed:
 		choice_revision += 1
 		choice = hero_holds[0].candidates
+
+func _refresh_demon_holds() -> void:
+	var changed := false
+	for index in demon_holds.size():
+		var offer: Dictionary = demon_holds[index]
+		for candidate in offer.candidates:
+			var id := String(candidate.get("id",""))
+			var stacks := int(battle.demon_build_counts.get(id,0))
+			candidate["current_stack"] = stacks
+			candidate["compare"] = DEMON_AUGMENTS.compare(candidate,stacks)
+		offer.wire_candidates = _wire_candidates(offer.candidates)
+		demon_holds[index] = offer
+		changed = true
+	if changed: choice_revision += 1
 func _reroll_held(role: String,argument: Dictionary) -> bool:
 	var number: Variant = argument.get("number",null)
 	if not RULES.number(number) or float(number) != floorf(float(number)): return false
@@ -193,6 +214,7 @@ func _apply_offer(role: String,offer: Dictionary,id: String) -> bool:
 			var hint := _demon_augment_hint(DEMON_AUGMENTS.get_augment(id))
 			demon_augment_hint_counts[hint] = int(demon_augment_hint_counts.get(hint,0)) + 1
 			public_demon_hints_dirty = true
+			_refresh_demon_holds()
 			return true
 	return false
 func _demon_augment_hint(augment: Dictionary) -> String:

@@ -1,6 +1,6 @@
 extends RefCounted
-## Live summon costs require matching protocol 15 peers.
-const VERSION := 16
+## Augment comparisons require matching protocol 17 peers.
+const VERSION := 17
 const HINT_DETAIL := "role" # "role" or "monster"
 const ROLE_HINT_LABELS := {"melee":"근접"}
 const TARGET_HINT_LABELS := {"demon":"마왕 운영","all_monsters":"모든 몬스터"}
@@ -17,6 +17,8 @@ const INPUT_TIMEOUT := 0.35
 const CHOICE_TIMEOUT := 8.0 # Legacy fixture compatibility; ranked matches do not use a choice timer.
 const UNAVAILABLE_AUGMENT_TEXT := "이미 최대 레벨이거나 슬롯이 가득 차 선택할 수 없습니다."
 const MAX_OFFER_CANDIDATES := 4 # 증강 선택지 한 번에 보이는 최대 후보 수(와이어 검증·팝업 카드 수).
+const MAX_COMPARE_ROWS := 6
+const MAX_COMPARE_FIELD_LENGTH := 32
 const AUGMENT_HOLD_LIMIT := 4
 const CHEST_HISTORY_LIMIT := 16
 const TRANSCENDENCE_SUMMON_LIMIT := 1
