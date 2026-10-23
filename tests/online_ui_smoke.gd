@@ -1,6 +1,7 @@
 extends SceneTree
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
 const RULES := preload("res://src/online/match_rules.gd")
+const WEAPONS := preload("res://src/data/hero_weapon_catalog.gd")
 class CommandSpy:
 	extends RefCounted
 	var reconnecting := false
@@ -188,17 +189,22 @@ func run() -> void:
 			scene._update_match_hud({"seconds":41.0,"hero":[100.0,100.0,720,1200,3],"actors":[]})
 			scene._update_hero_build({"level":3,"weapons":[["ranged_rookie_arcane_bolt",2,false]],"passives":[["survival_power",1]],"augments":["공격력 증가"],"rerolls_left":99,"held_offers":["비공개"]})
 			await process_frame
-			var build_text: String = scene.hero_build_level.text + scene.hero_build_augments.text
-			for row in scene.hero_build_rows.get_children():
-				if row is Label: build_text += row.text
-				for child in row.get_children():
-					if child is Label: build_text += child.text
-			check(build_text.contains("피해") and build_text.contains("공격 간격") and build_text.contains("사거리") and build_text.contains("공격력 증가"),"public build includes weapon stats and chosen augments")
-			check(scene.hero_build_level.text.contains("720 / 1200") and scene.hero_build_level.text.contains("Lv.3"),"public build shows current hero HP and level")
+			var build_text: String = ""
+			for label in scene.hero_build_panel.find_children("*","Label",true,false):
+				build_text += label.text
+				check(label.size.x >= 200.0,"public build label keeps readable width: "+label.text+" width="+str(label.size.x))
+			check(scene.hero_build_scroll.horizontal_scroll_mode == ScrollContainer.SCROLL_MODE_DISABLED and scene.hero_build_panel.size.x >= scene.hero_build_scroll.size.x - 24.0,"public build fills scroll width")
+			check(scene.hero_build_weapon_cards.size() == WEAPONS.WEAPON_SLOTS and scene.hero_build_passive_cards.size() == WEAPONS.PASSIVE_SLOTS,"public build has every equipment slot")
+			var weapon_name: Label = scene.hero_build_weapon_cards[0].get_node("Row/Text/Name")
+			var weapon_details: Label = scene.hero_build_weapon_cards[0].get_node("Row/Text/Details")
+			check(weapon_name.text.contains(String(WEAPONS.WEAPONS["ranged_rookie_arcane_bolt"].name)) and weapon_name.text.contains("Lv.2") and weapon_details.text.contains("피해") and weapon_details.text.contains("간격") and weapon_details.text.contains("사거리") and weapon_details.get_line_count() == 1,"equipped weapon shows name, level, and one-line stats")
+			check(build_text.contains("공격력 증가"),"public build shows chosen augments")
+			check(scene.hero_build_hp_text.text.contains("720 / 1200") and scene.hero_build_level.text.contains("Lv.3") and scene.hero_build_hp_bar.value == 720,"public build shows current hero HP and level")
 			check(not build_text.contains("비공개") and not build_text.contains("99") and not build_text.contains("새로고침"),"held choices and reroll state remain private")
 			var previous_signature: String = scene.hero_build_signature
+			var previous_nodes: int = scene.hero_build_panel.find_children("*","Control",true,false).size()
 			scene._update_hero_build(scene.hero_build_data)
-			check(scene.hero_build_signature == previous_signature,"unchanged public build does not redraw")
+			check(scene.hero_build_signature == previous_signature and scene.hero_build_panel.find_children("*","Control",true,false).size() == previous_nodes,"unchanged public build keeps nodes")
 			var outside := InputEventMouseButton.new(); outside.pressed = true; outside.position = Vector2(10,10)
 			scene._hero_build_outside_input(outside)
 			check(not scene.hero_build_overlay.visible,"outside tap closes build popup")
@@ -226,7 +232,7 @@ func run() -> void:
 		if role == "demon":
 			check(scene.bottom_bar.get_global_rect().end.y <= root.size.y and scene.summon_buttons[-1].get_global_rect().end.x <= root.size.x,"phone cards fit")
 			scene.hero_build_toggle.pressed.emit(); await process_frame
-			check(scene.hero_build_frame.size.x >= root.size.x * 0.8 and scene.hero_build_frame.get_global_rect().end.x <= root.size.x,"phone build popup fits width")
+			check(scene.hero_build_frame.size.x >= root.size.x * 0.8 and scene.hero_build_frame.get_global_rect().position.x >= 0 and scene.hero_build_frame.get_global_rect().end.x <= root.size.x and scene.hero_build_frame.get_global_rect().end.y <= root.size.y,"phone build popup fits screen")
 			scene._close_hero_build()
 		check(scene.hold_popup.dot_row.get_global_rect().end.y <= lower.get_global_rect().position.y and absf(scene.view.get_global_rect().end.y-lower.get_global_rect().position.y) <= 2.0,"phone battlefield fills to lower HUD and dots stay above it")
 		scene.hold_popup.open_index(0); await process_frame
@@ -242,7 +248,7 @@ func run() -> void:
 		if role == "demon":
 			check(scene.bottom_bar.get_global_rect().end.y <= root.size.y and scene.summon_buttons[-1].get_global_rect().end.x <= root.size.x,"tablet cards fit")
 			scene.hero_build_toggle.pressed.emit(); await process_frame
-			check(scene.hero_build_frame.size.x >= root.size.x * 0.8 and scene.hero_build_frame.get_global_rect().end.x <= root.size.x,"tablet build popup fits width")
+			check(scene.hero_build_frame.size.x >= root.size.x * 0.8 and scene.hero_build_frame.get_global_rect().position.x >= 0 and scene.hero_build_frame.get_global_rect().end.x <= root.size.x and scene.hero_build_frame.get_global_rect().end.y <= root.size.y,"tablet build popup fits screen")
 			scene._close_hero_build()
 		check(scene.hold_popup.dot_row.get_global_rect().end.y <= lower.get_global_rect().position.y and absf(scene.view.get_global_rect().end.y-lower.get_global_rect().position.y) <= 2.0,"tablet battlefield fills to lower HUD and dots stay above it")
 		scene.hold_popup.open_index(0); await process_frame

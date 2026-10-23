@@ -74,6 +74,11 @@ var hero_build_panel: VBoxContainer
 var hero_build_rows: VBoxContainer
 var hero_build_level: Label
 var hero_build_augments: Label
+var hero_build_portrait: TextureRect
+var hero_build_hp_bar: ProgressBar
+var hero_build_hp_text: Label
+var hero_build_weapon_cards: Array[Control] = []
+var hero_build_passive_cards: Array[Control] = []
 var hero_build_signature := ""
 var hero_build_data: Dictionary = {}
 var demon_info_panel: Control
@@ -248,12 +253,31 @@ func _ready() -> void:
 		var title := _label(heading,"공개된 용사 빌드",28); title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var close := _button(heading,"닫기",_close_hero_build); close.custom_minimum_size = Vector2(110,62)
 		hero_build_scroll = ScrollContainer.new(); hero_build_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		hero_build_scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hero_build_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 		content.add_child(hero_build_scroll)
-		hero_build_panel = VBoxContainer.new(); hero_build_scroll.add_child(hero_build_panel)
-		hero_build_level = _label(hero_build_panel,"용사 Lv.1 · HP ? / ?",25)
-		hero_build_rows = VBoxContainer.new(); hero_build_panel.add_child(hero_build_rows)
-		hero_build_augments = _label(hero_build_panel,"선택한 증강: 없음",22)
-		hero_build_augments.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		hero_build_panel = VBoxContainer.new(); hero_build_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hero_build_panel.add_theme_constant_override("separation",20); hero_build_scroll.add_child(hero_build_panel)
+		var hero_header := HBoxContainer.new(); hero_header.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hero_build_panel.add_child(hero_header)
+		hero_build_portrait = TextureRect.new(); hero_build_portrait.custom_minimum_size = Vector2(112,112)
+		hero_build_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		hero_build_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; hero_header.add_child(hero_build_portrait)
+		var hero_status := VBoxContainer.new(); hero_status.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hero_header.add_child(hero_status)
+		hero_build_level = _label(hero_status,"용사 · Lv.1",26); hero_build_level.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hero_build_hp_bar = ProgressBar.new(); hero_build_hp_bar.show_percentage = false
+		hero_build_hp_bar.custom_minimum_size.y = 26; hero_build_hp_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hero_status.add_child(hero_build_hp_bar)
+		hero_build_hp_text = _label(hero_status,"HP ? / ?",23); hero_build_hp_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hero_build_rows = VBoxContainer.new(); hero_build_rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hero_build_panel.add_child(hero_build_rows)
+		_create_hero_build_cards(hero_build_rows,"장착 무기",WEAPONS.WEAPON_SLOTS,hero_build_weapon_cards)
+		_create_hero_build_cards(hero_build_rows,"장착 보조",WEAPONS.PASSIVE_SLOTS,hero_build_passive_cards)
+		var augment_section := VBoxContainer.new(); augment_section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hero_build_panel.add_child(augment_section)
+		var augment_title := _label(augment_section,"선택한 증강",24); augment_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hero_build_augments = _label(augment_section,"없음",23); hero_build_augments.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	else:
 		demon_info_panel = Control.new(); demon_info_panel.name = "DemonInfoPanel"
 		demon_info_panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
@@ -397,6 +421,7 @@ func _layout_top_bar() -> void:
 		if hero_build_frame != null:
 			hero_build_frame.position = Vector2(width * 0.05,270)
 			hero_build_frame.size = Vector2(width * 0.9,minf(1380.0,get_viewport_rect().size.y - 540.0))
+			hero_build_panel.custom_minimum_size.x = hero_build_frame.size.x - 84.0
 
 func _show_match_layout() -> void:
 	for control in setup_controls: control.hide()
@@ -630,16 +655,21 @@ func _update_hero_build(build: Dictionary) -> void:
 	if not build.get("weapons",null) is Array or not build.get("passives",null) is Array: return
 	if build.weapons.size() > WEAPONS.WEAPON_SLOTS or build.passives.size() > WEAPONS.PASSIVE_SLOTS: return
 	hero_build_data = build
-	var heading := "%s · Lv.%d · HP %d / %d" % [String(HEROES.get_character(matched_hero_id).get("name","용사")),int(build.level),maxi(0,hud_hp),maxi(0,hud_max_hp)]
+	var heading := "%s · Lv.%d" % [String(HEROES.get_character(matched_hero_id).get("name","용사")),int(build.level)]
 	if hero_build_level.text != heading: hero_build_level.text = heading
+	hero_build_hp_bar.max_value = maxi(1,hud_max_hp)
+	hero_build_hp_bar.value = clampi(hud_hp,0,maxi(1,hud_max_hp))
+	hero_build_hp_text.text = "HP %d / %d" % [maxi(0,hud_hp),maxi(0,hud_max_hp)]
 	var signature := JSON.stringify([build,matched_hero_id])
 	if signature == hero_build_signature: return
 	hero_build_signature = signature
+	hero_build_portrait.texture = HERO_HUD.portrait_texture(matched_hero_id)
 	var names := PackedStringArray()
 	for name in build.augments:
 		if name is String: names.append(name)
-	hero_build_augments.text = "선택한 증강: %s" % ("없음" if names.is_empty() else ", ".join(names))
-	_render_hero_items(hero_build_rows,build)
+	hero_build_augments.text = "없음" if names.is_empty() else " · ".join(names)
+	_render_hero_build_cards(hero_build_weapon_cards,build.weapons,true)
+	_render_hero_build_cards(hero_build_passive_cards,build.passives,false)
 func _update_hero_inventory(inventory: Dictionary) -> void:
 	if not RULES.number(inventory.get("level",null)) or not RULES.number(inventory.get("exp",null)) or not RULES.number(inventory.get("exp_next",null)): return
 	if not RULES.number(inventory.get("rerolls_left",null)) or not RULES.number(inventory.get("reroll_limit",null)): return
@@ -651,34 +681,58 @@ func _update_hero_inventory(inventory: Dictionary) -> void:
 	if signature == inventory_signature: return
 	inventory_signature = signature
 	_update_hero_slots(inventory)
-func _render_hero_items(target: VBoxContainer,inventory: Dictionary) -> void:
-	for child in target.get_children():
-		target.remove_child(child); child.queue_free()
-	for kind in ["weapons","passives"]:
-		_label(target,"장착 무기" if kind == "weapons" else "장착 보조",24)
-		for item in inventory[kind]:
-			if not item is Array or item.size() < 2 or not item[0] is String or not RULES.number(item[1]): continue
-			var id: String = item[0]
-			var evolved: bool = kind == "weapons" and item.size() > 2 and item[2] == true
-			if not WEAPONS.WEAPONS.has(id) and not WEAPONS.PASSIVES.has(id): continue
-			var level := int(item[1])
-			var row := HBoxContainer.new(); target.add_child(row)
-			var icon := TextureRect.new(); icon.texture = ICONS.texture(id)
-			icon.custom_minimum_size = Vector2(56,56); icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; row.add_child(icon)
-			var data: Dictionary = WEAPONS.WEAPONS.get(id,WEAPONS.PASSIVES.get(id,{}))
-			var name := WEAPONS.GROWTH.evolution_name(id) if evolved else String(data.get("name",id))
-			var details := ""
-			if kind == "weapons":
-				var comparisons: Array = WEAPONS.compare(id,11 if evolved else level)
-				var stats := PackedStringArray()
-				for comparison in comparisons:
-					if comparison.label in ["피해","공격 간격","사거리","소환 유지"]: stats.append("%s %s" % [comparison.label,comparison.next])
-				details = " · ".join(stats)
-			else: details = WEAPONS.description(id,level,false)
-			var label := _label(row,"%s  %s  %s\n%s" % ["무기" if kind == "weapons" else "보조","MAX" if evolved else "Lv.%d" % level,name,details],20)
-			label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+func _create_hero_build_cards(parent: VBoxContainer,title: String,count: int,cards: Array[Control]) -> void:
+	var section := VBoxContainer.new(); section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	parent.add_child(section)
+	var heading := _label(section,title,24); heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var grid := GridContainer.new(); grid.columns = 2; grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grid.add_theme_constant_override("h_separation",16); grid.add_theme_constant_override("v_separation",12)
+	section.add_child(grid)
+	for index in count:
+		var card := PanelContainer.new(); card.name = "Card%d" % index
+		card.size_flags_horizontal = Control.SIZE_EXPAND_FILL; card.custom_minimum_size.y = 96
+		var style := StyleBoxFlat.new(); style.bg_color = Color(0.09,0.075,0.055,0.88)
+		style.border_color = Color(0.65,0.5,0.25); style.set_border_width_all(2)
+		style.set_content_margin_all(10); card.add_theme_stylebox_override("panel",style)
+		grid.add_child(card); cards.append(card)
+		var row := HBoxContainer.new(); row.name = "Row"; row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		card.add_child(row)
+		var icon := TextureRect.new(); icon.name = "Icon"; icon.custom_minimum_size = Vector2(64,64)
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; row.add_child(icon)
+		var text := VBoxContainer.new(); text.name = "Text"; text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(text)
+		var item_name := _label(text,"비어 있음",23); item_name.name = "Name"
+		item_name.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var details := _label(text,"",22); details.name = "Details"
+		details.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+func _render_hero_build_cards(cards: Array[Control],items: Array,weapon: bool) -> void:
+	for index in cards.size():
+		var card := cards[index]
+		var icon := card.get_node("Row/Icon") as TextureRect
+		var name_label := card.get_node("Row/Text/Name") as Label
+		var details_label := card.get_node("Row/Text/Details") as Label
+		icon.texture = null; name_label.text = "비어 있음"; details_label.text = ""
+		card.modulate.a = 0.5
+		if index >= items.size(): continue
+		var item = items[index]
+		if not item is Array or item.size() < 2 or not item[0] is String or not RULES.number(item[1]): continue
+		var id: String = item[0]
+		var data: Dictionary = WEAPONS.WEAPONS.get(id,{}) if weapon else WEAPONS.PASSIVES.get(id,{})
+		if data.is_empty(): continue
+		var level := int(item[1])
+		var evolved: bool = weapon and item.size() > 2 and item[2] == true
+		icon.texture = ICONS.texture(id)
+		name_label.text = "%s %s" % [WEAPONS.GROWTH.evolution_name(id) if evolved else String(data.get("name",id)),"MAX" if evolved else "Lv.%d" % level]
+		if weapon:
+			var stats := PackedStringArray()
+			for comparison in WEAPONS.compare(id,11 if evolved else level):
+				if comparison.label in ["피해","공격 간격","사거리"]:
+					stats.append("%s %s" % ["간격" if comparison.label == "공격 간격" else comparison.label,comparison.next])
+			details_label.text = " · ".join(stats)
+		else: details_label.text = WEAPONS.description(id,level,false).replace("\n"," · ")
+		card.modulate.a = 1.0
 func _receive_chests(receipts: Array) -> void:
 	if receipts.size() > RULES.CHEST_HISTORY_LIMIT: return
 	for receipt in receipts:
