@@ -3,6 +3,7 @@ const RULES := preload("res://src/online/match_rules.gd")
 const LOCAL_ACCESS := preload("res://src/online/local_test_access.gd")
 const DRAIN := preload("res://src/online/socket_drain.gd")
 const CODEC := preload("res://src/online/snapshot_codec.gd")
+const MAPS := preload("res://src/data/ranked_map_catalog.gd")
 signal event_received(event: Dictionary)
 signal connection_closed(message: String)
 signal connection_recovering(active: bool, remaining: float)
@@ -26,6 +27,13 @@ var heartbeat_left := 0.0
 var result_received := false
 var local_test_connection := false
 var test_transport_paused := false
+static func valid_ranked_map(event: Dictionary) -> bool:
+	if not event.get("map",null) is String: return false
+	var map_data: Dictionary = MAPS.get_map(String(event.map))
+	if map_data.is_empty(): return false
+	var battlefield: Variant = event.get("battlefield",null)
+	if not battlefield is Dictionary or battlefield.get("map","") != event.map: return false
+	return RULES.number(event.get("duration",null)) and is_equal_approx(float(event.duration),float(map_data.duration_seconds))
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 func _notification(what: int) -> void:
@@ -137,6 +145,7 @@ func _process(delta: float) -> void:
 			_network_lost("기존 연결의 종료를 확인하고 있습니다."); return
 		if op == "matched":
 			if not event.get("match",null) is String or event.get("rules","") != RULES.ID or event.get("role","") != role or not RULES.resume_token_valid(event.get("resume_token",null)): continue
+			if not valid_ranked_map(event): continue
 			if reconnecting and event.match != match_id: continue
 			match_id = event.match; resume_token = event.resume_token; sequence = 0
 			if reconnecting:

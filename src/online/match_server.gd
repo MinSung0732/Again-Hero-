@@ -9,6 +9,7 @@ const RANKED := preload("res://src/data/ranked_rules.gd")
 const RESULT_STORE := preload("res://src/online/ranked_result_store.gd")
 const LOADOUT := preload("res://src/online/online_loadout.gd")
 const LOADOUT_STORE := preload("res://src/online/ranked_loadout_store.gd")
+const MAPS := preload("res://src/data/ranked_map_catalog.gd")
 var result_store
 var loadout_store
 var metrics = preload("res://src/online/network_metrics.gd").new()
@@ -24,12 +25,15 @@ var auth
 var next_peer := 0
 var snapshot_left := 0.0
 var room_factory: Callable
+var map_rng := RandomNumberGenerator.new()
 var test_auth := false
 var local_test_ticket := ""
 var auth_pending := 0
 var bind_address := "127.0.0.1"
 var retire: Array[int] = []
 var remove_rooms: Array[String] = []
+func _ready() -> void:
+	map_rng.randomize()
 func start(port: int,bind: String = "127.0.0.1",development_auth: bool = false,invitation: String = "") -> Error:
 	if development_auth and bind != "127.0.0.1": return ERR_UNAUTHORIZED
 	if not invitation.is_empty() and (bind != "127.0.0.1" or not LOCAL_ACCESS.valid_hex(invitation, LOCAL_ACCESS.TICKET_BYTES) or development_auth): return ERR_UNAUTHORIZED
@@ -194,6 +198,7 @@ func _match_waiters() -> void:
 	if pair.is_empty(): return
 	var key := Crypto.new().generate_random_bytes(16).hex_encode()
 	var room = room_factory.call() if room_factory.is_valid() else ROOM.new()
+	room.map_id = String(MAPS.pick(map_rng).id)
 	add_child(room)
 	var seats := {}
 	for id in pair:
@@ -218,7 +223,10 @@ func _match_waiters() -> void:
 		_send_matched(id,key,false)
 func _send_matched(id: int,key: String,resumed: bool) -> void:
 	var role: String = peers[id].role
-	_send(id,{"op":"matched","match":key,"role":role,"rules":RULES.ID,"hero":rooms[key].node.hero_id,"roster":rooms[key].node.roster if role=="demon" else [],"skill_ids":rooms[key].node.skill_ids if role=="demon" else [],"transcendence_id":rooms[key].node.transcendence_id if role=="demon" else "","duration":RULES.DURATION,"resume_token":rooms[key].seats[role].resume_token,"resumed":resumed,"feedback_cursor":rooms[key].node.feedback.sequence,"battlefield":rooms[key].node.battlefield_info})
+	_send(id,_matched_payload(key,role,resumed))
+func _matched_payload(key: String,role: String,resumed: bool) -> Dictionary:
+	var room = rooms[key].node
+	return {"op":"matched","match":key,"role":role,"rules":RULES.ID,"hero":room.hero_id,"roster":room.roster if role=="demon" else [],"skill_ids":room.skill_ids if role=="demon" else [],"transcendence_id":room.transcendence_id if role=="demon" else "","duration":room.battle.run_time_limit_seconds,"map":room.map_id,"resume_token":rooms[key].seats[role].resume_token,"resumed":resumed,"feedback_cursor":room.feedback.sequence,"battlefield":room.battlefield_info}
 func _resume(id: int,message: Dictionary) -> void:
 	if message.get("version",null) != RULES.VERSION or message.get("rules","") != RULES.ID: _reject(id,"version_mismatch"); return
 	var token_value: Variant = message.get("resume_token",null)
@@ -295,7 +303,7 @@ func _record_result(key: String,winner: String,reason: String) -> void:
 	if is_instance_valid(room.battle) and is_instance_valid(room.battle.hero):
 		elapsed = float(room.battle.run_metrics.elapsed_seconds)
 		hp_ratio = float(room.battle.hero.current_hp) / maxf(1.0,float(room.battle.hero.max_hp))
-	var margins: Dictionary = RANKED.margins(winner,reason,elapsed,RULES.DURATION,hp_ratio)
+	var margins: Dictionary = _match_margins(room,winner,reason,elapsed,hp_ratio)
 	var result: Dictionary = await result_store.record(key,String(match_data.seats.demon.uid),
 		String(match_data.seats.hero.uid),winner,reason,margins)
 	if not rooms.has(key): return
@@ -303,6 +311,8 @@ func _record_result(key: String,winner: String,reason: String) -> void:
 	rooms[key].result_pending = false
 	rooms[key].ended = Time.get_ticks_msec()
 	for id in rooms[key].members: _send_result(id,key)
+func _match_margins(room: Node,winner: String,reason: String,elapsed: float,hp_ratio: float) -> Dictionary:
+	return RANKED.margins(winner,reason,elapsed,room.battle.run_time_limit_seconds,hp_ratio)
 static func _encode(message: Dictionary) -> String:
 	var encoded := JSON.stringify(message)
 	return encoded if encoded.to_utf8_buffer().size() <= RULES.MAX_SNAPSHOT else ""

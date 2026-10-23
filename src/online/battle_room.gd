@@ -5,6 +5,7 @@ const SKILLS := preload("res://src/data/demon_ultimate_catalog.gd")
 const PRESENTATION := preload("res://src/online/presentation_snapshot.gd")
 const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
 const MONSTERS := preload("res://src/data/monster_catalog.gd")
+const MAPS := preload("res://src/data/ranked_map_catalog.gd")
 var presentation = PRESENTATION.new()
 var battlefield_info := {}
 const PRIMITIVES := preload("res://src/online/primitive_mirror.gd")
@@ -43,12 +44,15 @@ var hero_id := preload("res://src/data/hero_character_catalog.gd").DEFAULT_HERO
 var roster: Array = RULES.ROSTER.duplicate() # Isolated room fixtures; the server sets the verified roster before prepare().
 var skill_ids: Array = []
 var transcendence_id := ""
+var map_id := "plaza"
 func set_loadouts(hero_loadout: Dictionary,demon_loadout: Dictionary) -> void:
 	hero_id = String(hero_loadout.hero_id)
 	roster = demon_loadout.team_ids.duplicate()
 	skill_ids = demon_loadout.skill_ids.duplicate()
 	transcendence_id = String(demon_loadout.transcendence_id)
 func prepare() -> void:
+	var map_data: Dictionary = MAPS.get_map(map_id)
+	if map_data.is_empty(): finish("","invalid_map"); return
 	world = SubViewport.new(); world.world_2d = World2D.new(); world.size = Vector2i(1080,1600)
 	world.render_target_update_mode = SubViewport.UPDATE_DISABLED; add_child(world)
 	var scene: PackedScene = load("res://src/battle/Battle.tscn")
@@ -56,13 +60,21 @@ func prepare() -> void:
 	battle = scene.instantiate(); battle.online_match_mode = true
 	battle.combat_popup_visuals_enabled = false
 	battle.online_match_rules = {"population":RULES.POPULATION,"roster":roster,"skill_ids":skill_ids,"transcendence_id":transcendence_id}
-	battle.hero_player_mode = true; battle.hero_player_stage = "stage_1"; battle.hero_player_hero_id = hero_id
+	battle.hero_player_mode = true; battle.hero_player_stage = String(map_data.stage_visual); battle.hero_player_hero_id = hero_id
 	world.add_child(battle); battle.set_external_pause(true)
-	battle.run_time_limit_seconds = RULES.DURATION
-	battle.run_metrics.reset(RULES.DURATION,int(battle.hero.current_hp),int(battle.hero.max_hp))
-	battle.command_power = RULES.OPENING_MANA; battle.command_regen_per_second = RULES.MANA_PER_SECOND
+	battle.current_map_size = map_data.map_size
+	battle.hero.configure_battlefield(battle.current_map_size)
+	battle.hero.position = battle.current_map_size * 0.5
+	var field = battle.get_node_or_null("Stage1Battlefield")
+	if field != null: field.configure(battle.current_stage_id,battle.current_map_size)
+	battle.run_time_limit_seconds = float(map_data.duration_seconds)
+	battle.run_metrics.reset(battle.run_time_limit_seconds,int(battle.hero.current_hp),int(battle.hero.max_hp))
+	var modifiers: Dictionary = map_data.modifiers
+	battle.hero.exp_gain_multiplier *= float(modifiers.get("hero_exp_multiplier",1.0))
+	battle.command_power = RULES.OPENING_MANA
+	battle.command_regen_per_second = RULES.MANA_PER_SECOND * float(modifiers.get("command_regen_multiplier",1.0))
 	battle.set_allowed_monster_ids(roster)
-	battlefield_info = {"stage":battle.current_stage_id,"bounds":[battle.current_map_size.x,battle.current_map_size.y]}
+	battlefield_info = {"stage":battle.current_stage_id,"bounds":[battle.current_map_size.x,battle.current_map_size.y],"map":map_id}
 	battle.online_visual_entity_exited.connect(presentation.forget_node)
 	battle.online_combat_feedback.connect(_feedback)
 	battle.online_cast_feedback.connect(func(cue: String,point: Vector2):

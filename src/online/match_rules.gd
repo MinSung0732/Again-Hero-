@@ -1,6 +1,6 @@
 extends RefCounted
-## Augment comparisons require matching protocol 17 peers.
-const VERSION := 17
+## Ranked map selection requires matching protocol 18 peers.
+const VERSION := 18
 const HINT_DETAIL := "role" # "role" or "monster"
 const ROLE_HINT_LABELS := {"melee":"근접"}
 const TARGET_HINT_LABELS := {"demon":"마왕 운영","all_monsters":"모든 몬스터"}
@@ -8,7 +8,7 @@ const SUMMON_PLACEMENT := "manual" # 랭크전 마왕 소환은 수동 배치만
 const ID := "duel_smoke_v1"
 const HERO := "ranged_rookie"
 const ROSTER := ["slime","spider","orc","bomb_rat","skeleton_archer"]
-const DURATION := 180.0
+const DURATION := 180.0 # Legacy test fixture only; live matches use ranked map duration.
 const POPULATION := 48
 const OPENING_MANA := 48.0
 const MANA_PER_SECOND := 12.0

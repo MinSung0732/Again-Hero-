@@ -24,6 +24,7 @@ const TOP_LAYOUT := preload("res://src/ui/castle_battle_chrome.gd")
 const RESPONSIVE := preload("res://src/ui/battle_responsive_layout.gd")
 const HERO_HUD := preload("res://src/ui/hero_survival_hud.gd")
 const STAGES := preload("res://src/data/stage_catalog.gd")
+const MAPS := preload("res://src/data/ranked_map_catalog.gd")
 const PANEL := preload("res://src/ui/illustrated_battle_panel.gd")
 const HOLD_POPUP := preload("res://src/ui/augment_hold_popup.gd")
 var loading
@@ -41,7 +42,7 @@ var status: Label
 var rows: VBoxContainer
 var setup_controls: Array[Control] = []
 var top_rects: Array[Rect2] = []
-var match_duration := RULES.DURATION
+var match_duration := 0.0
 var matched_hero_id := ""
 var hud_timer_second := -1
 var hud_hp := -1
@@ -616,12 +617,12 @@ func _event(event: Dictionary) -> void:
 		"queued": status.text = "상대 역할 플레이어를 찾는 중..."
 		"matched":
 			matched_hero_id = String(event.get("hero",HEROES.DEFAULT_HERO))
-			match_duration = float(event.get("duration",RULES.DURATION))
+			var map_data: Dictionary = MAPS.get_map(String(event.get("map","")))
+			if map_data.is_empty(): return
+			match_duration = float(map_data.duration_seconds)
 			hud_timer_second = -1; hud_hp = -1; hud_max_hp = -1; hud_monsters = -1; hud_level = -1; hud_exp = -1; hud_exp_next = -1; hud_mana = -1
-			var stage_id := String(event.get("battlefield",{}).get("stage",""))
-			var stage_data: Dictionary = STAGES.get_stage(stage_id)
-			_set_hud_text("StageNumber","RANKED")
-			_set_hud_text("Subtitle",String(stage_data.get("name",stage_data.get("display_name","랭크 전장"))))
+			_set_hud_text("StageNumber",String(map_data.name))
+			_set_hud_text("Subtitle","%s · %d분" % [MAPS.favor_label(String(map_data.favor)),int(match_duration)/60])
 			_set_hud_text("StageHeroName",String(HEROES.get_character(matched_hero_id).get("name","용사")))
 			(top_bar.get_node("HeroPortrait") as TextureRect).texture = HERO_HUD.portrait_texture(matched_hero_id)
 			(top_bar.get_node("ExpBar") as Control).visible = role == "hero"
@@ -654,7 +655,7 @@ func _event(event: Dictionary) -> void:
 			view.feedback.reset(int(event.get("feedback_cursor",0)))
 			load_revision += 1
 			local_preparing = true; waiting_for_start = true; _set_controls(false)
-			loading.begin(role); loading.show_phase("loading")
+			loading.begin(role); loading.set_map(map_data); loading.show_phase("loading")
 			_prepare_match(event,load_revision)
 		"connection":
 			if event.get("match","") != client.match_id or ended or not event.get("paused",null) is bool or not RULES.number(event.get("remaining",null),RULES.RECONNECT_GRACE): return

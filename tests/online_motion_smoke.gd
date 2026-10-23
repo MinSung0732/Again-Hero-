@@ -84,7 +84,7 @@ func run() -> void:
 	check(not scene.view.motion_paused and scene.view.motion.slots.is_empty(),"peer resume resets motion baseline")
 	scene.client.connection_recovering.emit(true,15.0)
 	check(scene.view.motion_paused,"local socket loss reaches motion pause")
-	scene._event({"op":"matched","match":"motion-fixture","resumed":true})
+	scene._event({"op":"matched","match":"motion-fixture","resumed":true,"map":"plaza","duration":600,"battlefield":{"stage":"stage_1","bounds":[3200,3200],"map":"plaza"}})
 	check(not scene.view.motion_paused,"local resume resets baseline before ready")
 	scene._event({"op":"result","match":"motion-fixture","winner":"hero"})
 	check(scene.view.motion_paused,"terminal result stops smoothing")

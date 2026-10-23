@@ -65,7 +65,7 @@ func run() -> void:
 	fresh.queue_free(); await process_frame
 	# Cancellation mid-load must never send a stale ready or leave an overlay.
 	var scene = scenes[0]
-	scene._event({"op":"matched","match":key,"battlefield":{"stage":"stage_2","bounds":[3600,3600]}})
+	scene._event({"op":"matched","match":key,"map":"plaza","duration":600,"battlefield":{"stage":"stage_2","bounds":[3600,3600],"map":"plaza"}})
 	check(scene.local_preparing and scene.loading.visible,"new prepare in progress")
 	scene._event({"op":"result","match":key,"winner":""})
 	await process_frame; await process_frame

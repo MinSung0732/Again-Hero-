@@ -82,7 +82,7 @@ func run() -> void:
 			# Since protocol 9 the demon's summon buttons come from the server's
 			# validated loadout on "matched", not a fixed roster.
 			check(scene.summon_buttons.is_empty(),"no roster before matching")
-			scene._event({"op":"matched","roster":["slime","orc","spider","bomb_rat","skeleton_archer"],"skill_ids":["line_assault"]})
+			scene._event({"op":"matched","map":"plaza","duration":600,"battlefield":{"stage":"stage_1","bounds":[3200,3200],"map":"plaza"},"roster":["slime","orc","spider","bomb_rat","skeleton_archer"],"skill_ids":["line_assault"]})
 			await process_frame
 			check(scene.summon_buttons.size() == 5 and scene.selected_monster == "slime","matched loadout builds solo summon cards")
 			check(scene.summon_buttons[0].get_node("Icon").texture != null and scene.summon_buttons[0].get_node("Cost").text != "","catalog icon and cost on summon cards")
@@ -115,18 +115,18 @@ func run() -> void:
 		check(not scene.ended and scene.status.text.contains("연결 복구"),"local transport loss keeps scene alive")
 		scene.client.reconnecting = false; scene.client.connection_recovering.emit(false,0.0)
 		scene.last_tick = 99
-		scene._event({"op":"matched","match":"ui-recovery","resumed":true})
+		scene._event({"op":"matched","match":"ui-recovery","resumed":true,"map":"plaza","duration":600,"battlefield":{"stage":"stage_1","bounds":[3200,3200],"map":"plaza"}})
 		check(scene.last_tick == -1,"resume forces snapshot refresh even at same tick")
 		scene._event({"op":"result","match":"ui-recovery","winner":role})
 		var result_text: String = scene.status.text
 		scene._event({"op":"result","match":"ui-recovery","winner":""})
 		check(scene.ended and scene.status.text == result_text,"terminal UI is idempotent")
-		scene._event({"op":"matched","hero":"ranged_rookie","duration":180.0,"battlefield":{"stage":"stage_1"}})
+		scene._event({"op":"matched","hero":"ranged_rookie","map":"plaza","duration":600,"battlefield":{"stage":"stage_1","bounds":[3200,3200],"map":"plaza"}})
 		await process_frame
 		check(scene.top_bar.visible and scene.top_bar.get_node_or_null("RunTimer") != null and scene.top_bar.get_node_or_null("HeroHPBar") != null and scene.top_bar.get_node_or_null("Monsters") != null,"both roles share battle top bar")
 		var snapshot := {"seconds":41.0,"hero":[100.0,100.0,720,1200,3],"actors":[[1,"slime",200.0,200.0,50,50],[2,"orc",300.0,300.0,80,80]]}
 		scene._update_match_hud(snapshot)
-		check(scene.top_bar.get_node("RunTimer").text.contains("02:19") and scene.top_bar.get_node("HeroHP").text.contains("720 / 1200") and scene.top_bar.get_node("Monsters").text.contains("2"),"snapshot updates timer HP and monster count")
+		check(scene.top_bar.get_node("RunTimer").text.contains("09:19") and scene.top_bar.get_node("HeroHP").text.contains("720 / 1200") and scene.top_bar.get_node("Monsters").text.contains("2"),"snapshot updates timer HP and monster count")
 		check(scene.top_bar.get_node("HeroHPBar").value == 720 and scene.top_bar.get_node("HeroHPBar").max_value == 1200,"snapshot updates HP bar")
 		if role == "hero":
 			scene._update_hud_progress(3,24,50)

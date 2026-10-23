@@ -12,6 +12,7 @@ var meter: ProgressBar
 var cancel: Button
 var backdrop: TextureRect
 var phase := ""
+var map_summary := ""
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP; z_index = 50
@@ -43,15 +44,19 @@ func label(parent: Node,font: int) -> Label:
 	value.add_theme_color_override("font_shadow_color",Color.BLACK); value.add_theme_constant_override("shadow_offset_y",3)
 	parent.add_child(value); return value
 func begin(role: String) -> void:
+	map_summary = ""
 	role_theme = DATA.theme(role); backdrop.texture = load(role_theme.art) as Texture2D
 	title.modulate = role_theme.accent; meter.modulate = role_theme.accent
 	clock = 0; show_phase("queue"); visible = true; set_process(true)
 func show_phase(value: String,progress: float = 0.0) -> void:
 	phase = value
 	title.text = role_theme.name+" · "+("상대를 찾는 중" if value == "queue" else "전투 준비")
-	subtitle.text = role_theme.tag if value == "queue" else "전장과 군단을 준비하는 중…" if value == "loading" else "준비 완료 · 상대방을 기다리는 중…"
+	subtitle.text = role_theme.tag if value == "queue" else map_summary + "\n" + ("전장과 군단을 준비하는 중…" if value == "loading" else "준비 완료 · 상대방을 기다리는 중…")
 	hint.text = role_theme.hint
 	meter.visible = value != "queue"; meter.value = clampf(progress,0,1)*100
+func set_map(map_data: Dictionary) -> void:
+	map_summary = "%s · %s · %d분" % [map_data.name,preload("res://src/data/ranked_map_catalog.gd").favor_label(String(map_data.favor)),int(map_data.duration_seconds)/60]
+	if phase != "queue": show_phase(phase,meter.value/100.0)
 func finish() -> void:
 	visible = false; set_process(false); backdrop.texture = null
 func _process(delta: float) -> void:
