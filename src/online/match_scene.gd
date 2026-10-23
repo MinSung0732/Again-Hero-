@@ -18,6 +18,8 @@ const SKILL_STORE := preload("res://src/systems/demon_skill_loadout_store.gd")
 const SKILLS := preload("res://src/data/demon_ultimate_catalog.gd")
 const TRANSCENDENCE := preload("res://src/systems/transcendence_loadout_store.gd")
 const ENTRY := preload("res://src/systems/dungeon_entry_policy.gd")
+const WEAPONS := preload("res://src/data/hero_weapon_catalog.gd")
+const ICONS := preload("res://src/ui/hero_augment_icons.gd")
 var loading
 var local_preparing := false
 var waiting_for_start := false
@@ -38,6 +40,16 @@ var hold_toggle: Button
 var hold_scroll: ScrollContainer
 var hold_expanded := false
 var hold_signature := ""
+var hero_level_label: Label
+var hero_inventory_rows: VBoxContainer
+var inventory_signature := ""
+var inventory_detail: AcceptDialog
+var chest_notice: Label
+var chest_queue: Array = []
+var chest_last_serial := 0
+var chest_seconds := 0.0
+var rerolls_left := 0
+var reroll_limit := 0
 var rules_popup: PopupPanel
 var action_row: HBoxContainer
 var skill_row: HBoxContainer
@@ -139,6 +151,10 @@ func _ready() -> void:
 	if role == "hero":
 		pad = PAD.new(); add_child(pad); pad.set_mode(PAD.MODE_FREE)
 		pad.input_surface = view; pad.movement_changed.connect(func(value: Vector2): movement = value)
+		hero_inventory_rows = VBoxContainer.new(); rows.add_child(hero_inventory_rows)
+		hero_level_label = _label(hero_inventory_rows,"용사 Lv.1 · EXP 0/1 · 새로고침 0/0",21)
+		chest_notice = _label(hero_inventory_rows,"",23)
+		inventory_detail = AcceptDialog.new(); inventory_detail.title = "장착 정보"; add_child(inventory_detail)
 	hold_toggle = _button(rows,"증강 보관함 · 0개 ▾",_toggle_holds)
 	hold_scroll = ScrollContainer.new(); hold_scroll.custom_minimum_size.y = 250; rows.add_child(hold_scroll)
 	hold_scroll.visible = false
@@ -182,12 +198,61 @@ func _select_transcendence() -> void:
 func _select_held(id: String,number: int) -> void:
 	if not ended and not connection_waiting and not client.reconnecting:
 		client.command("choose" if role == "hero" else "demon_choose",{"id":id,"number":number})
+func _reroll_held(number: int) -> void:
+	if role == "hero" and not ended and not connection_waiting and not client.reconnecting and rerolls_left > 0:
+		client.command("reroll",{"number":number})
+func _show_hero_item(id: String,level: int,evolved: bool) -> void:
+	var data: Dictionary = WEAPONS.WEAPONS.get(id,WEAPONS.PASSIVES.get(id,{}))
+	if data.is_empty(): return
+	var rank := 11 if evolved else level
+	var title := WEAPONS.GROWTH.evolution_name(id) if evolved else String(data.get("name",id))
+	inventory_detail.dialog_text = "%s · %s\n%s" % [title,"MAX" if evolved else "Lv.%d" % level,WEAPONS.description(id,rank)]
+	inventory_detail.popup_centered(Vector2i(700,320))
+func _update_hero_inventory(inventory: Dictionary) -> void:
+	if not RULES.number(inventory.get("level",null)) or not RULES.number(inventory.get("exp",null)) or not RULES.number(inventory.get("exp_next",null)): return
+	if not RULES.number(inventory.get("rerolls_left",null)) or not RULES.number(inventory.get("reroll_limit",null)): return
+	if not inventory.get("weapons",null) is Array or not inventory.get("passives",null) is Array: return
+	if inventory.weapons.size() > WEAPONS.WEAPON_SLOTS or inventory.passives.size() > WEAPONS.PASSIVE_SLOTS: return
+	rerolls_left = int(inventory.rerolls_left); reroll_limit = int(inventory.reroll_limit)
+	hero_level_label.text = "용사 Lv.%d · EXP %d/%d · 새로고침 %d/%d" % [int(inventory.level),int(inventory.exp),int(inventory.exp_next),rerolls_left,reroll_limit]
+	var signature := JSON.stringify([inventory.weapons,inventory.passives])
+	if signature == inventory_signature: return
+	inventory_signature = signature
+	for child in hero_inventory_rows.get_children():
+		if child is HBoxContainer: child.queue_free()
+	for kind in ["weapons","passives"]:
+		var row := HBoxContainer.new(); hero_inventory_rows.add_child(row)
+		for item in inventory[kind]:
+			if not item is Array or item.size() < 2 or not item[0] is String or not RULES.number(item[1]): continue
+			var id: String = item[0]
+			var evolved: bool = kind == "weapons" and item.size() > 2 and item[2] == true
+			if not WEAPONS.WEAPONS.has(id) and not WEAPONS.PASSIVES.has(id): continue
+			var level := int(item[1])
+			var button := _button(row,"MAX" if evolved else "Lv.%d" % level,_show_hero_item.bind(id,level,evolved))
+			button.icon = ICONS.texture(id); button.custom_minimum_size = Vector2(100,66)
+			button.add_theme_font_size_override("font_size",18)
+func _receive_chests(receipts: Array) -> void:
+	if receipts.size() > RULES.CHEST_HISTORY_LIMIT: return
+	for receipt in receipts:
+		if not receipt is Dictionary or not RULES.number(receipt.get("serial",null)) or not receipt.get("name",null) is String: continue
+		var serial := int(receipt.serial)
+		if serial <= chest_last_serial: continue
+		chest_last_serial = serial
+		chest_queue.append(receipt.duplicate())
+func _advance_chest_notice(delta: float) -> void:
+	if chest_notice == null: return
+	chest_seconds -= delta
+	if chest_seconds > 0: return
+	if chest_queue.is_empty(): chest_notice.text = ""; return
+	var receipt: Dictionary = chest_queue.pop_front()
+	chest_notice.text = "상자 보상 · %s\n%s" % [String(receipt.name),String(receipt.get("description",""))]
+	chest_seconds = 2.4
 func _toggle_holds() -> void:
 	hold_expanded = not hold_expanded
 	hold_scroll.visible = hold_expanded
 	hold_toggle.text = "증강 보관함 · %d개 %s" % [choices.get_meta("count",0),"▴" if hold_expanded else "▾"]
 func _update_holds(holds: Array) -> void:
-	var signature := JSON.stringify(holds)
+	var signature := JSON.stringify([holds,rerolls_left,reroll_limit])
 	if signature == hold_signature: return
 	hold_signature = signature
 	choices.set_meta("count",holds.size())
@@ -197,6 +262,9 @@ func _update_holds(holds: Array) -> void:
 	for index in holds.size():
 		var offer: Dictionary = holds[index]
 		_label(choices,"보관 %d · %d번 선택지" % [index+1,int(offer.number)],20)
+		if role == "hero":
+			var refresh := _button(choices,"새로고침 · 남은 %d/%d회" % [rerolls_left,reroll_limit],_reroll_held.bind(int(offer.number)))
+			refresh.disabled = rerolls_left <= 0 or connection_waiting or client.reconnecting
 		for option in offer.candidates:
 			var name := String(option.name)
 			var description := String(option.get("description",""))
@@ -251,6 +319,8 @@ func _event(event: Dictionary) -> void:
 	match String(event.get("op","")):
 		"queued": status.text = "상대 역할 플레이어를 찾는 중..."
 		"matched":
+			if not bool(event.get("resumed",false)):
+				chest_queue.clear(); chest_last_serial = 0; chest_seconds = 0.0; inventory_signature = ""
 			transcendence_id = String(event.get("transcendence_id",""))
 			if event.get("roster",null) is Array: view.set_match_roster(event.roster,transcendence_id)
 			if role == "demon" and event.get("roster",null) is Array:
@@ -302,6 +372,9 @@ func _event(event: Dictionary) -> void:
 					if not option is Dictionary or not option.get("id",null) is String or not option.get("name",null) is String: return
 			if int(event.tick) <= last_tick or not view.update_state(event): return
 			last_tick = int(event.tick)
+			if role == "hero" and event.get("hero_inventory",null) is Dictionary and event.get("chest_receipts",null) is Array:
+				_update_hero_inventory(event.hero_inventory)
+				_receive_chests(event.chest_receipts)
 			view.feedback.suspended = waiting_for_start or connection_waiting or client.reconnecting
 			if waiting_for_start and last_tick > 0 and not connection_waiting and not client.reconnecting:
 				waiting_for_start = false; view.feedback.suspended = false; loading.finish(); _set_controls(true)
@@ -383,6 +456,7 @@ func _test_connection(disconnected: bool) -> void:
 		_refresh_connection_test_controls()
 func _process(delta: float) -> void:
 	if client == null: return
+	_advance_chest_notice(delta)
 	if metrics_panel!=null and metrics_panel.visible:
 		metrics_left-=delta
 		if metrics_left<=0:

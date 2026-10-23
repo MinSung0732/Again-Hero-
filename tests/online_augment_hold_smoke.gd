@@ -8,7 +8,7 @@ func check(ok: bool,message: String) -> void:
 	if not ok: push_error(message); quit(1); assert(ok,message)
 func _initialize() -> void: run.call_deferred()
 func run() -> void:
-	check(RULES.VERSION == 11 and RULES.AUGMENT_HOLD_LIMIT == 4,"protocol and hold limit")
+	check(RULES.VERSION == 12 and RULES.AUGMENT_HOLD_LIMIT == 4,"protocol and hold limit")
 	var room = ROOM.new(); root.add_child(room); room.prepare(); room.start()
 	room.battle.process_mode = Node.PROCESS_MODE_DISABLED
 	var hero = room.battle.hero

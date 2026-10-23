@@ -1,6 +1,6 @@
 extends RefCounted
-## Augment hold requires matching protocol 11 server and client.
-const VERSION := 11
+## Hero chest, reroll, and private inventory require matching protocol 12 peers.
+const VERSION := 12
 const SUMMON_PLACEMENT := "manual" # 랭크전 마왕 소환은 수동 배치만, 자동 배치 금지.
 const ID := "duel_smoke_v1"
 const HERO := "ranged_rookie"
@@ -13,6 +13,7 @@ const SNAPSHOT_INTERVAL := 0.1
 const INPUT_TIMEOUT := 0.35
 const CHOICE_TIMEOUT := 8.0 # Legacy fixture compatibility; ranked matches do not use a choice timer.
 const AUGMENT_HOLD_LIMIT := 4
+const CHEST_HISTORY_LIMIT := 16
 const TRANSCENDENCE_SUMMON_LIMIT := 1
 const MAX_CLIENTS := 24
 const MAX_AUTH_REQUESTS := 8

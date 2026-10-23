@@ -21,6 +21,7 @@ var move_age := 0.0
 var choice_revision := 0
 var choice: Array = []
 var hero_holds: Array = []
+var chest_receipts: Array = []
 var demon_holds: Array = []
 var next_offer_number := 0
 var tick := 0
@@ -66,6 +67,7 @@ func prepare() -> void:
 
 	battle.battle_finished.connect(func(_message: String,demon_won: bool): finish("demon" if demon_won else "hero",_message))
 	battle.hero.player_augment_requested.connect(_choice)
+	battle.hero_chest_opened.connect(_chest_opened)
 	battle.summon_result.connect(func(_id: String,_accepted: bool,message: String): last_action_message = message)
 	is_prepared = true
 func start() -> void:
@@ -82,6 +84,14 @@ func set_connection_paused(value: bool) -> void:
 func _choice(candidates: Array) -> void:
 	_hold("hero",candidates,0)
 	_enforce_hold_limit("hero")
+func _chest_opened() -> void:
+	if finished or not is_instance_valid(battle.hero) or battle.hero.player_weapons == null: return
+	var runtime = battle.hero.player_weapons
+	var receipt: Dictionary = runtime.roll_chest()
+	if not runtime.apply_chest(receipt): return
+	# The server applies the reward before sending a display-only receipt.
+	chest_receipts.append({"serial":int(receipt.serial),"id":String(receipt.id),"kind":String(receipt.kind),"name":String(receipt.name),"description":String(receipt.description),"evolution":bool(receipt.evolution)})
+	if chest_receipts.size() > RULES.CHEST_HISTORY_LIMIT: chest_receipts.pop_front()
 func _demon_offer(candidates: Array,_rerolls: int,level: int) -> void:
 	_hold("demon",candidates,level)
 	battle.bank_online_demon_augment()
@@ -91,12 +101,32 @@ func _hold(role: String,candidates: Array,level: int) -> void:
 	next_offer_number += 1
 	var queue: Array = hero_holds if role == "hero" else demon_holds
 	var fixed_candidates: Array = candidates.duplicate(true)
-	var wire_candidates: Array = []
-	for candidate in fixed_candidates:
-		wire_candidates.append({"id":String(candidate.get("id","")),"name":String(candidate.get("name","")),"description":String(candidate.get("description",""))})
+	var wire_candidates: Array = _wire_candidates(fixed_candidates)
 	queue.append({"number":next_offer_number,"candidates":fixed_candidates,"wire_candidates":wire_candidates,"received":next_offer_number,"level":level})
 	choice_revision += 1
 	choice = hero_holds[0].candidates if not hero_holds.is_empty() else []
+func _wire_candidates(candidates: Array) -> Array:
+	var result: Array = []
+	for candidate in candidates:
+		result.append({"id":String(candidate.get("id","")),"name":String(candidate.get("name","")),"description":String(candidate.get("description",""))})
+	return result
+func _reroll_held(argument: Dictionary) -> bool:
+	var number: Variant = argument.get("number",null)
+	if not RULES.number(number) or float(number) != floorf(float(number)): return false
+	var runtime = battle.hero.player_weapons
+	if runtime == null or runtime.rerolls_remaining() <= 0: return false
+	for index in hero_holds.size():
+		var offer: Dictionary = hero_holds[index]
+		if int(offer.number) != int(number): continue
+		var next: Array = runtime.reroll(offer.candidates)
+		if next.is_empty(): return false
+		offer.candidates = next.duplicate(true)
+		offer.wire_candidates = _wire_candidates(offer.candidates)
+		hero_holds[index] = offer
+		choice_revision += 1
+		choice = hero_holds[0].candidates if not hero_holds.is_empty() else []
+		return true
+	return false
 func _enforce_hold_limit(role: String) -> void:
 	var queue: Array = hero_holds if role == "hero" else demon_holds
 	while queue.size() > RULES.AUGMENT_HOLD_LIMIT:
@@ -136,6 +166,8 @@ func apply(role: String,kind: String,argument: Variant) -> bool:
 		battle.hero.set_player_move_input(direction); move_age = 0.0; return true
 	if role == "hero" and kind == "choose" and argument is Dictionary:
 		return _select_offer(role,argument)
+	if role == "hero" and kind == "reroll" and argument is Dictionary:
+		return _reroll_held(argument)
 	if role == "demon" and kind == "summon" and argument is Dictionary:
 		# RULES.SUMMON_PLACEMENT: 랭크전 소환은 좌표를 지정한 수동 배치만 허용.
 		if not argument.get("id",null) is String: return false
@@ -171,7 +203,7 @@ func step(delta: float) -> void:
 func finish(won: String,why: String) -> void:
 	if finished: return
 	finished = true; running = false; winner = won; reason = why
-	hero_holds.clear(); demon_holds.clear(); choice = []
+	hero_holds.clear(); demon_holds.clear(); chest_receipts.clear(); choice = []
 	if is_instance_valid(battle): battle.set_external_pause(true)
 	completed.emit(winner,reason)
 func snapshot(role: String = "") -> Dictionary:
@@ -182,9 +214,23 @@ func snapshot(role: String = "") -> Dictionary:
 	return snapshot_for_role(role,state)
 func snapshot_for_role(role: String,state: Dictionary) -> Dictionary:
 	var own := state.duplicate()
-	if role == "hero": own["augment_holds"] = _wire_holds(hero_holds)
+	if role == "hero":
+		own["augment_holds"] = _wire_holds(hero_holds)
+		own["chest_receipts"] = chest_receipts.duplicate(true)
+		own["hero_inventory"] = _hero_inventory()
 	elif role == "demon": own["augment_holds"] = _wire_holds(demon_holds)
 	return own
+func _hero_inventory() -> Dictionary:
+	if not is_instance_valid(battle.hero) or battle.hero.player_weapons == null: return {}
+	var hero = battle.hero
+	var runtime = hero.player_weapons
+	var weapons: Array = []
+	var passives: Array = []
+	for id in runtime.weapon_ids:
+		weapons.append([String(id),int(runtime.levels.get(id,0)),runtime.evolved.has(id)])
+	for id in runtime.passives:
+		passives.append([String(id),int(runtime.passives[id])])
+	return {"level":int(hero.level),"exp":int(hero.current_exp),"exp_next":int(hero.exp_to_next_level),"rerolls_left":runtime.rerolls_remaining(),"reroll_limit":int(runtime.reroll_limit),"weapons":weapons,"passives":passives}
 func _wire_holds(queue: Array) -> Array:
 	var result: Array = []
 	for offer in queue: result.append({"number":offer.number,"candidates":offer.wire_candidates})
