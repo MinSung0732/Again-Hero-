@@ -78,7 +78,7 @@ func _ready() -> void:
 		var description := Label.new(); description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		description.add_theme_font_size_override("font_size",21); labels.add_child(description)
 		card_descriptions.append(description); card.hide()
-		var comparison := AUGMENT_COMPARE.add(labels,[],15)
+		var comparison := AUGMENT_COMPARE.add(labels,[],AUGMENT_COMPARE.ONLINE_FONT)
 		comparison.fit_content = false
 		comparison.scroll_active = true
 		comparison.mouse_filter = Control.MOUSE_FILTER_PASS

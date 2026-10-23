@@ -3189,7 +3189,7 @@ func _on_demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: 
 			description_label.offset_top = 126.0
 		var comparison_view := buttons[index].get_node_or_null("AugmentCompare") as RichTextLabel
 		if comparison_view == null:
-			comparison_view = AUGMENT_COMPARE.add(buttons[index],[],13)
+			comparison_view = AUGMENT_COMPARE.add(buttons[index],[],AUGMENT_COMPARE.SOLO_DEMON_FONT,true)
 			comparison_view.set_anchors_preset(Control.PRESET_TOP_WIDE)
 			comparison_view.offset_left = 18.0
 			comparison_view.offset_right = -18.0

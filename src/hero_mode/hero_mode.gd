@@ -362,7 +362,7 @@ func _choice_card(parent: HBoxContainer, candidate: Dictionary, action: Callable
 	var description := _label(rows,String(candidate.get("description","")),22)
 	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	var comparison: Array = candidate.get("compare",[])
-	AUGMENT_COMPARE.add(rows,comparison,16)
+	AUGMENT_COMPARE.add(rows,comparison,AUGMENT_COMPARE.SOLO_HERO_FONT,true)
 	description.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	var hint := _label(rows,"탭하여 선택",20); hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	return button
