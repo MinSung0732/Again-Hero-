@@ -1,6 +1,9 @@
 extends RefCounted
-## Public hero build and private held choices require matching protocol 13 peers.
-const VERSION := 13
+## Role-only demon hints require matching protocol 14 peers.
+const VERSION := 14
+const HINT_DETAIL := "role" # "role" or "monster"
+const ROLE_HINT_LABELS := {"melee":"근접"}
+const TARGET_HINT_LABELS := {"demon":"마왕 운영","all_monsters":"모든 몬스터"}
 const SUMMON_PLACEMENT := "manual" # 랭크전 마왕 소환은 수동 배치만, 자동 배치 금지.
 const ID := "duel_smoke_v1"
 const HERO := "ranged_rookie"

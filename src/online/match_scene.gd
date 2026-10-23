@@ -50,6 +50,9 @@ var hero_build_rows: VBoxContainer
 var hero_build_level: Label
 var hero_build_augments: Label
 var hero_build_signature := ""
+var demon_info_toggle: Button
+var demon_info_panel: VBoxContainer
+var demon_info_hints: Label
 var inventory_detail: AcceptDialog
 var chest_notice: Label
 var chest_queue: Array = []
@@ -155,6 +158,14 @@ func _ready() -> void:
 		hero_build_level = _label(hero_build_panel,"용사 Lv.1",20)
 		hero_build_rows = VBoxContainer.new(); hero_build_panel.add_child(hero_build_rows)
 		hero_build_augments = _label(hero_build_panel,"선택한 증강: 없음",18)
+	else:
+		demon_info_toggle = _button(rows,"마왕 정보 ▾",_toggle_demon_info)
+		demon_info_toggle.custom_minimum_size.y = 48
+		demon_info_panel = VBoxContainer.new(); demon_info_panel.visible = false; rows.add_child(demon_info_panel)
+		_label(demon_info_panel,"편성 ?",18)
+		_label(demon_info_panel,"스킬 ?",18)
+		_label(demon_info_panel,"초월 ?",18)
+		demon_info_hints = _label(demon_info_panel,"증강 방향: 없음",18)
 	action_row = HBoxContainer.new(); rows.add_child(action_row)
 	if role == "demon":
 		skill_row = HBoxContainer.new(); rows.add_child(skill_row)
@@ -227,6 +238,15 @@ func _show_hero_item(id: String,level: int,evolved: bool) -> void:
 func _toggle_hero_build() -> void:
 	hero_build_scroll.visible = not hero_build_scroll.visible
 	hero_build_toggle.text = "용사 빌드 %s" % ("▴" if hero_build_scroll.visible else "▾")
+func _toggle_demon_info() -> void:
+	demon_info_panel.visible = not demon_info_panel.visible
+	demon_info_toggle.text = "마왕 정보 %s" % ("▴" if demon_info_panel.visible else "▾")
+func _update_demon_info(hints: Dictionary) -> void:
+	if not hints.get("augment_hints",null) is Array: return
+	var names := PackedStringArray()
+	for hint in hints.augment_hints:
+		if hint is String: names.append(hint)
+	demon_info_hints.text = "증강 방향: %s" % ("없음" if names.is_empty() else ", ".join(names))
 func _update_hero_build(build: Dictionary) -> void:
 	if not RULES.number(build.get("level",null)) or not build.get("augments",null) is Array: return
 	if not build.get("weapons",null) is Array or not build.get("passives",null) is Array: return
@@ -394,12 +414,14 @@ func _event(event: Dictionary) -> void:
 			if ended or event.get("match","") != client.match_id or not RULES.number(event.get("tick",null)): return
 			if not RULES.number(event.get("seconds",null)) or not RULES.number(event.get("mana",null)): return
 			if not event.get("augment_holds",null) is Array or event.augment_holds.size() > RULES.AUGMENT_HOLD_LIMIT: return
-			if not RULES.number(event.get("demon_charge",null)) or not RULES.number(event.get("demon_charge_max",null)): return
-			if not event.get("demon_cooldowns",null) is Dictionary or not event.get("demon_ready",null) is Dictionary or not event.get("transcend_ready",null) is bool or not event.get("transcend_used",null) is bool: return
-			for cooldown in event.demon_cooldowns.values():
-				if not RULES.number(cooldown): return
-			for ready in event.demon_ready.values():
-				if not ready is bool: return
+			if role == "demon":
+				if not RULES.number(event.get("demon_charge",null)) or not RULES.number(event.get("demon_charge_max",null)): return
+				if not event.get("demon_cooldowns",null) is Dictionary or not event.get("demon_ready",null) is Dictionary or not event.get("transcend_ready",null) is bool or not event.get("transcend_used",null) is bool: return
+				for cooldown in event.demon_cooldowns.values():
+					if not RULES.number(cooldown): return
+				for ready in event.demon_ready.values():
+					if not ready is bool: return
+			elif not event.get("demon_hints",null) is Dictionary: return
 			for offer in event.augment_holds:
 				if not offer is Dictionary or not RULES.number(offer.get("number",null)) or float(offer.number) != floorf(float(offer.number)) or not offer.get("candidates",null) is Array or offer.candidates.is_empty() or offer.candidates.size() > 4: return
 				for option in offer.candidates:
@@ -410,6 +432,7 @@ func _event(event: Dictionary) -> void:
 				_update_hero_inventory(event.hero_inventory)
 				_receive_chests(event.chest_receipts)
 			if role == "demon" and event.get("hero_build",null) is Dictionary: _update_hero_build(event.hero_build)
+			if role == "hero": _update_demon_info(event.demon_hints)
 			view.feedback.suspended = waiting_for_start or connection_waiting or client.reconnecting
 			if waiting_for_start and last_tick > 0 and not connection_waiting and not client.reconnecting:
 				waiting_for_start = false; view.feedback.suspended = false; loading.finish(); _set_controls(true)

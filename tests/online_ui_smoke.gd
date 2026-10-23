@@ -19,7 +19,10 @@ func run() -> void:
 		scene.hold_toggle.pressed.emit(); await process_frame
 		check(scene.hold_scroll.visible and scene.view.size.y > 300 and scene.hold_toggle.get_global_rect().end.y < root.size.y,"held tray expands within portrait screen")
 		scene.hold_toggle.pressed.emit()
-		if role == "hero": check(scene.pad.mode == "free" and scene.pad.input_surface == scene.view,"touch binds battle only")
+		if role == "hero":
+			check(scene.pad.mode == "free" and scene.pad.input_surface == scene.view,"touch binds battle only")
+			scene.view.set_match_roster([],"")
+			check(scene.view.reveal_on_sight and scene.view._admit_sighted_actor("slime") and not scene.view._admit_sighted_actor("not_a_monster"),"hero without demon roster admits only real monsters on sight")
 		else:
 			# Since protocol 9 the demon's summon buttons come from the server's
 			# validated loadout on "matched", not a fixed roster.

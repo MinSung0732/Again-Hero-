@@ -3,6 +3,8 @@ extends Node
 const RULES := preload("res://src/online/match_rules.gd")
 const SKILLS := preload("res://src/data/demon_ultimate_catalog.gd")
 const PRESENTATION := preload("res://src/online/presentation_snapshot.gd")
+const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
+const MONSTERS := preload("res://src/data/monster_catalog.gd")
 var presentation = PRESENTATION.new()
 var battlefield_info := {}
 const PRIMITIVES := preload("res://src/online/primitive_mirror.gd")
@@ -26,6 +28,9 @@ var selected_hero_augments: Array[String] = []
 var public_hero_build: Dictionary = {}
 var public_hero_build_dirty := true
 var demon_holds: Array = []
+var demon_augment_hint_counts: Dictionary = {}
+var public_demon_hints: Dictionary = {"augment_hints":[]}
+var public_demon_hints_dirty := true
 var next_offer_number := 0
 var tick := 0
 var hero_last := Vector2.ZERO
@@ -147,8 +152,22 @@ func _apply_offer(role: String,offer: Dictionary,id: String) -> bool:
 	for candidate in offer.candidates:
 		if String(candidate.get("id","")) == id:
 			if role == "hero": return battle.hero.choose_player_augment(id,offer.candidates)
-			return battle.choose_held_demon_augment(id,offer.candidates,int(offer.level))
+			if not battle.choose_held_demon_augment(id,offer.candidates,int(offer.level)): return false
+			var hint := _demon_augment_hint(DEMON_AUGMENTS.get_augment(id))
+			demon_augment_hint_counts[hint] = int(demon_augment_hint_counts.get(hint,0)) + 1
+			public_demon_hints_dirty = true
+			return true
 	return false
+func _demon_augment_hint(augment: Dictionary) -> String:
+	var target := String(augment.get("target_type",""))
+	if RULES.TARGET_HINT_LABELS.has(target): return String(RULES.TARGET_HINT_LABELS[target])
+	var monster_id := String(augment.get("target_monster_id",augment.get("monster_id","")))
+	if monster_id.is_empty(): return String(RULES.TARGET_HINT_LABELS.all_monsters)
+	var monster: Dictionary = MONSTERS.get_monster(monster_id)
+	if RULES.HINT_DETAIL == "monster": return "%s 강화" % String(monster.get("name","몬스터"))
+	var effects: Dictionary = augment.get("effect_values",{})
+	var role := String(augment.get("role_override",effects.get("role_override",monster.get("role",""))))
+	return "%s 강화" % String(RULES.ROLE_HINT_LABELS.get(role,MONSTERS.get_role_label(role)))
 func _select_offer(role: String,argument: Dictionary) -> bool:
 	var number: Variant = argument.get("number",null)
 	var id: Variant = argument.get("id",null)
@@ -223,9 +242,23 @@ func snapshot(role: String = "") -> Dictionary:
 func snapshot_for_role(role: String,state: Dictionary) -> Dictionary:
 	var own := state.duplicate()
 	if role == "hero":
+		own.erase("demon_charge")
+		own.erase("demon_charge_max")
+		own.erase("demon_cooldowns")
+		own.erase("demon_ready")
+		own.erase("transcend_ready")
+		own.erase("transcend_used")
 		own["augment_holds"] = _wire_holds(hero_holds)
 		own["chest_receipts"] = chest_receipts.duplicate(true)
 		own["hero_inventory"] = _hero_inventory()
+		if public_demon_hints_dirty:
+			var hints: Array = []
+			for hint in demon_augment_hint_counts:
+				var count := int(demon_augment_hint_counts[hint])
+				hints.append("%s x%d" % [hint,count] if count > 1 else hint)
+			public_demon_hints = {"augment_hints":hints}
+			public_demon_hints_dirty = false
+		own["demon_hints"] = public_demon_hints
 	elif role == "demon":
 		own["augment_holds"] = _wire_holds(demon_holds)
 		if public_hero_build_dirty:
