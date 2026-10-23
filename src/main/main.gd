@@ -2754,37 +2754,7 @@ func _cache_demon_ultimate_ui_data() -> void:
 
 
 func _ensure_demon_action_choice_capacity(required_count: int) -> void:
-	while demon_action_choice_buttons.size() < maxi(required_count, 0):
-		var button_index := demon_action_choice_buttons.size()
-		var button := Button.new()
-		button.name = "Choice%d" % (button_index + 1)
-		button.focus_mode = Control.FOCUS_NONE
-		button.mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		button.clip_text = true
-		button.add_theme_color_override(
-			"font_color",
-			Color(0.96, 0.91, 1.0, 1.0)
-		)
-		button.add_theme_color_override(
-			"font_pressed_color",
-			Color(1.0, 0.88, 0.4, 1.0)
-		)
-		button.add_theme_color_override(
-			"font_disabled_color",
-			Color(0.48, 0.45, 0.54, 0.9)
-		)
-		for style_name in ["normal", "hover", "pressed", "disabled"]:
-			var style_box := demon_ultimate_1.get_theme_stylebox(style_name)
-			if style_box != null:
-				button.add_theme_stylebox_override(style_name, style_box)
-		button.pressed.connect(
-			_on_demon_action_choice_button_pressed.bind(button_index)
-		)
-		demon_action_choice_grid.add_child(button)
-		button.hide()
-		demon_action_choice_buttons.append(button)
+	preload("res://src/ui/demon_action_choices.gd").ensure_buttons(demon_action_choice_grid,demon_action_choice_buttons,demon_ultimate_1,_on_demon_action_choice_button_pressed,maxi(required_count,0))
 
 
 func _show_demon_action_choices(
@@ -2802,19 +2772,6 @@ func _show_demon_action_choices(
 	demon_action_choice_ids.clear()
 	demon_action_choice_actions.clear()
 
-	var column_count := choice_count
-	if choice_count > 5:
-		column_count = ceili(float(choice_count) / 2.0)
-	demon_action_choice_grid.columns = maxi(column_count, 1)
-	var row_count := ceili(
-		float(choice_count) / float(demon_action_choice_grid.columns)
-	)
-	var font_size := 22
-	if choice_count >= 5:
-		font_size = 20
-	if row_count > 1:
-		font_size = 17
-
 	for choice_index in range(choice_count):
 		var choice: Dictionary = choices[choice_index]
 		var choice_id := String(choice.get("id", "choice_%d" % choice_index))
@@ -2825,36 +2782,12 @@ func _show_demon_action_choices(
 		demon_action_choice_ids.append(choice_id)
 		demon_action_choice_actions.append(action)
 
-		var button := demon_action_choice_buttons[choice_index]
-		button.text = String(choice.get("text", choice_id))
-		button.disabled = bool(choice.get("disabled", false))
-		button.add_theme_font_size_override(
-			"font_size",
-			int(choice.get("font_size", font_size))
-		)
-		button.show()
-
-	for button_index in range(
-		choice_count,
-		demon_action_choice_buttons.size()
-	):
-		demon_action_choice_buttons[button_index].hide()
-
-	$HUD/DemonUltimatePanel/UltimateButtons.hide()
-	demon_ultimate_bar.hide()
-	demon_action_choice_grid.show()
-	demon_ultimate_label.text = title
-	demon_ultimate_label.add_theme_color_override(
-		"font_color",
-		Color(1.0, 0.78, 0.28, 1.0)
-	)
+	preload("res://src/ui/demon_action_choices.gd").show_choices(demon_action_choice_grid,demon_action_choice_buttons,$HUD/DemonUltimatePanel/UltimateButtons,demon_ultimate_bar,demon_ultimate_label,title,choices)
 
 
 func _hide_demon_action_choices() -> void:
 	demon_action_choice_active = false
-	demon_action_choice_grid.hide()
-	for button in demon_action_choice_buttons:
-		button.hide()
+	preload("res://src/ui/demon_action_choices.gd").hide_choices(demon_action_choice_grid,demon_action_choice_buttons)
 	demon_action_choice_context = ""
 	demon_action_choice_ids.clear()
 	demon_action_choice_actions.clear()
@@ -2972,45 +2905,7 @@ func _on_demon_ultimate_pressed(skill_id: String) -> void:
 		status_label.text = "마력이 부족합니다. %s은(는) 코스트 %d가 필요합니다." % [String(skill.get("name", "마력 기술")), int(round(mana_cost))]
 
 func _open_demon_direction_select() -> void:
-	var direction_choices: Array = [
-		{
-			"id": "east",
-			"text": "동쪽 ▶",
-			"action": Callable(
-				self,
-				"_on_demon_line_direction_pressed"
-			).bind("east"),
-		},
-		{
-			"id": "west",
-			"text": "◀ 서쪽",
-			"action": Callable(
-				self,
-				"_on_demon_line_direction_pressed"
-			).bind("west"),
-		},
-		{
-			"id": "north",
-			"text": "▲ 북쪽",
-			"action": Callable(
-				self,
-				"_on_demon_line_direction_pressed"
-			).bind("north"),
-		},
-		{
-			"id": "south",
-			"text": "▼ 남쪽",
-			"action": Callable(
-				self,
-				"_on_demon_line_direction_pressed"
-			).bind("south"),
-		},
-		{
-			"id": "cancel",
-			"text": "취소",
-			"action": Callable(self, "_close_demon_direction_select"),
-		},
-	]
+	var direction_choices: Array = preload("res://src/ui/demon_action_choices.gd").line_directions(Callable(self,"_on_demon_line_direction_pressed"),Callable(self,"_close_demon_direction_select"))
 	_show_demon_action_choices(
 		"일직선 공세 · 방향 선택",
 		"line_direction",

@@ -14,7 +14,7 @@ func check(ok: bool,message: String) -> void:
 	if not ok: push_error(message); quit(1); assert(ok,message)
 func _initialize() -> void: run.call_deferred()
 func run() -> void:
-	for path in ["res://src/main/main.gd","res://src/hero_mode/hero_mode.gd","res://src/online/match_scene.gd","res://src/online/battle_room.gd","res://src/online/match_rules.gd","res://src/ui/augment_hold_popup.gd","res://src/ui/demon_augment_panel_view.gd","res://src/ui/hero_augment_cards_view.gd","res://src/ui/castle_battle_chrome.gd"]:
+	for path in ["res://src/main/main.gd","res://src/hero_mode/hero_mode.gd","res://src/online/match_scene.gd","res://src/online/battle_view.gd","res://src/ui/demon_action_choices.gd","res://src/online/battle_room.gd","res://src/online/match_rules.gd","res://src/ui/augment_hold_popup.gd","res://src/ui/demon_augment_panel_view.gd","res://src/ui/hero_augment_cards_view.gd","res://src/ui/castle_battle_chrome.gd"]:
 		var script: Script = load(path)
 		check(script != null and script.can_instantiate(),"modified script loads: "+path)
 	var solo_packed: PackedScene = load("res://src/main/Main.tscn")
@@ -161,7 +161,8 @@ func run() -> void:
 		scene._process(3.1)
 		check(not scene.battle_toast.visible,"battle toast expires")
 		if role == "hero":
-			check(scene.demon_info_panel.visible and scene.demon_info_panel.get_node_or_null("IllustratedBattlePanel") != null and scene.demon_info_panel.mouse_filter == Control.MOUSE_FILTER_IGNORE,"hero demon information stays visible in gold frame without input")
+			check(scene.demon_info_panel.visible and scene.demon_info_panel.size.x > 0 and scene.demon_info_panel.size.y > 0 and scene.demon_info_panel.get_node_or_null("IllustratedBattlePanel") != null and scene.demon_info_panel.get_node("IllustratedBattlePanel").size == scene.demon_info_panel.size and scene.demon_info_panel.mouse_filter == Control.MOUSE_FILTER_IGNORE,"hero demon information draws a sized gold frame without input: panel="+str(scene.demon_info_panel.size)+" frame="+str(scene.demon_info_panel.get_node("IllustratedBattlePanel").size))
+			check(scene.demon_info_panel.get_node("Content").get_child(0).get_theme_font_size("font_size") == 24 and scene.demon_info_hints.get_theme_font_size("font_size") == 22,"hero demon information text is readable")
 			check(scene.demon_info_panel.get_global_rect().end.y <= scene.view.get_global_rect().position.y,"demon information clears battlefield")
 			scene._update_demon_info({"augment_hints":["공격 강화","방어 강화"]})
 			check(scene.demon_info_hints.text.contains("공격 강화") and scene.demon_info_hints.text.contains("방어 강화"),"demon augment hints update")
@@ -169,6 +170,18 @@ func run() -> void:
 			check(scene.demon_info_hints.text.contains("아직 없음"),"empty demon augment hints are explicit")
 		else:
 			check(scene.hero_build_toggle.visible and not scene.hero_build_overlay.visible,"hero build button starts closed")
+			check(scene.direction_buttons.size() == 5 and scene.get_node_or_null("DirectionRow") == null,"demon uses shared choice buttons without battlefield direction row")
+			scene._open_direction_select()
+			var choice_grid: GridContainer = scene.demon_panel.get_node("ActionChoiceGrid")
+			check(choice_grid.visible and choice_grid.get_child_count() == 5 and not scene.skill_row.visible and not scene.demon_panel.get_node("UltimateBar").visible,"line direction shows five choices and hides skills and ultimate bar")
+			check(choice_grid.get_child(0).text.contains("동쪽") and choice_grid.get_child(1).text.contains("서쪽") and choice_grid.get_child(2).text.contains("북쪽") and choice_grid.get_child(3).text.contains("남쪽") and choice_grid.get_child(4).text == "취소","line direction uses solo button labels")
+			choice_grid.get_child(4).pressed.emit()
+			check(not choice_grid.visible and scene.skill_row.visible and scene.demon_panel.get_node("UltimateBar").visible and scene.demon_panel.get_node("UltimateLabel").text == scene.ultimate_status_text,"cancel restores demon skill controls")
+			var skill_client = scene.client; var was_ended: bool = scene.ended
+			scene.client = command_spy; scene.ended = false
+			scene._open_direction_select(); choice_grid.get_child(0).pressed.emit()
+			check(command_spy.kind == "skill" and command_spy.argument == {"id":"line_assault","direction":"east"} and not choice_grid.visible,"direction choice sends existing skill command: "+command_spy.kind+" "+str(command_spy.argument)+" grid="+str(choice_grid.visible))
+			scene.client = skill_client; scene.ended = was_ended
 			scene.hero_build_toggle.pressed.emit(); await process_frame
 			check(scene.hero_build_overlay.visible and scene.hero_build_frame.get_node_or_null("IllustratedBattlePanel") != null and scene.hero_build_frame.size.x >= scene.size.x * 0.8,"hero build opens wide gold popup")
 			check(absf(scene.hero_build_frame.get_global_rect().get_center().x-scene.size.x*0.5) <= 2.0 and not paused,"popup is centered and combat stays active")
@@ -197,12 +210,16 @@ func run() -> void:
 		check(scene.top_bar.get_node("HeroHPBar").value == 720 and scene.top_bar.get_node("HeroHPBar").max_value == 1200,"snapshot updates HP bar")
 		if role == "hero":
 			scene._update_hud_progress(3,24,50)
+			check(scene.hero_slots.get_node("IllustratedBattlePanel").size == scene.hero_slots.size and scene.hero_slots.size.y > 0,"hero lower inventory draws gold frame")
 			check(scene.top_bar.get_node("ExpBar").value == 24 and scene.top_bar.get_node("ExpBar").visible,"hero EXP shown")
 			scene._update_hero_inventory({"level":3,"exp":24,"exp_next":50,"rerolls_left":1,"reroll_limit":2,"weapons":[["ranged_rookie_arcane_bolt",2,false]],"passives":[["survival_power",1]]})
 			check(scene.weapon_buttons[0].get_node("Icon").texture != null and scene.weapon_buttons[0].get_node("Rank").text == "Lv.2" and scene.passive_buttons[0].get_node("Icon").texture != null,"snapshot fills shared hero slots")
 			check(scene.weapon_buttons[0].get_parent().name == "무기Inventory" and scene.passive_buttons[0].get_parent().name == "보조Inventory" and (scene.weapon_buttons[0].get_theme_stylebox("normal") as StyleBoxFlat).border_width_left == 4,"hero slots use shared inventory rows and pixel skin")
 		else: check(not scene.top_bar.get_node("ExpBar").visible and scene.top_bar.get_node("HeroLevel").text.contains("3"),"demon sees level without EXP")
 		root.size = Vector2i(1080,1920); await process_frame; await process_frame
+		scene.view._layout_map()
+		check(scene.view.map_offset.x <= 0 and scene.view.map_offset.y <= 0 and scene.view.map_offset.x + scene.view.bounds.x * scene.view.scale_ratio >= scene.view.size.x and scene.view.map_offset.y + scene.view.bounds.y * scene.view.scale_ratio >= scene.view.size.y,"phone camera clamps map over viewport")
+		if role == "hero": check(is_equal_approx(scene.demon_info_panel.size.x,scene.top_bar.get_node("HeroStatusFrame").size.x),"phone demon information matches hero status width")
 		check(scene.top_bar.get_global_rect().end.x <= root.size.x and absf(scene.view.get_global_rect().position.y-(scene.demon_info_panel.get_global_rect().end.y if role == "hero" else scene.top_bar.get_global_rect().end.y)) <= 8.0,"phone battlefield starts below information")
 		var lower: Control = scene.demon_panel if role == "demon" else scene.hero_slots
 		check(lower.get_global_rect().end.y <= root.size.y and scene.view.get_global_rect().end.y <= lower.get_global_rect().position.y,"phone lower HUD fits below battlefield")
@@ -217,6 +234,9 @@ func run() -> void:
 		if role == "demon": check(scene.hold_popup.popup.get_global_rect().end.y < scene.bottom_bar.get_global_rect().position.y and scene.hold_popup.lower_button.get_global_rect().end.y <= scene.hold_popup.popup.get_global_rect().end.y,"phone augment popup clears bottom bar")
 		scene.hold_popup.close_popup()
 		root.size = Vector2i(1536,1920); await process_frame; await process_frame
+		scene.view._layout_map()
+		check(scene.view.map_offset.x <= 0 and scene.view.map_offset.y <= 0 and scene.view.map_offset.x + scene.view.bounds.x * scene.view.scale_ratio >= scene.view.size.x and scene.view.map_offset.y + scene.view.bounds.y * scene.view.scale_ratio >= scene.view.size.y,"tablet camera clamps map over viewport")
+		if role == "hero": check(is_equal_approx(scene.demon_info_panel.size.x,scene.top_bar.get_node("HeroStatusFrame").size.x),"tablet demon information matches hero status width")
 		check(scene.top_bar.get_global_rect().end.x <= root.size.x and scene.top_bar.get_node("Monsters").get_global_rect().end.x <= root.size.x and absf(scene.view.get_global_rect().position.y-(scene.demon_info_panel.get_global_rect().end.y if role == "hero" else scene.top_bar.get_global_rect().end.y)) <= 8.0,"tablet battlefield starts below information")
 		check(lower.get_global_rect().end.y <= root.size.y and lower.get_global_rect().end.x <= root.size.x and scene.view.get_global_rect().end.y <= lower.get_global_rect().position.y,"tablet lower HUD fits below battlefield")
 		if role == "demon":

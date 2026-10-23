@@ -27,6 +27,7 @@ const PIXEL_SKIN := preload("res://src/ui/pixel_panel_skin.gd")
 const STAGES := preload("res://src/data/stage_catalog.gd")
 const MAPS := preload("res://src/data/ranked_map_catalog.gd")
 const HOLD_POPUP := preload("res://src/ui/augment_hold_popup.gd")
+const ACTION_CHOICES := preload("res://src/ui/demon_action_choices.gd")
 var loading
 var local_preparing := false
 var waiting_for_start := false
@@ -75,7 +76,7 @@ var hero_build_level: Label
 var hero_build_augments: Label
 var hero_build_signature := ""
 var hero_build_data: Dictionary = {}
-var demon_info_panel: VBoxContainer
+var demon_info_panel: Control
 var demon_info_hints: Label
 var inventory_detail: AcceptDialog
 var chest_notice: Label
@@ -100,7 +101,9 @@ var inventory_items := {"weapons":[],"passives":[]}
 var hero_slots: Control
 var weapon_buttons: Array[Button] = []
 var passive_buttons: Array[Button] = []
-var direction_row: HBoxContainer
+var direction_buttons: Array = []
+var direction_choices: Array = []
+var ultimate_status_text := "필살기   0 / 100"
 var skill_direction := "east"
 var transcend_button: Button
 var transcendence_id := ""
@@ -195,6 +198,9 @@ func _ready() -> void:
 		panel_targets.append(top_bar.get_node(name))
 	if role == "demon":
 		panel_targets.append_array([demon_panel.get_node("Frame"),bottom_bar.get_node("AutoFrame")])
+		(demon_panel.get_node("DemonLevelLabel") as Label).add_theme_font_size_override("font_size",24)
+		(demon_panel.get_node("DemonProgressLabel") as Label).add_theme_font_size_override("font_size",23)
+		(demon_panel.get_node("DemonProgressLabel") as Label).add_theme_color_override("font_color",Color("f4f1e9"))
 		for button in demon_panel.get_node("UltimateButtons").get_children():
 			panel_targets.append(button)
 			button.add_theme_font_size_override("font_size",24)
@@ -249,15 +255,22 @@ func _ready() -> void:
 		hero_build_augments = _label(hero_build_panel,"선택한 증강: 없음",22)
 		hero_build_augments.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	else:
-		demon_info_panel = VBoxContainer.new(); demon_info_panel.name = "DemonInfoPanel"
-		demon_info_panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
-		demon_info_panel.offset_left = 24; demon_info_panel.offset_right = -24
+		demon_info_panel = Control.new(); demon_info_panel.name = "DemonInfoPanel"
+		demon_info_panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_LEFT)
+		demon_info_panel.offset_left = 20; demon_info_panel.offset_right = 734
 		demon_info_panel.offset_top = 350; demon_info_panel.offset_bottom = 470
 		demon_info_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		add_child(demon_info_panel); TOP_LAYOUT.install_panels([demon_info_panel])
-		var summary := _label(demon_info_panel,"마왕 정보    편성 ? · 스킬 ? · 초월 ?",21)
+		add_child(demon_info_panel)
+		TOP_LAYOUT.install_panels([demon_info_panel])
+		var info_content := VBoxContainer.new(); info_content.name = "Content"
+		info_content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		info_content.offset_left = 30; info_content.offset_right = -30
+		info_content.offset_top = 18; info_content.offset_bottom = -12
+		info_content.add_theme_constant_override("separation",6); demon_info_panel.add_child(info_content)
+		var summary := _label(info_content,"마왕 정보 · 편성 ? · 스킬 ? · 초월 ?",24)
+		summary.add_theme_color_override("font_color",Color("ffe08c"))
 		summary.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		demon_info_hints = _label(demon_info_panel,"증강 방향: 아직 없음",19)
+		demon_info_hints = _label(info_content,"증강 방향: 아직 없음",22)
 		demon_info_hints.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if role == "demon":
 		action_row = bottom_bar.get_node("SummonButtons")
@@ -270,23 +283,24 @@ func _ready() -> void:
 		transcend_button.pressed.connect(_select_transcendence); bottom_bar.add_child(transcend_button)
 		TOP_LAYOUT.install_panels([transcend_button])
 		transcend_button.disabled = true; transcend_button.hide()
-		direction_row = HBoxContainer.new(); add_child(direction_row)
-		direction_row.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
-		direction_row.offset_left = 24; direction_row.offset_right = -24
-		direction_row.offset_top = -605; direction_row.offset_bottom = -530
-		direction_row.hide()
-		for direction in ["east","west","north","south"]:
-			var button := _button(direction_row,{"east":"동","west":"서","north":"북","south":"남"}[direction],_select_skill_direction.bind(direction))
-			button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		ACTION_CHOICES.ensure_buttons(demon_panel.get_node("ActionChoiceGrid"),direction_buttons,skill_row.get_child(0),_on_direction_choice,5)
 	if role == "hero":
 		pad = PAD.new(); add_child(pad); pad.set_mode(PAD.MODE_FREE)
 		pad.input_surface = view; pad.movement_changed.connect(func(value: Vector2): movement = value)
-		hero_slots = VBoxContainer.new(); hero_slots.name = "HeroInventory"
+		hero_slots = Control.new(); hero_slots.name = "HeroInventory"
 		hero_slots.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
 		hero_slots.offset_left = 24; hero_slots.offset_right = -24; hero_slots.offset_top = -210
 		add_child(hero_slots)
-		weapon_buttons = HERO_HUD.inventory_row(hero_slots,"무기",WEAPONS.WEAPON_SLOTS)
-		passive_buttons = HERO_HUD.inventory_row(hero_slots,"보조",WEAPONS.PASSIVE_SLOTS)
+		TOP_LAYOUT.install_panels([hero_slots])
+		var slot_content := VBoxContainer.new(); slot_content.name = "Content"
+		slot_content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		slot_content.offset_left = 24; slot_content.offset_right = -24
+		slot_content.offset_top = 20; slot_content.offset_bottom = -10
+		hero_slots.add_child(slot_content)
+		weapon_buttons = HERO_HUD.inventory_row(slot_content,"무기",WEAPONS.WEAPON_SLOTS)
+		passive_buttons = HERO_HUD.inventory_row(slot_content,"보조",WEAPONS.PASSIVE_SLOTS)
+		for row in [weapon_buttons[0].get_parent(),passive_buttons[0].get_parent()]:
+			(row.get_child(0) as Label).add_theme_color_override("font_color",Color("f4f1e9"))
 		for button in weapon_buttons + passive_buttons: PIXEL_SKIN.apply(button)
 		for index in weapon_buttons.size(): weapon_buttons[index].pressed.connect(_show_slot_info.bind(true,index))
 		for index in passive_buttons.size(): passive_buttons[index].pressed.connect(_show_slot_info.bind(false,index))
@@ -365,6 +379,10 @@ func _layout_top_bar() -> void:
 			child.position = rect.position
 			child.size = rect.size
 			index += 1
+	if demon_info_panel != null:
+		var status_frame: Control = top_bar.get_node("HeroStatusFrame")
+		demon_info_panel.position.x = status_frame.position.x
+		demon_info_panel.size.x = status_frame.size.x
 	if role == "demon":
 		for panel in [demon_panel,bottom_bar]:
 			for child in panel.get_children():
@@ -530,7 +548,9 @@ func _update_demon_controls(event: Dictionary) -> void:
 		(demon_panel.get_node("DemonProgressLabel") as Label).text = "EXP %.1f / %.1f" % [float(event.get("demon_exp",0.0)),float(event.get("demon_exp_next",1.0))]
 		var exp_bar := demon_panel.get_node("DemonExpBar") as ProgressBar
 		exp_bar.max_value = maxf(1.0,float(event.get("demon_exp_next",1.0))); exp_bar.value = float(event.get("demon_exp",0.0))
-		(demon_panel.get_node("UltimateLabel") as Label).text = "필살기 %d / %d" % [roundi(float(event.demon_charge)),roundi(float(event.demon_charge_max))]
+		ultimate_status_text = "필살기 %d / %d" % [roundi(float(event.demon_charge)),roundi(float(event.demon_charge_max))]
+		if not demon_panel.get_node("ActionChoiceGrid").visible:
+			(demon_panel.get_node("UltimateLabel") as Label).text = ultimate_status_text
 		var charge_bar := demon_panel.get_node("UltimateBar") as ProgressBar
 		charge_bar.max_value = maxf(1.0,float(event.demon_charge_max)); charge_bar.value = float(event.demon_charge)
 		for id in skill_buttons:
@@ -553,7 +573,24 @@ func _select_monster(id: String) -> void:
 func _select_skill_direction(direction: String) -> void:
 	skill_direction = direction
 	action_notice.text = "직선 포위 방향: %s" % {"east":"동","west":"서","north":"북","south":"남"}.get(direction,direction)
+	_use_skill("line_assault")
+func _on_direction_choice(index: int) -> void:
+	if index < 0 or index >= direction_choices.size(): return
+	var action: Callable = direction_choices[index].action
+	if action.is_valid(): action.call()
+func _open_direction_select() -> void:
+	direction_choices = ACTION_CHOICES.line_directions(_select_skill_direction,_close_direction_select)
+	ACTION_CHOICES.show_choices(demon_panel.get_node("ActionChoiceGrid"),direction_buttons,skill_row,demon_panel.get_node("UltimateBar"),demon_panel.get_node("UltimateLabel"),"일직선 공세 · 방향 선택",direction_choices)
+	status.text = "일직선 공세 · 발사 방향을 선택하세요"
+func _close_direction_select() -> void:
+	ACTION_CHOICES.hide_choices(demon_panel.get_node("ActionChoiceGrid"),direction_buttons)
+	skill_row.show(); demon_panel.get_node("UltimateBar").show()
+	(demon_panel.get_node("UltimateLabel") as Label).text = ultimate_status_text
+	demon_panel.get_node("UltimateLabel").remove_theme_color_override("font_color")
 func _use_skill(id: String) -> void:
+	if id == "line_assault" and not demon_panel.get_node("ActionChoiceGrid").visible:
+		_open_direction_select(); return
+	if id == "line_assault": _close_direction_select()
 	if not ended and not connection_waiting and not client.reconnecting:
 		client.command("skill",{"id":id,"direction":skill_direction if id == "line_assault" else ""})
 func _select_transcendence() -> void:
@@ -745,7 +782,6 @@ func _event(event: Dictionary) -> void:
 					for connection in button.pressed.get_connections(): button.pressed.disconnect(connection.callable)
 					button.pressed.connect(_use_skill.bind(id))
 					skill_buttons[id] = button
-				direction_row.visible = "line_assault" in demon_skills
 				transcend_button.visible = not transcendence_id.is_empty()
 			last_tick = -1; view.resume_motion()
 			_refresh_connection_test_controls()

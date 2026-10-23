@@ -195,14 +195,17 @@ func _draw_visuals() -> void:
 		draw_texture_rect_region(texture,Rect2(command[12],command[13],command[14],command[15]),source,Color(command[16],command[17],command[18],command[19]))
 	draw_set_transform_matrix(Transform2D.IDENTITY)
 func _layout_map() -> void:
-	scale_ratio = minf(size.x/bounds.x,size.y/bounds.y)
-	map_offset = (size-bounds*scale_ratio)*0.5
+	scale_ratio = maxf(size.x/bounds.x,size.y/bounds.y)
+	var hero_point := Vector2(bounds.x*0.5,bounds.y*0.5)
+	if state.get("hero",null) is Array and state.hero.size() >= 2:
+		hero_point = motion.position(0,Vector2(state.hero[0],state.hero[1]))
+	var extent := bounds*scale_ratio
+	map_offset = Vector2(clampf(size.x*0.5-hero_point.x*scale_ratio,size.x-extent.x,0.0),clampf(size.y*0.5-hero_point.y*scale_ratio,size.y-extent.y,0.0))
 	if battlefield != null:
 		battlefield.position = map_offset; battlefield.scale = Vector2.ONE*scale_ratio
 func _draw() -> void:
 	_layout_map()
 	if battlefield == null or not battlefield.visible:
-		draw_rect(Rect2(Vector2.ZERO,size),Color("101b28"))
 		draw_rect(Rect2(map_offset,bounds*scale_ratio),Color("283847"))
 		for x in range(0,int(bounds.x),300): draw_line(map_offset+Vector2(x,0)*scale_ratio,map_offset+Vector2(x,bounds.y)*scale_ratio,Color("354654"))
 		for y in range(0,int(bounds.y),300): draw_line(map_offset+Vector2(0,y)*scale_ratio,map_offset+Vector2(bounds.x,y)*scale_ratio,Color("354654"))
