@@ -160,13 +160,37 @@ func run() -> void:
 		check(scene.battle_toast.visible and scene.battle_toast.text == "짧은 알림","battle status uses toast")
 		scene._process(3.1)
 		check(not scene.battle_toast.visible,"battle toast expires")
-		var info_button: Button = scene.demon_info_toggle if role == "hero" else scene.hero_build_toggle
-		var info_panel: Control = scene.demon_info_panel if role == "hero" else scene.hero_build_scroll
-		check(info_button.visible and not info_panel.visible and info_button.get_parent() == scene,"info button overlays battlefield")
-		info_button.pressed.emit(); await process_frame
-		check(info_panel.visible and info_panel.get_global_rect().intersects(scene.view.get_global_rect()),"info panel opens over battlefield")
-		info_button.pressed.emit(); await process_frame
-		check(not info_panel.visible,"info panel closes")
+		if role == "hero":
+			check(scene.demon_info_panel.visible and scene.demon_info_panel.get_node_or_null("IllustratedBattlePanel") != null and scene.demon_info_panel.mouse_filter == Control.MOUSE_FILTER_IGNORE,"hero demon information stays visible in gold frame without input")
+			check(scene.demon_info_panel.get_global_rect().end.y <= scene.view.get_global_rect().position.y,"demon information clears battlefield")
+			scene._update_demon_info({"augment_hints":["공격 강화","방어 강화"]})
+			check(scene.demon_info_hints.text.contains("공격 강화") and scene.demon_info_hints.text.contains("방어 강화"),"demon augment hints update")
+			scene._update_demon_info({"augment_hints":[]})
+			check(scene.demon_info_hints.text.contains("아직 없음"),"empty demon augment hints are explicit")
+		else:
+			check(scene.hero_build_toggle.visible and not scene.hero_build_overlay.visible,"hero build button starts closed")
+			scene.hero_build_toggle.pressed.emit(); await process_frame
+			check(scene.hero_build_overlay.visible and scene.hero_build_frame.get_node_or_null("IllustratedBattlePanel") != null and scene.hero_build_frame.size.x >= scene.size.x * 0.8,"hero build opens wide gold popup")
+			check(absf(scene.hero_build_frame.get_global_rect().get_center().x-scene.size.x*0.5) <= 2.0 and not paused,"popup is centered and combat stays active")
+			scene._update_match_hud({"seconds":41.0,"hero":[100.0,100.0,720,1200,3],"actors":[]})
+			scene._update_hero_build({"level":3,"weapons":[["ranged_rookie_arcane_bolt",2,false]],"passives":[["survival_power",1]],"augments":["공격력 증가"],"rerolls_left":99,"held_offers":["비공개"]})
+			await process_frame
+			var build_text: String = scene.hero_build_level.text + scene.hero_build_augments.text
+			for row in scene.hero_build_rows.get_children():
+				if row is Label: build_text += row.text
+				for child in row.get_children():
+					if child is Label: build_text += child.text
+			check(build_text.contains("피해") and build_text.contains("공격 간격") and build_text.contains("사거리") and build_text.contains("공격력 증가"),"public build includes weapon stats and chosen augments")
+			check(scene.hero_build_level.text.contains("720 / 1200") and scene.hero_build_level.text.contains("Lv.3"),"public build shows current hero HP and level")
+			check(not build_text.contains("비공개") and not build_text.contains("99") and not build_text.contains("새로고침"),"held choices and reroll state remain private")
+			var previous_signature: String = scene.hero_build_signature
+			scene._update_hero_build(scene.hero_build_data)
+			check(scene.hero_build_signature == previous_signature,"unchanged public build does not redraw")
+			var outside := InputEventMouseButton.new(); outside.pressed = true; outside.position = Vector2(10,10)
+			scene._hero_build_outside_input(outside)
+			check(not scene.hero_build_overlay.visible,"outside tap closes build popup")
+			scene.hero_build_toggle.pressed.emit(); scene._close_hero_build()
+			check(not scene.hero_build_overlay.visible and not scene.hero_build_toggle.button_pressed,"close hides build popup")
 		var snapshot := {"seconds":41.0,"hero":[100.0,100.0,720,1200,3],"actors":[[1,"slime",200.0,200.0,50,50],[2,"orc",300.0,300.0,80,80]]}
 		scene._update_match_hud(snapshot)
 		check(scene.top_bar.get_node("RunTimer").text.contains("09:19") and scene.top_bar.get_node("HeroHP").text.contains("720 / 1200") and scene.top_bar.get_node("Monsters").text.contains("2"),"snapshot updates timer HP and monster count")
@@ -176,23 +200,30 @@ func run() -> void:
 			check(scene.top_bar.get_node("ExpBar").value == 24 and scene.top_bar.get_node("ExpBar").visible,"hero EXP shown")
 			scene._update_hero_inventory({"level":3,"exp":24,"exp_next":50,"rerolls_left":1,"reroll_limit":2,"weapons":[["ranged_rookie_arcane_bolt",2,false]],"passives":[["survival_power",1]]})
 			check(scene.weapon_buttons[0].get_node("Icon").texture != null and scene.weapon_buttons[0].get_node("Rank").text == "Lv.2" and scene.passive_buttons[0].get_node("Icon").texture != null,"snapshot fills shared hero slots")
-			check(scene.weapon_buttons[0].get_parent().name == "무기Inventory" and scene.passive_buttons[0].get_parent().name == "보조Inventory" and scene.weapon_buttons[0].get_theme_stylebox("normal") != null,"hero slots use shared inventory rows")
+			check(scene.weapon_buttons[0].get_parent().name == "무기Inventory" and scene.passive_buttons[0].get_parent().name == "보조Inventory" and (scene.weapon_buttons[0].get_theme_stylebox("normal") as StyleBoxFlat).border_width_left == 4,"hero slots use shared inventory rows and pixel skin")
 		else: check(not scene.top_bar.get_node("ExpBar").visible and scene.top_bar.get_node("HeroLevel").text.contains("3"),"demon sees level without EXP")
 		root.size = Vector2i(1080,1920); await process_frame; await process_frame
-		check(scene.top_bar.get_global_rect().end.x <= root.size.x and absf(scene.view.get_global_rect().position.y-scene.top_bar.get_global_rect().end.y) <= 2.0,"phone battlefield starts at top bar")
+		check(scene.top_bar.get_global_rect().end.x <= root.size.x and absf(scene.view.get_global_rect().position.y-(scene.demon_info_panel.get_global_rect().end.y if role == "hero" else scene.top_bar.get_global_rect().end.y)) <= 8.0,"phone battlefield starts below information")
 		var lower: Control = scene.demon_panel if role == "demon" else scene.hero_slots
 		check(lower.get_global_rect().end.y <= root.size.y and scene.view.get_global_rect().end.y <= lower.get_global_rect().position.y,"phone lower HUD fits below battlefield")
 		if role == "demon":
 			check(scene.bottom_bar.get_global_rect().end.y <= root.size.y and scene.summon_buttons[-1].get_global_rect().end.x <= root.size.x,"phone cards fit")
+			scene.hero_build_toggle.pressed.emit(); await process_frame
+			check(scene.hero_build_frame.size.x >= root.size.x * 0.8 and scene.hero_build_frame.get_global_rect().end.x <= root.size.x,"phone build popup fits width")
+			scene._close_hero_build()
 		check(scene.hold_popup.dot_row.get_global_rect().end.y <= lower.get_global_rect().position.y and absf(scene.view.get_global_rect().end.y-lower.get_global_rect().position.y) <= 2.0,"phone battlefield fills to lower HUD and dots stay above it")
 		scene.hold_popup.open_index(0); await process_frame
 		check(scene.hold_popup.popup.get_global_rect().position.y >= 0 and scene.hold_popup.popup.get_global_rect().end.y <= root.size.y,"phone popup fits")
 		if role == "demon": check(scene.hold_popup.popup.get_global_rect().end.y < scene.bottom_bar.get_global_rect().position.y and scene.hold_popup.lower_button.get_global_rect().end.y <= scene.hold_popup.popup.get_global_rect().end.y,"phone augment popup clears bottom bar")
 		scene.hold_popup.close_popup()
 		root.size = Vector2i(1536,1920); await process_frame; await process_frame
-		check(scene.top_bar.get_global_rect().end.x <= root.size.x and scene.top_bar.get_node("Monsters").get_global_rect().end.x <= root.size.x and absf(scene.view.get_global_rect().position.y-scene.top_bar.get_global_rect().end.y) <= 2.0,"tablet battlefield starts at top bar")
+		check(scene.top_bar.get_global_rect().end.x <= root.size.x and scene.top_bar.get_node("Monsters").get_global_rect().end.x <= root.size.x and absf(scene.view.get_global_rect().position.y-(scene.demon_info_panel.get_global_rect().end.y if role == "hero" else scene.top_bar.get_global_rect().end.y)) <= 8.0,"tablet battlefield starts below information")
 		check(lower.get_global_rect().end.y <= root.size.y and lower.get_global_rect().end.x <= root.size.x and scene.view.get_global_rect().end.y <= lower.get_global_rect().position.y,"tablet lower HUD fits below battlefield")
-		if role == "demon": check(scene.bottom_bar.get_global_rect().end.y <= root.size.y and scene.summon_buttons[-1].get_global_rect().end.x <= root.size.x,"tablet cards fit")
+		if role == "demon":
+			check(scene.bottom_bar.get_global_rect().end.y <= root.size.y and scene.summon_buttons[-1].get_global_rect().end.x <= root.size.x,"tablet cards fit")
+			scene.hero_build_toggle.pressed.emit(); await process_frame
+			check(scene.hero_build_frame.size.x >= root.size.x * 0.8 and scene.hero_build_frame.get_global_rect().end.x <= root.size.x,"tablet build popup fits width")
+			scene._close_hero_build()
 		check(scene.hold_popup.dot_row.get_global_rect().end.y <= lower.get_global_rect().position.y and absf(scene.view.get_global_rect().end.y-lower.get_global_rect().position.y) <= 2.0,"tablet battlefield fills to lower HUD and dots stay above it")
 		scene.hold_popup.open_index(0); await process_frame
 		check(scene.hold_popup.popup.get_global_rect().position.x >= 0 and scene.hold_popup.popup.get_global_rect().end.x <= root.size.x and scene.hold_popup.popup.get_global_rect().end.y <= root.size.y,"tablet popup fits")

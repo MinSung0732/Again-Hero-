@@ -23,6 +23,7 @@ const ICONS := preload("res://src/ui/hero_augment_icons.gd")
 const TOP_LAYOUT := preload("res://src/ui/castle_battle_chrome.gd")
 const RESPONSIVE := preload("res://src/ui/battle_responsive_layout.gd")
 const HERO_HUD := preload("res://src/ui/hero_survival_hud.gd")
+const PIXEL_SKIN := preload("res://src/ui/pixel_panel_skin.gd")
 const STAGES := preload("res://src/data/stage_catalog.gd")
 const MAPS := preload("res://src/data/ranked_map_catalog.gd")
 const HOLD_POPUP := preload("res://src/ui/augment_hold_popup.gd")
@@ -65,13 +66,15 @@ var action_notice: Label
 var hold_popup: Control
 var inventory_signature := ""
 var hero_build_toggle: Button
+var hero_build_overlay: Control
+var hero_build_frame: Panel
 var hero_build_scroll: ScrollContainer
 var hero_build_panel: VBoxContainer
 var hero_build_rows: VBoxContainer
 var hero_build_level: Label
 var hero_build_augments: Label
 var hero_build_signature := ""
-var demon_info_toggle: Button
+var hero_build_data: Dictionary = {}
 var demon_info_panel: VBoxContainer
 var demon_info_hints: Label
 var inventory_detail: AcceptDialog
@@ -220,19 +223,42 @@ func _ready() -> void:
 			else: client.command("summon",{"id":selected_monster,"point":[point.x,point.y]}))
 	if role == "demon":
 		hero_build_toggle = _info_button("용사 빌드",_toggle_hero_build)
-		hero_build_scroll = ScrollContainer.new(); hero_build_scroll.custom_minimum_size.y = 160
-		hero_build_scroll.visible = false; _place_info_panel(hero_build_scroll)
+		hero_build_overlay = Control.new(); hero_build_overlay.name = "HeroBuildOverlay"
+		hero_build_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		hero_build_overlay.mouse_filter = Control.MOUSE_FILTER_STOP; hero_build_overlay.z_index = 100
+		hero_build_overlay.gui_input.connect(_hero_build_outside_input)
+		add_child(hero_build_overlay); hero_build_overlay.hide()
+		var dim := ColorRect.new(); dim.color = Color(0,0,0,0.6)
+		dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		dim.mouse_filter = Control.MOUSE_FILTER_IGNORE; hero_build_overlay.add_child(dim)
+		hero_build_frame = Panel.new(); hero_build_frame.name = "HeroBuildFrame"
+		hero_build_frame.mouse_filter = Control.MOUSE_FILTER_STOP; hero_build_overlay.add_child(hero_build_frame)
+		hero_build_frame.add_theme_stylebox_override("panel",StyleBoxEmpty.new())
+		TOP_LAYOUT.install_panels([hero_build_frame])
+		var content := VBoxContainer.new(); content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		content.offset_left = 32; content.offset_right = -32; content.offset_top = 28; content.offset_bottom = -28
+		hero_build_frame.add_child(content)
+		var heading := HBoxContainer.new(); content.add_child(heading)
+		var title := _label(heading,"공개된 용사 빌드",28); title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		var close := _button(heading,"닫기",_close_hero_build); close.custom_minimum_size = Vector2(110,62)
+		hero_build_scroll = ScrollContainer.new(); hero_build_scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		content.add_child(hero_build_scroll)
 		hero_build_panel = VBoxContainer.new(); hero_build_scroll.add_child(hero_build_panel)
-		hero_build_level = _label(hero_build_panel,"용사 Lv.1",20)
+		hero_build_level = _label(hero_build_panel,"용사 Lv.1 · HP ? / ?",25)
 		hero_build_rows = VBoxContainer.new(); hero_build_panel.add_child(hero_build_rows)
-		hero_build_augments = _label(hero_build_panel,"선택한 증강: 없음",18)
+		hero_build_augments = _label(hero_build_panel,"선택한 증강: 없음",22)
+		hero_build_augments.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	else:
-		demon_info_toggle = _info_button("마왕 정보",_toggle_demon_info)
-		demon_info_panel = VBoxContainer.new(); demon_info_panel.visible = false; _place_info_panel(demon_info_panel)
-		_label(demon_info_panel,"편성 ?",18)
-		_label(demon_info_panel,"스킬 ?",18)
-		_label(demon_info_panel,"초월 ?",18)
-		demon_info_hints = _label(demon_info_panel,"증강 방향: 없음",18)
+		demon_info_panel = VBoxContainer.new(); demon_info_panel.name = "DemonInfoPanel"
+		demon_info_panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+		demon_info_panel.offset_left = 24; demon_info_panel.offset_right = -24
+		demon_info_panel.offset_top = 350; demon_info_panel.offset_bottom = 470
+		demon_info_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		add_child(demon_info_panel); TOP_LAYOUT.install_panels([demon_info_panel])
+		var summary := _label(demon_info_panel,"마왕 정보    편성 ? · 스킬 ? · 초월 ?",21)
+		summary.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		demon_info_hints = _label(demon_info_panel,"증강 방향: 아직 없음",19)
+		demon_info_hints.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	if role == "demon":
 		action_row = bottom_bar.get_node("SummonButtons")
 		skill_row = demon_panel.get_node("UltimateButtons")
@@ -261,6 +287,7 @@ func _ready() -> void:
 		add_child(hero_slots)
 		weapon_buttons = HERO_HUD.inventory_row(hero_slots,"무기",WEAPONS.WEAPON_SLOTS)
 		passive_buttons = HERO_HUD.inventory_row(hero_slots,"보조",WEAPONS.PASSIVE_SLOTS)
+		for button in weapon_buttons + passive_buttons: PIXEL_SKIN.apply(button)
 		for index in weapon_buttons.size(): weapon_buttons[index].pressed.connect(_show_slot_info.bind(true,index))
 		for index in passive_buttons.size(): passive_buttons[index].pressed.connect(_show_slot_info.bind(false,index))
 		for button in weapon_buttons + passive_buttons: HERO_HUD.update_slot(button,null,"+",""); button.disabled = true
@@ -279,7 +306,7 @@ func _ready() -> void:
 	hold_popup.oldest_auto_chosen.connect(_show_auto_hold_notice)
 	# Popup, held dots and overlay panels own their touches; the free pad only starts on bare battlefield.
 	if pad != null:
-		for control in [hold_popup.popup,hold_popup.dot_row,hero_slots,demon_info_panel,hero_build_scroll,hero_build_toggle,demon_info_toggle,surrender_dialog]:
+		for control in [hold_popup.popup,hold_popup.dot_row,hero_slots,hero_build_overlay,hero_build_toggle,surrender_dialog]:
 			if control is Control: pad.input_exclusions.append(control)
 	resized.connect(_update_hold_position)
 	cancel_button = _button(rows,"매칭 취소 · 로비로",_leave)
@@ -328,23 +355,6 @@ func _info_button(title: String,callback: Callable) -> Button:
 	button.add_theme_stylebox_override("normal",style)
 	button.add_theme_stylebox_override("hover",style)
 	return button
-func _place_info_panel(panel: Control) -> void:
-	add_child(panel)
-	panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
-	panel.offset_left = -470; panel.offset_right = -24
-	panel.offset_top = 420; panel.offset_bottom = 670
-	panel.z_index = 21
-	var background := Panel.new(); background.name = panel.name + "Background"
-	add_child(background)
-	background.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
-	background.offset_left = -480; background.offset_right = -14
-	background.offset_top = 414; background.offset_bottom = 680
-	background.mouse_filter = Control.MOUSE_FILTER_IGNORE; background.z_index = 20
-	var style := StyleBoxFlat.new(); style.bg_color = Color("171b29",0.96)
-	style.border_color = Color("c9a45e"); style.set_border_width_all(2)
-	background.add_theme_stylebox_override("panel",style)
-	background.visible = panel.visible
-	panel.visibility_changed.connect(func(): background.visible = panel.visible)
 func _layout_top_bar() -> void:
 	if top_bar == null or top_rects.is_empty(): return
 	var width := get_viewport_rect().size.x
@@ -366,6 +376,9 @@ func _layout_top_bar() -> void:
 		for button in summon_buttons:
 			button.custom_minimum_size.x = 0
 			button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		if hero_build_frame != null:
+			hero_build_frame.position = Vector2(width * 0.05,270)
+			hero_build_frame.size = Vector2(width * 0.9,minf(1380.0,get_viewport_rect().size.y - 540.0))
 
 func _show_match_layout() -> void:
 	for control in setup_controls: control.hide()
@@ -373,8 +386,7 @@ func _show_match_layout() -> void:
 	top_bar.show()
 	status.hide(); action_notice.hide(); cancel_button.hide(); ranking_row.hide()
 	if hero_build_toggle != null: hero_build_toggle.show()
-	if demon_info_toggle != null: demon_info_toggle.show()
-	rows.offset_top = top_bar.get_global_rect().end.y
+	rows.offset_top = 478 if role == "hero" else top_bar.get_global_rect().end.y
 	rows.offset_left = 0
 	rows.offset_right = 0
 	rows.offset_bottom = -465 if role == "demon" else -210
@@ -561,25 +573,31 @@ func _show_hero_item(id: String,level: int,evolved: bool) -> void:
 	inventory_detail.dialog_text = "%s · %s\n%s" % [title,"MAX" if evolved else "Lv.%d" % level,WEAPONS.description(id,rank)]
 	inventory_detail.popup_centered(Vector2i(700,320))
 func _toggle_hero_build() -> void:
-	hero_build_scroll.visible = not hero_build_scroll.visible
-	hero_build_toggle.button_pressed = hero_build_scroll.visible
-func _toggle_demon_info() -> void:
-	demon_info_panel.visible = not demon_info_panel.visible
-	demon_info_toggle.button_pressed = demon_info_panel.visible
+	hero_build_overlay.visible = not hero_build_overlay.visible
+	hero_build_toggle.button_pressed = hero_build_overlay.visible
+func _close_hero_build() -> void:
+	hero_build_overlay.hide()
+	hero_build_toggle.button_pressed = false
+func _hero_build_outside_input(event: InputEvent) -> void:
+	if (event is InputEventMouseButton and event.pressed) or (event is InputEventScreenTouch and event.pressed):
+		var point: Vector2 = event.get("position")
+		if not hero_build_frame.get_rect().has_point(point): _close_hero_build()
 func _update_demon_info(hints: Dictionary) -> void:
 	if not hints.get("augment_hints",null) is Array: return
 	var names := PackedStringArray()
 	for hint in hints.augment_hints:
 		if hint is String: names.append(hint)
-	demon_info_hints.text = "증강 방향: %s" % ("없음" if names.is_empty() else ", ".join(names))
+	demon_info_hints.text = "증강 방향: %s" % ("아직 없음" if names.is_empty() else "  ·  ".join(names))
 func _update_hero_build(build: Dictionary) -> void:
 	if not RULES.number(build.get("level",null)) or not build.get("augments",null) is Array: return
 	if not build.get("weapons",null) is Array or not build.get("passives",null) is Array: return
 	if build.weapons.size() > WEAPONS.WEAPON_SLOTS or build.passives.size() > WEAPONS.PASSIVE_SLOTS: return
-	var signature := JSON.stringify(build)
+	hero_build_data = build
+	var heading := "%s · Lv.%d · HP %d / %d" % [String(HEROES.get_character(matched_hero_id).get("name","용사")),int(build.level),maxi(0,hud_hp),maxi(0,hud_max_hp)]
+	if hero_build_level.text != heading: hero_build_level.text = heading
+	var signature := JSON.stringify([build,matched_hero_id])
 	if signature == hero_build_signature: return
 	hero_build_signature = signature
-	hero_build_level.text = "용사 Lv.%d" % int(build.level)
 	var names := PackedStringArray()
 	for name in build.augments:
 		if name is String: names.append(name)
@@ -598,18 +616,32 @@ func _update_hero_inventory(inventory: Dictionary) -> void:
 	_update_hero_slots(inventory)
 func _render_hero_items(target: VBoxContainer,inventory: Dictionary) -> void:
 	for child in target.get_children():
-		if child is HBoxContainer: child.queue_free()
+		target.remove_child(child); child.queue_free()
 	for kind in ["weapons","passives"]:
-		var row := HBoxContainer.new(); target.add_child(row)
+		_label(target,"장착 무기" if kind == "weapons" else "장착 보조",24)
 		for item in inventory[kind]:
 			if not item is Array or item.size() < 2 or not item[0] is String or not RULES.number(item[1]): continue
 			var id: String = item[0]
 			var evolved: bool = kind == "weapons" and item.size() > 2 and item[2] == true
 			if not WEAPONS.WEAPONS.has(id) and not WEAPONS.PASSIVES.has(id): continue
 			var level := int(item[1])
-			var button := _button(row,"MAX" if evolved else "Lv.%d" % level,_show_hero_item.bind(id,level,evolved))
-			button.icon = ICONS.texture(id); button.custom_minimum_size = Vector2(100,66)
-			button.add_theme_font_size_override("font_size",18)
+			var row := HBoxContainer.new(); target.add_child(row)
+			var icon := TextureRect.new(); icon.texture = ICONS.texture(id)
+			icon.custom_minimum_size = Vector2(56,56); icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; row.add_child(icon)
+			var data: Dictionary = WEAPONS.WEAPONS.get(id,WEAPONS.PASSIVES.get(id,{}))
+			var name := WEAPONS.GROWTH.evolution_name(id) if evolved else String(data.get("name",id))
+			var details := ""
+			if kind == "weapons":
+				var comparisons: Array = WEAPONS.compare(id,11 if evolved else level)
+				var stats := PackedStringArray()
+				for comparison in comparisons:
+					if comparison.label in ["피해","공격 간격","사거리","소환 유지"]: stats.append("%s %s" % [comparison.label,comparison.next])
+				details = " · ".join(stats)
+			else: details = WEAPONS.description(id,level,false)
+			var label := _label(row,"%s  %s  %s\n%s" % ["무기" if kind == "weapons" else "보조","MAX" if evolved else "Lv.%d" % level,name,details],20)
+			label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+			label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 func _receive_chests(receipts: Array) -> void:
 	if receipts.size() > RULES.CHEST_HISTORY_LIMIT: return
 	for receipt in receipts:
@@ -683,6 +715,7 @@ func _event(event: Dictionary) -> void:
 		"queued": status.text = "상대 역할 플레이어를 찾는 중..."
 		"matched":
 			matched_hero_id = String(event.get("hero",HEROES.DEFAULT_HERO))
+			hero_build_signature = ""; hero_build_data = {}
 			var map_data: Dictionary = MAPS.get_map(String(event.get("map","")))
 			if map_data.is_empty(): return
 			match_duration = float(map_data.duration_seconds)
