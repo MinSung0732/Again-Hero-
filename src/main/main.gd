@@ -28,6 +28,7 @@ const DEMON_SKILL_LOADOUT_STORE := preload(
 const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
 const AUGMENT_COMPARE := preload("res://src/ui/augment_compare_view.gd")
 const HERO_AUGMENTS := preload("res://src/data/hero_augment_catalog.gd")
+const DEMON_AUGMENT_VIEW := preload("res://src/ui/demon_augment_panel_view.gd")
 const HERO_SKILL_COOLDOWN_BADGE := preload("res://src/ui/hero_skill_cooldown_badge.gd")
 const BATTLE_PIXEL_FRAME_ASSEMBLER := preload("res://src/ui/battle_pixel_frame_assembler.gd")
 const PIXEL_PANEL_SKIN := preload("res://src/ui/pixel_panel_skin.gd")
@@ -3082,210 +3083,16 @@ func _on_demon_augment_ready(candidates: Array, rerolls_left: int, demon_level: 
 	_clear_pending_manual_spawn()
 	demon_augment_panel.show()
 
-	var is_special := false
-	if not current_demon_candidates.is_empty():
-		is_special = (
-			String(
-				current_demon_candidates[0].get("augment_type", "normal")
-			)
-			== "special"
-		)
-
-	if is_special:
-		demon_augment_title.text = "마왕의 특수증강"
-		demon_augment_trigger.text = (
-			"마왕 Lv.%d · 편성 몬스터 특수증강 1개 선택"
-			% demon_level
-		)
-	else:
-		demon_augment_title.text = "마왕의 개입"
-		demon_augment_trigger.text = (
-			"마왕 Lv.%d · 일반증강 1개 선택"
-			% demon_level
-		)
-
-	var buttons: Array[Button] = [demon_choice_0, demon_choice_1, demon_choice_2]
-	for index in range(buttons.size()):
-		buttons[index].toggle_mode = true
-		buttons[index].button_group = _demon_choice_group
-		# Radio selection changes on press, without a transient second highlight
-		# or unchecking/rechecking the already selected card on release.
-		buttons[index].action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
-		buttons[index].set_pressed_no_signal(false)
-		buttons[index].disabled = true
-		if index >= current_demon_candidates.size():
-			buttons[index].visible = false
-			continue
-
-		buttons[index].visible = true
-		var candidate: Dictionary = current_demon_candidates[index]
-		var candidate_type := String(
-			candidate.get("augment_type", "normal")
-		)
-
-		demon_choice_icons[index].texture = null
-		demon_choice_icons[index].visible = false
-		buttons[index].text = ""
-
-		var name_label: Label = buttons[index].get_node("Name") as Label
-		var description_label: Label = buttons[index].get_node(
-			"Description"
-		) as Label
-		var level_label: Label = buttons[index].get_node("Level") as Label
-		name_label.text = ""
-		description_label.text = ""
-		level_label.text = ""
-
-		if candidate_type == "special":
-			var monster_id := String(candidate.get("monster_id", ""))
-			_apply_augment_monster_icon(
-				demon_choice_icons[index],
-				monster_id
-			)
-			name_label.text = _wrap_augment_card_text(
-				String(candidate.get("name", "특수증강")),
-				14
-			)
-			description_label.text = _wrap_augment_card_text(
-				String(candidate.get("description", "")),
-				16
-			)
-			level_label.text = "특수 · %s" % (
-				_get_catalog_monster_name(monster_id)
-			)
-		else:
-			var target_monster_id := String(
-				candidate.get("target_monster_id", "")
-			)
-			if not target_monster_id.is_empty():
-				_apply_augment_monster_icon(
-					demon_choice_icons[index],
-					target_monster_id
-				)
-
-			var current_stack := int(candidate.get("current_stack", 0))
-			var max_stack := int(candidate.get("max_stack", 1))
-			var next_stack := mini(current_stack + 1, max_stack)
-			name_label.text = _wrap_augment_card_text(
-				String(candidate.get("name", "증강")),
-				14
-			)
-			description_label.text = _wrap_augment_card_text(
-				String(candidate.get("description", "")),
-				16
-			)
-			level_label.text = "%d/%d" % [
-				next_stack,
-				max_stack,
-			]
-
-		if demon_choice_icons[index].visible:
-			name_label.offset_top = 122.0
-			name_label.offset_bottom = 176.0
-			description_label.offset_top = 180.0
-		else:
-			name_label.offset_top = 64.0
-			name_label.offset_bottom = 118.0
-			description_label.offset_top = 126.0
-		var comparison_view := buttons[index].get_node_or_null("AugmentCompare") as RichTextLabel
-		if comparison_view == null:
-			comparison_view = AUGMENT_COMPARE.add(buttons[index],[],AUGMENT_COMPARE.SOLO_DEMON_FONT,true)
-			comparison_view.set_anchors_preset(Control.PRESET_TOP_WIDE)
-			comparison_view.offset_left = 18.0
-			comparison_view.offset_right = -18.0
-			comparison_view.fit_content = false
-			comparison_view.scroll_active = true
-			comparison_view.mouse_filter = Control.MOUSE_FILTER_PASS
-		comparison_view.offset_top = 228.0
-		comparison_view.offset_bottom = 344.0
-		description_label.offset_bottom = 224.0 if candidate.has("compare") and not candidate.compare.is_empty() else 332.0
-		var comparison: Array = candidate.get("compare",[])
-		AUGMENT_COMPARE.update(comparison_view,comparison)
-
+	var buttons: Array[Button] = [demon_choice_0,demon_choice_1,demon_choice_2]
+	for button in buttons:
+		button.toggle_mode = true
+		button.button_group = _demon_choice_group
+		button.action_mode = BaseButton.ACTION_MODE_BUTTON_PRESS
 	var reroll_max := 3
 	if battle.has_method("get_demon_reroll_max"):
 		reroll_max = int(battle.call("get_demon_reroll_max"))
-	demon_reroll_button.text = "↻ 새로고침 %d / %d" % [rerolls_left, reroll_max]
-	demon_reroll_button.disabled = true
-	demon_confirm_button.disabled = true
-	demon_confirm_button.text = "증강을 먼저 선택하세요"
-	demon_augment_guide.text = (
-		"특수증강 레벨입니다. 편성 몬스터의 전투 방식을 강화하세요."
-		if is_special
-		else "일반증강 레벨입니다. 마왕 운영 또는 편성 몬스터를 강화하세요."
-	)
-	demon_augment_guide.text += "\n카드 선택 후 ‘적용’을 눌러 확정하세요."
+	var is_special: bool = DEMON_AUGMENT_VIEW.populate(demon_augment_panel,current_demon_candidates,demon_level,rerolls_left,reroll_max)
 	status_label.text = "특수증강 선택 중" if is_special else "일반증강 선택 중"
-
-func _apply_augment_monster_icon(
-	icon_rect: TextureRect,
-	monster_id: String
-) -> void:
-	icon_rect.texture = null
-	icon_rect.visible = false
-
-	if monster_id.is_empty():
-		return
-
-	var texture := _load_monster_info_icon(monster_id)
-	if texture == null:
-		return
-
-	var display_texture: Texture2D = texture
-	var image := texture.get_image()
-	if image != null and not image.is_empty():
-		var used_rect := image.get_used_rect()
-		if used_rect.size.x > 0 and used_rect.size.y > 0:
-			var atlas := AtlasTexture.new()
-			atlas.atlas = texture
-			atlas.region = Rect2(
-				used_rect.position,
-				used_rect.size
-			)
-			display_texture = atlas
-
-	icon_rect.texture = display_texture
-	icon_rect.visible = true
-
-func _wrap_augment_card_text(
-	value: String,
-	max_chars_per_line: int
-) -> String:
-	var max_chars := maxi(max_chars_per_line, 4)
-	var words := value.split(" ", false)
-	var lines: PackedStringArray = []
-	var current_line := ""
-
-	for raw_word in words:
-		var word := String(raw_word)
-		if word.length() > max_chars:
-			if not current_line.is_empty():
-				lines.append(current_line)
-				current_line = ""
-			var start := 0
-			while start < word.length():
-				lines.append(
-					word.substr(start, mini(max_chars, word.length() - start))
-				)
-				start += max_chars
-			continue
-
-		var candidate := word
-		if not current_line.is_empty():
-			candidate = "%s %s" % [current_line, word]
-
-		if candidate.length() > max_chars:
-			if not current_line.is_empty():
-				lines.append(current_line)
-			current_line = word
-		else:
-			current_line = candidate
-
-	if not current_line.is_empty():
-		lines.append(current_line)
-
-	return "\n".join(lines)
-
 func _on_demon_choice_pressed(index: int) -> void:
 	if not _can_select_demon_choice() or index < 0 or index >= current_demon_candidates.size():
 		return

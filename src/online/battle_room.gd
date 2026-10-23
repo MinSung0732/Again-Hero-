@@ -144,6 +144,8 @@ func _wire_candidates(candidates: Array) -> Array:
 			var row: Dictionary = raw_row
 			comparison.append({"label":String(row.get("label","")).substr(0,RULES.MAX_COMPARE_FIELD_LENGTH),"current":String(row.get("current","")).substr(0,RULES.MAX_COMPARE_FIELD_LENGTH),"next":String(row.get("next","")).substr(0,RULES.MAX_COMPARE_FIELD_LENGTH)})
 		wire["compare"] = comparison
+		for field in ["augment_type","monster_id","target_monster_id","current_stack","max_stack"]:
+			if candidate.has(field): wire[field] = candidate[field]
 		if bool(candidate.get("unavailable",false)): wire["unavailable"] = true
 		result.append(wire)
 	return result
@@ -360,7 +362,7 @@ func _hero_inventory() -> Dictionary:
 	return {"level":int(hero.level),"exp":int(hero.current_exp),"exp_next":int(hero.exp_to_next_level),"rerolls_left":runtime.rerolls_remaining(),"reroll_limit":int(runtime.reroll_limit),"weapons":weapons,"passives":passives}
 func _wire_holds(queue: Array) -> Array:
 	var result: Array = []
-	for offer in queue: result.append({"number":offer.number,"candidates":offer.wire_candidates})
+	for offer in queue: result.append({"number":offer.number,"level":offer.level,"candidates":offer.wire_candidates})
 	return result
 
 func _feedback(target: Node2D,amount: int,color: Color,healing: bool) -> void:

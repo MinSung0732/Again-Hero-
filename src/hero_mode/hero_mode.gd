@@ -11,6 +11,7 @@ const MOVE_PAD := preload("res://src/hero_mode/hero_move_pad.gd")
 const WEAPONS := preload("res://src/data/hero_weapon_catalog.gd")
 const ICONS := preload("res://src/ui/hero_augment_icons.gd")
 const AUGMENT_COMPARE := preload("res://src/ui/augment_compare_view.gd")
+const HERO_AUGMENT_CARDS := preload("res://src/ui/hero_augment_cards_view.gd")
 const DIRECTOR := preload("res://src/hero_mode/ai_demon_director.gd")
 const SETTINGS := preload("res://src/ui/BattleSettings.tscn")
 const HUD := preload("res://src/ui/hero_survival_hud.gd")
@@ -330,7 +331,7 @@ func _show_choices(candidates: Array) -> void:
 	var buttons: Array[Button] = []
 	for candidate in candidates:
 		var id := String(candidate.get("id",""))
-		var button := _choice_card(choices,candidate,_choose.bind(id,revision))
+		var button: Button = HERO_AUGMENT_CARDS.create(choices,candidate,_choose.bind(id,revision))
 		button.disabled = true; buttons.append(button)
 	var refresh := Button.new(); refresh.name = "AugmentReroll"
 	refresh.text = "새로고침 · 남은 %d/%d회" % [battle.hero.player_weapons.rerolls_remaining(),battle.hero.player_weapons.reroll_limit]
@@ -342,31 +343,6 @@ func _show_choices(candidates: Array) -> void:
 	for button in buttons:
 		if is_instance_valid(button): button.disabled = false
 	if is_instance_valid(refresh): refresh.disabled = battle.hero.player_weapons.rerolls_remaining() <= 0
-func _choice_card(parent: HBoxContainer, candidate: Dictionary, action: Callable) -> Button:
-	var id := String(candidate.get("id",""))
-	var button := Button.new(); button.name = id; button.custom_minimum_size = Vector2(280,500)
-	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL; button.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	_skin_action_button(button); parent.add_child(button); button.pressed.connect(action)
-	var margin := MarginContainer.new(); margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for side in ["left","right","top","bottom"]: margin.add_theme_constant_override("margin_"+side,16)
-	button.add_child(margin)
-	var rows := VBoxContainer.new(); rows.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	rows.add_theme_constant_override("separation",18); margin.add_child(rows)
-	var icon := TextureRect.new(); icon.name = "AugmentIcon"; icon.texture = ICONS.texture(id)
-	icon.custom_minimum_size = Vector2(120,120); icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE; rows.add_child(icon)
-	var name_label := _label(rows,String(candidate.get("name",id)),26)
-	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	var description := _label(rows,String(candidate.get("description","")),22)
-	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	var comparison: Array = candidate.get("compare",[])
-	AUGMENT_COMPARE.add(rows,comparison,AUGMENT_COMPARE.SOLO_HERO_FONT,true)
-	description.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var hint := _label(rows,"탭하여 선택",20); hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	return button
-
 func _reroll_choices(revision: int) -> void:
 	if not choosing or revision != choice_generation or battle.battle_over: return
 	if not battle.hero.reroll_player_augment():

@@ -1,6 +1,6 @@
 extends RefCounted
-## Ranked map selection requires matching protocol 18 peers.
-const VERSION := 18
+## Augment card metadata requires matching protocol 19 peers.
+const VERSION := 19
 const HINT_DETAIL := "role" # "role" or "monster"
 const ROLE_HINT_LABELS := {"melee":"근접"}
 const TARGET_HINT_LABELS := {"demon":"마왕 운영","all_monsters":"모든 몬스터"}

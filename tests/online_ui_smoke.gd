@@ -14,14 +14,18 @@ func check(ok: bool,message: String) -> void:
 	if not ok: push_error(message); quit(1); assert(ok,message)
 func _initialize() -> void: run.call_deferred()
 func run() -> void:
-	for path in ["res://src/main/main.gd","res://src/online/match_scene.gd","res://src/online/battle_room.gd","res://src/ui/augment_hold_popup.gd"]:
+	for path in ["res://src/main/main.gd","res://src/hero_mode/hero_mode.gd","res://src/online/match_scene.gd","res://src/online/battle_room.gd","res://src/online/match_rules.gd","res://src/ui/augment_hold_popup.gd","res://src/ui/demon_augment_panel_view.gd","res://src/ui/hero_augment_cards_view.gd"]:
 		var script: Script = load(path)
 		check(script != null and script.can_instantiate(),"modified script loads: "+path)
 	var solo_packed: PackedScene = load("res://src/main/Main.tscn")
 	check(solo_packed != null and solo_packed.can_instantiate(),"solo scene loads")
 	var solo := solo_packed.instantiate()
 	check(solo.get_node_or_null("HUD/BottomBar/CommandBar") != null and solo.get_node_or_null("HUD/DemonUltimatePanel/UltimateButtons") != null,"solo paths survive shared scene extraction")
+	check(solo.get_node_or_null("HUD/DemonAugmentPanel/Margin/VBox/Title") != null,"solo demon augment path survives extraction")
 	solo.free()
+	var hero_packed: PackedScene = load("res://src/hero_mode/HeroMode.tscn")
+	check(hero_packed != null and hero_packed.can_instantiate(),"hero mode scene loads")
+	var hero_scene := hero_packed.instantiate(); hero_scene.free()
 	var online_packed: PackedScene = load("res://src/online/OnlineMatch.tscn")
 	check(online_packed != null and online_packed.can_instantiate(),"online scene loads")
 	var online := online_packed.instantiate()
@@ -45,6 +49,11 @@ func run() -> void:
 		check(scene.queue_button.custom_minimum_size.y >= 72,"mobile button size")
 		check(scene.view.size.x > 500 and scene.view.size.y > 300,"battle panel expands")
 		check(scene.hold_popup.dots.size() == RULES.AUGMENT_HOLD_LIMIT and not scene.hold_popup.popup.visible,"pooled hold dots start closed")
+		check(scene.hold_popup.lower_button.text == "내리기" and scene.hold_popup.reroll_button != null,"online hold controls present")
+		if role == "demon":
+			check(scene.hold_popup.popup.scene_file_path == "res://src/ui/demon_augment_panel.tscn" and scene.hold_popup.confirm_button != null,"demon uses shared augment scene")
+		else:
+			check(scene.hold_popup.popup_rows.get_node_or_null("HorizontalAugmentCards") != null,"hero uses shared horizontal card builder")
 		var holds: Array = []
 		for number in 3:
 			holds.append({"number":number+1,"candidates":[{"id":"survival_power","name":"생존력","description":"체력 증가"}]})
@@ -55,11 +64,19 @@ func run() -> void:
 		check(scene.hold_popup.dot_glows[2].modulate.a <= 0.01 and scene.hold_popup.dot_glows[2].mouse_filter == Control.MOUSE_FILTER_IGNORE,"glow fades out and never blocks taps")
 		scene.hold_popup.dots[1].pressed.emit(); await process_frame
 		check(scene.hold_popup.popup.visible and scene.hold_popup.opened_number == 2 and scene.hold_popup.card_names[0].text == "생존력","dot opens its own candidate popup")
+		check(scene.hold_popup.title_label.text.contains("보관 2번"),"opened offer displays its held number")
+		if role == "hero":
+			check(scene.hold_popup.cards[0].get_node_or_null("MarginContainer/VBoxContainer/AugmentIcon") != null and scene.hold_popup.cards[0].get_node_or_null("MarginContainer/VBoxContainer/Name") != null,"hero offer uses shared card structure")
+		else:
+			check(scene.hold_popup.cards[0].get_node_or_null("Level") != null and scene.hold_popup.popup_rows.get_node("Title").text == "마왕의 개입","demon offer uses solo card and title")
 		scene.hold_popup.lower_button.pressed.emit()
 		check(not scene.hold_popup.popup.visible and scene.hold_popup.dots[1].visible,"lower closes popup and keeps dot")
 		var real_client = scene.client
 		var command_spy := CommandSpy.new(); scene.client = command_spy
 		scene.hold_popup.open_index(1); scene.hold_popup.cards[0].pressed.emit()
+		if role == "demon":
+			check(command_spy.kind.is_empty() and not scene.hold_popup.confirm_button.disabled,"demon card selection awaits apply")
+			scene.hold_popup.confirm_button.pressed.emit()
 		check(command_spy.kind == ("choose" if role == "hero" else "demon_choose") and command_spy.argument == {"id":"survival_power","number":2},"candidate sends role command with held number")
 		if role == "hero":
 			scene.rerolls_left = 1; scene.reroll_limit = 2; scene._update_holds(holds)
