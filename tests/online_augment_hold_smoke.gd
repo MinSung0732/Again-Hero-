@@ -8,7 +8,7 @@ func check(ok: bool,message: String) -> void:
 	if not ok: push_error(message); quit(1); assert(ok,message)
 func _initialize() -> void: run.call_deferred()
 func run() -> void:
-	check(RULES.VERSION == 15 and RULES.AUGMENT_HOLD_LIMIT == 4,"protocol and hold limit")
+	check(RULES.VERSION == 16 and RULES.AUGMENT_HOLD_LIMIT == 4,"protocol and hold limit")
 	var room = ROOM.new(); root.add_child(room); room.prepare(); room.start()
 	room.battle.process_mode = Node.PROCESS_MODE_DISABLED
 	var hero = room.battle.hero
@@ -44,6 +44,14 @@ func run() -> void:
 	check(room.demon_holds.size() == 4 and room.demon_holds[0].number == first_demon_number+1 and applied_count > 0 and not battle.demon_augment_selection_active,"demon fifth offer applies oldest")
 	var demon_number: int = room.demon_holds[0].number
 	var demon_id := String(room.demon_holds[0].candidates[0].id)
+	var demon_rerolls_before: int = battle.demon_rerolls_left
+	var demon_snapshot: Dictionary = room.snapshot("demon")
+	check(int(demon_snapshot.demon_rerolls_left) == demon_rerolls_before and int(demon_snapshot.demon_reroll_limit) == battle.demon_reroll_max and not room.snapshot("hero").has("demon_rerolls_left"),"demon reroll budget is private to demon")
+	check(room.apply("demon","reroll",{"number":demon_number}) and battle.demon_rerolls_left == demon_rerolls_before-1 and not battle.demon_augment_selection_active,"demon held reroll spends demon budget")
+	check(room.demon_holds[0].number == demon_number and room.demon_holds[0].candidates.size() <= RULES.MAX_OFFER_CANDIDATES,"demon reroll keeps offer slot")
+	demon_id = String(room.demon_holds[0].candidates[0].id)
+	battle.demon_rerolls_left = 0
+	check(not room.apply("demon","reroll",{"number":demon_number}),"demon reroll denied at zero")
 	check(not room.apply("demon","demon_choose",{"number":demon_number+999,"id":demon_id}),"demon wrong number denied")
 	check(not room.apply("demon","demon_choose",{"number":demon_number,"id":"invalid"}),"demon foreign candidate denied")
 	check(room.apply("demon","demon_choose",{"number":float(demon_number),"id":demon_id}),"demon held JSON numeric choice applies")

@@ -125,7 +125,7 @@ const MANUAL_SPAWN_HERO_MIN_DISTANCE := 220.0
 const MANUAL_SPAWN_WARNING_DURATION := 0.70
 const DEMON_BASE_EXP_TO_NEXT := 15.0
 const DEMON_EXP_GROWTH_PER_LEVEL := 4.0
-const BASE_DEMON_REROLLS := 3
+const BASE_DEMON_REROLLS := DEMON_AUGMENTS.BASE_REROLLS
 const DEMON_LEVEL_MONSTER_HP_GROWTH := 1.03
 const DEMON_LEVEL_MONSTER_HP_MAX_MULTIPLIER := 2.50
 const DEMON_LEVEL_MONSTER_DAMAGE_GROWTH := 1.028
@@ -4869,6 +4869,20 @@ func bank_online_demon_augment() -> void:
 	demon_augment_candidates = []
 	demon_augment_revision += 1
 	_open_next_demon_augment_if_needed()
+
+func reroll_held_demon_augment(candidates: Array, offer_level: int) -> Array:
+	if not online_match_mode or demon_augment_selection_active or demon_rerolls_left <= 0 or candidates.is_empty(): return []
+	var previous_level := demon_active_augment_level
+	var previous_ids: Array[String] = demon_last_candidate_ids.duplicate()
+	demon_active_augment_level = offer_level
+	demon_last_candidate_ids.clear()
+	for candidate in candidates: demon_last_candidate_ids.append(String(candidate.get("id", "")))
+	var next := _roll_demon_augment_candidates(true)
+	demon_active_augment_level = previous_level
+	demon_last_candidate_ids = previous_ids
+	if next.is_empty(): return []
+	demon_rerolls_left -= 1
+	return next
 
 func choose_held_demon_augment(augment_id: String, candidates: Array, offer_level: int) -> bool:
 	if not online_match_mode or demon_augment_selection_active or candidates.is_empty(): return false

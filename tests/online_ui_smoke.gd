@@ -72,6 +72,7 @@ func run() -> void:
 		check(scene.hold_popup.dots.filter(func(dot): return dot.visible).size() <= RULES.AUGMENT_HOLD_LIMIT and scene.status.text.contains("자동 선택됨"),"server overflow removes oldest dot and shows toast")
 		if role == "hero":
 			check(scene.pad.mode == "free" and scene.pad.input_surface == scene.view,"touch binds battle only")
+			check(scene.hold_popup.popup in scene.pad.input_exclusions and scene.hold_popup.dot_row in scene.pad.input_exclusions,"augment popup and dots are excluded from the move pad")
 			scene.view.set_match_roster([],"")
 			check(scene.view.reveal_on_sight and scene.view._admit_sighted_actor("slime") and not scene.view._admit_sighted_actor("not_a_monster"),"hero without demon roster admits only real monsters on sight")
 		else:

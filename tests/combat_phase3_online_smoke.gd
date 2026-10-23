@@ -37,7 +37,7 @@ func run() -> void:
 	root.get_node("CloudStore").stop(); root.get_node("LoginGateway").remember_session_enabled = false
 	var old_script = baseline(); var rooms: Array = []
 	var codec = CODEC.new()
-	var later_fields := ["battlefield", "summon_costs", "demon_level", "demon_exp", "demon_exp_next", "demon_charge", "demon_charge_max", "demon_cooldowns", "demon_ready", "transcend_ready", "transcend_used", "visuals", "primitives", "feedback", "feedback_cursor"]
+	var later_fields := ["battlefield", "summon_costs", "demon_level", "demon_rerolls_left", "demon_reroll_limit", "demon_exp", "demon_exp_next", "demon_charge", "demon_charge_max", "demon_cooldowns", "demon_ready", "transcend_ready", "transcend_used", "visuals", "primitives", "feedback", "feedback_cursor"]
 	for index in 2:
 		var room := ROOM.new(); root.add_child(room); room.prepare(); rooms.append(room)
 		var previous = old_script.new(); previous.battle = room.battle

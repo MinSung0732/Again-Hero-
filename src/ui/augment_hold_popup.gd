@@ -131,7 +131,7 @@ func _show_offer() -> void:
 		_refresh_reroll(); _layout(); return
 
 func _refresh_reroll() -> void:
-	reroll_button.visible = role == "hero"
+	reroll_button.visible = reroll_limit > 0
 	reroll_button.text = "새로고침 · 남은 %d/%d회" % [rerolls_left,reroll_limit]
 	reroll_button.disabled = not controls_enabled or rerolls_left <= 0
 
@@ -153,7 +153,7 @@ func _choose_card(index: int) -> void:
 		choose.emit(opened_number,String(offer.candidates[index].id)); close_popup(); return
 
 func _reroll_open() -> void:
-	if role == "hero" and controls_enabled and rerolls_left > 0 and opened_number >= 0:
+	if controls_enabled and rerolls_left > 0 and opened_number >= 0:
 		reroll.emit(opened_number)
 
 func _layout() -> void:

@@ -6,6 +6,7 @@ const FRONTIER := preload("res://src/data/frontier_monster_catalog.gd")
 const TYPE_NORMAL := "normal"
 const TYPE_SPECIAL := "special"
 
+const BASE_REROLLS := 3 # 연구 보너스 전 마왕 증강 새로고침 기본 횟수(솔로·랭크 공통).
 const NORMAL_MAX_LEVEL := 10
 const SPECIAL_MAX_LEVEL := 1
 

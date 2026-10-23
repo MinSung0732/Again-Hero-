@@ -124,21 +124,24 @@ func _wire_candidates(candidates: Array) -> Array:
 	for candidate in candidates:
 		result.append({"id":String(candidate.get("id","")),"name":String(candidate.get("name","")),"description":String(candidate.get("description",""))})
 	return result
-func _reroll_held(argument: Dictionary) -> bool:
+func _reroll_held(role: String,argument: Dictionary) -> bool:
 	var number: Variant = argument.get("number",null)
 	if not RULES.number(number) or float(number) != floorf(float(number)): return false
 	var runtime = battle.hero.player_weapons
-	if runtime == null or runtime.rerolls_remaining() <= 0: return false
-	for index in hero_holds.size():
-		var offer: Dictionary = hero_holds[index]
+	if role == "hero" and (runtime == null or runtime.rerolls_remaining() <= 0): return false
+	var queue: Array = hero_holds if role == "hero" else demon_holds
+	for index in queue.size():
+		var offer: Dictionary = queue[index]
 		if int(offer.number) != int(number): continue
-		var next: Array = runtime.reroll(offer.candidates)
+		# Each side spends its own solo reroll budget (research bonus is 0 in ranked).
+		var next: Array = runtime.reroll(offer.candidates) if role == "hero" else battle.reroll_held_demon_augment(offer.candidates,int(offer.level))
 		if next.is_empty(): return false
 		offer.candidates = next.slice(0,RULES.MAX_OFFER_CANDIDATES).duplicate(true)
 		offer.wire_candidates = _wire_candidates(offer.candidates)
-		hero_holds[index] = offer
-		choice_revision += 1
-		choice = hero_holds[0].candidates if not hero_holds.is_empty() else []
+		queue[index] = offer
+		if role == "hero":
+			choice_revision += 1
+			choice = hero_holds[0].candidates if not hero_holds.is_empty() else []
 		return true
 	return false
 func _enforce_hold_limit(role: String) -> void:
@@ -194,8 +197,8 @@ func apply(role: String,kind: String,argument: Variant) -> bool:
 		battle.hero.set_player_move_input(direction); move_age = 0.0; return true
 	if role == "hero" and kind == "choose" and argument is Dictionary:
 		return _select_offer(role,argument)
-	if role == "hero" and kind == "reroll" and argument is Dictionary:
-		return _reroll_held(argument)
+	if kind == "reroll" and argument is Dictionary:
+		return _reroll_held(role,argument)
 	if role == "demon" and kind == "summon" and argument is Dictionary:
 		# RULES.SUMMON_PLACEMENT: 랭크전 소환은 좌표를 지정한 수동 배치만 허용.
 		if not argument.get("id",null) is String: return false
@@ -249,6 +252,8 @@ func snapshot_for_role(role: String,state: Dictionary) -> Dictionary:
 		own.erase("demon_ready")
 		own.erase("summon_costs")
 		own.erase("demon_level")
+		own.erase("demon_rerolls_left")
+		own.erase("demon_reroll_limit")
 		own.erase("demon_exp")
 		own.erase("demon_exp_next")
 		own.erase("transcend_ready")
@@ -343,7 +348,7 @@ func _build_snapshot() -> Dictionary:
 		var skill: Dictionary = SKILLS.get_skill(String(id))
 		demon_ready[id] = battle.demon_ultimate_spawn_queue.is_empty() and battle.demon_ultimate_charge+0.001 >= float(skill.get("mana_cost",SKILLS.CHARGE_MAX)) and float(battle.demon_ultimate_cooldowns.get(id,0.0)) <= 0.001
 	# Bounded snapshot serialization and presentation sort at10Hz, not physics Hz.
-	return {"op":"state","tick":tick,"hero":[hero_last.x,hero_last.y,hp,maximum,level],"bounds":[battle.current_map_size.x,battle.current_map_size.y],"battlefield":battlefield_info,"seconds":battle.run_metrics.elapsed_seconds,"mana":battle.command_power,"summon_costs":summon_costs,"demon_level":battle.demon_level,"demon_exp":battle.demon_exp,"demon_exp_next":battle.demon_exp_to_next_level,"demon_charge":battle.demon_ultimate_charge,"demon_charge_max":SKILLS.CHARGE_MAX,"demon_cooldowns":battle.demon_ultimate_cooldowns,"demon_ready":demon_ready,"transcend_ready":battle.transcendence.ready and not battle.transcendence.used,"transcend_used":battle.transcendence.used,"actors":actors,"shots":shots,"visuals":visuals,"primitives":primitives,"feedback":feedback.snapshot(),"feedback_cursor":feedback.sequence,"winner":winner,"reason":reason}
+	return {"op":"state","tick":tick,"hero":[hero_last.x,hero_last.y,hp,maximum,level],"bounds":[battle.current_map_size.x,battle.current_map_size.y],"battlefield":battlefield_info,"seconds":battle.run_metrics.elapsed_seconds,"mana":battle.command_power,"summon_costs":summon_costs,"demon_level":battle.demon_level,"demon_rerolls_left":battle.demon_rerolls_left,"demon_reroll_limit":battle.demon_reroll_max,"demon_exp":battle.demon_exp,"demon_exp_next":battle.demon_exp_to_next_level,"demon_charge":battle.demon_ultimate_charge,"demon_charge_max":SKILLS.CHARGE_MAX,"demon_cooldowns":battle.demon_ultimate_cooldowns,"demon_ready":demon_ready,"transcend_ready":battle.transcendence.ready and not battle.transcendence.used,"transcend_used":battle.transcendence.used,"actors":actors,"shots":shots,"visuals":visuals,"primitives":primitives,"feedback":feedback.snapshot(),"feedback_cursor":feedback.sequence,"winner":winner,"reason":reason}
 
 func _visual_order(a: Array,b: Array) -> bool:
 	return PRESENTATION.visual_order(a,b)

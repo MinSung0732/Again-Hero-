@@ -253,6 +253,10 @@ func _ready() -> void:
 	hold_popup.choose.connect(func(number: int,id: String): _select_held(id,number))
 	hold_popup.reroll.connect(_reroll_held)
 	hold_popup.oldest_auto_chosen.connect(_show_auto_hold_notice)
+	# Popup, held dots and overlay panels own their touches; the free pad only starts on bare battlefield.
+	if pad != null:
+		for control in [hold_popup.popup,hold_popup.dot_row,hero_slots,demon_info_panel]:
+			if control is Control: pad.input_exclusions.append(control)
 	resized.connect(_update_hold_position)
 	_button(rows,"매칭 취소 · 로비로",_leave)
 	loading = LOADING.new(); add_child(loading); loading.cancelled.connect(_leave); loading.rules_requested.connect(_show_rules)
@@ -441,6 +445,7 @@ func _update_hero_slots(inventory: Dictionary) -> void:
 			button.disabled = false
 
 func _update_demon_controls(event: Dictionary) -> void:
+	rerolls_left = int(event.get("demon_rerolls_left",0)); reroll_limit = int(event.get("demon_reroll_limit",0))
 	_update_summon_cards(float(event.mana),event.summon_costs)
 	var skill_signature := JSON.stringify([event.get("demon_level",1),event.get("demon_exp",0.0),event.get("demon_exp_next",1.0),event.demon_charge,event.demon_charge_max,event.demon_cooldowns,event.demon_ready,event.transcend_ready,event.transcend_used,connection_waiting,waiting_for_start])
 	if skill_signature != skill_state_signature:
@@ -482,7 +487,7 @@ func _select_held(id: String,number: int) -> void:
 	if not ended and not connection_waiting and not client.reconnecting:
 		client.command("choose" if role == "hero" else "demon_choose",{"id":id,"number":number})
 func _reroll_held(number: int) -> void:
-	if role == "hero" and not ended and not connection_waiting and not client.reconnecting and rerolls_left > 0:
+	if not ended and not connection_waiting and not client.reconnecting and rerolls_left > 0:
 		client.command("reroll",{"number":number})
 func _show_hero_item(id: String,level: int,evolved: bool) -> void:
 	var data: Dictionary = WEAPONS.WEAPONS.get(id,WEAPONS.PASSIVES.get(id,{}))
@@ -668,6 +673,7 @@ func _event(event: Dictionary) -> void:
 				if not RULES.number(event.get("demon_charge",null)) or not RULES.number(event.get("demon_charge_max",null)): return
 				if not event.get("demon_cooldowns",null) is Dictionary or not event.get("demon_ready",null) is Dictionary or not event.get("summon_costs",null) is Dictionary or not event.get("transcend_ready",null) is bool or not event.get("transcend_used",null) is bool: return
 				if not RULES.number(event.get("demon_level",null)) or not RULES.number(event.get("demon_exp",null)) or not RULES.number(event.get("demon_exp_next",null)): return
+				if not RULES.number(event.get("demon_rerolls_left",null)) or not RULES.number(event.get("demon_reroll_limit",null)): return
 				for id in summon_ids:
 					if not RULES.number(event.summon_costs.get(id,null)) or float(event.summon_costs[id]) < 0.0: return
 				for cooldown in event.demon_cooldowns.values():
