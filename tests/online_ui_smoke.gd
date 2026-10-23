@@ -14,7 +14,7 @@ func check(ok: bool,message: String) -> void:
 	if not ok: push_error(message); quit(1); assert(ok,message)
 func _initialize() -> void: run.call_deferred()
 func run() -> void:
-	for path in ["res://src/main/main.gd","res://src/hero_mode/hero_mode.gd","res://src/online/match_scene.gd","res://src/online/battle_room.gd","res://src/online/match_rules.gd","res://src/ui/augment_hold_popup.gd","res://src/ui/demon_augment_panel_view.gd","res://src/ui/hero_augment_cards_view.gd"]:
+	for path in ["res://src/main/main.gd","res://src/hero_mode/hero_mode.gd","res://src/online/match_scene.gd","res://src/online/battle_room.gd","res://src/online/match_rules.gd","res://src/ui/augment_hold_popup.gd","res://src/ui/demon_augment_panel_view.gd","res://src/ui/hero_augment_cards_view.gd","res://src/ui/castle_battle_chrome.gd"]:
 		var script: Script = load(path)
 		check(script != null and script.can_instantiate(),"modified script loads: "+path)
 	var solo_packed: PackedScene = load("res://src/main/Main.tscn")
@@ -53,6 +53,7 @@ func run() -> void:
 		check(scene.hold_popup.lower_button.text == "내리기" and scene.hold_popup.reroll_button != null,"online hold controls present")
 		if role == "demon":
 			check(scene.hold_popup.popup.scene_file_path == "res://src/ui/demon_augment_panel.tscn" and scene.hold_popup.confirm_button != null,"demon uses shared augment scene")
+			check(scene.hold_popup.lower_button.get_parent() == scene.hold_popup.popup_rows.get_node("Actions"),"lower button stays inside shared panel actions")
 		else:
 			check(scene.hold_popup.popup_rows.get_node_or_null("HorizontalAugmentCards") != null,"hero uses shared horizontal card builder")
 		var holds: Array = []
@@ -70,6 +71,11 @@ func run() -> void:
 			check(scene.hold_popup.cards[0].get_node_or_null("MarginContainer/VBoxContainer/AugmentIcon") != null and scene.hold_popup.cards[0].get_node_or_null("MarginContainer/VBoxContainer/Name") != null,"hero offer uses shared card structure")
 		else:
 			check(scene.hold_popup.cards[0].get_node_or_null("Level") != null and scene.hold_popup.popup_rows.get_node("Title").text == "마왕의 개입","demon offer uses solo card and title")
+			var long_candidate := {"id":"survival_power","name":"룬방패수호병 최대 체력 증가","description":"최대 체력이 증가합니다"}
+			preload("res://src/ui/demon_augment_panel_view.gd").populate(scene.hold_popup.popup,[long_candidate],1,0,0)
+			var name_label: Label = scene.hold_popup.cards[0].get_node("Name")
+			var description: Label = scene.hold_popup.cards[0].get_node("Description")
+			check(name_label.text.contains("\n") and name_label.get_theme_font("font").get_height(name_label.get_theme_font_size("font_size")) * 2 <= name_label.size.y and name_label.get_global_rect().end.y <= description.get_global_rect().position.y,"two-line demon name fits before description")
 		scene.hold_popup.lower_button.pressed.emit()
 		check(not scene.hold_popup.popup.visible and scene.hold_popup.dots[1].visible,"lower closes popup and keeps dot")
 		var real_client = scene.client
@@ -142,6 +148,8 @@ func run() -> void:
 		scene._event({"op":"matched","hero":"ranged_rookie","map":"plaza","duration":600,"battlefield":{"stage":"stage_1","bounds":[3200,3200],"map":"plaza"}})
 		await process_frame
 		check(scene.top_bar.visible and scene.top_bar.get_node_or_null("RunTimer") != null and scene.top_bar.get_node_or_null("HeroHPBar") != null and scene.top_bar.get_node_or_null("Monsters") != null,"both roles share battle top bar")
+		var chrome: Control = scene.get_node("CastleBattleChrome")
+		check(chrome.visible and chrome.z_index == -10 and chrome.anchor_right == 1.0 and chrome.anchor_bottom == 1.0 and chrome.size == scene.size and scene.view.z_index > chrome.z_index,"both roles show full-rect castle backdrop behind battlefield")
 		check(not scene.status.visible and not scene.action_notice.visible and not scene.cancel_button.visible,"battle hides debug rows and matching cancel")
 		check(scene.top_menu.get_item_text(1) == "항복하고 나가기" and scene.surrender_dialog != null,"battle menu confirms surrender")
 		scene.top_menu.id_pressed.emit(1); await process_frame
@@ -179,6 +187,7 @@ func run() -> void:
 		check(scene.hold_popup.dot_row.get_global_rect().end.y <= lower.get_global_rect().position.y and absf(scene.view.get_global_rect().end.y-lower.get_global_rect().position.y) <= 2.0,"phone battlefield fills to lower HUD and dots stay above it")
 		scene.hold_popup.open_index(0); await process_frame
 		check(scene.hold_popup.popup.get_global_rect().position.y >= 0 and scene.hold_popup.popup.get_global_rect().end.y <= root.size.y,"phone popup fits")
+		if role == "demon": check(scene.hold_popup.popup.get_global_rect().end.y < scene.bottom_bar.get_global_rect().position.y and scene.hold_popup.lower_button.get_global_rect().end.y <= scene.hold_popup.popup.get_global_rect().end.y,"phone augment popup clears bottom bar")
 		scene.hold_popup.close_popup()
 		root.size = Vector2i(1536,1920); await process_frame; await process_frame
 		check(scene.top_bar.get_global_rect().end.x <= root.size.x and scene.top_bar.get_node("Monsters").get_global_rect().end.x <= root.size.x and absf(scene.view.get_global_rect().position.y-scene.top_bar.get_global_rect().end.y) <= 2.0,"tablet battlefield starts at top bar")
@@ -187,6 +196,7 @@ func run() -> void:
 		check(scene.hold_popup.dot_row.get_global_rect().end.y <= lower.get_global_rect().position.y and absf(scene.view.get_global_rect().end.y-lower.get_global_rect().position.y) <= 2.0,"tablet battlefield fills to lower HUD and dots stay above it")
 		scene.hold_popup.open_index(0); await process_frame
 		check(scene.hold_popup.popup.get_global_rect().position.x >= 0 and scene.hold_popup.popup.get_global_rect().end.x <= root.size.x and scene.hold_popup.popup.get_global_rect().end.y <= root.size.y,"tablet popup fits")
+		if role == "demon": check(scene.hold_popup.popup.get_global_rect().end.y < scene.bottom_bar.get_global_rect().position.y and scene.hold_popup.lower_button.get_global_rect().end.y <= scene.hold_popup.popup.get_global_rect().end.y,"tablet augment popup clears bottom bar")
 		scene.hold_popup.close_popup()
 		scene.queue_free(); await process_frame
 	local.active = true; local.tutorial_preview = false; SCOPE.user_id = ""; SCOPE.guest_directory = local.test_directory

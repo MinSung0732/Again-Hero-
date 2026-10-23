@@ -21,11 +21,12 @@ static func populate(panel: PanelContainer,candidates: Array,demon_level: int,re
 		icon.texture = _monster_icon(monster_id)
 		icon.visible = icon.texture != null
 		button.text = ""
-		(button.get_node("Name") as Label).text = _wrap(String(candidate.get("name","증강")),14)
+		var name_label := button.get_node("Name") as Label
+		name_label.text = _wrap(String(candidate.get("name","증강")),14)
+		name_label.add_theme_font_size_override("font_size",18 if name_label.text.contains("\n") else 22)
 		var description := button.get_node("Description") as Label
 		description.text = _wrap(String(candidate.get("description","")),16)
 		(button.get_node("Level") as Label).text = "특수 · %s" % String(MONSTERS.get_monster(monster_id).get("name",monster_id)) if special else "%d/%d" % [mini(int(candidate.get("current_stack",0))+1,int(candidate.get("max_stack",1))),int(candidate.get("max_stack",1))]
-		var name_label := button.get_node("Name") as Label
 		name_label.offset_top = 122.0 if icon.visible else 64.0
 		name_label.offset_bottom = 176.0 if icon.visible else 118.0
 		description.offset_top = 180.0 if icon.visible else 126.0

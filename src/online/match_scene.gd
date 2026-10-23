@@ -25,7 +25,6 @@ const RESPONSIVE := preload("res://src/ui/battle_responsive_layout.gd")
 const HERO_HUD := preload("res://src/ui/hero_survival_hud.gd")
 const STAGES := preload("res://src/data/stage_catalog.gd")
 const MAPS := preload("res://src/data/ranked_map_catalog.gd")
-const PANEL := preload("res://src/ui/illustrated_battle_panel.gd")
 const HOLD_POPUP := preload("res://src/ui/augment_hold_popup.gd")
 var loading
 var local_preparing := false
@@ -186,15 +185,18 @@ func _ready() -> void:
 		if child is Control and child != status and child != ranking_row and child != action_notice and child != view:
 			setup_controls.append(child)
 	TOP_LAYOUT.layout_top(top_bar)
-	var panel_art := TOP_LAYOUT.texture(self,TOP_LAYOUT.ROOT + "gold_panel.png")
+	var chrome: Control = TOP_LAYOUT.install_backdrop(self)
+	chrome.hide()
+	var panel_targets: Array = []
 	for name in ["StageFrame","TimerFrame","HeroStatusFrame","MonsterFrame","StageMenuButton"]:
-		PANEL.install(top_bar.get_node(name),panel_art)
+		panel_targets.append(top_bar.get_node(name))
 	if role == "demon":
-		for target in [demon_panel.get_node("Frame"),bottom_bar.get_node("AutoFrame")]: PANEL.install(target,panel_art)
+		panel_targets.append_array([demon_panel.get_node("Frame"),bottom_bar.get_node("AutoFrame")])
 		for button in demon_panel.get_node("UltimateButtons").get_children():
-			PANEL.install(button,panel_art)
+			panel_targets.append(button)
 			button.add_theme_font_size_override("font_size",24)
-		for button in bottom_bar.get_node("SummonButtons").get_children(): PANEL.install(button,panel_art)
+		panel_targets.append_array(bottom_bar.get_node("SummonButtons").get_children())
+	TOP_LAYOUT.install_panels(panel_targets)
 	for child in top_bar.get_children():
 		if child is Control and is_zero_approx(child.anchor_left) and is_zero_approx(child.anchor_right):
 			top_rects.append(child.get_rect())
@@ -240,7 +242,7 @@ func _ready() -> void:
 		transcend_button = Button.new(); transcend_button.text = "초월 소환 · 위치 지정"
 		transcend_button.position = Vector2(810,14); transcend_button.size = Vector2(218,56)
 		transcend_button.pressed.connect(_select_transcendence); bottom_bar.add_child(transcend_button)
-		PANEL.install(transcend_button,panel_art)
+		TOP_LAYOUT.install_panels([transcend_button])
 		transcend_button.disabled = true; transcend_button.hide()
 		direction_row = HBoxContainer.new(); add_child(direction_row)
 		direction_row.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
@@ -367,6 +369,7 @@ func _layout_top_bar() -> void:
 
 func _show_match_layout() -> void:
 	for control in setup_controls: control.hide()
+	get_node("CastleBattleChrome").show()
 	top_bar.show()
 	status.hide(); action_notice.hide(); cancel_button.hide(); ranking_row.hide()
 	if hero_build_toggle != null: hero_build_toggle.show()

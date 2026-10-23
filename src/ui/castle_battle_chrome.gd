@@ -14,10 +14,33 @@ static func texture(main: Node, path: String) -> Texture2D:
 		var cached: Texture2D = warmup.get_texture(path)
 		if cached != null:
 			return cached
+	return texture_for_path(path)
+
+static func texture_for_path(path: String) -> Texture2D:
 	if ResourceLoader.exists(path):
 		return load(path) as Texture2D
 	var image := Image.load_from_file(path)
 	return ImageTexture.create_from_image(image) if image != null and not image.is_empty() else null
+
+static func install_backdrop(layer: Node, art_source: Node = null) -> Control:
+	var chrome = load("res://src/ui/castle_battle_chrome.gd").new()
+	chrome.name = "CastleBattleChrome"
+	chrome.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	chrome.z_index = -10
+	layer.add_child(chrome)
+	chrome.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	chrome.surround = texture(art_source, ROOT + "castle_surround.png") if art_source != null else texture_for_path(ROOT + "castle_surround.png")
+	chrome.floor_backing = texture(art_source, ROOT + "flagstone_floor.png") if art_source != null else texture_for_path(ROOT + "flagstone_floor.png")
+	chrome.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+	chrome.resized.connect(chrome.queue_redraw)
+	chrome.queue_redraw()
+	return chrome
+
+static func install_panels(targets: Array, art_source: Node = null) -> void:
+	var panel_art := texture(art_source, ROOT + "gold_panel.png") if art_source != null else texture_for_path(ROOT + "gold_panel.png")
+	var panel_builder = load("res://src/ui/illustrated_battle_panel.gd")
+	for target in targets:
+		panel_builder.install(target, panel_art)
 
 static func rebuild(main: Node) -> void:
 	var top := main.get_node("HUD/TopBar")
@@ -31,27 +54,14 @@ static func rebuild(main: Node) -> void:
 		button.offset_bottom = button.offset_top + 142
 		place(button.get_node("Icon"), Rect2(46, 24, 52, 52))
 		place(button.get_node("Label"), Rect2(10, 87, 124, 38), 24)
-	var chrome = load("res://src/ui/castle_battle_chrome.gd").new()
-	chrome.name = "CastleBattleChrome"
-	chrome.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	chrome.z_index = -10
-	main.hud_layer.add_child(chrome)
-	chrome.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	chrome.surround = texture(main, ROOT + "castle_surround.png")
-	chrome.floor_backing = texture(main, ROOT + "flagstone_floor.png")
-	chrome.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	chrome.resized.connect(chrome.queue_redraw)
-	chrome.queue_redraw()
-	var panel_art := texture(main, ROOT + "gold_panel.png")
-	var panel_builder = load("res://src/ui/illustrated_battle_panel.gd")
-	for target in [top.get_node("StageFrame"), top.get_node("TimerFrame"),
+	install_backdrop(main.hud_layer, main)
+	install_panels([top.get_node("StageFrame"), top.get_node("TimerFrame"),
 		top.get_node("HeroStatusFrame"), top.get_node("MonsterFrame"),
 		main.stage_menu_button, main.monster_info_bookmark, main.hero_info_bookmark,
 		main.get_node("HUD/DemonUltimatePanel/Frame"), main.get_node("HUD/BottomBar/AutoFrame"),
-		main.summon_slot_1, main.summon_slot_2, main.summon_slot_3]:
-		panel_builder.install(target, panel_art)
+		main.summon_slot_1, main.summon_slot_2, main.summon_slot_3], main)
+	install_panels([main.demon_ultimate_1, main.demon_ultimate_2, main.demon_ultimate_3], main)
 	for button in [main.demon_ultimate_1, main.demon_ultimate_2, main.demon_ultimate_3]:
-		panel_builder.install(button, panel_art)
 		button.add_theme_font_size_override("font_size", 24)
 		button.add_theme_color_override("font_disabled_color", Color("a497bc"))
 	for button in [main.summon_slot_1, main.summon_slot_2, main.summon_slot_3]:

@@ -93,7 +93,13 @@ func _ready() -> void:
 		reroll_button.custom_minimum_size.y = 64; reroll_button.add_theme_font_size_override("font_size",26)
 		popup_rows.add_child(reroll_button)
 	lower_button = Button.new(); lower_button.name = "Lower"; lower_button.text = "내리기"; lower_button.custom_minimum_size.y = 64
-	popup_rows.add_child(lower_button); lower_button.pressed.connect(close_popup)
+	if role == "demon":
+		lower_button.custom_minimum_size.y = confirm_button.custom_minimum_size.y
+		lower_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		popup_rows.get_node("Actions").add_child(lower_button)
+	else:
+		popup_rows.add_child(lower_button)
+	lower_button.pressed.connect(close_popup)
 	reroll_button.pressed.connect(_reroll_open)
 	resized.connect(_layout)
 	_layout()
@@ -216,6 +222,7 @@ func _layout() -> void:
 	if dot_row == null or popup == null: return
 	dot_row.position = Vector2(maxf(0.0,(size.x-RULES.AUGMENT_HOLD_LIMIT*76.0)/2.0),maxf(0.0,lower_top-72.0))
 	if popup.visible:
+		if role == "demon": return
 		var width := minf(980.0,size.x-48.0)
 		var height := minf(820.0,size.y-120.0)
 		popup.size = Vector2(width,height)
