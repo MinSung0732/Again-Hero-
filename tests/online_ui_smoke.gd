@@ -47,6 +47,7 @@ func run() -> void:
 		await process_frame; await process_frame
 		check(scene.role == role,"requested role")
 		check(scene.queue_button.custom_minimum_size.y >= 72,"mobile button size")
+		check(not scene.cancel_button.visible and not scene.action_notice.visible,"setup does not show battle instructions or matching cancel")
 		check(scene.view.size.x > 500 and scene.view.size.y > 300,"battle panel expands")
 		check(scene.hold_popup.dots.size() == RULES.AUGMENT_HOLD_LIMIT and not scene.hold_popup.popup.visible,"pooled hold dots start closed")
 		check(scene.hold_popup.lower_button.text == "내리기" and scene.hold_popup.reroll_button != null,"online hold controls present")
@@ -141,6 +142,23 @@ func run() -> void:
 		scene._event({"op":"matched","hero":"ranged_rookie","map":"plaza","duration":600,"battlefield":{"stage":"stage_1","bounds":[3200,3200],"map":"plaza"}})
 		await process_frame
 		check(scene.top_bar.visible and scene.top_bar.get_node_or_null("RunTimer") != null and scene.top_bar.get_node_or_null("HeroHPBar") != null and scene.top_bar.get_node_or_null("Monsters") != null,"both roles share battle top bar")
+		check(not scene.status.visible and not scene.action_notice.visible and not scene.cancel_button.visible,"battle hides debug rows and matching cancel")
+		check(scene.top_menu.get_item_text(1) == "항복하고 나가기" and scene.surrender_dialog != null,"battle menu confirms surrender")
+		scene.top_menu.id_pressed.emit(1); await process_frame
+		check(scene.surrender_dialog.visible,"surrender menu opens confirmation")
+		scene.surrender_dialog.hide()
+		scene.status.text = "짧은 알림"
+		scene._process(0.1)
+		check(scene.battle_toast.visible and scene.battle_toast.text == "짧은 알림","battle status uses toast")
+		scene._process(3.1)
+		check(not scene.battle_toast.visible,"battle toast expires")
+		var info_button: Button = scene.demon_info_toggle if role == "hero" else scene.hero_build_toggle
+		var info_panel: Control = scene.demon_info_panel if role == "hero" else scene.hero_build_scroll
+		check(info_button.visible and not info_panel.visible and info_button.get_parent() == scene,"info button overlays battlefield")
+		info_button.pressed.emit(); await process_frame
+		check(info_panel.visible and info_panel.get_global_rect().intersects(scene.view.get_global_rect()),"info panel opens over battlefield")
+		info_button.pressed.emit(); await process_frame
+		check(not info_panel.visible,"info panel closes")
 		var snapshot := {"seconds":41.0,"hero":[100.0,100.0,720,1200,3],"actors":[[1,"slime",200.0,200.0,50,50],[2,"orc",300.0,300.0,80,80]]}
 		scene._update_match_hud(snapshot)
 		check(scene.top_bar.get_node("RunTimer").text.contains("09:19") and scene.top_bar.get_node("HeroHP").text.contains("720 / 1200") and scene.top_bar.get_node("Monsters").text.contains("2"),"snapshot updates timer HP and monster count")
@@ -150,22 +168,23 @@ func run() -> void:
 			check(scene.top_bar.get_node("ExpBar").value == 24 and scene.top_bar.get_node("ExpBar").visible,"hero EXP shown")
 			scene._update_hero_inventory({"level":3,"exp":24,"exp_next":50,"rerolls_left":1,"reroll_limit":2,"weapons":[["ranged_rookie_arcane_bolt",2,false]],"passives":[["survival_power",1]]})
 			check(scene.weapon_buttons[0].get_node("Icon").texture != null and scene.weapon_buttons[0].get_node("Rank").text == "Lv.2" and scene.passive_buttons[0].get_node("Icon").texture != null,"snapshot fills shared hero slots")
+			check(scene.weapon_buttons[0].get_parent().name == "무기Inventory" and scene.passive_buttons[0].get_parent().name == "보조Inventory" and scene.weapon_buttons[0].get_theme_stylebox("normal") != null,"hero slots use shared inventory rows")
 		else: check(not scene.top_bar.get_node("ExpBar").visible and scene.top_bar.get_node("HeroLevel").text.contains("3"),"demon sees level without EXP")
 		root.size = Vector2i(1080,1920); await process_frame; await process_frame
-		check(scene.top_bar.get_global_rect().end.x <= root.size.x and scene.view.get_global_rect().position.y >= scene.top_bar.get_global_rect().end.y,"phone top bar fits above battlefield")
+		check(scene.top_bar.get_global_rect().end.x <= root.size.x and absf(scene.view.get_global_rect().position.y-scene.top_bar.get_global_rect().end.y) <= 2.0,"phone battlefield starts at top bar")
 		var lower: Control = scene.demon_panel if role == "demon" else scene.hero_slots
 		check(lower.get_global_rect().end.y <= root.size.y and scene.view.get_global_rect().end.y <= lower.get_global_rect().position.y,"phone lower HUD fits below battlefield")
 		if role == "demon":
 			check(scene.bottom_bar.get_global_rect().end.y <= root.size.y and scene.summon_buttons[-1].get_global_rect().end.x <= root.size.x,"phone cards fit")
-		check(scene.hold_popup.dot_row.get_global_rect().end.y <= lower.get_global_rect().position.y and scene.view.get_global_rect().end.y <= scene.hold_popup.dot_row.get_global_rect().position.y,"phone dots fit between battlefield and lower HUD")
+		check(scene.hold_popup.dot_row.get_global_rect().end.y <= lower.get_global_rect().position.y and absf(scene.view.get_global_rect().end.y-lower.get_global_rect().position.y) <= 2.0,"phone battlefield fills to lower HUD and dots stay above it")
 		scene.hold_popup.open_index(0); await process_frame
 		check(scene.hold_popup.popup.get_global_rect().position.y >= 0 and scene.hold_popup.popup.get_global_rect().end.y <= root.size.y,"phone popup fits")
 		scene.hold_popup.close_popup()
 		root.size = Vector2i(1536,1920); await process_frame; await process_frame
-		check(scene.top_bar.get_global_rect().end.x <= root.size.x and scene.top_bar.get_node("Monsters").get_global_rect().end.x <= root.size.x and scene.view.get_global_rect().position.y >= scene.top_bar.get_global_rect().end.y,"tablet top bar fits above battlefield")
+		check(scene.top_bar.get_global_rect().end.x <= root.size.x and scene.top_bar.get_node("Monsters").get_global_rect().end.x <= root.size.x and absf(scene.view.get_global_rect().position.y-scene.top_bar.get_global_rect().end.y) <= 2.0,"tablet battlefield starts at top bar")
 		check(lower.get_global_rect().end.y <= root.size.y and lower.get_global_rect().end.x <= root.size.x and scene.view.get_global_rect().end.y <= lower.get_global_rect().position.y,"tablet lower HUD fits below battlefield")
 		if role == "demon": check(scene.bottom_bar.get_global_rect().end.y <= root.size.y and scene.summon_buttons[-1].get_global_rect().end.x <= root.size.x,"tablet cards fit")
-		check(scene.hold_popup.dot_row.get_global_rect().end.y <= lower.get_global_rect().position.y and scene.view.get_global_rect().end.y <= scene.hold_popup.dot_row.get_global_rect().position.y,"tablet dots fit between battlefield and lower HUD")
+		check(scene.hold_popup.dot_row.get_global_rect().end.y <= lower.get_global_rect().position.y and absf(scene.view.get_global_rect().end.y-lower.get_global_rect().position.y) <= 2.0,"tablet battlefield fills to lower HUD and dots stay above it")
 		scene.hold_popup.open_index(0); await process_frame
 		check(scene.hold_popup.popup.get_global_rect().position.x >= 0 and scene.hold_popup.popup.get_global_rect().end.x <= root.size.x and scene.hold_popup.popup.get_global_rect().end.y <= root.size.y,"tablet popup fits")
 		scene.hold_popup.close_popup()
@@ -192,6 +211,7 @@ func run() -> void:
 		scene.test_code.text = preload("res://src/online/local_test_access.gd").new_ticket()
 		scene._join()
 		check(scene.client.socket != null and scene.client.token.is_empty() and scene.test_code.text.is_empty(),"localtest queues without social token; field cleared")
+		check(scene.cancel_button.visible and scene.action_notice.visible,"matching wait shows cancel and instructions")
 		local.active = false; scene._process(0.01)
 		check(scene.ended and scene.client.socket == null and scene.status.text.contains("테스트 모드"),"leaving test scope closes connection")
 		scene._join()

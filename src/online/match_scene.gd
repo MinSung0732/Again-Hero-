@@ -38,6 +38,12 @@ var metrics_left := 0.0
 var client
 var view
 var status: Label
+var battle_toast: Label
+var toast_seconds := 0.0
+var last_status_text := ""
+var last_action_text := ""
+var cancel_button: Button
+var surrender_dialog: ConfirmationDialog
 @onready var top_bar: Control = $TopBar
 var rows: VBoxContainer
 var setup_controls: Array[Control] = []
@@ -139,7 +145,11 @@ func _ready() -> void:
 	else:
 		demon_summary = _label(rows,"",20)
 		_refresh_demon_summary()
-	ranking_row = HBoxContainer.new(); ranking_row.visible = false; rows.add_child(ranking_row)
+	ranking_row = HBoxContainer.new(); ranking_row.visible = false; add_child(ranking_row)
+	ranking_row.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+	ranking_row.offset_left = 24; ranking_row.offset_right = -24
+	ranking_row.offset_top = -340; ranking_row.offset_bottom = -280
+	ranking_row.z_index = 23
 	ranking_icon = TextureRect.new(); ranking_icon.custom_minimum_size = Vector2(56,56)
 	ranking_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; ranking_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	ranking_row.add_child(ranking_icon)
@@ -191,10 +201,13 @@ func _ready() -> void:
 	get_viewport().size_changed.connect(_layout_top_bar)
 	_layout_top_bar()
 	top_menu = PopupMenu.new(); add_child(top_menu)
-	top_menu.add_item("규칙 보기",0); top_menu.add_item("대전 나가기",1)
+	top_menu.add_item("규칙 보기",0); top_menu.add_item("항복하고 나가기",1)
 	top_menu.id_pressed.connect(func(id: int):
 		if id == 0: _show_rules()
-		else: _leave())
+		else: surrender_dialog.popup_centered())
+	surrender_dialog = ConfirmationDialog.new(); surrender_dialog.title = "항복하고 나가기"
+	surrender_dialog.dialog_text = "대전을 포기하고 로비로 돌아가시겠습니까?"
+	surrender_dialog.confirmed.connect(_leave); add_child(surrender_dialog)
 	top_bar.get_node("StageMenuButton").pressed.connect(func():
 		top_menu.position = Vector2i(top_bar.get_node("StageMenuButton").get_global_rect().position + Vector2(0,80))
 		top_menu.popup())
@@ -204,18 +217,16 @@ func _ready() -> void:
 				if client.command("transcend",{"point":[point.x,point.y]}): transcend_placement = false
 			else: client.command("summon",{"id":selected_monster,"point":[point.x,point.y]}))
 	if role == "demon":
-		hero_build_toggle = _button(rows,"용사 빌드 ▾",_toggle_hero_build)
-		hero_build_toggle.custom_minimum_size.y = 48
+		hero_build_toggle = _info_button("용사 빌드",_toggle_hero_build)
 		hero_build_scroll = ScrollContainer.new(); hero_build_scroll.custom_minimum_size.y = 160
-		hero_build_scroll.visible = false; rows.add_child(hero_build_scroll)
+		hero_build_scroll.visible = false; _place_info_panel(hero_build_scroll)
 		hero_build_panel = VBoxContainer.new(); hero_build_scroll.add_child(hero_build_panel)
 		hero_build_level = _label(hero_build_panel,"용사 Lv.1",20)
 		hero_build_rows = VBoxContainer.new(); hero_build_panel.add_child(hero_build_rows)
 		hero_build_augments = _label(hero_build_panel,"선택한 증강: 없음",18)
 	else:
-		demon_info_toggle = _button(rows,"마왕 정보 ▾",_toggle_demon_info)
-		demon_info_toggle.custom_minimum_size.y = 48
-		demon_info_panel = VBoxContainer.new(); demon_info_panel.visible = false; rows.add_child(demon_info_panel)
+		demon_info_toggle = _info_button("마왕 정보",_toggle_demon_info)
+		demon_info_panel = VBoxContainer.new(); demon_info_panel.visible = false; _place_info_panel(demon_info_panel)
 		_label(demon_info_panel,"편성 ?",18)
 		_label(demon_info_panel,"스킬 ?",18)
 		_label(demon_info_panel,"초월 ?",18)
@@ -231,7 +242,11 @@ func _ready() -> void:
 		transcend_button.pressed.connect(_select_transcendence); bottom_bar.add_child(transcend_button)
 		PANEL.install(transcend_button,panel_art)
 		transcend_button.disabled = true; transcend_button.hide()
-		direction_row = HBoxContainer.new(); rows.add_child(direction_row)
+		direction_row = HBoxContainer.new(); add_child(direction_row)
+		direction_row.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+		direction_row.offset_left = 24; direction_row.offset_right = -24
+		direction_row.offset_top = -605; direction_row.offset_bottom = -530
+		direction_row.hide()
 		for direction in ["east","west","north","south"]:
 			var button := _button(direction_row,{"east":"동","west":"서","north":"북","south":"남"}[direction],_select_skill_direction.bind(direction))
 			button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -248,7 +263,13 @@ func _ready() -> void:
 		for index in passive_buttons.size(): passive_buttons[index].pressed.connect(_show_slot_info.bind(false,index))
 		for button in weapon_buttons + passive_buttons: HERO_HUD.update_slot(button,null,"+",""); button.disabled = true
 		hero_slots.hide()
-		chest_notice = _label(rows,"",23)
+		chest_notice = _label(self,"",23)
+		chest_notice.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+		chest_notice.offset_left = 24; chest_notice.offset_right = -24
+		chest_notice.offset_top = -330; chest_notice.offset_bottom = -260
+		chest_notice.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		chest_notice.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		chest_notice.z_index = 22; chest_notice.hide()
 	inventory_detail = AcceptDialog.new(); inventory_detail.title = "장착 정보"; add_child(inventory_detail)
 	hold_popup = HOLD_POPUP.new(); hold_popup.role = role; add_child(hold_popup)
 	hold_popup.choose.connect(func(number: int,id: String): _select_held(id,number))
@@ -256,10 +277,21 @@ func _ready() -> void:
 	hold_popup.oldest_auto_chosen.connect(_show_auto_hold_notice)
 	# Popup, held dots and overlay panels own their touches; the free pad only starts on bare battlefield.
 	if pad != null:
-		for control in [hold_popup.popup,hold_popup.dot_row,hero_slots,demon_info_panel]:
+		for control in [hold_popup.popup,hold_popup.dot_row,hero_slots,demon_info_panel,hero_build_scroll,hero_build_toggle,demon_info_toggle,surrender_dialog]:
 			if control is Control: pad.input_exclusions.append(control)
 	resized.connect(_update_hold_position)
-	_button(rows,"매칭 취소 · 로비로",_leave)
+	cancel_button = _button(rows,"매칭 취소 · 로비로",_leave)
+	cancel_button.hide(); action_notice.hide()
+	battle_toast = _label(self,"",30); battle_toast.name = "BattleToast"
+	battle_toast.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+	battle_toast.offset_top = 365; battle_toast.offset_bottom = 430
+	battle_toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	battle_toast.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	battle_toast.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	battle_toast.add_theme_color_override("font_color",Color("ffe08c"))
+	battle_toast.add_theme_color_override("font_outline_color",Color("090714"))
+	battle_toast.add_theme_constant_override("outline_size",7)
+	battle_toast.z_index = 190; battle_toast.hide()
 	loading = LOADING.new(); add_child(loading); loading.cancelled.connect(_leave); loading.rules_requested.connect(_show_rules)
 	_build_rules_popup()
 	client = CLIENT.new(); add_child(client); client.event_received.connect(_event)
@@ -274,7 +306,7 @@ func _ready() -> void:
 	client.connection_closed.connect(func(message: String):
 		if not ended: status.text = message
 		view.feedback.pause_feedback(); view.pause_motion()
-		queue_button.disabled = false; ended = true; load_revision += 1; loading.finish(); _set_controls(false))
+		queue_button.disabled = false; cancel_button.hide(); ended = true; load_revision += 1; loading.finish(); _set_controls(false))
 func _label(parent: Node,value: String,font: int) -> Label:
 	var label := Label.new(); label.text = value; label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	label.add_theme_font_size_override("font_size",font); parent.add_child(label); return label
@@ -282,6 +314,35 @@ func _button(parent: Node,value: String,callback: Callable) -> Button:
 	var button := Button.new(); button.text = value; button.custom_minimum_size.y = 76
 	button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART; button.add_theme_font_size_override("font_size",25)
 	parent.add_child(button); button.pressed.connect(callback); return button
+func _info_button(title: String,callback: Callable) -> Button:
+	var button := _button(self,"ⓘ " + title,callback)
+	button.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	button.offset_left = -244; button.offset_right = -24
+	button.offset_top = 350; button.offset_bottom = 412
+	button.custom_minimum_size.y = 0; button.add_theme_font_size_override("font_size",22)
+	button.z_index = 20; button.hide()
+	var style := StyleBoxFlat.new(); style.bg_color = Color("242333")
+	style.border_color = Color("c9a45e"); style.set_border_width_all(2)
+	button.add_theme_stylebox_override("normal",style)
+	button.add_theme_stylebox_override("hover",style)
+	return button
+func _place_info_panel(panel: Control) -> void:
+	add_child(panel)
+	panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	panel.offset_left = -470; panel.offset_right = -24
+	panel.offset_top = 420; panel.offset_bottom = 670
+	panel.z_index = 21
+	var background := Panel.new(); background.name = panel.name + "Background"
+	add_child(background)
+	background.set_anchors_and_offsets_preset(Control.PRESET_TOP_RIGHT)
+	background.offset_left = -480; background.offset_right = -14
+	background.offset_top = 414; background.offset_bottom = 680
+	background.mouse_filter = Control.MOUSE_FILTER_IGNORE; background.z_index = 20
+	var style := StyleBoxFlat.new(); style.bg_color = Color("171b29",0.96)
+	style.border_color = Color("c9a45e"); style.set_border_width_all(2)
+	background.add_theme_stylebox_override("panel",style)
+	background.visible = panel.visible
+	panel.visibility_changed.connect(func(): background.visible = panel.visible)
 func _layout_top_bar() -> void:
 	if top_bar == null or top_rects.is_empty(): return
 	var width := get_viewport_rect().size.x
@@ -307,17 +368,18 @@ func _layout_top_bar() -> void:
 func _show_match_layout() -> void:
 	for control in setup_controls: control.hide()
 	top_bar.show()
-	rows.offset_top = 350
+	status.hide(); action_notice.hide(); cancel_button.hide(); ranking_row.hide()
+	if hero_build_toggle != null: hero_build_toggle.show()
+	if demon_info_toggle != null: demon_info_toggle.show()
+	rows.offset_top = top_bar.get_global_rect().end.y
 	rows.offset_left = 0
 	rows.offset_right = 0
-	rows.offset_bottom = -525 if role == "demon" else -280
+	rows.offset_bottom = -465 if role == "demon" else -210
 	if role == "demon":
 		demon_panel.show(); bottom_bar.show()
 	else: hero_slots.show()
-	status.autowrap_mode = TextServer.AUTOWRAP_OFF
-	status.clip_text = true
-	status.add_theme_font_size_override("font_size",21)
-	status.custom_minimum_size.y = 32
+	last_status_text = status.text
+	last_action_text = action_notice.text
 	_layout_top_bar()
 	_update_hold_position()
 
@@ -329,8 +391,6 @@ func _update_hold_position() -> void:
 func _show_auto_hold_notice() -> void:
 	const MESSAGE := "가장 오래된 증강이 자동 선택됨"
 	status.text = MESSAGE
-	get_tree().create_timer(2.0).timeout.connect(func():
-		if is_instance_valid(self) and status.text == MESSAGE: status.text = "마력 %d" % hud_mana)
 
 func _set_hud_text(path: String,value: String) -> void:
 	var label := top_bar.get_node(path) as Label
@@ -499,10 +559,10 @@ func _show_hero_item(id: String,level: int,evolved: bool) -> void:
 	inventory_detail.popup_centered(Vector2i(700,320))
 func _toggle_hero_build() -> void:
 	hero_build_scroll.visible = not hero_build_scroll.visible
-	hero_build_toggle.text = "용사 빌드 %s" % ("▴" if hero_build_scroll.visible else "▾")
+	hero_build_toggle.button_pressed = hero_build_scroll.visible
 func _toggle_demon_info() -> void:
 	demon_info_panel.visible = not demon_info_panel.visible
-	demon_info_toggle.text = "마왕 정보 %s" % ("▴" if demon_info_panel.visible else "▾")
+	demon_info_toggle.button_pressed = demon_info_panel.visible
 func _update_demon_info(hints: Dictionary) -> void:
 	if not hints.get("augment_hints",null) is Array: return
 	var names := PackedStringArray()
@@ -559,9 +619,10 @@ func _advance_chest_notice(delta: float) -> void:
 	if chest_notice == null: return
 	chest_seconds -= delta
 	if chest_seconds > 0: return
-	if chest_queue.is_empty(): chest_notice.text = ""; return
+	if chest_queue.is_empty(): chest_notice.text = ""; chest_notice.hide(); return
 	var receipt: Dictionary = chest_queue.pop_front()
 	chest_notice.text = "상자 보상 · %s\n%s" % [String(receipt.name),String(receipt.get("description",""))]
+	chest_notice.show()
 	chest_seconds = 2.4
 func _update_holds(holds: Array) -> void:
 	hold_popup.set_rerolls(rerolls_left,reroll_limit)
@@ -611,7 +672,9 @@ func _join() -> void:
 	if test_code != null and error == OK: test_code.clear()
 	status.text = "서버에 연결 중..." if error == OK else "서버에 연결하지 못했습니다."
 	queue_button.disabled = error == OK
-	if error == OK: loading.begin(role); _set_controls(false)
+	if error == OK:
+		cancel_button.show(); action_notice.show()
+		loading.begin(role); _set_controls(false)
 func _event(event: Dictionary) -> void:
 	match String(event.get("op","")):
 		"queued": status.text = "상대 역할 플레이어를 찾는 중..."
@@ -709,7 +772,6 @@ func _event(event: Dictionary) -> void:
 				var mana_value := roundi(float(event.mana))
 				if mana_value != hud_mana:
 					hud_mana = mana_value
-					status.text = "마력 %d" % mana_value
 			_update_holds(event.augment_holds)
 			if role == "demon": _update_demon_controls(event)
 		"result":
@@ -778,6 +840,20 @@ func _test_connection(disconnected: bool) -> void:
 func _process(delta: float) -> void:
 	if client == null: return
 	_advance_chest_notice(delta)
+	if top_bar.visible and not loading.visible:
+		if status.text != last_status_text:
+			last_status_text = status.text
+			battle_toast.text = status.text
+			toast_seconds = 3.0
+			battle_toast.show()
+		if action_notice.text != last_action_text:
+			last_action_text = action_notice.text
+			battle_toast.text = action_notice.text
+			toast_seconds = 3.0
+			battle_toast.show()
+		if toast_seconds > 0.0:
+			toast_seconds -= delta
+			if toast_seconds <= 0.0: battle_toast.hide()
 	if metrics_panel!=null and metrics_panel.visible:
 		metrics_left-=delta
 		if metrics_left<=0:
