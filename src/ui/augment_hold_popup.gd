@@ -104,9 +104,11 @@ func close_popup() -> void:
 	opened_number = -1; popup.hide()
 
 func set_controls(enabled: bool) -> void:
+	if enabled == controls_enabled: return
 	controls_enabled = enabled
 	for card in cards: card.disabled = not enabled
 	reroll_button.disabled = not enabled or rerolls_left <= 0
+	if enabled and opened_number >= 0: _show_offer() # keeps unavailable cards disabled
 
 func set_rerolls(left: int,limit: int) -> void:
 	if rerolls_left == left and reroll_limit == limit: return
@@ -128,6 +130,7 @@ func _show_offer() -> void:
 			card_names[index].text = String(option.get("name",""))
 			card_descriptions[index].text = String(option.get("description",""))
 			card_icons[index].texture = _candidate_icon(String(option.get("id","")))
+			cards[index].disabled = not controls_enabled or bool(option.get("unavailable",false))
 		_refresh_reroll(); _layout(); return
 
 func _refresh_reroll() -> void:
@@ -148,7 +151,7 @@ func _choose_card(index: int) -> void:
 	if not controls_enabled: return
 	for offer in holds:
 		if int(offer.number) != opened_number: continue
-		if index >= offer.candidates.size(): return
+		if index >= offer.candidates.size() or bool(offer.candidates[index].get("unavailable",false)): return
 		last_chosen_number = opened_number
 		choose.emit(opened_number,String(offer.candidates[index].id)); close_popup(); return
 

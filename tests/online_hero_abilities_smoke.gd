@@ -4,13 +4,14 @@ const RULES := preload("res://src/online/match_rules.gd")
 const GUIDE := preload("res://src/data/ranked_rules_guide.gd")
 const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
 const MONSTERS := preload("res://src/data/monster_catalog.gd")
+const WEAPON_DATA := preload("res://src/data/hero_weapon_catalog.gd")
 var checks := 0
 func check(ok: bool,message: String) -> void:
 	checks += 1
 	if not ok: push_error(message); quit(1); assert(ok,message)
 func _initialize() -> void: run.call_deferred()
 func run() -> void:
-	check(RULES.VERSION == 16,"server and client protocol 15")
+	check(RULES.VERSION == 16,"server and client protocol 16")
 	var room = ROOM.new(); root.add_child(room); room.prepare(); room.start()
 	room.battle.process_mode = Node.PROCESS_MODE_DISABLED
 	var runtime = room.battle.hero.player_weapons
@@ -50,6 +51,24 @@ func run() -> void:
 	var chosen: Dictionary = room.hero_holds[0].candidates[0]
 	check(room.apply("hero","choose",{"number":number,"id":String(chosen.id)}),"held augment can be selected")
 	check(String(chosen.name) in room.snapshot("demon").hero_build.augments,"selected augment name reaches demon")
+	# Two held copies of the same owned weapon: taking one re-levels the other instead of showing a stale rank.
+	room.hero_holds.clear()
+	var weapon_id := String(runtime.weapon_ids[0])
+	runtime.levels[weapon_id] = 1
+	room._choice([runtime.offer_card(weapon_id),runtime.RESTORE_CARD.duplicate()]); room._choice([runtime.offer_card(weapon_id),runtime.RESTORE_CARD.duplicate()])
+	var first_number: int = room.hero_holds[0].number
+	var second_number: int = room.hero_holds[1].number
+	check(String(room.hero_holds[1].candidates[0].name).contains("Lv.2"),"both held copies start at the same next level")
+	check(room.apply("hero","choose",{"number":first_number,"id":weapon_id}) and int(runtime.levels[weapon_id]) == 2,"first held copy upgrades the weapon")
+	check(int(room.hero_holds[0].number) == second_number and String(room.hero_holds[0].candidates[0].name).contains("Lv.3") and room.hero_holds[0].candidates[0].name == runtime.offer_card(weapon_id).name,"second held copy shows the next level after the first pick")
+	check(room.hero_holds[0].wire_candidates == room.snapshot("hero").augment_holds[0].candidates,"refreshed held card reaches the hero wire")
+	runtime.levels[weapon_id] = WEAPON_DATA.MAX_LEVEL; room._refresh_hero_holds()
+	check(bool(room.hero_holds[0].candidates[0].get("unavailable",false)) and room.snapshot("hero").augment_holds[0].candidates[0].get("unavailable",false),"maxed held card is marked unavailable")
+	check(not room.apply("hero","choose",{"number":second_number,"id":weapon_id}) and int(runtime.levels[weapon_id]) == WEAPON_DATA.MAX_LEVEL,"unavailable held card cannot be chosen")
+	room.hero_holds.clear(); room._choice([runtime.offer_card(weapon_id) if not runtime.offer_card(weapon_id).is_empty() else {"id":weapon_id,"name":"stale"}])
+	room._refresh_hero_holds()
+	check(room.hero_holds.size() == 1 and not room.hero_holds[0].candidates.is_empty() and room.hero_holds[0].candidates.all(func(card): return not bool(card.get("unavailable",false)) and String(card.id) != weapon_id),"offer with nothing left is replaced without a reroll")
+	room.hero_holds.clear()
 	check(JSON.stringify(GUIDE.sections()).contains("상자 골드 없음") and JSON.stringify(GUIDE.sections()).contains("새로고침 3회"),"ranked guide explains chest and rerolls")
 	check(JSON.stringify(GUIDE.sections()).contains("보관 중인 선택지는 비공개"),"ranked guide explains public build boundary")
 	check(JSON.stringify(GUIDE.sections()).contains("마왕이 고른 증강의 역할 방향만"),"ranked guide explains demon hint boundary")

@@ -77,7 +77,8 @@ func prepare() -> void:
 	battle.hero.player_augment_requested.connect(_choice)
 	battle.hero.augment_selected.connect(func(_level: int,_candidates: Array,chosen_name: String,_reason: String,_summary: String):
 		selected_hero_augments.append(chosen_name)
-		public_hero_build_dirty = true)
+		public_hero_build_dirty = true
+		_refresh_hero_holds())
 	battle.hero.progression_changed.connect(func(_level: int,_exp: int,_next: int): public_hero_build_dirty = true)
 	battle.hero_chest_opened.connect(_chest_opened)
 	battle.summon_result.connect(func(_id: String,_accepted: bool,message: String): last_action_message = message)
@@ -102,6 +103,7 @@ func _chest_opened() -> void:
 	var receipt: Dictionary = runtime.roll_chest()
 	if not runtime.apply_chest(receipt): return
 	public_hero_build_dirty = true
+	_refresh_hero_holds()
 	# The server applies the reward before sending a display-only receipt.
 	chest_receipts.append({"serial":int(receipt.serial),"id":String(receipt.id),"kind":String(receipt.kind),"name":String(receipt.name),"description":String(receipt.description),"evolution":bool(receipt.evolution)})
 	if chest_receipts.size() > RULES.CHEST_HISTORY_LIMIT: chest_receipts.pop_front()
@@ -122,8 +124,38 @@ func _hold(role: String,candidates: Array,level: int) -> void:
 func _wire_candidates(candidates: Array) -> Array:
 	var result: Array = []
 	for candidate in candidates:
-		result.append({"id":String(candidate.get("id","")),"name":String(candidate.get("name","")),"description":String(candidate.get("description",""))})
+		var wire := {"id":String(candidate.get("id","")),"name":String(candidate.get("name","")),"description":String(candidate.get("description",""))}
+		if bool(candidate.get("unavailable",false)): wire["unavailable"] = true
+		result.append(wire)
 	return result
+# Held hero cards keep their ids but re-read level text after the build changes. A card that can no
+# longer be taken is shown as unavailable; an offer with nothing left is replaced without spending a reroll.
+func _refresh_hero_holds() -> void:
+	var runtime = battle.hero.player_weapons
+	if runtime == null or hero_holds.is_empty(): return
+	var changed := false
+	for index in hero_holds.size():
+		var offer: Dictionary = hero_holds[index]
+		var refreshed: Array = []
+		var ids: Array = []
+		var available := 0
+		for candidate in offer.candidates:
+			var id := String(candidate.get("id",""))
+			ids.append(id)
+			var card: Dictionary = runtime.offer_card(id)
+			if card.is_empty(): card = {"id":id,"name":String(candidate.get("name","")),"description":RULES.UNAVAILABLE_AUGMENT_TEXT,"unavailable":true}
+			else: available += 1
+			refreshed.append(card)
+		if available == 0: refreshed = runtime.candidates(ids)
+		refreshed = refreshed.slice(0,RULES.MAX_OFFER_CANDIDATES)
+		if refreshed == offer.candidates: continue
+		offer.candidates = refreshed.duplicate(true)
+		offer.wire_candidates = _wire_candidates(offer.candidates)
+		hero_holds[index] = offer
+		changed = true
+	if changed:
+		choice_revision += 1
+		choice = hero_holds[0].candidates
 func _reroll_held(role: String,argument: Dictionary) -> bool:
 	var number: Variant = argument.get("number",null)
 	if not RULES.number(number) or float(number) != floorf(float(number)): return false
@@ -155,6 +187,7 @@ func _enforce_hold_limit(role: String) -> void:
 func _apply_offer(role: String,offer: Dictionary,id: String) -> bool:
 	for candidate in offer.candidates:
 		if String(candidate.get("id","")) == id:
+			if bool(candidate.get("unavailable",false)): return false
 			if role == "hero": return battle.hero.choose_player_augment(id,offer.candidates)
 			if not battle.choose_held_demon_augment(id,offer.candidates,int(offer.level)): return false
 			var hint := _demon_augment_hint(DEMON_AUGMENTS.get_augment(id))

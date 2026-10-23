@@ -71,6 +71,7 @@ var awakening_flash := 0.0
 var reroll_limit := MODE.AUGMENT_REROLLS
 var rerolls_used := 0
 
+const RESTORE_CARD := {"id":"survival_restore","name":"완성된 빌드 · 회복","description":"모든 선택이 최대 레벨입니다. 최대 HP의 15%를 회복합니다."}
 func rerolls_remaining() -> int:
 	return maxi(0,reroll_limit-rerolls_used)
 
@@ -183,17 +184,12 @@ func _refresh_owned_summons(id: String) -> void:
 func candidates(previous_ids: Array = []) -> Array:
 	var options: Array = []
 	for id in available_weapons:
-		if int(levels.get(id,0)) >= DATA.MAX_LEVEL: continue
-		if not levels.has(id) and weapon_ids.size() >= DATA.WEAPON_SLOTS: continue
-		options.append(_card(id,int(levels.get(id,0))+1))
+		var card := offer_card(id)
+		if not card.is_empty(): options.append(card)
 	for id in DATA.PASSIVES:
-		if not DATA.passive_allowed(id,String(hero.hero_id),weapon_ids): continue
-		if bool(DATA.PASSIVES[id].get("one_shot",false)):
-			if hero.current_hp > 0 and hero.current_hp < hero.max_hp: options.append(_card(id,1))
-			continue
-		if int(passives.get(id,0)) >= DATA.passive_limit(id): continue
-		if not passives.has(id) and passives.size() >= DATA.PASSIVE_SLOTS: continue
-		options.append(_card(id,int(passives.get(id,0))+1))
+		if bool(DATA.PASSIVES[id].get("one_shot",false)) and not (hero.current_hp > 0 and hero.current_hp < hero.max_hp): continue
+		var card := offer_card(id)
+		if not card.is_empty(): options.append(card)
 	# Guarantee an owned upgrade when available; two other choices still explore.
 	var result: Array = []
 	var owned: Array = []
@@ -214,8 +210,22 @@ func candidates(previous_ids: Array = []) -> Array:
 		else: fresh.append(card)
 	while result.size() < 3 and not fresh.is_empty(): result.append(fresh.pop_back())
 	while result.size() < 3 and not repeated.is_empty(): result.append(repeated.pop_back())
-	if result.is_empty(): result.append({"id":"survival_restore","name":"완성된 빌드 · 회복","description":"모든 선택이 최대 레벨입니다. 최대 HP의 15%를 회복합니다."})
+	if result.is_empty(): result.append(RESTORE_CARD.duplicate())
 	return result
+
+# Current-level card for one id, or {} when it can no longer be taken (max level or full slots).
+# Held online offers re-read this so a stored card never shows a stale level.
+func offer_card(id: String) -> Dictionary:
+	if id == RESTORE_CARD.id: return RESTORE_CARD.duplicate()
+	if DATA.is_weapon(id):
+		if id not in available_weapons or int(levels.get(id,0)) >= DATA.MAX_LEVEL: return {}
+		if not levels.has(id) and weapon_ids.size() >= DATA.WEAPON_SLOTS: return {}
+		return _card(id,int(levels.get(id,0))+1)
+	if not DATA.PASSIVES.has(id) or not DATA.passive_allowed(id,String(hero.hero_id),weapon_ids): return {}
+	if bool(DATA.PASSIVES[id].get("one_shot",false)): return _card(id,1)
+	if int(passives.get(id,0)) >= DATA.passive_limit(id): return {}
+	if not passives.has(id) and passives.size() >= DATA.PASSIVE_SLOTS: return {}
+	return _card(id,int(passives.get(id,0))+1)
 
 func _card(id: String, next_level: int) -> Dictionary:
 	var data: Dictionary = DATA.WEAPONS.get(id,DATA.PASSIVES.get(id,{}))
