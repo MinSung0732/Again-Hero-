@@ -6,8 +6,15 @@ func check(ok: bool,message: String) -> void:
 	if not ok: push_error(message); quit(1); assert(ok,message)
 func _initialize() -> void: run.call_deferred()
 func run() -> void:
+	var local = root.get_node("LocalTestMode")
+	var old_active: bool = local.active
+	var old_preview: bool = local.tutorial_preview
+	var old_owner: String = SCOPE.user_id
+	var old_directory: String = SCOPE.guest_directory
+	local.active = false; local.tutorial_preview = false; SCOPE.user_id = ""; SCOPE.guest_directory = "user://"
 	root.size = Vector2i(1080,1920)
 	for role in ["hero","demon"]:
+		root.size = Vector2i(1080,1920)
 		root.get_node("SceneTransition")._entry_options = {"role":role}
 		var packed: PackedScene = load("res://src/online/OnlineMatch.tscn")
 		check(packed != null,"scene compiles with autoloads")
@@ -55,12 +62,22 @@ func run() -> void:
 		var result_text: String = scene.status.text
 		scene._event({"op":"result","match":"ui-recovery","winner":""})
 		check(scene.ended and scene.status.text == result_text,"terminal UI is idempotent")
+		scene._event({"op":"matched","hero":"ranged_rookie","duration":180.0,"battlefield":{"stage":"stage_1"}})
+		await process_frame
+		check(scene.top_bar.visible and scene.top_bar.get_node_or_null("RunTimer") != null and scene.top_bar.get_node_or_null("HeroHPBar") != null and scene.top_bar.get_node_or_null("Monsters") != null,"both roles share battle top bar")
+		var snapshot := {"seconds":41.0,"hero":[100.0,100.0,720,1200,3],"actors":[[1,"slime",200.0,200.0,50,50],[2,"orc",300.0,300.0,80,80]]}
+		scene._update_match_hud(snapshot)
+		check(scene.top_bar.get_node("RunTimer").text.contains("02:19") and scene.top_bar.get_node("HeroHP").text.contains("720 / 1200") and scene.top_bar.get_node("Monsters").text.contains("2"),"snapshot updates timer HP and monster count")
+		check(scene.top_bar.get_node("HeroHPBar").value == 720 and scene.top_bar.get_node("HeroHPBar").max_value == 1200,"snapshot updates HP bar")
+		if role == "hero":
+			scene._update_hud_progress(3,24,50)
+			check(scene.top_bar.get_node("ExpBar").value == 24 and scene.top_bar.get_node("ExpBar").visible,"hero EXP shown")
+		else: check(not scene.top_bar.get_node("ExpBar").visible and scene.top_bar.get_node("HeroLevel").text.contains("3"),"demon sees level without EXP")
+		root.size = Vector2i(1080,1920); await process_frame; await process_frame
+		check(scene.top_bar.get_global_rect().end.x <= root.size.x and scene.view.get_global_rect().position.y >= scene.top_bar.get_global_rect().end.y,"phone top bar fits above battlefield")
+		root.size = Vector2i(1536,1920); await process_frame; await process_frame
+		check(scene.top_bar.get_global_rect().end.x <= root.size.x and scene.top_bar.get_node("Monsters").get_global_rect().end.x <= root.size.x and scene.view.get_global_rect().position.y >= scene.top_bar.get_global_rect().end.y,"tablet top bar fits above battlefield")
 		scene.queue_free(); await process_frame
-	var local = root.get_node("LocalTestMode")
-	var old_active: bool = local.active
-	var old_preview: bool = local.tutorial_preview
-	var old_owner: String = SCOPE.user_id
-	var old_directory: String = SCOPE.guest_directory
 	local.active = true; local.tutorial_preview = false; SCOPE.user_id = ""; SCOPE.guest_directory = local.test_directory
 	check(local.is_online_match_allowed(),"isolated localtest has online permission")
 	check(preload("res://src/systems/mode_unlock_store.gd").unlocked("rank","stage_1"),"localtest existing rank unlock reaches entry")

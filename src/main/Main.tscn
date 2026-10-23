@@ -1,4 +1,4 @@
-[gd_scene load_steps=34 format=3]
+[gd_scene load_steps=48 format=3]
 
 [ext_resource type="Script" path="res://src/main/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://src/battle/Battle.tscn" id="2_battle"]
@@ -7,14 +7,9 @@
 [ext_resource type="PackedScene" path="res://src/ui/StageIntroCutscene.tscn" id="5_intro"]
 [ext_resource type="PackedScene" path="res://src/ui/HeroRevealCutscene.tscn" id="6_reveal"]
 [ext_resource type="PackedScene" path="res://src/ui/SkillUnlockCutscene.tscn" id="7_skill_unlock"]
-[ext_resource type="Texture2D" path="res://assets/art/UI/logo/AgainHeroLogo.png" id="8_logo"]
-[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/hero_status_panel.svg" id="11_hero_status"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/side_frame.svg" id="12_menu"]
-[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/side_frame.svg" id="16_monster"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/side_frame.svg" id="17_detail"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/side_frame.svg" id="18_hero"]
-[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/icon_menu.svg" id="22_side_menu_icon"]
-[ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/icon_monster.svg" id="23_side_monster_icon"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/icon_detail.svg" id="24_side_detail_icon"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/icon_hero.svg" id="25_side_hero_icon"]
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/summon_card.svg" id="15_card"]
@@ -26,6 +21,7 @@
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/bottom_hud_backdrop.svg" id="30_bottom_backdrop"]
 
 [ext_resource type="PackedScene" path="res://src/ui/BattleSettings.tscn" id="shared_battle_settings"]
+[ext_resource type="PackedScene" path="res://src/ui/battle_top_bar.tscn" id="shared_top_bar"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_cooldown_bg"]
 bg_color = Color(0, 0, 0, 0)
@@ -73,13 +69,6 @@ corner_radius_top_left = 8
 corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hud_hp_fill"]
-bg_color = Color(0.08, 0.92, 0.25, 1)
-
-corner_radius_top_left = 7
-corner_radius_top_right = 7
-corner_radius_bottom_right = 7
-corner_radius_bottom_left = 7
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hud_exp_fill"]
 bg_color = Color(0.08, 0.55, 1, 1)
 
@@ -436,272 +425,7 @@ text = "알림"
 horizontal_alignment = 1
 vertical_alignment = 1
 
-[node name="TopBar" type="Control" parent="HUD"]
-anchors_preset = 10
-anchor_right = 1.0
-offset_bottom = 300.0
-grow_horizontal = 2
-mouse_filter = 1
-
-[node name="LogoPlate" type="TextureRect" parent="HUD/TopBar"]
-offset_left = 12.0
-offset_top = 4.0
-offset_right = 306.0
-offset_bottom = 132.0
-mouse_filter = 2
-texture = ExtResource("8_logo")
-expand_mode = 1
-stretch_mode = 5
-texture_filter = 1
-
-[node name="Title" type="Label" parent="HUD/TopBar"]
-visible = false
-offset_left = 22.0
-offset_top = 30.0
-offset_right = 300.0
-offset_bottom = 106.0
-theme_override_colors/font_color = Color(1, 0.68, 0.18, 1)
-theme_override_colors/font_outline_color = Color(0.16, 0.025, 0.17, 1)
-theme_override_constants/outline_size = 5
-theme_override_font_sizes/font_size = 36
-text = "용사, 또 너야?"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="StageFrame" type="TextureRect" parent="HUD/TopBar"]
-offset_left = 314.0
-offset_top = 8.0
-offset_right = 718.0
-offset_bottom = 133.0
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 0
-texture_filter = 1
-
-[node name="Subtitle" type="Label" parent="HUD/TopBar"]
-offset_left = 336.0
-offset_top = 50.0
-offset_right = 696.0
-offset_bottom = 81.0
-theme_override_colors/font_color = Color(0.98, 0.94, 0.9, 1)
-theme_override_colors/font_outline_color = Color(0.03, 0.02, 0.07, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 25
-text = "첫 번째 침입자"
-clip_text = true
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="StageNumber" type="Label" parent="HUD/TopBar"]
-offset_left = 356.0
-offset_top = 18.0
-offset_right = 476.0
-offset_bottom = 44.0
-mouse_filter = 2
-theme_override_colors/font_color = Color(1, 0.82, 0.38, 1)
-theme_override_colors/font_outline_color = Color(0.03, 0.02, 0.07, 1)
-theme_override_constants/outline_size = 2
-theme_override_font_sizes/font_size = 15
-text = "Stage 1"
-clip_text = true
-horizontal_alignment = 0
-vertical_alignment = 1
-
-[node name="StageHeroName" type="Label" parent="HUD/TopBar"]
-offset_left = 344.0
-offset_top = 82.0
-offset_right = 688.0
-offset_bottom = 106.0
-mouse_filter = 2
-theme_override_colors/font_color = Color(1, 0.76, 0.28, 1)
-theme_override_colors/font_outline_color = Color(0.03, 0.02, 0.07, 1)
-theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 18
-text = "견습 마도사"
-clip_text = true
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="TimerFrame" type="TextureRect" parent="HUD/TopBar"]
-offset_left = 730.0
-offset_top = 20.0
-offset_right = 1050.0
-offset_bottom = 106.0
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 0
-texture_filter = 1
-
-[node name="RunTimer" type="Label" parent="HUD/TopBar"]
-offset_left = 746.0
-offset_top = 36.0
-offset_right = 1034.0
-offset_bottom = 91.0
-theme_override_colors/font_color = Color(0.96, 0.93, 0.88, 1)
-theme_override_colors/font_outline_color = Color(0.03, 0.02, 0.07, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 25
-text = "남은 시간 06:00"
-clip_text = true
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="HeroStatusFrame" type="TextureRect" parent="HUD/TopBar"]
-offset_left = 18.0
-offset_top = 128.0
-offset_right = 728.0
-offset_bottom = 293.0
-mouse_filter = 2
-texture = ExtResource("11_hero_status")
-expand_mode = 1
-stretch_mode = 0
-texture_filter = 1
-
-[node name="HeroPortrait" type="TextureRect" parent="HUD/TopBar"]
-offset_left = 52.0
-offset_top = 157.0
-offset_right = 164.0
-offset_bottom = 269.0
-mouse_filter = 2
-expand_mode = 1
-stretch_mode = 5
-texture_filter = 1
-
-[node name="HeroLevel" type="Label" parent="HUD/TopBar"]
-offset_left = 184.0
-offset_top = 147.0
-offset_right = 680.0
-offset_bottom = 184.0
-theme_override_colors/font_color = Color(1, 0.91, 0.76, 1)
-theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 27
-text = "Lv. 1   용사"
-clip_text = true
-vertical_alignment = 1
-
-[node name="HeroHPBar" type="ProgressBar" parent="HUD/TopBar"]
-offset_left = 198.0
-offset_top = 201.0
-offset_right = 689.0
-offset_bottom = 230.0
-max_value = 300.0
-value = 300.0
-mouse_filter = 2
-theme_override_styles/background = SubResource("StyleBoxFlat_hud_bar_bg")
-theme_override_styles/fill = SubResource("StyleBoxFlat_hud_hp_fill")
-show_percentage = false
-
-[node name="HeroHP" type="Label" parent="HUD/TopBar"]
-offset_left = 192.0
-offset_top = 197.0
-offset_right = 695.0
-offset_bottom = 233.0
-theme_override_colors/font_color = Color(0.94, 1, 0.95, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.95)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 23
-text = "HP 300 / 300"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="ExpBar" type="ProgressBar" parent="HUD/TopBar"]
-offset_left = 198.0
-offset_top = 237.0
-offset_right = 689.0
-offset_bottom = 257.0
-max_value = 50.0
-mouse_filter = 2
-theme_override_styles/background = SubResource("StyleBoxFlat_hud_bar_bg")
-theme_override_styles/fill = SubResource("StyleBoxFlat_hud_exp_fill")
-show_percentage = false
-
-[node name="ExpLabel" type="Label" parent="HUD/TopBar"]
-offset_left = 198.0
-offset_top = 232.0
-offset_right = 689.0
-offset_bottom = 260.0
-theme_override_colors/font_color = Color(0.88, 0.91, 1, 1)
-theme_override_colors/font_outline_color = Color(0, 0, 0, 0.95)
-theme_override_constants/outline_size = 3
-theme_override_font_sizes/font_size = 18
-text = "EXP 0 / 50"
-clip_text = true
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="StageMenuButton" type="Button" parent="HUD/TopBar"]
-metadata/audio_cue = "click"
-offset_left = 790.0
-offset_top = 126.0
-offset_right = 1050.0
-offset_bottom = 204.0
-theme_override_colors/font_color = Color(0.96, 0.92, 0.86, 1)
-theme_override_font_sizes/font_size = 27
-theme_override_styles/normal = SubResource("StyleBoxTexture_menu")
-theme_override_styles/hover = SubResource("StyleBoxTexture_menu")
-theme_override_styles/pressed = SubResource("StyleBoxTexture_menu")
-text = ""
-
-[node name="Icon" type="TextureRect" parent="HUD/TopBar/StageMenuButton"]
-layout_mode = 1
-offset_left = 53.0
-offset_top = 19.0
-offset_right = 91.0
-offset_bottom = 57.0
-mouse_filter = 2
-texture = ExtResource("22_side_menu_icon")
-expand_mode = 1
-stretch_mode = 5
-texture_filter = 1
-
-[node name="Label" type="Label" parent="HUD/TopBar/StageMenuButton"]
-layout_mode = 1
-offset_left = 96.0
-offset_top = 13.0
-offset_right = 220.0
-offset_bottom = 63.0
-mouse_filter = 2
-theme_override_colors/font_color = Color(0.96, 0.92, 0.86, 1)
-theme_override_font_sizes/font_size = 25
-text = "메뉴"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="MonsterFrame" type="TextureRect" parent="HUD/TopBar"]
-offset_left = 790.0
-offset_top = 210.0
-offset_right = 1050.0
-offset_bottom = 288.0
-mouse_filter = 2
-texture = ExtResource("16_monster")
-expand_mode = 1
-stretch_mode = 0
-texture_filter = 1
-
-[node name="MonsterIcon" type="TextureRect" parent="HUD/TopBar"]
-offset_left = 827.0
-offset_top = 229.0
-offset_right = 865.0
-offset_bottom = 267.0
-mouse_filter = 2
-texture = ExtResource("23_side_monster_icon")
-expand_mode = 1
-stretch_mode = 5
-texture_filter = 1
-
-[node name="Monsters" type="Label" parent="HUD/TopBar"]
-offset_left = 872.0
-offset_top = 218.0
-offset_right = 1026.0
-offset_bottom = 281.0
-theme_override_colors/font_color = Color(0.96, 0.92, 0.95, 1)
-theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
-theme_override_constants/outline_size = 4
-theme_override_font_sizes/font_size = 29
-text = "몬스터 0"
-horizontal_alignment = 1
-vertical_alignment = 1
+[node name="TopBar" parent="HUD" instance=ExtResource("shared_top_bar")]
 
 [node name="DemonUltimatePanel" type="Control" parent="HUD"]
 anchors_preset = 12

@@ -21,26 +21,7 @@ static func texture(main: Node, path: String) -> Texture2D:
 
 static func rebuild(main: Node) -> void:
 	var top := main.get_node("HUD/TopBar")
-	place(top.get_node("LogoPlate"), Rect2(14, 4, 350, 156))
-	place(top.get_node("StageFrame"), Rect2(378, 12, 354, 148))
-	place(top.get_node("StageNumber"), Rect2(412, 25, 286, 32), 24)
-	top.get_node("StageNumber").horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	place(top.get_node("Subtitle"), Rect2(402, 59, 306, 44), 30)
-	place(top.get_node("StageHeroName"), Rect2(402, 105, 306, 32), 23)
-	place(top.get_node("TimerFrame"), Rect2(750, 30, 306, 90))
-	place(top.get_node("RunTimer"), Rect2(766, 48, 274, 54), 28)
-	place(top.get_node("HeroStatusFrame"), Rect2(20, 165, 714, 172))
-	place(top.get_node("HeroPortrait"), Rect2(38, 182, 142, 138))
-	place(top.get_node("HeroLevel"), Rect2(200, 180, 500, 42), 30)
-	place(top.get_node("HeroHPBar"), Rect2(200, 232, 498, 36))
-	place(top.get_node("HeroHP"), Rect2(200, 232, 498, 36), 28)
-	place(top.get_node("ExpBar"), Rect2(200, 280, 498, 27))
-	place(top.get_node("ExpLabel"), Rect2(200, 276, 498, 35), 23)
-	place(top.get_node("StageMenuButton"), Rect2(810, 130, 246, 82))
-	place(top.get_node("MonsterFrame"), Rect2(750, 226, 306, 110))
-	place(top.get_node("MonsterIcon"), Rect2(772, 256, 46, 46))
-	place(top.get_node("Monsters"), Rect2(824, 244, 218, 68), 34)
-	top.offset_bottom = 350
+	layout_top(top)
 	place(main.get_node("HUD/HeroSkillCooldownBar"), Rect2(130, PLAY_TOP+10, 470, 68))
 	for index in range(2):
 		var button: Button = main.monster_info_bookmark if index == 0 else main.hero_info_bookmark
@@ -83,6 +64,28 @@ static func rebuild(main: Node) -> void:
 	apply_visibility(main, main.battle_frame_enabled)
 	main.battle_responsive_layout = preload("res://src/ui/battle_responsive_layout.gd").new()
 	main.battle_responsive_layout.install(main)
+
+static func layout_top(top: Control) -> void:
+	place(top.get_node("LogoPlate"), Rect2(14, 4, 350, 156))
+	place(top.get_node("StageFrame"), Rect2(378, 12, 354, 148))
+	place(top.get_node("StageNumber"), Rect2(412, 25, 286, 32), 24)
+	top.get_node("StageNumber").horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	place(top.get_node("Subtitle"), Rect2(402, 59, 306, 44), 30)
+	place(top.get_node("StageHeroName"), Rect2(402, 105, 306, 32), 23)
+	place(top.get_node("TimerFrame"), Rect2(750, 30, 306, 90))
+	place(top.get_node("RunTimer"), Rect2(766, 48, 274, 54), 28)
+	place(top.get_node("HeroStatusFrame"), Rect2(20, 165, 714, 172))
+	place(top.get_node("HeroPortrait"), Rect2(38, 182, 142, 138))
+	place(top.get_node("HeroLevel"), Rect2(200, 180, 500, 42), 30)
+	place(top.get_node("HeroHPBar"), Rect2(200, 232, 498, 36))
+	place(top.get_node("HeroHP"), Rect2(200, 232, 498, 36), 28)
+	place(top.get_node("ExpBar"), Rect2(200, 280, 498, 27))
+	place(top.get_node("ExpLabel"), Rect2(200, 276, 498, 35), 23)
+	place(top.get_node("StageMenuButton"), Rect2(810, 130, 246, 82))
+	place(top.get_node("MonsterFrame"), Rect2(750, 226, 306, 110))
+	place(top.get_node("MonsterIcon"), Rect2(772, 256, 46, 46))
+	place(top.get_node("Monsters"), Rect2(824, 244, 218, 68), 34)
+	top.offset_bottom = 350
 
 static func apply_visibility(main: Node, enabled: bool) -> void:
 	var chrome: Control = main.hud_layer.get_node_or_null("CastleBattleChrome")

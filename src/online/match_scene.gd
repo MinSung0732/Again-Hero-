@@ -20,6 +20,11 @@ const TRANSCENDENCE := preload("res://src/systems/transcendence_loadout_store.gd
 const ENTRY := preload("res://src/systems/dungeon_entry_policy.gd")
 const WEAPONS := preload("res://src/data/hero_weapon_catalog.gd")
 const ICONS := preload("res://src/ui/hero_augment_icons.gd")
+const TOP_LAYOUT := preload("res://src/ui/castle_battle_chrome.gd")
+const RESPONSIVE := preload("res://src/ui/battle_responsive_layout.gd")
+const HERO_HUD := preload("res://src/ui/hero_survival_hud.gd")
+const STAGES := preload("res://src/data/stage_catalog.gd")
+const PANEL := preload("res://src/ui/illustrated_battle_panel.gd")
 var loading
 var local_preparing := false
 var waiting_for_start := false
@@ -31,6 +36,21 @@ var metrics_left := 0.0
 var client
 var view
 var status: Label
+@onready var top_bar: Control = $TopBar
+var rows: VBoxContainer
+var setup_controls: Array[Control] = []
+var top_rects: Array[Rect2] = []
+var match_duration := RULES.DURATION
+var matched_hero_id := ""
+var hud_timer_second := -1
+var hud_hp := -1
+var hud_max_hp := -1
+var hud_monsters := -1
+var hud_level := -1
+var hud_exp := -1
+var hud_exp_next := -1
+var hud_mana := -1
+var top_menu: PopupMenu
 var ranking_row: HBoxContainer
 var ranking_icon: TextureRect
 var ranking_label: Label
@@ -94,7 +114,7 @@ func _ready() -> void:
 	var options: Dictionary = get_node("/root/SceneTransition").consume_entry_options()
 	role = String(options.get("role","hero")); initial_owner = get_node("/root/LoginGateway").user_id
 	initial_local_test = get_node("/root/LocalTestMode").is_online_match_allowed()
-	var rows := VBoxContainer.new(); add_child(rows); rows.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	rows = VBoxContainer.new(); add_child(rows); rows.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	rows.offset_left = 24; rows.offset_right = -24; rows.offset_top = 35; rows.offset_bottom = -30
 	_label(rows,"랭킹 매칭",34)
 	_label(rows,"선택 용사 ↔ 마왕 · 3분 생존 · 보상/스테미너 변동 없음",22)
@@ -144,6 +164,26 @@ func _ready() -> void:
 		for button in [copy_metrics,reset_metrics]:
 			button.custom_minimum_size.y=56; button.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	view = VIEW.new(); view.size_flags_vertical = Control.SIZE_EXPAND_FILL; view.custom_minimum_size.y = 400; rows.add_child(view)
+	for child in rows.get_children():
+		if child is Control and child != status and child != ranking_row and child != action_notice and child != view:
+			setup_controls.append(child)
+	TOP_LAYOUT.layout_top(top_bar)
+	var panel_art := TOP_LAYOUT.texture(self,TOP_LAYOUT.ROOT + "gold_panel.png")
+	for name in ["StageFrame","TimerFrame","HeroStatusFrame","MonsterFrame","StageMenuButton"]:
+		PANEL.install(top_bar.get_node(name),panel_art)
+	for child in top_bar.get_children():
+		if child is Control and is_zero_approx(child.anchor_left) and is_zero_approx(child.anchor_right):
+			top_rects.append(child.get_rect())
+	get_viewport().size_changed.connect(_layout_top_bar)
+	_layout_top_bar()
+	top_menu = PopupMenu.new(); add_child(top_menu)
+	top_menu.add_item("규칙 보기",0); top_menu.add_item("대전 나가기",1)
+	top_menu.id_pressed.connect(func(id: int):
+		if id == 0: _show_rules()
+		else: _leave())
+	top_bar.get_node("StageMenuButton").pressed.connect(func():
+		top_menu.position = Vector2i(top_bar.get_node("StageMenuButton").get_global_rect().position + Vector2(0,80))
+		top_menu.popup())
 	view.placement.connect(func(point: Vector2):
 		if role == "demon" and not ended and not local_preparing and not waiting_for_start and not connection_waiting and not client.reconnecting:
 			if transcend_placement:
@@ -209,6 +249,61 @@ func _button(parent: Node,value: String,callback: Callable) -> Button:
 	var button := Button.new(); button.text = value; button.custom_minimum_size.y = 76
 	button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART; button.add_theme_font_size_override("font_size",25)
 	parent.add_child(button); button.pressed.connect(callback); return button
+func _layout_top_bar() -> void:
+	if top_bar == null or top_rects.is_empty(): return
+	var width := get_viewport_rect().size.x
+	var index := 0
+	for child in top_bar.get_children():
+		if child is Control and is_zero_approx(child.anchor_left) and is_zero_approx(child.anchor_right):
+			var rect := RESPONSIVE.horizontal_rect(top_rects[index],width)
+			child.position = rect.position
+			child.size = rect.size
+			index += 1
+
+func _show_match_layout() -> void:
+	for control in setup_controls: control.hide()
+	top_bar.show()
+	rows.offset_top = 350
+	rows.offset_left = 0
+	rows.offset_right = 0
+	status.autowrap_mode = TextServer.AUTOWRAP_OFF
+	status.clip_text = true
+	status.add_theme_font_size_override("font_size",21)
+	status.custom_minimum_size.y = 32
+	_layout_top_bar()
+
+func _set_hud_text(path: String,value: String) -> void:
+	var label := top_bar.get_node(path) as Label
+	if label.text != value: label.text = value
+
+func _update_hud_progress(level: int,exp: int,exp_next: int) -> void:
+	if level != hud_level:
+		hud_level = level
+		_set_hud_text("HeroLevel","Lv. %d   %s" % [level,String(HEROES.get_character(matched_hero_id).get("name","용사"))])
+	if role != "hero": return
+	if exp != hud_exp or exp_next != hud_exp_next:
+		hud_exp = exp; hud_exp_next = exp_next
+		var bar := top_bar.get_node("ExpBar") as ProgressBar
+		bar.max_value = maxi(1,exp_next); bar.value = clampi(exp,0,maxi(1,exp_next))
+		_set_hud_text("ExpLabel","EXP %d / %d" % [exp,exp_next])
+
+func _update_match_hud(event: Dictionary) -> void:
+	var remaining := maxi(0,ceili(match_duration-float(event.seconds)))
+	if remaining != hud_timer_second:
+		hud_timer_second = remaining
+		_set_hud_text("RunTimer","남은 시간 %02d:%02d" % [remaining/60,remaining%60])
+	var hp := int(event.hero[2]); var maximum := maxi(1,int(event.hero[3]))
+	if hp != hud_hp or maximum != hud_max_hp:
+		hud_hp = hp; hud_max_hp = maximum
+		var bar := top_bar.get_node("HeroHPBar") as ProgressBar
+		bar.max_value = maximum; bar.value = clampi(hp,0,maximum)
+		_set_hud_text("HeroHP","HP %d / %d" % [hp,maximum])
+	var monsters: int = event.actors.size()
+	if monsters != hud_monsters:
+		hud_monsters = monsters
+		_set_hud_text("Monsters","몬스터 %d" % monsters)
+	if role == "demon": _update_hud_progress(int(event.hero[4]),0,0)
+
 func _select_monster(id: String) -> void:
 	selected_monster = id
 	transcend_placement = false
@@ -267,6 +362,7 @@ func _update_hero_inventory(inventory: Dictionary) -> void:
 	if inventory.weapons.size() > WEAPONS.WEAPON_SLOTS or inventory.passives.size() > WEAPONS.PASSIVE_SLOTS: return
 	rerolls_left = int(inventory.rerolls_left); reroll_limit = int(inventory.reroll_limit)
 	hero_level_label.text = "용사 Lv.%d · EXP %d/%d · 새로고침 %d/%d" % [int(inventory.level),int(inventory.exp),int(inventory.exp_next),rerolls_left,reroll_limit]
+	_update_hud_progress(int(inventory.level),int(inventory.exp),int(inventory.exp_next))
 	var signature := JSON.stringify([inventory.weapons,inventory.passives])
 	if signature == inventory_signature: return
 	inventory_signature = signature
@@ -373,6 +469,18 @@ func _event(event: Dictionary) -> void:
 	match String(event.get("op","")):
 		"queued": status.text = "상대 역할 플레이어를 찾는 중..."
 		"matched":
+			matched_hero_id = String(event.get("hero",HEROES.DEFAULT_HERO))
+			match_duration = float(event.get("duration",RULES.DURATION))
+			hud_timer_second = -1; hud_hp = -1; hud_max_hp = -1; hud_monsters = -1; hud_level = -1; hud_exp = -1; hud_exp_next = -1; hud_mana = -1
+			var stage_id := String(event.get("battlefield",{}).get("stage",""))
+			var stage_data: Dictionary = STAGES.get_stage(stage_id)
+			_set_hud_text("StageNumber","RANKED")
+			_set_hud_text("Subtitle",String(stage_data.get("name",stage_data.get("display_name","랭크 전장"))))
+			_set_hud_text("StageHeroName",String(HEROES.get_character(matched_hero_id).get("name","용사")))
+			(top_bar.get_node("HeroPortrait") as TextureRect).texture = HERO_HUD.portrait_texture(matched_hero_id)
+			(top_bar.get_node("ExpBar") as Control).visible = role == "hero"
+			(top_bar.get_node("ExpLabel") as Control).visible = role == "hero"
+			_show_match_layout()
 			if not bool(event.get("resumed",false)):
 				chest_queue.clear(); chest_last_serial = 0; chest_seconds = 0.0; inventory_signature = ""
 			transcendence_id = String(event.get("transcendence_id",""))
@@ -428,16 +536,23 @@ func _event(event: Dictionary) -> void:
 					if not option is Dictionary or not option.get("id",null) is String or not option.get("name",null) is String: return
 			if int(event.tick) <= last_tick or not view.update_state(event): return
 			last_tick = int(event.tick)
+			_update_match_hud(event)
 			if role == "hero" and event.get("hero_inventory",null) is Dictionary and event.get("chest_receipts",null) is Array:
 				_update_hero_inventory(event.hero_inventory)
 				_receive_chests(event.chest_receipts)
-			if role == "demon" and event.get("hero_build",null) is Dictionary: _update_hero_build(event.hero_build)
+			if role == "demon" and event.get("hero_build",null) is Dictionary:
+				_update_hero_build(event.hero_build)
+				_update_hud_progress(int(event.hero_build.get("level",event.hero[4])),0,0)
 			if role == "hero": _update_demon_info(event.demon_hints)
 			view.feedback.suspended = waiting_for_start or connection_waiting or client.reconnecting
 			if waiting_for_start and last_tick > 0 and not connection_waiting and not client.reconnecting:
 				waiting_for_start = false; view.feedback.suspended = false; loading.finish(); _set_controls(true)
 			if event.has("feedback"): view.feedback.consume(event.feedback,event.feedback_cursor,event.tick)
-			if not connection_waiting: status.text = "%s · %.0f초 · 용사 HP %d/%d · 지휘력 %.0f" % ["마왕" if role == "demon" else "용사",maxf(0,RULES.DURATION-float(event.seconds)),int(event.hero[2]),int(event.hero[3]),float(event.mana)]
+			if not connection_waiting:
+				var mana_value := roundi(float(event.mana))
+				if mana_value != hud_mana:
+					hud_mana = mana_value
+					status.text = "마력 %d" % mana_value
 			_update_holds(event.augment_holds)
 			if role == "demon":
 				for id in skill_buttons:
