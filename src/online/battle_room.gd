@@ -113,7 +113,8 @@ func _hold(role: String,candidates: Array,level: int) -> void:
 	if finished or candidates.is_empty(): return
 	next_offer_number += 1
 	var queue: Array = hero_holds if role == "hero" else demon_holds
-	var fixed_candidates: Array = candidates.duplicate(true)
+	# Offers are capped to what the client validates and can display.
+	var fixed_candidates: Array = candidates.slice(0,RULES.MAX_OFFER_CANDIDATES).duplicate(true)
 	var wire_candidates: Array = _wire_candidates(fixed_candidates)
 	queue.append({"number":next_offer_number,"candidates":fixed_candidates,"wire_candidates":wire_candidates,"received":next_offer_number,"level":level})
 	choice_revision += 1
@@ -133,7 +134,7 @@ func _reroll_held(argument: Dictionary) -> bool:
 		if int(offer.number) != int(number): continue
 		var next: Array = runtime.reroll(offer.candidates)
 		if next.is_empty(): return false
-		offer.candidates = next.duplicate(true)
+		offer.candidates = next.slice(0,RULES.MAX_OFFER_CANDIDATES).duplicate(true)
 		offer.wire_candidates = _wire_candidates(offer.candidates)
 		hero_holds[index] = offer
 		choice_revision += 1

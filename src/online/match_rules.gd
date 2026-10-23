@@ -15,6 +15,7 @@ const MANA_PER_SECOND := 12.0
 const SNAPSHOT_INTERVAL := 0.1
 const INPUT_TIMEOUT := 0.35
 const CHOICE_TIMEOUT := 8.0 # Legacy fixture compatibility; ranked matches do not use a choice timer.
+const MAX_OFFER_CANDIDATES := 4 # 증강 선택지 한 번에 보이는 최대 후보 수(와이어 검증·팝업 카드 수).
 const AUGMENT_HOLD_LIMIT := 4
 const CHEST_HISTORY_LIMIT := 16
 const TRANSCENDENCE_SUMMON_LIMIT := 1

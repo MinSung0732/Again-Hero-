@@ -1,12 +1,20 @@
 extends SceneTree
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
+const RULES := preload("res://src/online/match_rules.gd")
+class CommandSpy:
+	extends RefCounted
+	var reconnecting := false
+	var kind := ""
+	var argument := {}
+	func command(value: String,data: Dictionary) -> bool:
+		kind = value; argument = data; return true
 var checks := 0
 func check(ok: bool,message: String) -> void:
 	checks += 1
 	if not ok: push_error(message); quit(1); assert(ok,message)
 func _initialize() -> void: run.call_deferred()
 func run() -> void:
-	for path in ["res://src/main/main.gd","res://src/online/match_scene.gd","res://src/online/battle_room.gd"]:
+	for path in ["res://src/main/main.gd","res://src/online/match_scene.gd","res://src/online/battle_room.gd","res://src/ui/augment_hold_popup.gd"]:
 		var script: Script = load(path)
 		check(script != null and script.can_instantiate(),"modified script loads: "+path)
 	var solo_packed: PackedScene = load("res://src/main/Main.tscn")
@@ -36,9 +44,32 @@ func run() -> void:
 		check(scene.role == role,"requested role")
 		check(scene.queue_button.custom_minimum_size.y >= 72,"mobile button size")
 		check(scene.view.size.x > 500 and scene.view.size.y > 300,"battle panel expands")
-		scene.hold_toggle.pressed.emit(); await process_frame
-		check(scene.hold_scroll.visible and scene.view.size.y > 300 and scene.hold_toggle.get_global_rect().end.y < root.size.y,"held tray expands within portrait screen")
-		scene.hold_toggle.pressed.emit()
+		check(scene.hold_popup.dots.size() == RULES.AUGMENT_HOLD_LIMIT and not scene.hold_popup.popup.visible,"pooled hold dots start closed")
+		var holds: Array = []
+		for number in 3:
+			holds.append({"number":number+1,"candidates":[{"id":"survival_power","name":"생존력","description":"체력 증가"}]})
+		scene._update_holds(holds); await process_frame
+		check(scene.hold_popup.dots.filter(func(dot): return dot.visible).size() == 3 and not scene.hold_popup.popup.visible,"three holds add three dots without opening")
+		scene.hold_popup.dots[1].pressed.emit(); await process_frame
+		check(scene.hold_popup.popup.visible and scene.hold_popup.opened_number == 2 and scene.hold_popup.card_names[0].text == "생존력","dot opens its own candidate popup")
+		scene.hold_popup.lower_button.pressed.emit()
+		check(not scene.hold_popup.popup.visible and scene.hold_popup.dots[1].visible,"lower closes popup and keeps dot")
+		var real_client = scene.client
+		var command_spy := CommandSpy.new(); scene.client = command_spy
+		scene.hold_popup.open_index(1); scene.hold_popup.cards[0].pressed.emit()
+		check(command_spy.kind == ("choose" if role == "hero" else "demon_choose") and command_spy.argument == {"id":"survival_power","number":2},"candidate sends role command with held number")
+		if role == "hero":
+			scene.rerolls_left = 1; scene.reroll_limit = 2; scene._update_holds(holds)
+			scene.hold_popup.open_index(0); scene.hold_popup.reroll_button.pressed.emit()
+			check(command_spy.kind == "reroll" and command_spy.argument == {"number":1},"hero refresh sends existing reroll command")
+			scene.hold_popup.close_popup()
+		scene.client = real_client
+		var dot_count: int = scene.hold_popup.dot_row.get_child_count()
+		scene._update_holds(holds.duplicate(true))
+		check(scene.hold_popup.dot_row.get_child_count() == dot_count,"same holds keep pooled node count")
+		scene._update_holds(holds + [{"number":4,"candidates":holds[0].candidates}])
+		scene._update_holds([holds[1],holds[2],{"number":4,"candidates":holds[0].candidates},{"number":5,"candidates":holds[0].candidates}])
+		check(scene.hold_popup.dots.filter(func(dot): return dot.visible).size() <= RULES.AUGMENT_HOLD_LIMIT and scene.status.text.contains("자동 선택됨"),"server overflow removes oldest dot and shows toast")
 		if role == "hero":
 			check(scene.pad.mode == "free" and scene.pad.input_surface == scene.view,"touch binds battle only")
 			scene.view.set_match_roster([],"")
@@ -68,6 +99,9 @@ func run() -> void:
 		scene._event({"op":"connection","match":"ui-recovery","paused":true,"remaining":15.0})
 		scene._process(0.01)
 		check(scene.connection_waiting and scene.status.text.contains("일시정지"),"server grace countdown displayed")
+		scene.hold_popup.open_index(0)
+		check(scene.hold_popup.cards[0].disabled and scene.hold_popup.reroll_button.disabled,"grace disables augment actions")
+		scene.hold_popup.close_popup()
 		if role == "hero": check(not scene.pad.enabled,"grace disables touch movement")
 		else:
 			for button in scene.summon_buttons: check(button.disabled,"grace disables summon buttons")
@@ -101,14 +135,19 @@ func run() -> void:
 		var lower: Control = scene.demon_panel if role == "demon" else scene.hero_slots
 		check(lower.get_global_rect().end.y <= root.size.y and scene.view.get_global_rect().end.y <= lower.get_global_rect().position.y,"phone lower HUD fits below battlefield")
 		if role == "demon":
-			check(scene.bottom_bar.get_global_rect().end.y <= root.size.y and scene.summon_buttons[-1].get_global_rect().end.x <= root.size.x and scene.hold_toggle.get_global_rect().end.y <= lower.get_global_rect().position.y,"phone cards and hold control fit")
-			scene.hold_toggle.pressed.emit(); await process_frame
-			check(scene.hold_scroll.get_global_rect().end.y <= lower.get_global_rect().position.y and scene.view.get_global_rect().end.y <= lower.get_global_rect().position.y,"expanded hold tray stays above lower HUD")
-			scene.hold_toggle.pressed.emit(); await process_frame
+			check(scene.bottom_bar.get_global_rect().end.y <= root.size.y and scene.summon_buttons[-1].get_global_rect().end.x <= root.size.x,"phone cards fit")
+		check(scene.hold_popup.dot_row.get_global_rect().end.y <= lower.get_global_rect().position.y and scene.view.get_global_rect().end.y <= scene.hold_popup.dot_row.get_global_rect().position.y,"phone dots fit between battlefield and lower HUD")
+		scene.hold_popup.open_index(0); await process_frame
+		check(scene.hold_popup.popup.get_global_rect().position.y >= 0 and scene.hold_popup.popup.get_global_rect().end.y <= root.size.y,"phone popup fits")
+		scene.hold_popup.close_popup()
 		root.size = Vector2i(1536,1920); await process_frame; await process_frame
 		check(scene.top_bar.get_global_rect().end.x <= root.size.x and scene.top_bar.get_node("Monsters").get_global_rect().end.x <= root.size.x and scene.view.get_global_rect().position.y >= scene.top_bar.get_global_rect().end.y,"tablet top bar fits above battlefield")
 		check(lower.get_global_rect().end.y <= root.size.y and lower.get_global_rect().end.x <= root.size.x and scene.view.get_global_rect().end.y <= lower.get_global_rect().position.y,"tablet lower HUD fits below battlefield")
-		if role == "demon": check(scene.bottom_bar.get_global_rect().end.y <= root.size.y and scene.summon_buttons[-1].get_global_rect().end.x <= root.size.x and scene.hold_toggle.get_global_rect().end.y <= lower.get_global_rect().position.y,"tablet cards and hold control fit")
+		if role == "demon": check(scene.bottom_bar.get_global_rect().end.y <= root.size.y and scene.summon_buttons[-1].get_global_rect().end.x <= root.size.x,"tablet cards fit")
+		check(scene.hold_popup.dot_row.get_global_rect().end.y <= lower.get_global_rect().position.y and scene.view.get_global_rect().end.y <= scene.hold_popup.dot_row.get_global_rect().position.y,"tablet dots fit between battlefield and lower HUD")
+		scene.hold_popup.open_index(0); await process_frame
+		check(scene.hold_popup.popup.get_global_rect().position.x >= 0 and scene.hold_popup.popup.get_global_rect().end.x <= root.size.x and scene.hold_popup.popup.get_global_rect().end.y <= root.size.y,"tablet popup fits")
+		scene.hold_popup.close_popup()
 		scene.queue_free(); await process_frame
 	local.active = true; local.tutorial_preview = false; SCOPE.user_id = ""; SCOPE.guest_directory = local.test_directory
 	check(local.is_online_match_allowed(),"isolated localtest has online permission")

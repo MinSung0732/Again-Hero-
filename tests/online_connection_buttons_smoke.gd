@@ -71,9 +71,9 @@ func run() -> void:
 		check(not scene.disconnect_button.disabled and scene.reconnect_button.disabled,"buttons reset after resume")
 		check(not room.hero_holds.is_empty(),"held augment survives reconnect")
 		if scene.role == "hero":
-			check(await until(func(): return scene.hold_toggle.text.contains("%d개" % room.hero_holds.size())),"own held augment badge restored")
+			check(await until(func(): return scene.hold_popup.dots.filter(func(dot): return dot.visible).size() == room.hero_holds.size()),"own held augment dots restored")
 		else:
-			check(scene.hold_toggle.text.contains("0개"),"opponent held count remains hidden")
+			check(scene.hold_popup.dots.all(func(dot): return not dot.visible),"opponent held count remains hidden")
 	# Leaving the button held never extends the authoritative grace.
 	hero.disconnect_button.pressed.emit()
 	check(await until(func(): return room.connection_paused),"timeout scenario paused")

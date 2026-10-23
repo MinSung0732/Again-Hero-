@@ -25,6 +25,7 @@ const RESPONSIVE := preload("res://src/ui/battle_responsive_layout.gd")
 const HERO_HUD := preload("res://src/ui/hero_survival_hud.gd")
 const STAGES := preload("res://src/data/stage_catalog.gd")
 const PANEL := preload("res://src/ui/illustrated_battle_panel.gd")
+const HOLD_POPUP := preload("res://src/ui/augment_hold_popup.gd")
 var loading
 var local_preparing := false
 var waiting_for_start := false
@@ -55,11 +56,7 @@ var ranking_row: HBoxContainer
 var ranking_icon: TextureRect
 var ranking_label: Label
 var action_notice: Label
-var choices: VBoxContainer
-var hold_toggle: Button
-var hold_scroll: ScrollContainer
-var hold_expanded := false
-var hold_signature := ""
+var hold_popup: Control
 var inventory_signature := ""
 var hero_build_toggle: Button
 var hero_build_scroll: ScrollContainer
@@ -252,10 +249,11 @@ func _ready() -> void:
 		hero_slots.hide()
 		chest_notice = _label(rows,"",23)
 	inventory_detail = AcceptDialog.new(); inventory_detail.title = "장착 정보"; add_child(inventory_detail)
-	hold_toggle = _button(rows,"증강 보관함 · 0개 ▾",_toggle_holds)
-	hold_scroll = ScrollContainer.new(); hold_scroll.custom_minimum_size.y = 250; rows.add_child(hold_scroll)
-	hold_scroll.visible = false
-	choices = VBoxContainer.new(); choices.size_flags_horizontal = Control.SIZE_EXPAND_FILL; hold_scroll.add_child(choices)
+	hold_popup = HOLD_POPUP.new(); hold_popup.role = role; add_child(hold_popup)
+	hold_popup.choose.connect(func(number: int,id: String): _select_held(id,number))
+	hold_popup.reroll.connect(_reroll_held)
+	hold_popup.oldest_auto_chosen.connect(_show_auto_hold_notice)
+	resized.connect(_update_hold_position)
 	_button(rows,"매칭 취소 · 로비로",_leave)
 	loading = LOADING.new(); add_child(loading); loading.cancelled.connect(_leave); loading.rules_requested.connect(_show_rules)
 	_build_rules_popup()
@@ -307,7 +305,7 @@ func _show_match_layout() -> void:
 	rows.offset_top = 350
 	rows.offset_left = 0
 	rows.offset_right = 0
-	rows.offset_bottom = -465 if role == "demon" else -220
+	rows.offset_bottom = -525 if role == "demon" else -280
 	if role == "demon":
 		demon_panel.show(); bottom_bar.show()
 	else: hero_slots.show()
@@ -316,6 +314,18 @@ func _show_match_layout() -> void:
 	status.add_theme_font_size_override("font_size",21)
 	status.custom_minimum_size.y = 32
 	_layout_top_bar()
+	_update_hold_position()
+
+func _update_hold_position() -> void:
+	if hold_popup == null: return
+	var lower: Control = demon_panel if role == "demon" else hero_slots
+	hold_popup.set_lower_top(lower.position.y)
+
+func _show_auto_hold_notice() -> void:
+	const MESSAGE := "가장 오래된 증강이 자동 선택됨"
+	status.text = MESSAGE
+	get_tree().create_timer(2.0).timeout.connect(func():
+		if is_instance_valid(self) and status.text == MESSAGE: status.text = "마력 %d" % hud_mana)
 
 func _set_hud_text(path: String,value: String) -> void:
 	var label := top_bar.get_node(path) as Label
@@ -547,29 +557,10 @@ func _advance_chest_notice(delta: float) -> void:
 	var receipt: Dictionary = chest_queue.pop_front()
 	chest_notice.text = "상자 보상 · %s\n%s" % [String(receipt.name),String(receipt.get("description",""))]
 	chest_seconds = 2.4
-func _toggle_holds() -> void:
-	hold_expanded = not hold_expanded
-	hold_scroll.visible = hold_expanded
-	hold_toggle.text = "증강 보관함 · %d개 %s" % [choices.get_meta("count",0),"▴" if hold_expanded else "▾"]
 func _update_holds(holds: Array) -> void:
-	var signature := JSON.stringify([holds,rerolls_left,reroll_limit])
-	if signature == hold_signature: return
-	hold_signature = signature
-	choices.set_meta("count",holds.size())
-	hold_toggle.text = "증강 보관함 · %d개 %s" % [holds.size(),"▴" if hold_expanded else "▾"]
-	hold_toggle.modulate = Color(1.0,0.82,0.4) if not holds.is_empty() else Color.WHITE
-	for child in choices.get_children(): choices.remove_child(child); child.queue_free()
-	for index in holds.size():
-		var offer: Dictionary = holds[index]
-		_label(choices,"보관 %d · %d번 선택지" % [index+1,int(offer.number)],20)
-		if role == "hero":
-			var refresh := _button(choices,"새로고침 · 남은 %d/%d회" % [rerolls_left,reroll_limit],_reroll_held.bind(int(offer.number)))
-			refresh.disabled = rerolls_left <= 0 or connection_waiting or client.reconnecting
-		for option in offer.candidates:
-			var name := String(option.name)
-			var description := String(option.get("description",""))
-			_button(choices,name if description.is_empty() else "%s · %s" % [name,description],_select_held.bind(String(option.id),int(offer.number)))
-	_set_controls(not connection_waiting and not client.reconnecting)
+	hold_popup.set_rerolls(rerolls_left,reroll_limit)
+	hold_popup.set_holds(holds)
+	hold_popup.set_controls(not ended and not connection_waiting and not client.reconnecting and not waiting_for_start)
 func _build_rules_popup() -> void:
 	rules_popup = PopupPanel.new(); add_child(rules_popup)
 	var scroll := ScrollContainer.new(); scroll.custom_minimum_size = Vector2(720,900); rules_popup.add_child(scroll)
@@ -606,7 +597,7 @@ func _join() -> void:
 	elif get_node("/root/LoginGateway").user_id.is_empty() or get_node("/root/LoginGateway").access_token.is_empty(): status.text = "Google 또는 카카오 로그인이 필요합니다."; return
 	if not RULES.endpoint_valid(endpoint.text.strip_edges()): status.text = "공용 대전 서버 주소(wss://)를 입력해 주세요."; return
 	ended = false; last_tick = -1; transcend_placement = false; connection_waiting = false
-	hold_signature = ""; _update_holds([])
+	_update_holds([])
 	ranking_row.hide()
 	view.clear_state()
 	if pad != null: pad.enabled = true; pad.reset()
@@ -685,7 +676,7 @@ func _event(event: Dictionary) -> void:
 					if not ready is bool: return
 			elif not event.get("demon_hints",null) is Dictionary: return
 			for offer in event.augment_holds:
-				if not offer is Dictionary or not RULES.number(offer.get("number",null)) or float(offer.number) != floorf(float(offer.number)) or not offer.get("candidates",null) is Array or offer.candidates.is_empty() or offer.candidates.size() > 4: return
+				if not offer is Dictionary or not RULES.number(offer.get("number",null)) or float(offer.number) != floorf(float(offer.number)) or not offer.get("candidates",null) is Array or offer.candidates.is_empty() or offer.candidates.size() > RULES.MAX_OFFER_CANDIDATES: return
 				for option in offer.candidates:
 					if not option is Dictionary or not option.get("id",null) is String or not option.get("name",null) is String: return
 			if int(event.tick) <= last_tick or not view.update_state(event): return
@@ -760,8 +751,7 @@ func _set_controls(enabled: bool) -> void:
 		if not enabled: pad.reset()
 	if role == "demon":
 		for index in summon_buttons.size(): summon_buttons[index].disabled = not enabled or summon_mana + 0.001 < float(summon_costs.get(summon_ids[index],MONSTERS.get_base_cost(summon_ids[index])))
-	for button in choices.get_children():
-		if button is Button: button.disabled = not enabled
+	if hold_popup != null: hold_popup.set_controls(enabled and not connection_waiting and not client.reconnecting)
 	if role == "demon":
 		for button in skill_row.get_children(): button.disabled = not enabled or button.disabled
 		if transcend_button != null: transcend_button.disabled = not enabled or transcend_button.disabled
