@@ -11,6 +11,8 @@ const FEEDBACK_DATA := preload("res://src/data/online_feedback_catalog.gd")
 const PRIMITIVES := preload("res://src/online/primitive_mirror.gd")
 const CAMERA_VIEW := preload("res://src/ui/battle_camera_view.gd")
 const BARS := preload("res://src/ui/battle_bar_painter.gd")
+const STATUS_BARS := preload("res://src/online/status_bar_view.gd")
+var status_bars
 var motion = preload("res://src/online/actor_motion.gd").new()
 var visual_order: Array[int] = []
 var visual_slots := PackedInt32Array()
@@ -63,6 +65,9 @@ func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	clip_contents = true
 	set_process(false)
+	status_bars = STATUS_BARS.new(); status_bars.capacity = ART.MAX_ACTORS + 1
+	status_bars.z_index = 1; add_child(status_bars)
+	if not state.is_empty(): status_bars.sync_state(state)
 	feedback = preload("res://src/online/combat_feedback.gd").new(); add_child(feedback)
 	load_drain = LOAD_DRAIN.new(); load_drain.paths = pending_textures; load_drain.view_ref = weakref(self)
 	get_tree().root.add_child.call_deferred(load_drain)
@@ -113,6 +118,7 @@ func update_state(value: Dictionary) -> bool:
 	if state.is_empty() and not hero_role and not camera_view_locked:
 		manual_center = Vector2(value.hero[0],value.hero[1])
 	state = value; bounds = Vector2(value.bounds[0],value.bounds[1])
+	if status_bars != null: status_bars.sync_state(state)
 	_merge_visuals()
 	_resolve_owners(); queue_redraw(); return true
 func prepare_battlefield(value: Dictionary) -> bool:
@@ -229,6 +235,9 @@ func _layout_map() -> void:
 	hero_point.y = clampf(hero_point.y,half_view.y,bounds.y-half_view.y) if bounds.y >= solo_size.y else bounds.y*0.5
 	if not hero_role and not camera_view_locked: manual_center = hero_point
 	map_offset = size*0.5-hero_point*map_scale
+	if status_bars != null:
+		if status_bars.position != map_offset: status_bars.position = map_offset
+		if status_bars.scale != map_scale: status_bars.scale = map_scale
 	if battlefield != null:
 		battlefield.position = map_offset; battlefield.scale = map_scale
 
@@ -254,11 +263,11 @@ func _draw() -> void:
 	var hp: Array = state.hero
 	var hero_point: Vector2 = motion.position(0,Vector2(hp[0],hp[1]))
 	_actor(hero_point,hero_texture,Color("73deff"),true,not painted_owners.has(0))
-	_draw_hero_bars(hero_point,hp[5],String(state.hero_archetype))
+	if status_bars != null: status_bars.move_actor(0,hero_point)
 	for actor in state.actors:
 		var point: Vector2 = motion.position(int(actor[0]),Vector2(actor[2],actor[3]))
 		_actor(point,textures.get(actor[1]),Color("d56d67"),false,not painted_owners.has(int(actor[0])))
-		_draw_monster_bars(point,actor[6])
+		if status_bars != null: status_bars.move_actor(int(actor[0]),point)
 	for shot in state.get("shots",ART.EMPTY):
 		var center := map_offset+Vector2(shot[0],shot[1])*map_scale
 		draw_circle(center,float(shot[2])*scale_ratio,Color(shot[3],shot[4],shot[5],shot[6]))
@@ -269,30 +278,6 @@ func _actor(point: Vector2,texture: Texture2D,color: Color,is_hero: bool,draw_bo
 	if draw_body:
 		if texture != null: draw_texture_rect(texture,Rect2(screen-extent*0.5,extent),false)
 		else: draw_circle(screen,12,color)
-func _bar_transform(point: Vector2) -> void:
-	draw_set_transform_matrix(Transform2D(Vector2(map_scale.x,0),Vector2(0,map_scale.y),map_offset+point*map_scale))
-func _draw_hero_bars(point: Vector2,bars: Array,archetype: String) -> void:
-	_bar_transform(point)
-	var layout: Vector4 = HERO_ART.get_status_layout(archetype)
-	var left := -HERO_ART.STATUS_BAR_WIDTH*0.5+layout.x
-	var rule: Dictionary = HERO_ART.get_status_resource(archetype)
-	if int(bars[2]) == 1:
-		if int(bars[4]) > 0: BARS.draw_hero_cells(self,float(bars[5]),int(bars[4]),int(bars[3]),rule["color"])
-	else:
-		BARS.draw_hero_resource(self,left if bool(rule["use_x_offset"]) else -HERO_ART.STATUS_BAR_WIDTH*0.5,float(bars[5]),float(bars[3])/255.0,rule["color"])
-	BARS.draw_hero_hp(self,left,float(bars[6]),float(bars[0])/255.0)
-	if int(bars[1]) > 0: BARS.draw_hero_shield(self,left,float(bars[7]),float(bars[1])/255.0)
-	draw_set_transform_matrix(Transform2D.IDENTITY)
-func _draw_monster_bars(point: Vector2,bars: Array) -> void:
-	_bar_transform(point)
-	var y := float(bars[2])
-	var scale_x := float(bars[3])/100.0
-	var scale_y := float(bars[4])/100.0
-	BARS.draw_monster_bar(self,y,float(bars[0])/255.0,BARS.MONSTER_HP,scale_x,scale_y)
-	if int(bars[1]) >= 0: BARS.draw_monster_bar(self,y+BARS.MONSTER_STEP/scale_y,float(bars[1])/255.0,BARS.MONSTER_YELLOW,scale_x,scale_y,true)
-	for index in range(5,bars.size(),2):
-		BARS.draw_monster_bar(self,y-BARS.MONSTER_STEP/scale_y*float((index-5)/2+1),float(bars[index+1])/255.0,BARS.SHIELD_COLORS[BARS.SHIELD_KINDS[int(bars[index])]],scale_x,scale_y)
-	draw_set_transform_matrix(Transform2D.IDENTITY)
 func _gui_input(event: InputEvent) -> void:
 	var point: Vector2
 	var pointer := -2

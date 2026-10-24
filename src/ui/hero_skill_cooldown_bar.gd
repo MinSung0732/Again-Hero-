@@ -28,5 +28,8 @@ func refresh(skills: Array) -> void:
 		badges.erase(id)
 	visible = not seen.is_empty()
 	if visible:
-		z_index = 120
-		move_to_front()
+		if z_index != 120: z_index = 120
+		# Reordering on every 10 Hz state invalidates the same sibling ordering.
+		var parent := get_parent()
+		if parent != null and get_index() != parent.get_child_count() - 1:
+			move_to_front()
