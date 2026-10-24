@@ -365,10 +365,10 @@ func _wire_holds(queue: Array) -> Array:
 	for offer in queue: result.append({"number":offer.number,"level":offer.level,"candidates":offer.wire_candidates})
 	return result
 
-func _feedback(target: Node2D,amount: int,color: Color,healing: bool) -> void:
+func _feedback(target: Node2D,amount: int,color: Color,healing: bool,critical: bool) -> void:
 	if not running or finished or connection_paused: return
 	var kind := "heal" if healing else "hero_hit" if target == battle.hero else "monster_hit"
-	feedback.publish(kind,target.global_position,amount,Color(1.0,0.45,0.4) if kind=="hero_hit" else color,tick)
+	feedback.publish(kind,target.global_position,amount,color,tick,target.get_instance_id(),critical)
 func _build_snapshot() -> Dictionary:
 	var actors: Array = []; var shots: Array = []
 	var visuals: Array = []
@@ -390,12 +390,17 @@ func _build_snapshot() -> Dictionary:
 		actors.append([ids[instance].wire,String(actor.get("monster_type")),snappedf(actor.position.x,0.1),snappedf(actor.position.y,0.1),int(actor.get("current_hp")),int(actor.get("max_hp")),_monster_bars(actor)])
 		presentation.append_tree(actor,int(ids[instance].wire),visuals)
 	for id in battle.online_visual_projectiles: presentation.append_tree(battle.online_visual_projectiles[id],-1,visuals)
+	for pool_key in battle.transient_fx_pools:
+		for effect in battle.transient_fx_pools[pool_key]:
+			if effect is Node2D and is_instance_valid(effect) and effect.visible:
+				presentation.append_tree(effect,-1,visuals)
 	if is_instance_valid(battle.hero) and battle.hero.player_weapons != null:
 		var weapons = battle.hero.player_weapons
 		for shot in weapons.projectiles:
 			if not shot.active or shot.melee or shot.delay > 0.0: continue
-			if shot.frames.is_empty() or not shot.has("visual_radius"):
-				shots.append([snappedf(shot.position.x,0.1),snappedf(shot.position.y,0.1)]); continue
+			if shot.frames.is_empty():
+				var shot_color: Color = shot.color
+				shots.append([snappedf(shot.position.x,0.1),snappedf(shot.position.y,0.1),float(shot.get("visual_radius",28.0)),shot_color.r,shot_color.g,shot_color.b,shot_color.a]); continue
 			var radius: float = shot.visual_radius
 			presentation.append_texture(weapons._loop_frame(shot.frames,float(shot.age)),-1,Transform2D(Vector2(shot.direction).angle(),shot.position),Rect2(Vector2.ONE*-radius,Vector2.ONE*radius*2),Color.WHITE,visuals,battle.hero.z_index)
 		presentation.append_weapon_areas(weapons,visuals)

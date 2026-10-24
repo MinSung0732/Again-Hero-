@@ -92,6 +92,11 @@ func update_state(value: Dictionary) -> bool:
 		if id <= 0 or float(id) != float(actor[0]) or actor_ids.has(id): return false
 		actor_ids[id] = true
 	var commands: Variant = value.get("visuals",ART.EMPTY)
+	if not value.get("shots",ART.EMPTY) is Array: return false
+	for shot in value.get("shots",ART.EMPTY):
+		if not shot is Array or shot.size()!=7 or not RULES.number(shot[0]) or not RULES.number(shot[1]) or not RULES.number(shot[2]) or shot[2]<=0 or shot[2]>256: return false
+		for channel in range(3,7):
+			if not RULES.number(shot[channel]) or shot[channel]<0 or shot[channel]>1: return false
 	if not commands is Array or commands.size() > ART.MAX_COMMANDS: return false
 	for command in commands:
 		if not ART.valid(command): return false
@@ -253,8 +258,10 @@ func _draw() -> void:
 		var point: Vector2 = motion.position(int(actor[0]),Vector2(actor[2],actor[3]))
 		_actor(point,textures.get(actor[1]),Color("d56d67"),false,not painted_owners.has(int(actor[0])))
 		_draw_monster_bars(point,actor[6])
-	for point in state.get("shots",ART.EMPTY):
-		if RULES.point(point): draw_circle(map_offset+Vector2(point[0],point[1])*map_scale,4,Color("d6f5ff"))
+	for shot in state.get("shots",ART.EMPTY):
+		var center := map_offset+Vector2(shot[0],shot[1])*map_scale
+		draw_circle(center,float(shot[2])*scale_ratio,Color(shot[3],shot[4],shot[5],shot[6]))
+		draw_circle(center,7.0*scale_ratio,Color.WHITE)
 func _actor(point: Vector2,texture: Texture2D,color: Color,is_hero: bool,draw_body: bool = true) -> void:
 	var screen := map_offset+point*map_scale
 	var extent := Vector2(42,54) if is_hero else Vector2(34,40)

@@ -1,6 +1,6 @@
 extends RefCounted
-## Combat status bars require matching protocol 20 peers.
-const VERSION := 20
+## Combat feedback and projectile shapes require matching protocol 21 peers.
+const VERSION := 21
 const HINT_DETAIL := "role" # "role" or "monster"
 const ROLE_HINT_LABELS := {"melee":"근접"}
 const TARGET_HINT_LABELS := {"demon":"마왕 운영","all_monsters":"모든 몬스터"}

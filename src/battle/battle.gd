@@ -41,7 +41,7 @@ signal hero_augment_selected(level: int, candidates: Array, chosen_name: String,
 signal conditional_skill_unlocked(skill_id: String, skill_name: String, payload: Dictionary)
 signal command_changed(current_value: float, max_value: float)
 signal summon_result(monster_type: String, success: bool, message: String)
-signal online_combat_feedback(target: Node2D,amount: int,color: Color,healing: bool)
+signal online_combat_feedback(target: Node2D,amount: int,color: Color,healing: bool,critical: bool)
 signal online_cast_feedback(cue: String,point: Vector2)
 signal online_visual_entity_exited(instance_id: int)
 var online_visual_projectiles := {}

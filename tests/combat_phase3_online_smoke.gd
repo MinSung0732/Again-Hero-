@@ -3,6 +3,7 @@ const ROOM := preload("res://src/online/battle_room.gd")
 const SERVER := preload("res://src/online/match_server.gd")
 const POPUPS := preload("res://src/ui/damage_number_spawner.gd")
 const CODEC := preload("res://src/online/snapshot_codec.gd")
+const FEEDBACK := preload("res://src/data/online_feedback_catalog.gd")
 var checks := 0
 var failures := 0
 func check(ok: bool,label: String) -> void:
@@ -40,6 +41,7 @@ func run() -> void:
 	var later_fields := ["hero_archetype", "battlefield", "summon_costs", "demon_level", "demon_rerolls_left", "demon_reroll_limit", "demon_exp", "demon_exp_next", "demon_charge", "demon_charge_max", "demon_cooldowns", "demon_ready", "transcend_ready", "transcend_used", "visuals", "primitives", "feedback", "feedback_cursor"]
 	for index in 2:
 		var room := ROOM.new(); root.add_child(room); room.prepare(); rooms.append(room)
+		room.feedback.publish("hero_hit",room.battle.hero.position,1,Color.WHITE,room.tick,room.battle.hero.get_instance_id())
 		var previous = old_script.new(); previous.battle = room.battle
 		room.battle.hero_player_mode = false
 		for actor_index in 48:
@@ -58,7 +60,7 @@ func run() -> void:
 			check(not after.has("choice_revision") and not after.has("choices"),"obsolete shared choice fields removed")
 			before.erase("choice_revision"); before.erase("choices")
 			var shared := baseline_fields(before, after)
-			# Protocol 20 appends a bar array to hero/actor rows; the frozen prefix must still match.
+			# Protocol 21 retains the bar row extension; the frozen prefix must still match.
 			check(after.hero.size() == before.hero.size()+1 and after.hero[-1] is Array,"hero row appends only the bar array")
 			shared["hero"] = after.hero.slice(0,before.hero.size())
 			var trimmed: Array = []
@@ -68,6 +70,8 @@ func run() -> void:
 			shared["actors"] = trimmed
 			check(shared.size() == before.size() and JSON.stringify(before) == SERVER._encode(shared),"wire/ID/order/generation parity")
 			check(added_fields(before, after) == later_fields,"only known later snapshot fields added")
+			check(FEEDBACK.valid_events(after.feedback,after.feedback_cursor,after.tick),"protocol 21 feedback row shape valid")
+			check(after.feedback.size()==1 and after.feedback[0].size()==FEEDBACK.EVENT_SIZE,"feedback row appends owner and critical")
 			check(codec_round_trip(codec, after),"path-interned wire decodes to the same snapshot")
 			check(room.ids.size() == room.battle.active_monsters.size(),"wire registry pruned without scratch snapshots")
 		previous.free()

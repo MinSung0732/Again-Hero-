@@ -82,13 +82,19 @@ func _deal_hit(target: Node2D, multiplier: float, followup: bool) -> bool:
 	var amount := maxi(1,int(round(attack_damage*multiplier*(DATA.BACKSTAB_MULTIPLIER if backstab else 1.0))))
 	var had_color := target.has_meta("damage_number_color_once")
 	var previous_color = target.get_meta("damage_number_color_once") if had_color else null
-	if backstab: target.set_meta("damage_number_color_once",DATA.BACKSTAB_COLOR)
+	var had_critical := target.has_meta("damage_number_critical_once")
+	var previous_critical = target.get_meta("damage_number_critical_once") if had_critical else null
+	if backstab:
+		target.set_meta("damage_number_color_once",DATA.BACKSTAB_COLOR)
+		target.set_meta("damage_number_critical_once",true)
 	var previous_action := STATUS_SCOPE.begin(target,combo_action)
 	var result = target.call("take_followup_damage",amount,self) if followup and target.has_method("take_followup_damage") else target.call("take_damage",amount,self)
 	STATUS_SCOPE.finish(target,previous_action)
 	if backstab and is_instance_valid(target):
 		if had_color: target.set_meta("damage_number_color_once",previous_color)
 		elif target.has_meta("damage_number_color_once"): target.remove_meta("damage_number_color_once")
+		if had_critical: target.set_meta("damage_number_critical_once",previous_critical)
+		elif target.has_meta("damage_number_critical_once"): target.remove_meta("damage_number_critical_once")
 	return result != false
 
 func _attack_target(target: Node2D) -> void:

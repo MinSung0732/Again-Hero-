@@ -97,6 +97,8 @@ func _process(delta: float) -> void:
 			if not room.is_prepared or not room.running or room.connection_paused or room.finished: continue
 			var started: int = Time.get_ticks_usec() if metrics.enabled else 0
 			var state: Dictionary = room.snapshot(); state["match"] = key
+			state["feedback"] = room.feedback.snapshot(int(rooms[key].get("feedback_sent",0)))
+			rooms[key]["feedback_sent"] = room.feedback.sequence
 			var bytes := -1
 			if metrics.enabled:
 				metrics.samples.snapshot.push(float(Time.get_ticks_usec()-started)/1000.0)

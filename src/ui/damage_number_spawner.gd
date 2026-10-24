@@ -27,10 +27,12 @@ static func show(
 			text_color
 		)
 		target.remove_meta("damage_number_color_once")
+	var critical := bool(target.get_meta("damage_number_critical_once", false))
+	if critical: target.remove_meta("damage_number_critical_once")
 
 	var feedback_parent := target.get_parent()
 	if feedback_parent != null and feedback_parent.has_signal("online_combat_feedback") and feedback_parent.get("online_match_mode") == true:
-		feedback_parent.emit_signal("online_combat_feedback",target,displayed_damage,text_color,false)
+		feedback_parent.emit_signal("online_combat_feedback",target,displayed_damage,text_color,false,critical)
 
 	if target.has_meta("damage_number_popup"):
 		var existing = target.get_meta("damage_number_popup")
@@ -72,7 +74,7 @@ static func show_heal(target: Node2D, amount: int) -> void:
 
 	var feedback_parent := target.get_parent()
 	if feedback_parent != null and feedback_parent.has_signal("online_combat_feedback") and feedback_parent.get("online_match_mode") == true:
-		feedback_parent.emit_signal("online_combat_feedback",target,displayed_heal,Color(0.32,1.0,0.42,1.0),true)
+		feedback_parent.emit_signal("online_combat_feedback",target,displayed_heal,Color(0.32,1.0,0.42,1.0),true,false)
 
 	if target.has_meta("heal_number_popup"):
 		var existing = target.get_meta("heal_number_popup")
@@ -129,6 +131,30 @@ static func show_text_at(
 	popup.global_position = world_position
 	popup.set_meta(OWNER_META, 0)
 	popup.call("setup_text", message)
+
+
+static func show_feedback(parent: Node2D, owner_id: int, world_position: Vector2, amount: int, text_color: Color, healing: bool) -> Node2D:
+	if amount <= 0 or parent == null:
+		return null
+	var pool := _get_compacted_pool(parent)
+	for entry in pool:
+		var existing := entry as Node2D
+		if existing == null or not bool(existing.call("is_pool_active")) or int(existing.get_meta(OWNER_META, -1)) != owner_id:
+			continue
+		if healing and bool(existing.call("can_merge_heal")):
+			existing.call("add_heal",amount,text_color)
+			return existing
+		if not healing and bool(existing.call("can_merge_damage")):
+			existing.call("add_damage",amount,text_color)
+			return existing
+	var popup := _acquire_popup(parent)
+	if popup == null:
+		return null
+	popup.position = world_position + WORLD_OFFSET + (Vector2(0.0, -10.0) if healing else Vector2.ZERO)
+	popup.set_meta(OWNER_META, owner_id)
+	if healing: popup.call("setup_heal",amount,text_color)
+	else: popup.call("setup",amount,text_color)
+	return popup
 
 
 static func _acquire_popup(parent: Node2D) -> Node2D:

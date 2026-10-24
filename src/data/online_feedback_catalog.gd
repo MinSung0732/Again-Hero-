@@ -5,7 +5,7 @@ const CAPACITY := 32
 const HERO_RESERVED := 8
 const MAX_PRIMITIVES := 24
 const MAX_POINTS := 70
-const EVENT_SIZE := 10
+const EVENT_SIZE := 12
 const MAX_AGE_SECONDS := 0.6
 const LIFETIME := 0.55
 const FONT_SIZE := 25
@@ -35,4 +35,7 @@ static func valid_events(events: Variant,cursor: Variant,tick: Variant) -> bool:
 		if row[5]<0 or row[5]!=floorf(row[5]): return false
 		for index in [6,7,8,9]:
 			if row[index]<0 or row[index]>1: return false
+		if not (row[10] is int or row[10] is float) or not is_finite(float(row[10])) or row[10]<0 or row[10]>9007199254740991 or row[10]!=floorf(float(row[10])): return false
+		if not (row[11] is int or row[11] is float) or row[11] not in [0,1]: return false
+		if row[2] not in ["hero_hit","monster_hit"] and row[11] != 0: return false
 	return true
