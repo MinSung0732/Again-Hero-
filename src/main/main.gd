@@ -43,6 +43,7 @@ const TOUCH_HOLD_DELAY := 0.18
 const TOUCH_HOLD_FRAME_SECONDS := 0.08
 const GAMEPLAY_SETTINGS_PATH := "user://gameplay_settings.cfg"
 const CAMERA_DRAG_THRESHOLD := 12.0
+const CAMERA_VIEW := preload("res://src/ui/battle_camera_view.gd")
 
 const BATTLE_PIXEL_FRAME_LARGE_DIR := "res://assets/art/UI/01_large_left_panel"
 const BATTLE_PIXEL_FRAME_TOP_RIGHT_DIR := "res://assets/art/UI/02_top_right_panel"
@@ -259,6 +260,7 @@ var _battle_toast_timer: float = 0.0
 var hero_voice = preload("res://src/audio/hero_voice_player.gd").new()
 
 func _ready() -> void:
+	battle_viewport.size = Vector2i(CAMERA_VIEW.DEMON_SIZE)
 	add_child(hero_voice)
 	hero_voice.install(battle)
 	hero_reveal_cutscene.battle_ready.connect(hero_voice.play_entry)

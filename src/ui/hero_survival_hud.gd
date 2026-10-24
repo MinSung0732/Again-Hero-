@@ -1,6 +1,7 @@
 extends RefCounted
 ## Shared castle assets/colors; the battle mode owns the values and callbacks.
 const BATTLE_TOP := 470.0
+const BACKGROUND_COLOR := Color("101e2c")
 const FRAME_WIDTH := 90.0
 const ART := preload("res://src/ui/hero_hud_art.gd")
 const MONSTER_ICON := preload("res://assets/art/monsters/slime/frames/idle_01.png")

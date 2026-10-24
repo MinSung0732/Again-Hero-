@@ -36,6 +36,19 @@ static func install_backdrop(layer: Node, art_source: Node = null) -> Control:
 	chrome.queue_redraw()
 	return chrome
 
+static func install_lower_backdrop(layer: Control, height: float) -> TextureRect:
+	var backing := TextureRect.new()
+	backing.name = "BattleLowerBacking"
+	backing.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	backing.z_index = -9
+	backing.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+	backing.offset_top = -height
+	backing.texture = texture_for_path("res://assets/art/UI/battle_hud_v2/bottom_hud_backdrop.svg")
+	backing.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	backing.stretch_mode = TextureRect.STRETCH_SCALE
+	layer.add_child(backing)
+	return backing
+
 static func install_panels(targets: Array, art_source: Node = null) -> void:
 	var panel_art := texture(art_source, ROOT + "gold_panel.png") if art_source != null else texture_for_path(ROOT + "gold_panel.png")
 	var panel_builder = load("res://src/ui/illustrated_battle_panel.gd")

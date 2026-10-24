@@ -28,6 +28,11 @@ const STAGES := preload("res://src/data/stage_catalog.gd")
 const MAPS := preload("res://src/data/ranked_map_catalog.gd")
 const HOLD_POPUP := preload("res://src/ui/augment_hold_popup.gd")
 const ACTION_CHOICES := preload("res://src/ui/demon_action_choices.gd")
+const SETTINGS := preload("res://src/ui/BattleSettings.tscn")
+const DEMON_MENU := preload("res://src/ui/BattlePauseMenu.tscn")
+const HERO_PAUSE := preload("res://src/ui/hero_pause_view.gd")
+const DETAIL := preload("res://src/ui/hero_inventory_detail.gd")
+const PAD_SETTINGS := preload("res://src/ui/hero_pad_settings.gd")
 var loading
 var local_preparing := false
 var waiting_for_start := false
@@ -59,7 +64,13 @@ var hud_level := -1
 var hud_exp := -1
 var hud_exp_next := -1
 var hud_mana := -1
-var top_menu: PopupMenu
+var match_menu: Control
+var settings_panel: Control
+var camera_view_locked := true
+var battle_frame_enabled := true
+var pad_mode_selector: OptionButton
+var online_pad_mode := PAD.MODE_FREE
+const GAMEPLAY_SETTINGS_PATH := "user://gameplay_settings.cfg"
 var ranking_row: HBoxContainer
 var ranking_icon: TextureRect
 var ranking_label: Label
@@ -191,13 +202,21 @@ func _ready() -> void:
 		var reset_metrics := _button(metric_actions,"측정 초기화",_reset_metrics)
 		for button in [copy_metrics,reset_metrics]:
 			button.custom_minimum_size.y=56; button.size_flags_horizontal=Control.SIZE_EXPAND_FILL
-	view = VIEW.new(); view.size_flags_vertical = Control.SIZE_EXPAND_FILL; view.custom_minimum_size.y = 400; rows.add_child(view)
+	view = VIEW.new(); view.hero_role = role == "hero"; view.size_flags_vertical = Control.SIZE_EXPAND_FILL; view.custom_minimum_size.y = 400; rows.add_child(view)
 	for child in rows.get_children():
 		if child is Control and child != status and child != ranking_row and child != action_notice and child != view:
 			setup_controls.append(child)
 	TOP_LAYOUT.layout_top(top_bar)
 	var chrome: Control = TOP_LAYOUT.install_backdrop(self)
 	chrome.hide()
+	var lower_backing: Control
+	if role == "demon": lower_backing = TOP_LAYOUT.install_lower_backdrop(self,465.0)
+	else:
+		var hero_backing := ColorRect.new(); hero_backing.color = HERO_HUD.BACKGROUND_COLOR
+		hero_backing.name = "BattleLowerBacking"; hero_backing.mouse_filter = Control.MOUSE_FILTER_IGNORE; hero_backing.z_index = -9
+		hero_backing.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE); hero_backing.offset_top = -210.0
+		add_child(hero_backing); lower_backing = hero_backing
+	lower_backing.hide()
 	var panel_targets: Array = []
 	for name in ["StageFrame","TimerFrame","HeroStatusFrame","MonsterFrame","StageMenuButton"]:
 		panel_targets.append(top_bar.get_node(name))
@@ -216,17 +235,11 @@ func _ready() -> void:
 			top_rects.append(child.get_rect())
 	get_viewport().size_changed.connect(_layout_top_bar)
 	_layout_top_bar()
-	top_menu = PopupMenu.new(); add_child(top_menu)
-	top_menu.add_item("규칙 보기",0); top_menu.add_item("항복하고 나가기",1)
-	top_menu.id_pressed.connect(func(id: int):
-		if id == 0: _show_rules()
-		else: surrender_dialog.popup_centered())
+	_install_match_menu()
 	surrender_dialog = ConfirmationDialog.new(); surrender_dialog.title = "항복하고 나가기"
 	surrender_dialog.dialog_text = "대전을 포기하고 로비로 돌아가시겠습니까?"
 	surrender_dialog.confirmed.connect(_leave); add_child(surrender_dialog)
-	top_bar.get_node("StageMenuButton").pressed.connect(func():
-		top_menu.position = Vector2i(top_bar.get_node("StageMenuButton").get_global_rect().position + Vector2(0,80))
-		top_menu.popup())
+	top_bar.get_node("StageMenuButton").pressed.connect(_open_match_menu)
 	view.placement.connect(func(point: Vector2):
 		if role == "demon" and not ended and not local_preparing and not waiting_for_start and not connection_waiting and not client.reconnecting:
 			if transcend_placement:
@@ -309,7 +322,7 @@ func _ready() -> void:
 		transcend_button.disabled = true; transcend_button.hide()
 		ACTION_CHOICES.ensure_buttons(demon_panel.get_node("ActionChoiceGrid"),direction_buttons,skill_row.get_child(0),_on_direction_choice,5)
 	if role == "hero":
-		pad = PAD.new(); add_child(pad); pad.set_mode(PAD.MODE_FREE)
+		pad = PAD.new(); add_child(pad); pad.set_mode(online_pad_mode)
 		pad.input_surface = view; pad.movement_changed.connect(func(value: Vector2): movement = value)
 		hero_slots = Control.new(); hero_slots.name = "HeroInventory"
 		hero_slots.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
@@ -344,7 +357,7 @@ func _ready() -> void:
 	hold_popup.oldest_auto_chosen.connect(_show_auto_hold_notice)
 	# Popup, held dots and overlay panels own their touches; the free pad only starts on bare battlefield.
 	if pad != null:
-		for control in [hold_popup.popup,hold_popup.dot_row,hero_slots,hero_build_overlay,hero_build_toggle,surrender_dialog]:
+		for control in [hold_popup.popup,hold_popup.dot_row,hero_slots,hero_build_overlay,hero_build_toggle,surrender_dialog,match_menu,settings_panel]:
 			if control is Control: pad.input_exclusions.append(control)
 	resized.connect(_update_hold_position)
 	cancel_button = _button(rows,"매칭 취소 · 로비로",_leave)
@@ -426,6 +439,7 @@ func _layout_top_bar() -> void:
 func _show_match_layout() -> void:
 	for control in setup_controls: control.hide()
 	get_node("CastleBattleChrome").show()
+	get_node("BattleLowerBacking").show()
 	top_bar.show()
 	status.hide(); action_notice.hide(); cancel_button.hide(); ranking_row.hide()
 	if hero_build_toggle != null: hero_build_toggle.show()
@@ -440,6 +454,119 @@ func _show_match_layout() -> void:
 	last_action_text = action_notice.text
 	_layout_top_bar()
 	_update_hold_position()
+
+func _install_match_menu() -> void:
+	var config := ConfigFile.new(); config.load(GAMEPLAY_SETTINGS_PATH)
+	camera_view_locked = bool(config.get_value("gameplay","camera_view_locked",true))
+	battle_frame_enabled = bool(config.get_value("gameplay","battle_frame_enabled",true))
+	view.set_camera_view_locked(camera_view_locked)
+	settings_panel = SETTINGS.instantiate(); settings_panel.name = "OnlineBattleSettings"; add_child(settings_panel)
+	var rows_panel := settings_panel.get_node("Panel/Margin/VBox") as VBoxContainer
+	var tabs := rows_panel.get_node("SettingsTabs") as TabContainer
+	tabs.set_tab_title(0,"사운드"); tabs.set_tab_title(1,"게임플레이")
+	rows_panel.get_node("CloseButton").pressed.connect(_close_match_settings)
+	var camera := tabs.get_node("Gameplay/CameraLock") as CheckBox
+	if role == "hero":
+		camera.disabled = true
+		camera.tooltip_text = "용사 모드에서는 시야 고정이 필수입니다."
+		tabs.get_node("Gameplay/CameraGuide").text = "용사 모드에서는 항상 용사를 추적합니다. 시야 고정을 해제할 수 없습니다."
+	else: camera.toggled.connect(_set_camera_view_locked)
+	(tabs.get_node("Gameplay/BattleFrame") as CheckBox).toggled.connect(_set_battle_frame)
+	if role == "hero":
+		pad_mode_selector = PAD_SETTINGS.install(tabs.get_node("Gameplay"),_set_online_pad_mode)
+		var pad_mode := String(config.get_value("gameplay","hero_pad_mode",PAD.MODE_FREE))
+		online_pad_mode = pad_mode if pad_mode in PAD.MODES else PAD.MODE_FREE
+	for pair in [["BGMRow",true],["SFXRow",false]]:
+		(tabs.get_node("Sound/"+String(pair[0])+"/Slider") as HSlider).value_changed.connect(_set_audio_level.bind(bool(pair[1])))
+	(tabs.get_node("Sound/BGMMute") as CheckBox).toggled.connect(_set_audio_mute.bind(true))
+	(tabs.get_node("Sound/SFXMute") as CheckBox).toggled.connect(_set_audio_mute.bind(false))
+	if role == "demon":
+		match_menu = DEMON_MENU.instantiate()
+		match_menu.name = "OnlineMatchMenu"; add_child(match_menu); match_menu.hide()
+		var buttons := match_menu.get_node("MenuPanel/Margin/VBox") as VBoxContainer
+		buttons.get_node("Title").text = "랭크 대전 · 마왕"
+		buttons.get_node("Guide").text = "설정 중에도 전투는 계속됩니다."
+		buttons.get_node("RestartButton").hide(); buttons.get_node("LobbyButton").hide()
+		buttons.get_node("ResumeButton").text = "계속 플레이"
+		buttons.get_node("ResumeButton").pressed.connect(_close_match_menu)
+		buttons.get_node("SettingsButton").pressed.connect(_open_match_settings)
+		var rules := Button.new(); rules.name = "RulesButton"; rules.text = "규칙 보기"; rules.custom_minimum_size.y = 100; buttons.add_child(rules); rules.pressed.connect(_show_rules)
+		var surrender := Button.new(); surrender.name = "SurrenderButton"; surrender.text = "기권"; surrender.custom_minimum_size.y = 100; buttons.add_child(surrender); surrender.pressed.connect(_confirm_surrender)
+	else:
+		match_menu = Control.new(); match_menu.name = "OnlineMatchMenu"; add_child(match_menu)
+		match_menu.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		match_menu.mouse_filter = Control.MOUSE_FILTER_STOP; match_menu.z_index = 300
+		var dim := ColorRect.new(); dim.name = "Dim"; dim.color = Color(0,0,0,0.8); match_menu.add_child(dim); dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		var panel := PanelContainer.new(); panel.name = "MenuPanel"; match_menu.add_child(panel)
+		panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		panel.offset_left = maxf(24,(size.x-920)*0.5); panel.offset_right = -panel.offset_left
+		panel.offset_top = minf(482,size.y*0.24); panel.offset_bottom = -24
+		panel.add_theme_stylebox_override("panel",DETAIL.style(Color("171226"),Color("e3bc69"),24))
+		var contents := VBoxContainer.new(); contents.name = "MenuRows"; panel.add_child(contents)
+		HERO_PAUSE.build(contents,{"seconds":0.0,"kills":0,"level":1,"weapons":[]},{"resume":_close_match_menu,"settings":_open_match_settings,"rules":_show_rules,"surrender":_confirm_surrender})
+		match_menu.find_child("PauseSummary",true,false).hide()
+		match_menu.hide()
+	_sync_match_settings()
+
+func _open_match_menu() -> void:
+	if not top_bar.visible: return
+	match_menu.show(); match_menu.move_to_front()
+	if role == "demon":
+		match_menu.get_node("MenuPanel/Margin/VBox/StageLabel").text = "랭크 대전 · "+String(HEROES.get_character(matched_hero_id).get("name","용사"))
+		match_menu.get_node("MenuPanel/Margin/VBox/TimeLabel").text = top_bar.get_node("RunTimer").text
+
+func _close_match_menu() -> void:
+	settings_panel.hide(); match_menu.hide()
+
+func _open_match_settings() -> void:
+	_sync_match_settings(); settings_panel.show(); settings_panel.move_to_front()
+
+func _close_match_settings() -> void:
+	settings_panel.hide()
+
+func _confirm_surrender() -> void:
+	surrender_dialog.popup_centered()
+
+func _sync_match_settings() -> void:
+	var tabs := settings_panel.get_node("Panel/Margin/VBox/SettingsTabs") as TabContainer
+	for pair in [["BGMRow",AudioSettings.bgm_level],["SFXRow",AudioSettings.sfx_level]]:
+		(tabs.get_node("Sound/"+String(pair[0])+"/Slider") as HSlider).set_value_no_signal(float(pair[1]))
+		(tabs.get_node("Sound/"+String(pair[0])+"/Value") as Label).text = str(pair[1])
+	(tabs.get_node("Sound/BGMMute") as CheckBox).set_pressed_no_signal(AudioSettings.bgm_muted)
+	(tabs.get_node("Sound/SFXMute") as CheckBox).set_pressed_no_signal(AudioSettings.sfx_muted)
+	(tabs.get_node("Gameplay/CameraLock") as CheckBox).set_pressed_no_signal(true if role == "hero" else camera_view_locked)
+	(tabs.get_node("Gameplay/BattleFrame") as CheckBox).set_pressed_no_signal(battle_frame_enabled)
+	if pad_mode_selector != null: pad_mode_selector.select(PAD.MODES.find(online_pad_mode))
+
+func _set_online_pad_mode(index: int) -> void:
+	if index < 0 or index >= PAD.MODES.size(): return
+	var config := ConfigFile.new(); config.load(GAMEPLAY_SETTINGS_PATH)
+	config.set_value("gameplay","hero_pad_mode",PAD.MODES[index])
+	if config.save(GAMEPLAY_SETTINGS_PATH) != OK: _sync_match_settings(); return
+	online_pad_mode = PAD.MODES[index]; pad.set_mode(online_pad_mode); _sync_match_settings()
+
+func _set_camera_view_locked(enabled: bool) -> void:
+	camera_view_locked = enabled; view.set_camera_view_locked(enabled)
+	_save_match_gameplay_setting("camera_view_locked",enabled)
+
+func _set_battle_frame(enabled: bool) -> void:
+	battle_frame_enabled = enabled
+	get_node("CastleBattleChrome").visible = enabled and top_bar.visible
+	_save_match_gameplay_setting("battle_frame_enabled",enabled)
+
+func _save_match_gameplay_setting(key: String,value: bool) -> void:
+	var config := ConfigFile.new(); config.load(GAMEPLAY_SETTINGS_PATH)
+	config.set_value("gameplay",key,value); config.save(GAMEPLAY_SETTINGS_PATH)
+
+func _set_audio_level(value: float,bgm: bool) -> void:
+	if bgm: AudioSettings.set_bgm_level(roundi(value))
+	else: AudioSettings.set_sfx_level(roundi(value))
+	_sync_match_settings()
+
+func _set_audio_mute(value: bool,bgm: bool) -> void:
+	if bgm: AudioSettings.set_bgm_muted(value)
+	else: AudioSettings.set_sfx_muted(value)
+	_sync_match_settings()
 
 func _update_hold_position() -> void:
 	if hold_popup == null: return

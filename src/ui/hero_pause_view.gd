@@ -5,7 +5,7 @@ const ICONS := preload("res://src/ui/hero_augment_icons.gd")
 static func build(parent: VBoxContainer, model: Dictionary, actions: Dictionary) -> void:
 	parent.add_theme_constant_override("separation",20)
 	var header := HBoxContainer.new(); header.name = "PauseHeader"; parent.add_child(header)
-	var title := DETAIL.label(header,"일시정지 · 용사 모드",36,Color("ffcf79")); title.size_flags_horizontal = Control.SIZE_EXPAND_FILL; title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var title := DETAIL.label(header,"랭크 대전 · 용사" if actions.has("surrender") else "일시정지 · 용사 모드",36,Color("ffcf79")); title.size_flags_horizontal = Control.SIZE_EXPAND_FILL; title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var x := DETAIL.button(header,"×",actions.resume); x.name = "PauseClose"; x.custom_minimum_size = Vector2(76,76)
 	var scroll := ScrollContainer.new(); scroll.name = "PauseScroll"; scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED; parent.add_child(scroll)
@@ -26,7 +26,9 @@ static func build(parent: VBoxContainer, model: Dictionary, actions: Dictionary)
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST; icon.mouse_filter = Control.MOUSE_FILTER_IGNORE; slots.add_child(icon)
 	if model.weapons.is_empty(): DETAIL.label(gear,"장비 없음",22)
 	if int(model.get("chest_gold",0)) > 0: DETAIL.label(body,"상자 골드 누적 %d · 종료 시 정산" % int(model.chest_gold),23,Color("ffcf77"))
-	for entry in [["계속 플레이","resume"],["다시 시작","restart"],["설정","settings"],["로비로 돌아가기","leave"]]:
+	var entries := [["계속 플레이","resume"],["다시 시작","restart"],["설정","settings"],["로비로 돌아가기","leave"]]
+	if actions.has("surrender"): entries = [["계속 플레이","resume"],["설정","settings"],["규칙 보기","rules"],["기권","surrender"]]
+	for entry in entries:
 		var button := DETAIL.button(body,String(entry[0]),actions[String(entry[1])]); button.name = "Pause_"+String(entry[1]); button.custom_minimum_size.y = 96
 		if entry[1] == "resume": button.grab_focus()
 		else: button.add_theme_stylebox_override("normal",DETAIL.style(Color("1a1729"),Color("d9b363"),16))

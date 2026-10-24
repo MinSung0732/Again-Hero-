@@ -2,6 +2,7 @@ extends SceneTree
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
 const RULES := preload("res://src/online/match_rules.gd")
 const WEAPONS := preload("res://src/data/hero_weapon_catalog.gd")
+const CAMERA_VIEW := preload("res://src/ui/battle_camera_view.gd")
 class CommandSpy:
 	extends RefCounted
 	var reconnecting := false
@@ -15,14 +16,17 @@ func check(ok: bool,message: String) -> void:
 	if not ok: push_error(message); quit(1); assert(ok,message)
 func _initialize() -> void: run.call_deferred()
 func run() -> void:
-	for path in ["res://src/main/main.gd","res://src/hero_mode/hero_mode.gd","res://src/online/match_scene.gd","res://src/online/battle_view.gd","res://src/ui/demon_action_choices.gd","res://src/online/battle_room.gd","res://src/online/match_rules.gd","res://src/ui/augment_hold_popup.gd","res://src/ui/demon_augment_panel_view.gd","res://src/ui/hero_augment_cards_view.gd","res://src/ui/castle_battle_chrome.gd"]:
+	for path in ["res://src/main/main.gd","res://src/hero_mode/hero_mode.gd","res://src/online/match_scene.gd","res://src/online/battle_view.gd","res://src/ui/battle_camera_view.gd","res://src/online/primitive_mirror.gd","res://src/online/combat_feedback.gd","res://src/ui/hero_pause_view.gd","res://src/ui/hero_survival_hud.gd","res://src/ui/hero_pad_settings.gd","res://src/ui/demon_action_choices.gd","res://src/online/battle_room.gd","res://src/online/match_rules.gd","res://src/ui/augment_hold_popup.gd","res://src/ui/demon_augment_panel_view.gd","res://src/ui/hero_augment_cards_view.gd","res://src/ui/castle_battle_chrome.gd"]:
 		var script: Script = load(path)
 		check(script != null and script.can_instantiate(),"modified script loads: "+path)
 	var solo_packed: PackedScene = load("res://src/main/Main.tscn")
 	check(solo_packed != null and solo_packed.can_instantiate(),"solo scene loads")
+	var pause_packed: PackedScene = load("res://src/ui/BattlePauseMenu.tscn")
+	check(pause_packed != null and pause_packed.can_instantiate(),"shared solo pause scene loads")
 	var solo := solo_packed.instantiate()
 	check(solo.get_node_or_null("HUD/BottomBar/CommandBar") != null and solo.get_node_or_null("HUD/DemonUltimatePanel/UltimateButtons") != null,"solo paths survive shared scene extraction")
 	check(solo.get_node_or_null("HUD/DemonAugmentPanel/Margin/VBox/Title") != null,"solo demon augment path survives extraction")
+	check(Vector2(solo.get_node("BattleViewportContainer/BattleViewport").size) == CAMERA_VIEW.DEMON_SIZE,"demon camera size follows solo viewport")
 	solo.free()
 	var hero_packed: PackedScene = load("res://src/hero_mode/HeroMode.tscn")
 	check(hero_packed != null and hero_packed.can_instantiate(),"hero mode scene loads")
@@ -100,6 +104,7 @@ func run() -> void:
 		check(scene.hold_popup.dots.filter(func(dot): return dot.visible).size() <= RULES.AUGMENT_HOLD_LIMIT and scene.status.text.contains("자동 선택됨"),"server overflow removes oldest dot and shows toast")
 		if role == "hero":
 			check(scene.pad.mode == "free" and scene.pad.input_surface == scene.view,"touch binds battle only")
+			check(scene.pad_mode_selector != null and scene.pad_mode_selector.get_parent().name == "PadModeRow","hero settings reuse solo pad-mode row")
 			check(scene.hold_popup.popup in scene.pad.input_exclusions and scene.hold_popup.dot_row in scene.pad.input_exclusions,"augment popup and dots are excluded from the move pad")
 			scene.view.set_match_roster([],"")
 			check(scene.view.reveal_on_sight and scene.view._admit_sighted_actor("slime") and not scene.view._admit_sighted_actor("not_a_monster"),"hero without demon roster admits only real monsters on sight")
@@ -152,10 +157,20 @@ func run() -> void:
 		var chrome: Control = scene.get_node("CastleBattleChrome")
 		check(chrome.visible and chrome.z_index == -10 and chrome.anchor_right == 1.0 and chrome.anchor_bottom == 1.0 and chrome.size == scene.size and scene.view.z_index > chrome.z_index,"both roles show full-rect castle backdrop behind battlefield")
 		check(not scene.status.visible and not scene.action_notice.visible and not scene.cancel_button.visible,"battle hides debug rows and matching cancel")
-		check(scene.top_menu.get_item_text(1) == "항복하고 나가기" and scene.surrender_dialog != null,"battle menu confirms surrender")
-		scene.top_menu.id_pressed.emit(1); await process_frame
+		var lower_backing: Control = scene.get_node("BattleLowerBacking")
+		check(lower_backing != null and lower_backing.visible and chrome.floor_backing != null and ((lower_backing as TextureRect).texture != null if role == "demon" else (lower_backing as ColorRect).color == preload("res://src/ui/hero_survival_hud.gd").BACKGROUND_COLOR),"solo role lower HUD backing covers both roles")
+		scene.top_bar.get_node("StageMenuButton").pressed.emit(); await process_frame
+		check(scene.match_menu.visible and not paused and scene.settings_panel.scene_file_path == "res://src/ui/BattleSettings.tscn","menu opens shared solo settings without pausing battle")
+		if role == "demon":
+			check(scene.match_menu.get_node_or_null("MenuPanel/Margin/VBox/RulesButton") != null and scene.match_menu.get_node_or_null("MenuPanel/Margin/VBox/SurrenderButton") != null and not scene.match_menu.get_node("MenuPanel/Margin/VBox/RestartButton").visible and not scene.match_menu.get_node("MenuPanel/Margin/VBox/LobbyButton").visible,"demon menu shares solo pause panel with online actions")
+		else:
+			check(scene.match_menu.find_child("Pause_rules",true,false) != null and scene.match_menu.find_child("Pause_surrender",true,false) != null and scene.match_menu.find_child("Pause_restart",true,false) == null,"hero menu shares solo pause builder with online actions")
+		scene._open_match_settings(); await process_frame
+		check(scene.settings_panel.visible and not paused,"settings keeps combat running")
+		scene._close_match_settings(); scene._confirm_surrender(); await process_frame
 		check(scene.surrender_dialog.visible,"surrender menu opens confirmation")
 		scene.surrender_dialog.hide()
+		scene._close_match_menu()
 		scene.status.text = "짧은 알림"
 		scene._process(0.1)
 		check(scene.battle_toast.visible and scene.battle_toast.text == "짧은 알림","battle status uses toast")
@@ -224,7 +239,8 @@ func run() -> void:
 		else: check(not scene.top_bar.get_node("ExpBar").visible and scene.top_bar.get_node("HeroLevel").text.contains("3"),"demon sees level without EXP")
 		root.size = Vector2i(1080,1920); await process_frame; await process_frame
 		scene.view._layout_map()
-		check(scene.view.map_offset.x <= 0 and scene.view.map_offset.y <= 0 and scene.view.map_offset.x + scene.view.bounds.x * scene.view.scale_ratio >= scene.view.size.x and scene.view.map_offset.y + scene.view.bounds.y * scene.view.scale_ratio >= scene.view.size.y,"phone camera clamps map over viewport")
+		check((scene.view.size/scene.view.map_scale).distance_to(CAMERA_VIEW.viewport_size(role == "hero")) < 0.1,"phone visible world matches solo camera")
+		check(scene.view.map_offset.x <= 0 and scene.view.map_offset.y <= 0 and scene.view.map_offset.x + scene.view.bounds.x * scene.view.map_scale.x >= scene.view.size.x and scene.view.map_offset.y + scene.view.bounds.y * scene.view.map_scale.y >= scene.view.size.y,"phone camera clamps map over viewport")
 		if role == "hero": check(is_equal_approx(scene.demon_info_panel.size.x,scene.top_bar.get_node("HeroStatusFrame").size.x),"phone demon information matches hero status width")
 		check(scene.top_bar.get_global_rect().end.x <= root.size.x and absf(scene.view.get_global_rect().position.y-(scene.demon_info_panel.get_global_rect().end.y if role == "hero" else scene.top_bar.get_global_rect().end.y)) <= 8.0,"phone battlefield starts below information")
 		var lower: Control = scene.demon_panel if role == "demon" else scene.hero_slots
@@ -241,7 +257,8 @@ func run() -> void:
 		scene.hold_popup.close_popup()
 		root.size = Vector2i(1536,1920); await process_frame; await process_frame
 		scene.view._layout_map()
-		check(scene.view.map_offset.x <= 0 and scene.view.map_offset.y <= 0 and scene.view.map_offset.x + scene.view.bounds.x * scene.view.scale_ratio >= scene.view.size.x and scene.view.map_offset.y + scene.view.bounds.y * scene.view.scale_ratio >= scene.view.size.y,"tablet camera clamps map over viewport")
+		check((scene.view.size/scene.view.map_scale).distance_to(CAMERA_VIEW.viewport_size(role == "hero")) < 0.1,"tablet visible world matches solo camera")
+		check(scene.view.map_offset.x <= 0 and scene.view.map_offset.y <= 0 and scene.view.map_offset.x + scene.view.bounds.x * scene.view.map_scale.x >= scene.view.size.x and scene.view.map_offset.y + scene.view.bounds.y * scene.view.map_scale.y >= scene.view.size.y,"tablet camera clamps map over viewport")
 		if role == "hero": check(is_equal_approx(scene.demon_info_panel.size.x,scene.top_bar.get_node("HeroStatusFrame").size.x),"tablet demon information matches hero status width")
 		check(scene.top_bar.get_global_rect().end.x <= root.size.x and scene.top_bar.get_node("Monsters").get_global_rect().end.x <= root.size.x and absf(scene.view.get_global_rect().position.y-(scene.demon_info_panel.get_global_rect().end.y if role == "hero" else scene.top_bar.get_global_rect().end.y)) <= 8.0,"tablet battlefield starts below information")
 		check(lower.get_global_rect().end.y <= root.size.y and lower.get_global_rect().end.x <= root.size.x and scene.view.get_global_rect().end.y <= lower.get_global_rect().position.y,"tablet lower HUD fits below battlefield")
@@ -255,6 +272,48 @@ func run() -> void:
 		check(scene.hold_popup.popup.get_global_rect().position.x >= 0 and scene.hold_popup.popup.get_global_rect().end.x <= root.size.x and scene.hold_popup.popup.get_global_rect().end.y <= root.size.y,"tablet popup fits")
 		if role == "demon": check(scene.hold_popup.popup.get_global_rect().end.y < scene.bottom_bar.get_global_rect().position.y and scene.hold_popup.lower_button.get_global_rect().end.y <= scene.hold_popup.popup.get_global_rect().end.y,"tablet augment popup clears bottom bar")
 		scene.hold_popup.close_popup()
+		var camera_view = scene.view
+		camera_view.bounds = Vector2(3200,3200)
+		camera_view.motion.clear()
+		camera_view.state = {"hero":[1600.0,1600.0,100.0,100.0,1],"actors":[]}
+		camera_view._layout_map()
+		var center_before: Vector2 = (camera_view.size*0.5-camera_view.map_offset)/camera_view.map_scale
+		check(center_before.distance_to(Vector2(1600,1600)) < 0.1,"camera follows hero at center")
+		camera_view.state.hero[0] = 10.0; camera_view.state.hero[1] = 10.0
+		camera_view._layout_map()
+		var edge_center: Vector2 = (camera_view.size*0.5-camera_view.map_offset)/camera_view.map_scale
+		check(edge_center.distance_to(CAMERA_VIEW.viewport_size(role == "hero")*0.5) < 0.1,"camera clamps hero at top-left world edge")
+		camera_view.state.hero[0] = 3190.0; camera_view.state.hero[1] = 3190.0
+		camera_view._layout_map()
+		var far_center: Vector2 = (camera_view.size*0.5-camera_view.map_offset)/camera_view.map_scale
+		check(far_center.distance_to(camera_view.bounds-CAMERA_VIEW.viewport_size(role == "hero")*0.5) < 0.1,"camera clamps hero at bottom-right world edge")
+		if role == "demon":
+			camera_view.state.hero[0] = 1600.0; camera_view.state.hero[1] = 1600.0
+			camera_view.set_camera_view_locked(true)
+			var lock_box := scene.settings_panel.get_node("Panel/Margin/VBox/SettingsTabs/Gameplay/CameraLock") as CheckBox
+			lock_box.toggled.emit(false)
+			check(not camera_view.camera_view_locked,"solo camera setting unlocks online demon view")
+			var unlocked_center: Vector2 = camera_view.manual_center
+			camera_view.pan_camera_by_screen_delta(Vector2(100,60))
+			check(camera_view.manual_center.distance_to(unlocked_center-Vector2(100,60)/camera_view.map_scale) < 0.1,"demon drag pans by solo screen-to-world rule")
+			camera_view.state.hero[0] = 2400.0; camera_view._layout_map()
+			check(camera_view.manual_center.distance_to(unlocked_center-Vector2(100,60)/camera_view.map_scale) < 0.1,"unlocked camera does not follow hero")
+			var placed: Array[Vector2] = []
+			camera_view.placement.connect(func(point: Vector2): placed.append(point))
+			var tap := InputEventMouseButton.new(); tap.button_index = MOUSE_BUTTON_LEFT; tap.position = camera_view.size*0.5; tap.pressed = true
+			camera_view._gui_input(tap); tap.pressed = false; camera_view._gui_input(tap)
+			check(placed.size() == 1 and placed[0].distance_to(camera_view.manual_center) < 0.1,"tap after camera pan sends visible world point for summon")
+			tap.pressed = true; camera_view._gui_input(tap)
+			var swipe := InputEventMouseMotion.new(); swipe.button_mask = MOUSE_BUTTON_MASK_LEFT; swipe.relative = Vector2(30,0)
+			camera_view._gui_input(swipe); tap.pressed = false; camera_view._gui_input(tap)
+			check(placed.size() == 1 and camera_view.manual_center.x < unlocked_center.x,"drag moves view without sending summon")
+			lock_box.toggled.emit(true)
+			check(camera_view.camera_view_locked,"camera lock resumes hero tracking")
+			camera_view._layout_map()
+			check(camera_view.manual_center.distance_to(Vector2(2400,1600)) < 0.1,"relocked demon view follows current hero")
+		else:
+			camera_view.set_camera_view_locked(false)
+			check(camera_view.camera_view_locked,"hero camera cannot be unlocked")
 		scene.queue_free(); await process_frame
 	local.active = true; local.tutorial_preview = false; SCOPE.user_id = ""; SCOPE.guest_directory = local.test_directory
 	check(local.is_online_match_allowed(),"isolated localtest has online permission")

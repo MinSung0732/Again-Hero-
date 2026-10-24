@@ -25,7 +25,7 @@ func replace(commands: Array) -> void:
 		for index in range(0,row[10].size(),2): points.append(Vector2(row[10][index],row[10][index+1]))
 		parsed.append({"kind":row[0],"pose":Transform2D(row[3],Vector2(row[1],row[2])),"radius":row[4],"color":Color(row[5],row[6],row[7],row[8]),"width":row[9],"points":points})
 func draw(view: Control) -> void:
-	var map := Transform2D(Vector2(view.scale_ratio,0),Vector2(0,view.scale_ratio),view.map_offset)
+	var map := Transform2D(Vector2(view.map_scale.x,0),Vector2(0,view.map_scale.y),view.map_offset)
 	for cmd in parsed:
 		view.draw_set_transform_matrix(map*cmd.pose)
 		match cmd.kind:

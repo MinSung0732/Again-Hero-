@@ -14,6 +14,8 @@ const AUGMENT_COMPARE := preload("res://src/ui/augment_compare_view.gd")
 const HERO_AUGMENT_CARDS := preload("res://src/ui/hero_augment_cards_view.gd")
 const DIRECTOR := preload("res://src/hero_mode/ai_demon_director.gd")
 const SETTINGS := preload("res://src/ui/BattleSettings.tscn")
+const CAMERA_VIEW := preload("res://src/ui/battle_camera_view.gd")
+const PAD_SETTINGS := preload("res://src/ui/hero_pad_settings.gd")
 const HUD := preload("res://src/ui/hero_survival_hud.gd")
 const REEL := preload("res://src/ui/hero_chest_reel.gd")
 const LOADING := preload("res://src/ui/startup_loading_view.gd")
@@ -156,7 +158,7 @@ func _create_battle() -> void:
 	view.stretch = true
 	add_child(view); move_child(view,1)
 	var viewport := SubViewport.new()
-	viewport.size = Vector2i(1080,1920-int(HUD.BATTLE_TOP))
+	viewport.size = Vector2i(CAMERA_VIEW.HERO_SIZE)
 	viewport.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	viewport.handle_input_locally = false
 	view.add_child(viewport)
@@ -185,7 +187,7 @@ func _create_battle() -> void:
 		if is_instance_valid(battle) and is_instance_valid(battle.hero): battle.hero.set_player_move_input(value))
 	_refresh_hud()
 func _build_ui() -> void:
-	var background := ColorRect.new(); background.color = Color("101e2c")
+	var background := ColorRect.new(); background.color = HUD.BACKGROUND_COLOR
 	background.name = "HeroBackground"
 	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); add_child(background)
@@ -583,25 +585,7 @@ func _install_battle_settings() -> void:
 	camera.tooltip_text = "용사 모드에서는 시야 고정이 필수입니다."
 	tabs.get_node("Gameplay/CameraGuide").text = "용사 모드에서는 항상 용사를 추적합니다. 시야 고정을 해제할 수 없습니다."
 	tabs.get_node("Gameplay/BattleFrame").toggled.connect(_set_battle_frame)
-	var pad_row := HBoxContainer.new(); pad_row.name = "PadModeRow"
-	pad_row.add_theme_constant_override("separation",16)
-	tabs.get_node("Gameplay").add_child(pad_row)
-	_label(pad_row,"이동 패드",23).custom_minimum_size.x = 165
-	pad_mode_selector = OptionButton.new(); pad_mode_selector.name = "PadMode"
-	pad_mode_selector.custom_minimum_size.y = 88
-	pad_mode_selector.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	pad_mode_selector.add_theme_font_size_override("font_size",30)
-	pad_mode_selector.add_item("고정형 패드",0); pad_mode_selector.add_item("자유형 패드",1)
-	_skin_action_button(pad_mode_selector); pad_row.add_child(pad_mode_selector)
-	var pad_popup := pad_mode_selector.get_popup()
-	pad_popup.add_theme_font_size_override("font_size",32)
-	pad_popup.add_theme_constant_override("v_separation",64)
-	pad_popup.add_theme_stylebox_override("panel",INVENTORY_DETAIL.style(Color("20192e"),Color("dfb86a"),16))
-	pad_popup.add_theme_color_override("font_color",Color("efe5ce"))
-	pad_popup.add_theme_color_override("font_hover_color",Color("ffda86"))
-	pad_mode_selector.item_selected.connect(_set_pad_mode)
-	var pad_guide := _label(tabs.get_node("Gameplay"),"고정형: 하단 중앙 · 자유형: 전투 화면 터치 위치\n변경 즉시 적용 · 자동 저장",18)
-	pad_guide.name = "PadGuide"
+	pad_mode_selector = PAD_SETTINGS.install(tabs.get_node("Gameplay"),_set_pad_mode)
 	for pair in [["BGMRow",true],["SFXRow",false]]:
 		tabs.get_node("Sound/"+String(pair[0])+"/Slider").value_changed.connect(_set_audio_level.bind(bool(pair[1])))
 	tabs.get_node("Sound/BGMMute").toggled.connect(_set_audio_mute.bind(true))

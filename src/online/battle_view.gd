@@ -9,6 +9,7 @@ const FIELD := preload("res://src/online/battlefield_presentation.gd")
 const SAMPLE := preload("res://src/online/presentation_snapshot.gd")
 const FEEDBACK_DATA := preload("res://src/data/online_feedback_catalog.gd")
 const PRIMITIVES := preload("res://src/online/primitive_mirror.gd")
+const CAMERA_VIEW := preload("res://src/ui/battle_camera_view.gd")
 var motion = preload("res://src/online/actor_motion.gd").new()
 var visual_order: Array[int] = []
 var visual_slots := PackedInt32Array()
@@ -32,8 +33,15 @@ var allowed_actor_ids: Array = RULES.ROSTER.duplicate()
 var reveal_on_sight := false
 var hero_texture: Texture2D
 var scale_ratio := 1.0
+var map_scale := Vector2.ONE
 var map_offset := Vector2.ZERO
 var bounds := Vector2(3600,3600)
+var hero_role := true
+var camera_view_locked := true
+var manual_center := Vector2.ZERO
+var drag_pointer := -1
+var drag_distance := 0.0
+const DRAG_THRESHOLD := 12.0
 signal placement(point: Vector2)
 func set_match_roster(roster: Array,transcendence_id: String = "") -> void:
 	allowed_actor_ids = roster.duplicate()
@@ -94,6 +102,8 @@ func update_state(value: Dictionary) -> bool:
 		if motion_received_us > 0 and now-motion_received_us >= int(ART.MOTION_RESET_SECONDS*1000000.0): motion.clear()
 		motion.replace(value.hero,value.actors); motion_received_us = now
 		if motion.active: set_process(true)
+	if state.is_empty() and not hero_role and not camera_view_locked:
+		manual_center = Vector2(value.hero[0],value.hero[1])
 	state = value; bounds = Vector2(value.bounds[0],value.bounds[1])
 	_merge_visuals()
 	_resolve_owners(); queue_redraw(); return true
@@ -173,6 +183,7 @@ func _resolve_owners() -> void:
 		if texture != null and command[2]+command[4] <= texture.get_width() and command[3]+command[5] <= texture.get_height(): painted_owners[int(command[0])] = true
 func clear_state() -> void:
 	state = {}; painted_owners.clear(); render_visuals.clear()
+	manual_center = bounds*0.5; drag_pointer = -1
 	visual_order.clear(); visual_slots.clear(); visual_depths.clear(); actor_ids.clear(); resume_motion()
 	if feedback != null: feedback.reset()
 	primitives.parsed.clear()
@@ -181,7 +192,7 @@ func clear_state() -> void:
 func _exit_tree() -> void:
 	if is_instance_valid(load_drain): load_drain.set_process(true)
 func _draw_visuals() -> void:
-	var map_transform := Transform2D(Vector2(scale_ratio,0),Vector2(0,scale_ratio),map_offset)
+	var map_transform := Transform2D(Vector2(map_scale.x,0),Vector2(0,map_scale.y),map_offset)
 	for index in visual_order:
 		var command: Array = render_visuals[index]
 		var texture: Texture2D = art_textures.get(command[1])
@@ -195,20 +206,40 @@ func _draw_visuals() -> void:
 		draw_texture_rect_region(texture,Rect2(command[12],command[13],command[14],command[15]),source,Color(command[16],command[17],command[18],command[19]))
 	draw_set_transform_matrix(Transform2D.IDENTITY)
 func _layout_map() -> void:
-	scale_ratio = maxf(size.x/bounds.x,size.y/bounds.y)
+	var solo_size: Vector2 = CAMERA_VIEW.viewport_size(hero_role)
+	map_scale = Vector2(size.x/solo_size.x,size.y/solo_size.y)
+	scale_ratio = map_scale.x
 	var hero_point := Vector2(bounds.x*0.5,bounds.y*0.5)
 	if state.get("hero",null) is Array and state.hero.size() >= 2:
 		hero_point = motion.position(0,Vector2(state.hero[0],state.hero[1]))
-	var extent := bounds*scale_ratio
-	map_offset = Vector2(clampf(size.x*0.5-hero_point.x*scale_ratio,size.x-extent.x,0.0),clampf(size.y*0.5-hero_point.y*scale_ratio,size.y-extent.y,0.0))
+	if not hero_role and not camera_view_locked:
+		hero_point = manual_center
+	else:
+		manual_center = hero_point
+	var half_view := solo_size*0.5
+	hero_point.x = clampf(hero_point.x,half_view.x,bounds.x-half_view.x) if bounds.x >= solo_size.x else bounds.x*0.5
+	hero_point.y = clampf(hero_point.y,half_view.y,bounds.y-half_view.y) if bounds.y >= solo_size.y else bounds.y*0.5
+	if not hero_role and not camera_view_locked: manual_center = hero_point
+	map_offset = size*0.5-hero_point*map_scale
 	if battlefield != null:
-		battlefield.position = map_offset; battlefield.scale = Vector2.ONE*scale_ratio
+		battlefield.position = map_offset; battlefield.scale = map_scale
+
+func set_camera_view_locked(locked: bool) -> void:
+	_layout_map()
+	camera_view_locked = locked or hero_role
+	manual_center = (size*0.5-map_offset)/map_scale
+	queue_redraw()
+
+func pan_camera_by_screen_delta(screen_delta: Vector2) -> void:
+	if hero_role or camera_view_locked or screen_delta.length_squared() <= 0.001: return
+	manual_center -= screen_delta/map_scale
+	_layout_map(); queue_redraw()
 func _draw() -> void:
 	_layout_map()
 	if battlefield == null or not battlefield.visible:
-		draw_rect(Rect2(map_offset,bounds*scale_ratio),Color("283847"))
-		for x in range(0,int(bounds.x),300): draw_line(map_offset+Vector2(x,0)*scale_ratio,map_offset+Vector2(x,bounds.y)*scale_ratio,Color("354654"))
-		for y in range(0,int(bounds.y),300): draw_line(map_offset+Vector2(0,y)*scale_ratio,map_offset+Vector2(bounds.x,y)*scale_ratio,Color("354654"))
+		draw_rect(Rect2(map_offset,bounds*map_scale),Color("283847"))
+		for x in range(0,int(bounds.x),300): draw_line(map_offset+Vector2(x,0)*map_scale,map_offset+Vector2(x,bounds.y)*map_scale,Color("354654"))
+		for y in range(0,int(bounds.y),300): draw_line(map_offset+Vector2(0,y)*map_scale,map_offset+Vector2(bounds.x,y)*map_scale,Color("354654"))
 	primitives.draw(self)
 	_draw_visuals()
 	if state.is_empty(): return
@@ -216,9 +247,9 @@ func _draw() -> void:
 	_actor(motion.position(0,Vector2(hp[0],hp[1])),hero_texture,Color("73deff"),float(hp[2])/maxf(1,float(hp[3])),true,not painted_owners.has(0))
 	for actor in state.actors: _actor(motion.position(int(actor[0]),Vector2(actor[2],actor[3])),textures.get(actor[1]),Color("d56d67"),float(actor[4])/maxf(1,float(actor[5])),false,not painted_owners.has(int(actor[0])))
 	for point in state.get("shots",ART.EMPTY):
-		if RULES.point(point): draw_circle(map_offset+Vector2(point[0],point[1])*scale_ratio,4,Color("d6f5ff"))
+		if RULES.point(point): draw_circle(map_offset+Vector2(point[0],point[1])*map_scale,4,Color("d6f5ff"))
 func _actor(point: Vector2,texture: Texture2D,color: Color,hp: float,is_hero: bool,draw_body: bool = true) -> void:
-	var screen := map_offset+point*scale_ratio
+	var screen := map_offset+point*map_scale
 	var extent := Vector2(42,54) if is_hero else Vector2(34,40)
 	if draw_body:
 		if texture != null: draw_texture_rect(texture,Rect2(screen-extent*0.5,extent),false)
@@ -227,9 +258,24 @@ func _actor(point: Vector2,texture: Texture2D,color: Color,hp: float,is_hero: bo
 	draw_line(screen+Vector2(-18,-32),screen+Vector2(-18+36*clampf(hp,0,1),-32),color,4)
 func _gui_input(event: InputEvent) -> void:
 	var point: Vector2
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT: point = event.position
-	elif event is InputEventScreenTouch and event.pressed: point = event.position
+	var pointer := -2
+	if event is InputEventScreenTouch: pointer = event.index
+	if event is InputEventScreenDrag and pointer == drag_pointer:
+		drag_distance += event.relative.length()
+		pan_camera_by_screen_delta(event.relative); accept_event(); return
+	if event is InputEventMouseMotion and drag_pointer == -2 and (event.button_mask & MOUSE_BUTTON_MASK_LEFT) != 0:
+		drag_distance += event.relative.length()
+		pan_camera_by_screen_delta(event.relative); accept_event(); return
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_LEFT: point = event.position
+	elif event is InputEventScreenTouch: point = event.position
 	else: return
-	_layout_map(); point = (point-map_offset)/maxf(0.001,scale_ratio)
+	if not hero_role and not camera_view_locked:
+		if event.pressed:
+			drag_pointer = pointer; drag_distance = 0.0; accept_event(); return
+		if pointer != drag_pointer: return
+		drag_pointer = -1
+		if drag_distance >= DRAG_THRESHOLD: accept_event(); return
+	elif not event.pressed: return
+	_layout_map(); point = (point-map_offset)/map_scale
 	if point.x >= 0 and point.y >= 0 and point.x <= bounds.x and point.y <= bounds.y: placement.emit(point)
 	accept_event()

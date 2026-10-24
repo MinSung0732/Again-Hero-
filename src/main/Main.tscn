@@ -1,4 +1,4 @@
-[gd_scene load_steps=49 format=3]
+[gd_scene load_steps=50 format=3]
 
 [ext_resource type="Script" path="res://src/main/main.gd" id="1_main"]
 [ext_resource type="PackedScene" path="res://src/battle/Battle.tscn" id="2_battle"]
@@ -21,6 +21,7 @@
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/bottom_hud_backdrop.svg" id="30_bottom_backdrop"]
 
 [ext_resource type="PackedScene" path="res://src/ui/BattleSettings.tscn" id="shared_battle_settings"]
+[ext_resource type="PackedScene" path="res://src/ui/BattlePauseMenu.tscn" id="shared_battle_pause"]
 [ext_resource type="PackedScene" path="res://src/ui/battle_top_bar.tscn" id="shared_top_bar"]
 [ext_resource type="PackedScene" path="res://src/ui/battle_bottom_bar.tscn" id="shared_bottom_bar"]
 [ext_resource type="PackedScene" path="res://src/ui/demon_ultimate_panel.tscn" id="shared_ultimate_panel"]
@@ -818,124 +819,7 @@ theme_override_font_sizes/font_size = 20
 text = "이 창을 열어도 전투는 계속 진행됩니다."
 autowrap_mode = 2
 
-[node name="PauseMenu" type="Control" parent="HUD"]
-z_index = 300
-visible = false
-layout_mode = 3
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-mouse_filter = 0
-
-[node name="Dim" type="ColorRect" parent="HUD/PauseMenu"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-color = Color(0.015, 0.012, 0.02, 0.78)
-mouse_filter = 0
-
-[node name="MenuPanel" type="PanelContainer" parent="HUD/PauseMenu"]
-theme_override_styles/panel = SubResource("StyleBoxTexture_modal_panel")
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -390.0
-offset_top = -410.0
-offset_right = 390.0
-offset_bottom = 410.0
-grow_horizontal = 2
-grow_vertical = 2
-
-[node name="Margin" type="MarginContainer" parent="HUD/PauseMenu/MenuPanel"]
-layout_mode = 2
-theme_override_constants/margin_left = 54
-theme_override_constants/margin_top = 52
-theme_override_constants/margin_right = 54
-theme_override_constants/margin_bottom = 52
-
-[node name="VBox" type="VBoxContainer" parent="HUD/PauseMenu/MenuPanel/Margin"]
-layout_mode = 2
-theme_override_constants/separation = 28
-alignment = 1
-
-[node name="Title" type="Label" parent="HUD/PauseMenu/MenuPanel/Margin/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(1, 0.86, 0.55, 1)
-theme_override_font_sizes/font_size = 46
-text = "전투 메뉴"
-horizontal_alignment = 1
-
-[node name="StageLabel" type="Label" parent="HUD/PauseMenu/MenuPanel/Margin/VBox"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 30
-text = "Stage 1 · 첫 번째 침입자\n상대: 견습 마도사"
-horizontal_alignment = 1
-autowrap_mode = 2
-
-[node name="TimeLabel" type="Label" parent="HUD/PauseMenu/MenuPanel/Margin/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.78, 0.72, 0.82, 1)
-theme_override_font_sizes/font_size = 26
-text = "남은 시간 06:00"
-horizontal_alignment = 1
-
-[node name="Guide" type="Label" parent="HUD/PauseMenu/MenuPanel/Margin/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.62, 0.58, 0.67, 1)
-theme_override_font_sizes/font_size = 21
-text = "메뉴가 열린 동안 전투와 타이머가 정지합니다."
-horizontal_alignment = 1
-autowrap_mode = 2
-
-[node name="ResumeButton" type="Button" parent="HUD/PauseMenu/MenuPanel/Margin/VBox"]
-focus_mode = 0
-theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
-theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
-theme_override_styles/normal = SubResource("StyleBoxFlat_action_normal")
-custom_minimum_size = Vector2(0, 124)
-layout_mode = 2
-theme_override_font_sizes/font_size = 30
-text = "계속하기"
-
-[node name="SettingsButton" type="Button" parent="HUD/PauseMenu/MenuPanel/Margin/VBox"]
-focus_mode = 0
-theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
-theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
-theme_override_styles/normal = SubResource("StyleBoxFlat_action_normal")
-custom_minimum_size = Vector2(0, 100)
-layout_mode = 2
-theme_override_font_sizes/font_size = 28
-text = "설정"
-
-[node name="RestartButton" type="Button" parent="HUD/PauseMenu/MenuPanel/Margin/VBox"]
-metadata/audio_cue = "click"
-focus_mode = 0
-theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
-theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
-theme_override_styles/normal = SubResource("StyleBoxFlat_action_normal")
-custom_minimum_size = Vector2(0, 115)
-layout_mode = 2
-theme_override_font_sizes/font_size = 29
-text = "이 스테이지 다시 도전"
-
-[node name="LobbyButton" type="Button" parent="HUD/PauseMenu/MenuPanel/Margin/VBox"]
-metadata/audio_cue = "click"
-focus_mode = 0
-theme_override_styles/pressed = SubResource("StyleBoxFlat_action_pressed")
-theme_override_styles/hover = SubResource("StyleBoxFlat_action_hover")
-theme_override_styles/normal = SubResource("StyleBoxFlat_action_normal")
-custom_minimum_size = Vector2(0, 115)
-layout_mode = 2
-theme_override_font_sizes/font_size = 29
-text = "로비로 나가기"
+[node name="PauseMenu" parent="HUD" instance=ExtResource("shared_battle_pause")]
 
 [node name="SettingsOverlay" parent="HUD" instance=ExtResource("shared_battle_settings")]
 
