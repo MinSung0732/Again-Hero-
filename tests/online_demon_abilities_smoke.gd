@@ -9,7 +9,7 @@ func check(ok: bool,message: String) -> void:
 	if not ok: push_error(message); quit(1); assert(ok,message)
 func _initialize() -> void: run.call_deferred()
 func run() -> void:
-	check(RULES.VERSION == 19 and SCENE != null,"matching protocol and client parse")
+	check(RULES.VERSION == 20 and SCENE != null,"matching protocol and client parse")
 	var room = ROOM.new(); root.add_child(room)
 	room.set_loadouts({"hero_id":RULES.HERO},{"team_ids":["slime","spider","orc"],"skill_ids":["encirclement"],"transcendence_id":"zeus"})
 	room.prepare(); room.start()

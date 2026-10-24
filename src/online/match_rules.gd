@@ -1,6 +1,6 @@
 extends RefCounted
-## Augment card metadata requires matching protocol 19 peers.
-const VERSION := 19
+## Combat status bars require matching protocol 20 peers.
+const VERSION := 20
 const HINT_DETAIL := "role" # "role" or "monster"
 const ROLE_HINT_LABELS := {"melee":"근접"}
 const TARGET_HINT_LABELS := {"demon":"마왕 운영","all_monsters":"모든 몬스터"}

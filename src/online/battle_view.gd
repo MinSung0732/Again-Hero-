@@ -10,6 +10,7 @@ const SAMPLE := preload("res://src/online/presentation_snapshot.gd")
 const FEEDBACK_DATA := preload("res://src/data/online_feedback_catalog.gd")
 const PRIMITIVES := preload("res://src/online/primitive_mirror.gd")
 const CAMERA_VIEW := preload("res://src/ui/battle_camera_view.gd")
+const BARS := preload("res://src/ui/battle_bar_painter.gd")
 var motion = preload("res://src/online/actor_motion.gd").new()
 var visual_order: Array[int] = []
 var visual_slots := PackedInt32Array()
@@ -75,14 +76,15 @@ func update_state(value: Dictionary) -> bool:
 	if not PRIMITIVES.valid(value.get("primitives",ART.EMPTY)): return false
 	if value.has("feedback") and not FEEDBACK_DATA.valid_events(value.feedback,value.get("feedback_cursor",null),value.get("tick",null)): return false
 	if not RULES.point(value.get("bounds",null)) or not value.get("hero",null) is Array: return false
-	if value.hero.size() != 5 or not value.get("actors",null) is Array or value.actors.size() > ART.MAX_ACTORS: return false
-	for number in value.hero:
-		if not RULES.number(number): return false
+	if value.hero.size() != 6 or not value.get("actors",null) is Array or value.actors.size() > ART.MAX_ACTORS: return false
+	for index in 5:
+		if not RULES.number(value.hero[index]): return false
+	if not BARS.valid_hero_bars(value.hero[5]) or not value.get("hero_archetype",null) is String: return false
 	if float(value.bounds[0]) < 500 or float(value.bounds[1]) < 500: return false
 	if float(value.bounds[0]) > ART.MAX_WORLD_EXTENT or float(value.bounds[1]) > ART.MAX_WORLD_EXTENT: return false
 	actor_ids.clear()
 	for actor in value.actors:
-		if not actor is Array or actor.size() != 6 or not actor[1] is String: return false
+		if not actor is Array or actor.size() != 7 or not actor[1] is String or not BARS.valid_monster_bars(actor[6]): return false
 		if actor[1] not in allowed_actor_ids and not _admit_sighted_actor(actor[1]): return false
 		for index in [0,2,3,4,5]:
 			if not RULES.number(actor[index]): return false
@@ -244,18 +246,45 @@ func _draw() -> void:
 	_draw_visuals()
 	if state.is_empty(): return
 	var hp: Array = state.hero
-	_actor(motion.position(0,Vector2(hp[0],hp[1])),hero_texture,Color("73deff"),float(hp[2])/maxf(1,float(hp[3])),true,not painted_owners.has(0))
-	for actor in state.actors: _actor(motion.position(int(actor[0]),Vector2(actor[2],actor[3])),textures.get(actor[1]),Color("d56d67"),float(actor[4])/maxf(1,float(actor[5])),false,not painted_owners.has(int(actor[0])))
+	var hero_point: Vector2 = motion.position(0,Vector2(hp[0],hp[1]))
+	_actor(hero_point,hero_texture,Color("73deff"),true,not painted_owners.has(0))
+	_draw_hero_bars(hero_point,hp[5],String(state.hero_archetype))
+	for actor in state.actors:
+		var point: Vector2 = motion.position(int(actor[0]),Vector2(actor[2],actor[3]))
+		_actor(point,textures.get(actor[1]),Color("d56d67"),false,not painted_owners.has(int(actor[0])))
+		_draw_monster_bars(point,actor[6])
 	for point in state.get("shots",ART.EMPTY):
 		if RULES.point(point): draw_circle(map_offset+Vector2(point[0],point[1])*map_scale,4,Color("d6f5ff"))
-func _actor(point: Vector2,texture: Texture2D,color: Color,hp: float,is_hero: bool,draw_body: bool = true) -> void:
+func _actor(point: Vector2,texture: Texture2D,color: Color,is_hero: bool,draw_body: bool = true) -> void:
 	var screen := map_offset+point*map_scale
 	var extent := Vector2(42,54) if is_hero else Vector2(34,40)
 	if draw_body:
 		if texture != null: draw_texture_rect(texture,Rect2(screen-extent*0.5,extent),false)
 		else: draw_circle(screen,12,color)
-	draw_line(screen+Vector2(-18,-32),screen+Vector2(18,-32),Color("27212c"),5)
-	draw_line(screen+Vector2(-18,-32),screen+Vector2(-18+36*clampf(hp,0,1),-32),color,4)
+func _bar_transform(point: Vector2) -> void:
+	draw_set_transform_matrix(Transform2D(Vector2(map_scale.x,0),Vector2(0,map_scale.y),map_offset+point*map_scale))
+func _draw_hero_bars(point: Vector2,bars: Array,archetype: String) -> void:
+	_bar_transform(point)
+	var layout: Vector4 = HERO_ART.get_status_layout(archetype)
+	var left := -HERO_ART.STATUS_BAR_WIDTH*0.5+layout.x
+	var rule: Dictionary = HERO_ART.get_status_resource(archetype)
+	if int(bars[2]) == 1:
+		if int(bars[4]) > 0: BARS.draw_hero_cells(self,float(bars[5]),int(bars[4]),int(bars[3]),rule["color"])
+	else:
+		BARS.draw_hero_resource(self,left if bool(rule["use_x_offset"]) else -HERO_ART.STATUS_BAR_WIDTH*0.5,float(bars[5]),float(bars[3])/255.0,rule["color"])
+	BARS.draw_hero_hp(self,left,float(bars[6]),float(bars[0])/255.0)
+	if int(bars[1]) > 0: BARS.draw_hero_shield(self,left,float(bars[7]),float(bars[1])/255.0)
+	draw_set_transform_matrix(Transform2D.IDENTITY)
+func _draw_monster_bars(point: Vector2,bars: Array) -> void:
+	_bar_transform(point)
+	var y := float(bars[2])
+	var scale_x := float(bars[3])/100.0
+	var scale_y := float(bars[4])/100.0
+	BARS.draw_monster_bar(self,y,float(bars[0])/255.0,BARS.MONSTER_HP,scale_x,scale_y)
+	if int(bars[1]) >= 0: BARS.draw_monster_bar(self,y+BARS.MONSTER_STEP/scale_y,float(bars[1])/255.0,BARS.MONSTER_YELLOW,scale_x,scale_y,true)
+	for index in range(5,bars.size(),2):
+		BARS.draw_monster_bar(self,y-BARS.MONSTER_STEP/scale_y*float((index-5)/2+1),float(bars[index+1])/255.0,BARS.SHIELD_COLORS[BARS.SHIELD_KINDS[int(bars[index])]],scale_x,scale_y)
+	draw_set_transform_matrix(Transform2D.IDENTITY)
 func _gui_input(event: InputEvent) -> void:
 	var point: Vector2
 	var pointer := -2

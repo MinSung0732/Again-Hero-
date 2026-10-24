@@ -11,7 +11,7 @@ func check(ok: bool,message: String) -> void:
 	if not ok: push_error(message); quit(1); assert(ok,message)
 func _initialize() -> void: run.call_deferred()
 func run() -> void:
-	check(RULES.VERSION == 19,"server and client protocol 19")
+	check(RULES.VERSION == 20,"server and client protocol 20")
 	var room = ROOM.new(); root.add_child(room); room.prepare(); room.start()
 	room.battle.process_mode = Node.PROCESS_MODE_DISABLED
 	var runtime = room.battle.hero.player_weapons

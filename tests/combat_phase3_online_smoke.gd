@@ -37,7 +37,7 @@ func run() -> void:
 	root.get_node("CloudStore").stop(); root.get_node("LoginGateway").remember_session_enabled = false
 	var old_script = baseline(); var rooms: Array = []
 	var codec = CODEC.new()
-	var later_fields := ["battlefield", "summon_costs", "demon_level", "demon_rerolls_left", "demon_reroll_limit", "demon_exp", "demon_exp_next", "demon_charge", "demon_charge_max", "demon_cooldowns", "demon_ready", "transcend_ready", "transcend_used", "visuals", "primitives", "feedback", "feedback_cursor"]
+	var later_fields := ["hero_archetype", "battlefield", "summon_costs", "demon_level", "demon_rerolls_left", "demon_reroll_limit", "demon_exp", "demon_exp_next", "demon_charge", "demon_charge_max", "demon_cooldowns", "demon_ready", "transcend_ready", "transcend_used", "visuals", "primitives", "feedback", "feedback_cursor"]
 	for index in 2:
 		var room := ROOM.new(); root.add_child(room); room.prepare(); rooms.append(room)
 		var previous = old_script.new(); previous.battle = room.battle
@@ -58,6 +58,14 @@ func run() -> void:
 			check(not after.has("choice_revision") and not after.has("choices"),"obsolete shared choice fields removed")
 			before.erase("choice_revision"); before.erase("choices")
 			var shared := baseline_fields(before, after)
+			# Protocol 20 appends a bar array to hero/actor rows; the frozen prefix must still match.
+			check(after.hero.size() == before.hero.size()+1 and after.hero[-1] is Array,"hero row appends only the bar array")
+			shared["hero"] = after.hero.slice(0,before.hero.size())
+			var trimmed: Array = []
+			for row in after.actors:
+				check(row.size() == 7 and row[-1] is Array,"actor row appends only the bar array")
+				trimmed.append(row.slice(0,6))
+			shared["actors"] = trimmed
 			check(shared.size() == before.size() and JSON.stringify(before) == SERVER._encode(shared),"wire/ID/order/generation parity")
 			check(added_fields(before, after) == later_fields,"only known later snapshot fields added")
 			check(codec_round_trip(codec, after),"path-interned wire decodes to the same snapshot")

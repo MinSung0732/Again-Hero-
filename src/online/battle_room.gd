@@ -387,7 +387,7 @@ func _build_snapshot() -> Dictionary:
 		if not ids.has(instance) or ids[instance].generation != generation:
 			next_id += 1; ids[instance] = {"wire":next_id,"generation":generation,"seen":snapshot_revision}
 		else: ids[instance].seen = snapshot_revision
-		actors.append([ids[instance].wire,String(actor.get("monster_type")),snappedf(actor.position.x,0.1),snappedf(actor.position.y,0.1),int(actor.get("current_hp")),int(actor.get("max_hp"))])
+		actors.append([ids[instance].wire,String(actor.get("monster_type")),snappedf(actor.position.x,0.1),snappedf(actor.position.y,0.1),int(actor.get("current_hp")),int(actor.get("max_hp")),_monster_bars(actor)])
 		presentation.append_tree(actor,int(ids[instance].wire),visuals)
 	for id in battle.online_visual_projectiles: presentation.append_tree(battle.online_visual_projectiles[id],-1,visuals)
 	if is_instance_valid(battle.hero) and battle.hero.player_weapons != null:
@@ -417,7 +417,55 @@ func _build_snapshot() -> Dictionary:
 		var skill: Dictionary = SKILLS.get_skill(String(id))
 		demon_ready[id] = battle.demon_ultimate_spawn_queue.is_empty() and battle.demon_ultimate_charge+0.001 >= float(skill.get("mana_cost",SKILLS.CHARGE_MAX)) and float(battle.demon_ultimate_cooldowns.get(id,0.0)) <= 0.001
 	# Bounded snapshot serialization and presentation sort at10Hz, not physics Hz.
-	return {"op":"state","tick":tick,"hero":[hero_last.x,hero_last.y,hp,maximum,level],"bounds":[battle.current_map_size.x,battle.current_map_size.y],"battlefield":battlefield_info,"seconds":battle.run_metrics.elapsed_seconds,"mana":battle.command_power,"summon_costs":summon_costs,"demon_level":battle.demon_level,"demon_rerolls_left":battle.demon_rerolls_left,"demon_reroll_limit":battle.demon_reroll_max,"demon_exp":battle.demon_exp,"demon_exp_next":battle.demon_exp_to_next_level,"demon_charge":battle.demon_ultimate_charge,"demon_charge_max":SKILLS.CHARGE_MAX,"demon_cooldowns":battle.demon_ultimate_cooldowns,"demon_ready":demon_ready,"transcend_ready":battle.transcendence.ready and not battle.transcendence.used,"transcend_used":battle.transcendence.used,"actors":actors,"shots":shots,"visuals":visuals,"primitives":primitives,"feedback":feedback.snapshot(),"feedback_cursor":feedback.sequence,"winner":winner,"reason":reason}
+	return {"op":"state","tick":tick,"hero":[hero_last.x,hero_last.y,hp,maximum,level,_hero_bars()],"hero_archetype":String(battle.hero.hero_archetype) if is_instance_valid(battle.hero) else "","bounds":[battle.current_map_size.x,battle.current_map_size.y],"battlefield":battlefield_info,"seconds":battle.run_metrics.elapsed_seconds,"mana":battle.command_power,"summon_costs":summon_costs,"demon_level":battle.demon_level,"demon_rerolls_left":battle.demon_rerolls_left,"demon_reroll_limit":battle.demon_reroll_max,"demon_exp":battle.demon_exp,"demon_exp_next":battle.demon_exp_to_next_level,"demon_charge":battle.demon_ultimate_charge,"demon_charge_max":SKILLS.CHARGE_MAX,"demon_cooldowns":battle.demon_ultimate_cooldowns,"demon_ready":demon_ready,"transcend_ready":battle.transcendence.ready and not battle.transcendence.used,"transcend_used":battle.transcendence.used,"actors":actors,"shots":shots,"visuals":visuals,"primitives":primitives,"feedback":feedback.snapshot(),"feedback_cursor":feedback.sequence,"winner":winner,"reason":reason}
+
+func _hero_bars() -> Array:
+	var hero = battle.hero
+	if not is_instance_valid(hero): return [0,0,0,0,0,-79,-64,-49]
+	var painter = preload("res://src/ui/battle_bar_painter.gd")
+	var presentation = preload("res://src/data/hero_presentation_catalog.gd")
+	var rule: Dictionary = presentation.get_status_resource(hero.hero_archetype)
+	var kind := 1 if rule["kind"] == &"cells" else 0
+	var value := 0
+	var capacity := 0
+	if kind == 1:
+		capacity = int(hero.call(rule["capacity_method"])) if rule.has("capacity_method") else int(hero.get(rule["capacity_property"]))
+		value = int(hero._get_status_displayed_cells(rule,capacity))
+	else:
+		var maximum: float
+		if rule.has("max_property"):
+			maximum = maxf(float(hero.get(rule["max_property"])),float(rule["minimum_max"]))
+		else:
+			var config: Dictionary = hero.get(rule["config_property"])
+			maximum = maxf(float(config.get(rule["max_key"],rule["default_max"])),float(rule["minimum_max"]))
+		value = painter.quantize(float(hero.get(rule["value_property"]))/maximum)
+	var shield := painter.quantize(hero.shield_hp/maxf(hero.shield_max_hp,1.0)) if hero.shield_hp > 0.0 else 0
+	var layout: Vector4 = presentation.get_status_layout(hero.hero_archetype)
+	var resource_y := layout.y
+	var hp_y := layout.z
+	var shield_y := layout.w
+	if hero.player_controlled and hero.player_weapons != null and hero.player_weapons.identity != null:
+		resource_y = hero.player_weapons.identity.status_resource_y
+		hp_y = hero.player_weapons.identity.status_hp_y
+		shield_y = hero.player_weapons.identity.status_shield_y
+	return [painter.quantize(float(hero.current_hp)/maxf(float(hero.max_hp),1.0)),shield,kind,value,capacity,int(resource_y),int(hp_y),int(shield_y)]
+
+func _monster_bars(actor: Node2D) -> Array:
+	var painter = preload("res://src/ui/battle_bar_painter.gd")
+	var common = preload("res://src/monsters/monster_runtime_common.gd")
+	var layout = preload("res://src/data/monster_bar_layout_catalog.gd")
+	var yellow := common.get_yellow_ratio(actor,layout.gauge_capacity(actor))
+	var y: float = layout.y(actor)
+	var canvas := actor.get_node_or_null("StatusLayer") as Node2D
+	if canvas == null: canvas = actor
+	var bars := [painter.quantize(float(actor.get("current_hp"))/maxf(float(actor.get("max_hp")),1.0)),painter.quantize(yellow) if yellow >= 0.0 else -1,int(round(y)),clampi(int(round(absf(canvas.global_scale.x)*100.0)),1,1024),clampi(int(round(absf(canvas.global_scale.y)*100.0)),1,1024)]
+	var order: Array = common.sync_bar_order(actor)
+	for kind in order:
+		var kind_index: int = painter.SHIELD_KINDS.find(kind)
+		if kind_index < 0: continue
+		bars.append(kind_index)
+		bars.append(painter.quantize(common.shield_value(actor,kind)/maxf(common.shield_value(actor,kind,true),1.0)))
+	return bars
 
 func _visual_order(a: Array,b: Array) -> bool:
 	return PRESENTATION.visual_order(a,b)

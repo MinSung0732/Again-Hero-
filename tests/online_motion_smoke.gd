@@ -9,7 +9,7 @@ func check(ok: bool,message: String) -> void:
 	if not ok: push_error(message); quit(1); assert(ok,message)
 func _initialize() -> void: run.call_deferred()
 func sample(y: float) -> Dictionary:
-	return {"bounds":[3600,3600],"hero":[100,y,80,100,1],"actors":[[1,RULES.ROSTER[0],200,y,10,20]],"visuals":[command(0,y),command(1,y),command(-2,150),command(-1,175)]}
+	return {"bounds":[3600,3600],"hero":[100,y,80,100,1,[204,0,0,0,0,-79,-64,-49]],"hero_archetype":RULES.HERO,"actors":[[1,RULES.ROSTER[0],200,y,10,20,[128,-1,-44,100,100]]],"visuals":[command(0,y),command(1,y),command(-2,150),command(-1,175)]}
 func command(owner: int,y: float) -> Array:
 	return [owner,"res://assets/art/fixture.png",0,0,16,16,1,0,0,1,100,y,-8,-8,16,16,1,1,1,1,0,y]
 func run() -> void:

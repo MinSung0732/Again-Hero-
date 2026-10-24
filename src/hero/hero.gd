@@ -8927,21 +8927,7 @@ func _draw_combat_status_overlay() -> void:
 	_draw_status_resource_bar(HERO_PRESENTATION.get_status_resource(hero_archetype), resource_bar_y, bar_width, bar_left_x)
 
 	var hp_ratio := float(current_hp) / float(maxi(max_hp, 1))
-	status_overlay.draw_rect(
-		Rect2(bar_left_x, hp_bar_y, bar_width, HERO_PRESENTATION.STATUS_HP_HEIGHT),
-		HERO_PRESENTATION.STATUS_BACKGROUND_COLOR,
-		true
-	)
-	status_overlay.draw_rect(
-		Rect2(
-			bar_left_x,
-			hp_bar_y,
-			bar_width * hp_ratio,
-			HERO_PRESENTATION.STATUS_HP_HEIGHT
-		),
-		HERO_PRESENTATION.STATUS_HP_COLOR,
-		true
-	)
+	preload("res://src/ui/battle_bar_painter.gd").draw_hero_hp(status_overlay, bar_left_x, hp_bar_y, hp_ratio)
 
 	if shield_max_hp > 0.0 and shield_hp > 0.0:
 		var shield_ratio := clampf(
@@ -8949,21 +8935,7 @@ func _draw_combat_status_overlay() -> void:
 			0.0,
 			1.0
 		)
-		status_overlay.draw_rect(
-			Rect2(bar_left_x, shield_bar_y, bar_width, HERO_PRESENTATION.STATUS_SHIELD_HEIGHT),
-			HERO_PRESENTATION.STATUS_SHIELD_BACKGROUND_COLOR,
-			true
-		)
-		status_overlay.draw_rect(
-			Rect2(
-				bar_left_x,
-				shield_bar_y,
-				bar_width * shield_ratio,
-				HERO_PRESENTATION.STATUS_SHIELD_HEIGHT
-			),
-			HERO_PRESENTATION.STATUS_SHIELD_COLOR,
-			true
-		)
+		preload("res://src/ui/battle_bar_painter.gd").draw_hero_shield(status_overlay, bar_left_x, shield_bar_y, shield_ratio)
 
 # Stronger paralysis replaces weaker; weaker applications cannot prolong it.
 
@@ -9164,7 +9136,6 @@ func _reset_scaled_effect_visual(target: AnimatedSprite2D, properties: Dictionar
 
 
 func _draw_status_resource_bar(rule: Dictionary, bar_y: float, bar_width: float, bar_left_x: float) -> void:
-	var height := HERO_PRESENTATION.STATUS_RESOURCE_HEIGHT
 	if rule["kind"] == &"cells":
 		var capacity: int
 		if rule.has("capacity_method"):
@@ -9172,13 +9143,7 @@ func _draw_status_resource_bar(rule: Dictionary, bar_y: float, bar_width: float,
 		else:
 			capacity = int(get(rule["capacity_property"]))
 		var displayed_cells := _get_status_displayed_cells(rule, capacity)
-		var gap := HERO_PRESENTATION.STATUS_CELL_GAP
-		var cell_width := (bar_width - gap * float(capacity - 1)) / float(capacity)
-		for index in range(capacity):
-			var x := -bar_width / 2.0 + float(index) * (cell_width + gap)
-			status_overlay.draw_rect(Rect2(x, bar_y, cell_width, height), HERO_PRESENTATION.STATUS_BACKGROUND_COLOR, true)
-			if index < displayed_cells:
-				status_overlay.draw_rect(Rect2(x, bar_y, cell_width, height), rule["color"], true)
+		preload("res://src/ui/battle_bar_painter.gd").draw_hero_cells(status_overlay, bar_y, capacity, displayed_cells, rule["color"])
 		return
 	var maximum: float
 	if rule.has("max_property"):
@@ -9188,8 +9153,7 @@ func _draw_status_resource_bar(rule: Dictionary, bar_y: float, bar_width: float,
 		maximum = maxf(float(config.get(rule["max_key"], rule["default_max"])), float(rule["minimum_max"]))
 	var ratio := clampf(float(get(rule["value_property"])) / maximum, 0.0, 1.0)
 	var x := bar_left_x if bool(rule["use_x_offset"]) else -bar_width / 2.0
-	status_overlay.draw_rect(Rect2(x, bar_y, bar_width, height), HERO_PRESENTATION.STATUS_BACKGROUND_COLOR, true)
-	status_overlay.draw_rect(Rect2(x, bar_y, bar_width * ratio, height), rule["color"], true)
+	preload("res://src/ui/battle_bar_painter.gd").draw_hero_resource(status_overlay, x, bar_y, ratio, rule["color"])
 
 
 func _get_status_displayed_cells(rule: Dictionary, capacity: int) -> int:

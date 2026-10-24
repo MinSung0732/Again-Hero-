@@ -539,11 +539,12 @@ static func apply_direct_heal(
 
 
 # Fixed screen-space rows: shield types / HP / existing skill resource only.
-const BAR_HEIGHT := 6.0
-const YELLOW_BAR_HEIGHT := 4.0
-const BAR_GAP := 3.0
-const BAR_WIDTH := 70.0
-const BAR_COLORS := {"shield":Color("61ddff"),"ranged":Color("b490ff"),"melee":Color("ff9566")}
+const BAR_PAINTER := preload("res://src/ui/battle_bar_painter.gd")
+const BAR_HEIGHT := BAR_PAINTER.MONSTER_HEIGHT
+const YELLOW_BAR_HEIGHT := BAR_PAINTER.MONSTER_YELLOW_HEIGHT
+const BAR_GAP := BAR_PAINTER.MONSTER_STEP - BAR_HEIGHT
+const BAR_WIDTH := BAR_PAINTER.MONSTER_WIDTH
+const BAR_COLORS := BAR_PAINTER.SHIELD_COLORS
 
 static func _bar_order(actor: Node) -> Array:
 	if not actor.has_meta("combat_bar_order"): actor.set_meta("combat_bar_order", [])
@@ -587,21 +588,15 @@ static func sync_bar_order(actor: Node) -> Array:
 static func draw_status_bars(actor: Node2D, canvas: Node2D, hp_y: float, gauge_capacity: float = 100.0) -> void:
 	var scale_x := maxf(absf(canvas.global_scale.x),0.01)
 	var scale_y := maxf(absf(canvas.global_scale.y),0.01)
-	var width := BAR_WIDTH/scale_x
-	var height := BAR_HEIGHT/scale_y
 	var step := (BAR_HEIGHT+BAR_GAP)/scale_y
-	_draw_bar(canvas,width,height,hp_y,float(actor.get("current_hp"))/maxf(float(actor.get("max_hp")),1.0),Color("4cd965"))
+	BAR_PAINTER.draw_monster_bar(canvas,hp_y,float(actor.get("current_hp"))/maxf(float(actor.get("max_hp")),1.0),BAR_PAINTER.MONSTER_HP,scale_x,scale_y)
 	var yellow_ratio := get_yellow_ratio(actor,gauge_capacity)
 	if yellow_ratio >= 0.0:
-		_draw_bar(canvas,width,YELLOW_BAR_HEIGHT/scale_y,hp_y+step,yellow_ratio,Color("ffdb3b"))
+		BAR_PAINTER.draw_monster_bar(canvas,hp_y+step,yellow_ratio,BAR_PAINTER.MONSTER_YELLOW,scale_x,scale_y,true)
 	var order := sync_bar_order(actor)
 	for index in range(order.size()):
 		var kind: String = order[index]
-		_draw_bar(canvas,width,height,hp_y-step*(index+1),shield_value(actor,kind)/maxf(shield_value(actor,kind,true),1.0),BAR_COLORS[kind])
-
-static func _draw_bar(canvas: Node2D, width: float, height: float, y: float, ratio: float, color: Color) -> void:
-	canvas.draw_rect(Rect2(-width*0.5,y,width,height),Color("202024"))
-	canvas.draw_rect(Rect2(-width*0.5,y,width*clampf(ratio,0.0,1.0),height),color)
+		BAR_PAINTER.draw_monster_bar(canvas,hp_y-step*(index+1),shield_value(actor,kind)/maxf(shield_value(actor,kind,true),1.0),BAR_COLORS[kind],scale_x,scale_y)
 
 static func draw_support_shield_bar(owner: Node2D, _width: float, hp_bar_y: float) -> void:
 	draw_status_bars(owner,owner,hp_bar_y)
