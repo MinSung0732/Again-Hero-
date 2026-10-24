@@ -21,6 +21,7 @@ const ENTRY := preload("res://src/systems/dungeon_entry_policy.gd")
 const WEAPONS := preload("res://src/data/hero_weapon_catalog.gd")
 const ICONS := preload("res://src/ui/hero_augment_icons.gd")
 const TOP_LAYOUT := preload("res://src/ui/castle_battle_chrome.gd")
+const HERO_FRAME := preload("res://src/ui/hero_battle_frame.gd")
 const RESPONSIVE := preload("res://src/ui/battle_responsive_layout.gd")
 const HERO_HUD := preload("res://src/ui/hero_survival_hud.gd")
 const PIXEL_SKIN := preload("res://src/ui/pixel_panel_skin.gd")
@@ -207,8 +208,17 @@ func _ready() -> void:
 		if child is Control and child != status and child != ranking_row and child != action_notice and child != view:
 			setup_controls.append(child)
 	TOP_LAYOUT.layout_top(top_bar)
-	var chrome: Control = TOP_LAYOUT.install_backdrop(self)
-	chrome.hide()
+	if role == "demon":
+		var chrome: Control = TOP_LAYOUT.install_backdrop(self)
+		chrome.hide()
+	else:
+		var hero_frame: Control = HERO_FRAME.new()
+		hero_frame.name = "HeroBattleFrame"
+		hero_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		hero_frame.z_index = -10
+		add_child(hero_frame)
+		hero_frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		hero_frame.hide()
 	var lower_backing: Control
 	if role == "demon": lower_backing = TOP_LAYOUT.install_lower_backdrop(self,465.0)
 	else:
@@ -438,15 +448,12 @@ func _layout_top_bar() -> void:
 
 func _show_match_layout() -> void:
 	for control in setup_controls: control.hide()
-	get_node("CastleBattleChrome").show()
 	get_node("BattleLowerBacking").show()
 	top_bar.show()
 	status.hide(); action_notice.hide(); cancel_button.hide(); ranking_row.hide()
 	if hero_build_toggle != null: hero_build_toggle.show()
-	rows.offset_top = 478 if role == "hero" else top_bar.get_global_rect().end.y
-	rows.offset_left = 0
-	rows.offset_right = 0
 	rows.offset_bottom = -465 if role == "demon" else -210
+	_apply_match_frame()
 	if role == "demon":
 		demon_panel.show(); bottom_bar.show()
 	else: hero_slots.show()
@@ -551,8 +558,17 @@ func _set_camera_view_locked(enabled: bool) -> void:
 
 func _set_battle_frame(enabled: bool) -> void:
 	battle_frame_enabled = enabled
-	get_node("CastleBattleChrome").visible = enabled and top_bar.visible
+	_apply_match_frame()
 	_save_match_gameplay_setting("battle_frame_enabled",enabled)
+
+func _apply_match_frame() -> void:
+	if role == "demon":
+		TOP_LAYOUT.apply_play_area(rows,battle_frame_enabled)
+		get_node("CastleBattleChrome").visible = battle_frame_enabled and top_bar.visible
+	else:
+		rows.offset_top = HERO_HUD.BATTLE_TOP
+		HERO_FRAME.apply_view_insets(rows,battle_frame_enabled)
+		get_node("HeroBattleFrame").visible = battle_frame_enabled and top_bar.visible
 
 func _save_match_gameplay_setting(key: String,value: bool) -> void:
 	var config := ConfigFile.new(); config.load(GAMEPLAY_SETTINGS_PATH)

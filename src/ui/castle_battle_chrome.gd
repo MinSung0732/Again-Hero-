@@ -116,13 +116,16 @@ static func apply_visibility(main: Node, enabled: bool) -> void:
 		chrome.visible = enabled
 	var insight := main.hud_layer.get_node_or_null("CombatInsight") as Control
 	var has_insight := insight != null and insight.visible
-	var play_top := PLAY_TOP if enabled or has_insight else 350.0
-	main.battle_viewport_container.offset_top = play_top
-	main.battle_viewport_container.offset_left = SIDE_INSET if enabled else 0.0
-	main.battle_viewport_container.offset_right = -SIDE_INSET if enabled else 0.0
+	apply_play_area(main.battle_viewport_container, enabled, has_insight)
+	var play_top: float = main.battle_viewport_container.offset_top
 	place(main.get_node("HUD/HeroSkillCooldownBar"), Rect2(130 if enabled else 30, play_top+10, 470, 68))
 	if main.battle_responsive_layout != null: main.battle_responsive_layout.refresh()
 	main._sync_skill_unlock_cutscene_frame()
+
+static func apply_play_area(view: Control, enabled: bool, has_insight: bool = false) -> void:
+	view.offset_top = PLAY_TOP if enabled or has_insight else 350.0
+	view.offset_left = SIDE_INSET if enabled else 0.0
+	view.offset_right = -SIDE_INSET if enabled else 0.0
 
 static func place(control: Control, rect: Rect2, font_size: int = 0) -> void:
 	control.position = rect.position

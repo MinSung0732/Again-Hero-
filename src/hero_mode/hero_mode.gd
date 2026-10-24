@@ -635,8 +635,7 @@ func _set_battle_frame(enabled: bool) -> void:
 func _apply_battle_frame() -> void:
 	battle_frame.visible = battle_frame_enabled
 	var view: SubViewportContainer = get_node("BattleView")
-	view.offset_left = HUD.FRAME_WIDTH if battle_frame_enabled else 0
-	view.offset_right = -HUD.FRAME_WIDTH if battle_frame_enabled else 0
+	preload("res://src/ui/hero_battle_frame.gd").apply_view_insets(view, battle_frame_enabled)
 	stats_panel.position.x = view.offset_left+10
 func _restart_from_pause() -> void:
 	if leaving or not paused or battle.battle_over: return

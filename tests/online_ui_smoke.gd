@@ -16,7 +16,7 @@ func check(ok: bool,message: String) -> void:
 	if not ok: push_error(message); quit(1); assert(ok,message)
 func _initialize() -> void: run.call_deferred()
 func run() -> void:
-	for path in ["res://src/main/main.gd","res://src/hero_mode/hero_mode.gd","res://src/online/match_scene.gd","res://src/online/battle_view.gd","res://src/ui/battle_camera_view.gd","res://src/online/primitive_mirror.gd","res://src/online/combat_feedback.gd","res://src/ui/hero_pause_view.gd","res://src/ui/hero_survival_hud.gd","res://src/ui/hero_pad_settings.gd","res://src/ui/demon_action_choices.gd","res://src/online/battle_room.gd","res://src/online/match_rules.gd","res://src/ui/augment_hold_popup.gd","res://src/ui/demon_augment_panel_view.gd","res://src/ui/hero_augment_cards_view.gd","res://src/ui/castle_battle_chrome.gd"]:
+	for path in ["res://src/main/main.gd","res://src/hero_mode/hero_mode.gd","res://src/online/match_scene.gd","res://src/online/battle_view.gd","res://src/ui/battle_camera_view.gd","res://src/online/primitive_mirror.gd","res://src/online/combat_feedback.gd","res://src/ui/hero_pause_view.gd","res://src/ui/hero_survival_hud.gd","res://src/ui/hero_battle_frame.gd","res://src/ui/hero_pad_settings.gd","res://src/ui/demon_action_choices.gd","res://src/online/battle_room.gd","res://src/online/match_rules.gd","res://src/ui/augment_hold_popup.gd","res://src/ui/demon_augment_panel_view.gd","res://src/ui/hero_augment_cards_view.gd","res://src/ui/castle_battle_chrome.gd"]:
 		var script: Script = load(path)
 		check(script != null and script.can_instantiate(),"modified script loads: "+path)
 	var solo_packed: PackedScene = load("res://src/main/Main.tscn")
@@ -153,12 +153,25 @@ func run() -> void:
 		check(scene.ended and scene.status.text == result_text,"terminal UI is idempotent")
 		scene._event({"op":"matched","hero":"ranged_rookie","map":"plaza","duration":600,"battlefield":{"stage":"stage_1","bounds":[3200,3200],"map":"plaza"}})
 		await process_frame
+		scene.battle_frame_enabled = true; scene._apply_match_frame(); await process_frame
 		check(scene.top_bar.visible and scene.top_bar.get_node_or_null("RunTimer") != null and scene.top_bar.get_node_or_null("HeroHPBar") != null and scene.top_bar.get_node_or_null("Monsters") != null,"both roles share battle top bar")
-		var chrome: Control = scene.get_node("CastleBattleChrome")
-		check(chrome.visible and chrome.z_index == -10 and chrome.anchor_right == 1.0 and chrome.anchor_bottom == 1.0 and chrome.size == scene.size and scene.view.z_index > chrome.z_index,"both roles show full-rect castle backdrop behind battlefield")
+		var frame: Control = scene.get_node("HeroBattleFrame" if role == "hero" else "CastleBattleChrome")
+		check(frame.visible and frame.z_index == -10 and frame.anchor_right == 1.0 and frame.anchor_bottom == 1.0 and frame.size == scene.size and scene.view.z_index > frame.z_index,"role frame stays behind battlefield")
+		check(scene.get_node_or_null("CastleBattleChrome") == null if role == "hero" else scene.get_node_or_null("HeroBattleFrame") == null,"only the role's frame exists")
+		check(scene.view.clip_contents,"battle clips sprites, effects and feedback")
+		check(is_equal_approx(scene.view.get_global_rect().position.y,470.0 if role == "hero" else 420.0),"battle starts at solo role frame top")
+		check(is_equal_approx(scene.view.get_global_rect().position.x,90.0 if role == "hero" else 120.0),"battle uses solo role side inset")
+		if role == "hero":
+			check(is_equal_approx(scene.view.get_global_rect().position.y,scene.demon_info_panel.get_global_rect().end.y) and scene.get_node_or_null("CastleBattleChrome") == null,"no castle gray layer or gap below demon info")
+		else:
+			var dot_style := scene.hold_popup.dots[0].get_theme_stylebox("normal") as StyleBoxFlat
+			check(dot_style != null and dot_style.border_color == Color("d9b45b") and dot_style.bg_color == Color("281832"),"held dots use dark gold skin")
+		scene.battle_frame_enabled = false; scene._apply_match_frame(); await process_frame
+		check(not frame.visible and is_equal_approx(scene.view.get_global_rect().position.x,0.0) and is_equal_approx(scene.view.get_global_rect().position.y,470.0 if role == "hero" else 350.0),"frame off expands to solo role area")
+		scene.battle_frame_enabled = true; scene._apply_match_frame(); await process_frame
 		check(not scene.status.visible and not scene.action_notice.visible and not scene.cancel_button.visible,"battle hides debug rows and matching cancel")
 		var lower_backing: Control = scene.get_node("BattleLowerBacking")
-		check(lower_backing != null and lower_backing.visible and chrome.floor_backing != null and ((lower_backing as TextureRect).texture != null if role == "demon" else (lower_backing as ColorRect).color == preload("res://src/ui/hero_survival_hud.gd").BACKGROUND_COLOR),"solo role lower HUD backing covers both roles")
+		check(lower_backing != null and lower_backing.visible and ((frame.floor_backing != null and (lower_backing as TextureRect).texture != null) if role == "demon" else (lower_backing as ColorRect).color == preload("res://src/ui/hero_survival_hud.gd").BACKGROUND_COLOR),"solo role lower HUD backing covers both roles")
 		scene.top_bar.get_node("StageMenuButton").pressed.emit(); await process_frame
 		check(scene.match_menu.visible and not paused and scene.settings_panel.scene_file_path == "res://src/ui/BattleSettings.tscn","menu opens shared solo settings without pausing battle")
 		if role == "demon":
@@ -242,7 +255,7 @@ func run() -> void:
 		check((scene.view.size/scene.view.map_scale).distance_to(CAMERA_VIEW.viewport_size(role == "hero")) < 0.1,"phone visible world matches solo camera")
 		check(scene.view.map_offset.x <= 0 and scene.view.map_offset.y <= 0 and scene.view.map_offset.x + scene.view.bounds.x * scene.view.map_scale.x >= scene.view.size.x and scene.view.map_offset.y + scene.view.bounds.y * scene.view.map_scale.y >= scene.view.size.y,"phone camera clamps map over viewport")
 		if role == "hero": check(is_equal_approx(scene.demon_info_panel.size.x,scene.top_bar.get_node("HeroStatusFrame").size.x),"phone demon information matches hero status width")
-		check(scene.top_bar.get_global_rect().end.x <= root.size.x and absf(scene.view.get_global_rect().position.y-(scene.demon_info_panel.get_global_rect().end.y if role == "hero" else scene.top_bar.get_global_rect().end.y)) <= 8.0,"phone battlefield starts below information")
+		check(scene.top_bar.get_global_rect().end.x <= root.size.x and absf(scene.view.get_global_rect().position.y-(470.0 if role == "hero" else 420.0)) <= 1.0 and absf(scene.view.get_global_rect().end.x-(root.size.x-(90.0 if role == "hero" else 120.0))) <= 1.0,"phone battlefield matches solo frame rect")
 		var lower: Control = scene.demon_panel if role == "demon" else scene.hero_slots
 		check(lower.get_global_rect().end.y <= root.size.y and scene.view.get_global_rect().end.y <= lower.get_global_rect().position.y,"phone lower HUD fits below battlefield")
 		if role == "demon":
@@ -260,7 +273,7 @@ func run() -> void:
 		check((scene.view.size/scene.view.map_scale).distance_to(CAMERA_VIEW.viewport_size(role == "hero")) < 0.1,"tablet visible world matches solo camera")
 		check(scene.view.map_offset.x <= 0 and scene.view.map_offset.y <= 0 and scene.view.map_offset.x + scene.view.bounds.x * scene.view.map_scale.x >= scene.view.size.x and scene.view.map_offset.y + scene.view.bounds.y * scene.view.map_scale.y >= scene.view.size.y,"tablet camera clamps map over viewport")
 		if role == "hero": check(is_equal_approx(scene.demon_info_panel.size.x,scene.top_bar.get_node("HeroStatusFrame").size.x),"tablet demon information matches hero status width")
-		check(scene.top_bar.get_global_rect().end.x <= root.size.x and scene.top_bar.get_node("Monsters").get_global_rect().end.x <= root.size.x and absf(scene.view.get_global_rect().position.y-(scene.demon_info_panel.get_global_rect().end.y if role == "hero" else scene.top_bar.get_global_rect().end.y)) <= 8.0,"tablet battlefield starts below information")
+		check(scene.top_bar.get_global_rect().end.x <= root.size.x and scene.top_bar.get_node("Monsters").get_global_rect().end.x <= root.size.x and absf(scene.view.get_global_rect().position.y-(470.0 if role == "hero" else 420.0)) <= 1.0 and absf(scene.view.get_global_rect().end.x-(root.size.x-(90.0 if role == "hero" else 120.0))) <= 1.0,"tablet battlefield matches solo frame rect")
 		check(lower.get_global_rect().end.y <= root.size.y and lower.get_global_rect().end.x <= root.size.x and scene.view.get_global_rect().end.y <= lower.get_global_rect().position.y,"tablet lower HUD fits below battlefield")
 		if role == "demon":
 			check(scene.bottom_bar.get_global_rect().end.y <= root.size.y and scene.summon_buttons[-1].get_global_rect().end.x <= root.size.x,"tablet cards fit")

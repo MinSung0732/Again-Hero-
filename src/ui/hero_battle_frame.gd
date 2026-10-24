@@ -5,6 +5,9 @@ const HUD := preload("res://src/ui/hero_survival_hud.gd")
 const TOP := HUD.BATTLE_TOP
 const WIDTH := HUD.FRAME_WIDTH
 var tiles: Array[Texture2D] = []
+static func apply_view_insets(view: Control, enabled: bool) -> void:
+	view.offset_left = WIDTH if enabled else 0.0
+	view.offset_right = -WIDTH if enabled else 0.0
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST

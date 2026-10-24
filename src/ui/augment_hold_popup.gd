@@ -50,6 +50,13 @@ func _ready() -> void:
 	for index in RULES.AUGMENT_HOLD_LIMIT:
 		var dot := Button.new(); dot.name = "Dot%d" % index; dot.text = "●"
 		dot.custom_minimum_size = Vector2(60,60); dot.add_theme_font_size_override("font_size",34)
+		if role == "demon":
+			var dot_style := StyleBoxFlat.new()
+			dot_style.bg_color = Color("281832"); dot_style.border_color = Color("d9b45b")
+			dot_style.set_border_width_all(3); dot_style.set_corner_radius_all(30)
+			for state in ["normal","hover","pressed","disabled"]:
+				dot.add_theme_stylebox_override(state,dot_style)
+			dot.add_theme_color_override("font_color",Color("eac14d"))
 		dot_row.add_child(dot); dot.pressed.connect(open_index.bind(index)); dot.hide(); dots.append(dot)
 		# Glow panels are built once per slot and only tweened when an offer arrives.
 		var glow := Panel.new(); glow.name = "NewGlow"; glow.mouse_filter = Control.MOUSE_FILTER_IGNORE; glow.show_behind_parent = true
