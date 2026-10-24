@@ -49,6 +49,28 @@ static func install_lower_backdrop(layer: Control, height: float) -> TextureRect
 	layer.add_child(backing)
 	return backing
 
+static func install_top_backdrop(layer: Control, height: float, color: Color, texture_path: String = "") -> ColorRect:
+	var backing := ColorRect.new()
+	backing.name = "BattleTopBacking"
+	backing.color = color
+	backing.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	backing.z_index = -11
+	layer.add_child(backing)
+	backing.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+	backing.offset_bottom = height
+	if not texture_path.is_empty():
+		var art := TextureRect.new()
+		art.name = "TopHUDBackdrop"
+		art.texture = texture_for_path(texture_path)
+		art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		art.stretch_mode = TextureRect.STRETCH_SCALE
+		art.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		backing.add_child(art)
+		art.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+		art.offset_bottom = 300.0
+	return backing
+
 static func install_panels(targets: Array, art_source: Node = null) -> void:
 	var panel_art := texture(art_source, ROOT + "gold_panel.png") if art_source != null else texture_for_path(ROOT + "gold_panel.png")
 	var panel_builder = load("res://src/ui/illustrated_battle_panel.gd")

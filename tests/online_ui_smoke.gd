@@ -168,9 +168,13 @@ func run() -> void:
 			check(dot_style != null and dot_style.border_color == Color("d9b45b") and dot_style.bg_color == Color("281832"),"held dots use dark gold skin")
 		scene.battle_frame_enabled = false; scene._apply_match_frame(); await process_frame
 		check(not frame.visible and is_equal_approx(scene.view.get_global_rect().position.x,0.0) and is_equal_approx(scene.view.get_global_rect().position.y,470.0 if role == "hero" else 350.0),"frame off expands to solo role area")
-		scene.battle_frame_enabled = true; scene._apply_match_frame(); await process_frame
-		check(not scene.status.visible and not scene.action_notice.visible and not scene.cancel_button.visible,"battle hides debug rows and matching cancel")
+		var top_backing: Control = scene.get_node("BattleTopBacking")
 		var lower_backing: Control = scene.get_node("BattleLowerBacking")
+		check(top_backing.visible and top_backing.z_index < frame.z_index and top_backing.get_global_rect().position == Vector2.ZERO and top_backing.get_global_rect().end.x >= root.size.x and top_backing.get_global_rect().end.y >= scene.top_bar.get_global_rect().end.y,"frame off keeps top HUD background across header")
+		check(lower_backing.visible and lower_backing.get_global_rect().end.x >= root.size.x and lower_backing.get_global_rect().end.y >= root.size.y,"frame off keeps lower HUD background")
+		scene.battle_frame_enabled = true; scene._apply_match_frame(); await process_frame
+		check(frame.visible and top_backing.visible and lower_backing.visible and is_equal_approx(scene.view.get_global_rect().position.x,90.0 if role == "hero" else 120.0),"frame on restores original inset with both backdrops")
+		check(not scene.status.visible and not scene.action_notice.visible and not scene.cancel_button.visible,"battle hides debug rows and matching cancel")
 		check(lower_backing != null and lower_backing.visible and ((frame.floor_backing != null and (lower_backing as TextureRect).texture != null) if role == "demon" else (lower_backing as ColorRect).color == preload("res://src/ui/hero_survival_hud.gd").BACKGROUND_COLOR),"solo role lower HUD backing covers both roles")
 		scene.top_bar.get_node("StageMenuButton").pressed.emit(); await process_frame
 		check(scene.match_menu.visible and not paused and scene.settings_panel.scene_file_path == "res://src/ui/BattleSettings.tscn","menu opens shared solo settings without pausing battle")
@@ -269,6 +273,10 @@ func run() -> void:
 		if role == "demon": check(scene.hold_popup.popup.get_global_rect().end.y < scene.bottom_bar.get_global_rect().position.y and scene.hold_popup.lower_button.get_global_rect().end.y <= scene.hold_popup.popup.get_global_rect().end.y,"phone augment popup clears bottom bar")
 		scene.hold_popup.close_popup()
 		root.size = Vector2i(1536,1920); await process_frame; await process_frame
+		scene.battle_frame_enabled = false; scene._apply_match_frame(); await process_frame
+		check(top_backing.visible and top_backing.get_global_rect().position == Vector2.ZERO and top_backing.get_global_rect().end.x >= root.size.x and top_backing.get_global_rect().end.y >= scene.top_bar.get_global_rect().end.y and lower_backing.visible and lower_backing.get_global_rect().end.x >= root.size.x and lower_backing.get_global_rect().end.y >= root.size.y,"tablet frame off retains top and lower HUD backgrounds")
+		scene.battle_frame_enabled = true; scene._apply_match_frame(); await process_frame
+		check(frame.visible and top_backing.visible and lower_backing.visible and is_equal_approx(scene.view.get_global_rect().position.x,90.0 if role == "hero" else 120.0),"tablet frame on restores original inset")
 		scene.view._layout_map()
 		check((scene.view.size/scene.view.map_scale).distance_to(CAMERA_VIEW.viewport_size(role == "hero")) < 0.1,"tablet visible world matches solo camera")
 		check(scene.view.map_offset.x <= 0 and scene.view.map_offset.y <= 0 and scene.view.map_offset.x + scene.view.bounds.x * scene.view.map_scale.x >= scene.view.size.x and scene.view.map_offset.y + scene.view.bounds.y * scene.view.map_scale.y >= scene.view.size.y,"tablet camera clamps map over viewport")

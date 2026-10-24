@@ -208,10 +208,13 @@ func _ready() -> void:
 		if child is Control and child != status and child != ranking_row and child != action_notice and child != view:
 			setup_controls.append(child)
 	TOP_LAYOUT.layout_top(top_bar)
+	var top_backing: ColorRect
 	if role == "demon":
+		top_backing = TOP_LAYOUT.install_top_backdrop(self,350.0,Color(0.035,0.038,0.052,1),"res://assets/art/UI/battle_hud_v2/top_hud_backdrop.svg")
 		var chrome: Control = TOP_LAYOUT.install_backdrop(self)
 		chrome.hide()
 	else:
+		top_backing = TOP_LAYOUT.install_top_backdrop(self,HERO_HUD.BATTLE_TOP,HERO_HUD.BACKGROUND_COLOR)
 		var hero_frame: Control = HERO_FRAME.new()
 		hero_frame.name = "HeroBattleFrame"
 		hero_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -219,6 +222,7 @@ func _ready() -> void:
 		add_child(hero_frame)
 		hero_frame.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		hero_frame.hide()
+	top_backing.hide()
 	var lower_backing: Control
 	if role == "demon": lower_backing = TOP_LAYOUT.install_lower_backdrop(self,465.0)
 	else:
@@ -448,6 +452,7 @@ func _layout_top_bar() -> void:
 
 func _show_match_layout() -> void:
 	for control in setup_controls: control.hide()
+	get_node("BattleTopBacking").show()
 	get_node("BattleLowerBacking").show()
 	top_bar.show()
 	status.hide(); action_notice.hide(); cancel_button.hide(); ranking_row.hide()
