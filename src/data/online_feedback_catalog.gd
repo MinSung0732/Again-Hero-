@@ -16,10 +16,11 @@ const CUES := {
 	"cast":{"path":"res://assets/audio/sfx/stage1_mage_v4_basic.wav","db":-23.0,"interval":0.18},
 	"summon":GAME.BATTLE_CUES.summon,
 	"transcend":GAME.BATTLE_CUES.summon,
+	"level_up":{"path":"res://assets/audio/sfx/level_up_rise07_cc0.mp3","db":-17.0,"interval":0.0},
 	"victory":CONTEXT.UI_CUES.victory,
 	"defeat":CONTEXT.UI_CUES.defeat,
 }
-const KINDS := ["hero_hit","monster_hit","heal","cast","summon","transcend"]
+const KINDS := ["hero_hit","monster_hit","heal","cast","summon","transcend","level_up"]
 const EMPTY := []
 static func valid_cursor(value: Variant) -> bool:
 	return (value is int or value is float) and is_finite(float(value)) and value >= 0 and value <= 2147483647 and value == floorf(value)

@@ -24,6 +24,10 @@ const TOP_LAYOUT := preload("res://src/ui/castle_battle_chrome.gd")
 const HERO_FRAME := preload("res://src/ui/hero_battle_frame.gd")
 const RESPONSIVE := preload("res://src/ui/battle_responsive_layout.gd")
 const HERO_HUD := preload("res://src/ui/hero_survival_hud.gd")
+const HERO_COOLDOWNS := preload("res://src/online/hero_cooldown_wire.gd")
+const HERO_COOLDOWN_BAR := preload("res://src/ui/hero_skill_cooldown_bar.tscn")
+const HERO_VOICE := preload("res://src/audio/hero_voice_player.gd")
+const HERO_VOICE_DATA := preload("res://src/data/hero_voice_catalog.gd")
 const PIXEL_SKIN := preload("res://src/ui/pixel_panel_skin.gd")
 const STAGES := preload("res://src/data/stage_catalog.gd")
 const MAPS := preload("res://src/data/ranked_map_catalog.gd")
@@ -145,6 +149,14 @@ var ended := false
 var connection_waiting := false
 var wait_deadline := 0
 var wait_seconds := -1
+var hero_skill_catalog: Array = []
+var hero_cooldown_bar: HBoxContainer
+var hero_voice
+var result_pending := false
+var result_serial := 0
+var result_wait_seconds := 0.0
+var result_focus: ColorRect
+var result_zoom_tween: Tween
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var options: Dictionary = get_node("/root/SceneTransition").consume_entry_options()
@@ -204,6 +216,11 @@ func _ready() -> void:
 		for button in [copy_metrics,reset_metrics]:
 			button.custom_minimum_size.y=56; button.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	view = VIEW.new(); view.hero_role = role == "hero"; view.size_flags_vertical = Control.SIZE_EXPAND_FILL; view.custom_minimum_size.y = 400; rows.add_child(view)
+	hero_cooldown_bar = HERO_COOLDOWN_BAR.instantiate()
+	add_child(hero_cooldown_bar)
+	hero_cooldown_bar.position = Vector2(24.0, TOP_LAYOUT.PLAY_TOP + 10.0 if role == "demon" else HERO_HUD.BATTLE_TOP + 10.0)
+	hero_cooldown_bar.hide()
+	hero_voice = HERO_VOICE.new(); add_child(hero_voice)
 	for child in rows.get_children():
 		if child is Control and child != status and child != ranking_row and child != action_notice and child != view:
 			setup_controls.append(child)
@@ -457,6 +474,7 @@ func _show_match_layout() -> void:
 	top_bar.show()
 	status.hide(); action_notice.hide(); cancel_button.hide(); ranking_row.hide()
 	if hero_build_toggle != null: hero_build_toggle.show()
+	if hero_cooldown_bar != null: hero_cooldown_bar.hide()
 	rows.offset_bottom = -465 if role == "demon" else -210
 	_apply_match_frame()
 	if role == "demon":
@@ -953,7 +971,14 @@ func _event(event: Dictionary) -> void:
 	match String(event.get("op","")):
 		"queued": status.text = "상대 역할 플레이어를 찾는 중..."
 		"matched":
+			result_serial += 1
 			matched_hero_id = String(event.get("hero",HEROES.DEFAULT_HERO))
+			hero_skill_catalog = event.get("hero_skill_catalog", []) if event.get("hero_skill_catalog", null) is Array else []
+			hero_voice.stop(); hero_voice.hero_id = matched_hero_id; hero_voice.terminal = false; hero_voice.consumed.clear(); hero_voice.streams.clear(); hero_voice._prepared = false
+			result_pending = false; result_wait_seconds = 0.0
+			if is_instance_valid(result_zoom_tween): result_zoom_tween.kill()
+			view.presentation_speed = 1.0; view.scale = Vector2.ONE
+			if is_instance_valid(result_focus): result_focus.queue_free(); result_focus = null
 			hero_build_signature = ""; hero_build_data = {}
 			var map_data: Dictionary = MAPS.get_map(String(event.get("map","")))
 			if map_data.is_empty(): return
@@ -1030,6 +1055,8 @@ func _event(event: Dictionary) -> void:
 							if not row.get(field,null) is String or String(row[field]).length() > RULES.MAX_COMPARE_FIELD_LENGTH: return
 			if int(event.tick) <= last_tick or not view.update_state(event): return
 			last_tick = int(event.tick)
+			if not event.get("hero_skill_cooldowns", null) is Array: return
+			hero_cooldown_bar.call("refresh", HERO_COOLDOWNS.decode(event.hero_skill_cooldowns, hero_skill_catalog))
 			_update_match_hud(event)
 			if role == "hero" and event.get("hero_inventory",null) is Dictionary and event.get("chest_receipts",null) is Array:
 				_update_hero_inventory(event.hero_inventory)
@@ -1051,23 +1078,12 @@ func _event(event: Dictionary) -> void:
 		"result":
 			if event.get("match","") != client.match_id or ended: return
 			if event.has("feedback"): view.feedback.consume(event.feedback,event.get("feedback_cursor",null),event.get("tick",null))
-			view.feedback.result(String(event.get("winner","")),role); view.pause_motion()
 			load_revision += 1; local_preparing = false; waiting_for_start = false; loading.finish()
-			ended = true; movement = Vector2.ZERO; connection_waiting = false; queue_button.disabled = false
+			ended = true; result_pending = true; movement = Vector2.ZERO; connection_waiting = false; queue_button.disabled = false
 			_set_controls(false)
 			_update_holds([])
-			status.text = "대전 종료 · "+("무효 경기" if String(event.get("winner","")).is_empty() else "승리" if event.winner == role else "패배")
-			var ranking: Variant = event.get("ranking",null)
-			if event.get("rated",false) == true and ranking is Dictionary and RULES.number(ranking.get("mmr",null)) and RULES.number(ranking.get("delta",null)):
-				var tier_id := String(ranking.get("tier",""))
-				var icon := RANKED.icon_path(tier_id)
-				if not icon.is_empty() and ResourceLoader.exists(icon):
-					ranking_icon.texture = load(icon)
-					ranking_label.text = "MMR %s%d → %d · %s" % ["+" if int(ranking.delta) >= 0 else "",int(ranking.delta),int(ranking.mmr),RANKED.display_name(tier_id)]
-					ranking_row.show()
-			if not ranking_row.visible:
-				status.text += "\n점수 변동 없음"
-			if pad != null: pad.enabled = false; pad.reset()
+			hero_cooldown_bar.hide()
+			_show_result_after_presentation(event)
 		"action":
 			if event.get("match","") == client.match_id and event.get("message",null) is String: action_notice.text = event.message
 		"error":
@@ -1076,6 +1092,46 @@ func _event(event: Dictionary) -> void:
 			ended = true
 			_set_controls(false)
 			status.text = String(RULES.ERROR_MESSAGES.get(event.get("reason","unknown"),"매칭 요청을 처리하지 못했습니다."))
+func _show_result_after_presentation(event: Dictionary) -> void:
+	var serial := result_serial
+	var winner := String(event.get("winner", ""))
+	var outcome := &"defeat" if winner == "demon" else &"victory"
+	result_wait_seconds = 0.0
+	if not winner.is_empty():
+		var path := HERO_VOICE_DATA.path_for(matched_hero_id, outcome)
+		var stream := load(path) as AudioStream if not path.is_empty() and ResourceLoader.exists(path) else null
+		result_wait_seconds = maxf(2.8, stream.get_length() + float(HERO_VOICE_DATA.EVENTS[outcome].delay) if stream != null else 0.0)
+		hero_voice._on_outcome(outcome)
+		result_focus = ColorRect.new()
+		result_focus.name = "ResultFocus"
+		result_focus.color = Color(0.05, 0.03, 0.09, 0.48)
+		result_focus.mouse_filter = Control.MOUSE_FILTER_STOP
+		view.add_child(result_focus)
+		result_focus.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		result_focus.modulate.a = 0.0
+		view.presentation_speed = 0.12
+		view.pivot_offset = view.size * 0.5
+		result_zoom_tween = create_tween().set_ignore_time_scale(true)
+		result_zoom_tween.tween_property(view, "scale", Vector2(1.08, 1.08), 0.55)
+		create_tween().set_ignore_time_scale(true).tween_property(result_focus, "modulate:a", 1.0, 0.25)
+		await get_tree().create_timer(result_wait_seconds, true, false, true).timeout
+	if not is_inside_tree() or serial != result_serial: return
+	result_pending = false
+	if is_instance_valid(result_zoom_tween): result_zoom_tween.kill()
+	view.presentation_speed = 1.0; view.scale = Vector2.ONE
+	if is_instance_valid(result_focus): result_focus.queue_free(); result_focus = null
+	view.feedback.result(winner, role); view.pause_motion()
+	status.text = "대전 종료 · "+("무효 경기" if winner.is_empty() else "승리" if winner == role else "패배")
+	var ranking: Variant = event.get("ranking",null)
+	if event.get("rated",false) == true and ranking is Dictionary and RULES.number(ranking.get("mmr",null)) and RULES.number(ranking.get("delta",null)):
+		var tier_id := String(ranking.get("tier",""))
+		var icon := RANKED.icon_path(tier_id)
+		if not icon.is_empty() and ResourceLoader.exists(icon):
+			ranking_icon.texture = load(icon)
+			ranking_label.text = "MMR %s%d → %d · %s" % ["+" if int(ranking.delta) >= 0 else "",int(ranking.delta),int(ranking.mmr),RANKED.display_name(tier_id)]
+			ranking_row.show()
+	if not ranking_row.visible: status.text += "\n점수 변동 없음"
+	if pad != null: pad.enabled = false; pad.reset()
 func _prepare_match(event: Dictionary,serial: int) -> void:
 	var current := func(): return is_inside_tree() and serial == load_revision and not ended and not client.reconnecting
 	await get_tree().process_frame

@@ -4,8 +4,10 @@ const SERVER := preload("res://src/online/match_server.gd")
 const POPUPS := preload("res://src/ui/damage_number_spawner.gd")
 const CODEC := preload("res://src/online/snapshot_codec.gd")
 const FEEDBACK := preload("res://src/data/online_feedback_catalog.gd")
+const RULES := preload("res://src/online/match_rules.gd")
 var checks := 0
 var failures := 0
+var max_snapshot_bytes := 0
 func check(ok: bool,label: String) -> void:
 	checks += 1
 	if not ok: failures += 1; push_error(label)
@@ -38,7 +40,7 @@ func run() -> void:
 	root.get_node("CloudStore").stop(); root.get_node("LoginGateway").remember_session_enabled = false
 	var old_script = baseline(); var rooms: Array = []
 	var codec = CODEC.new()
-	var later_fields := ["hero_archetype", "battlefield", "summon_costs", "demon_level", "demon_rerolls_left", "demon_reroll_limit", "demon_exp", "demon_exp_next", "demon_charge", "demon_charge_max", "demon_cooldowns", "demon_ready", "transcend_ready", "transcend_used", "visuals", "primitives", "feedback", "feedback_cursor"]
+	var later_fields := ["hero_archetype", "hero_skill_cooldowns", "battlefield", "summon_costs", "demon_level", "demon_rerolls_left", "demon_reroll_limit", "demon_exp", "demon_exp_next", "demon_charge", "demon_charge_max", "demon_cooldowns", "demon_ready", "transcend_ready", "transcend_used", "visuals", "primitives", "feedback", "feedback_cursor"]
 	for index in 2:
 		var room := ROOM.new(); root.add_child(room); room.prepare(); rooms.append(room)
 		room.feedback.publish("hero_hit",room.battle.hero.position,1,Color.WHITE,room.tick,room.battle.hero.get_instance_id())
@@ -60,7 +62,7 @@ func run() -> void:
 			check(not after.has("choice_revision") and not after.has("choices"),"obsolete shared choice fields removed")
 			before.erase("choice_revision"); before.erase("choices")
 			var shared := baseline_fields(before, after)
-			# Protocol 21 retains the bar row extension; the frozen prefix must still match.
+			# Protocol 22 retains the bar row extension; the frozen prefix must still match.
 			check(after.hero.size() == before.hero.size()+1 and after.hero[-1] is Array,"hero row appends only the bar array")
 			shared["hero"] = after.hero.slice(0,before.hero.size())
 			var trimmed: Array = []
@@ -70,7 +72,11 @@ func run() -> void:
 			shared["actors"] = trimmed
 			check(shared.size() == before.size() and JSON.stringify(before) == SERVER._encode(shared),"wire/ID/order/generation parity")
 			check(added_fields(before, after) == later_fields,"only known later snapshot fields added")
-			check(FEEDBACK.valid_events(after.feedback,after.feedback_cursor,after.tick),"protocol 21 feedback row shape valid")
+			check(FEEDBACK.valid_events(after.feedback,after.feedback_cursor,after.tick),"protocol 22 feedback row shape valid")
+			check(after.hero_skill_cooldowns is Array and after.hero_skill_cooldowns.size() <= room.hero_skill_catalog.size(),"bounded indexed hero cooldowns")
+			var snapshot_bytes := JSON.stringify(after).to_utf8_buffer().size()
+			max_snapshot_bytes = maxi(max_snapshot_bytes, snapshot_bytes)
+			check(snapshot_bytes <= RULES.MAX_SNAPSHOT,"48 actor snapshot fits MAX_SNAPSHOT")
 			check(after.feedback.size()==1 and after.feedback[0].size()==FEEDBACK.EVENT_SIZE,"feedback row appends owner and critical")
 			check(codec_round_trip(codec, after),"path-interned wire decodes to the same snapshot")
 			check(room.ids.size() == room.battle.active_monsters.size(),"wire registry pruned without scratch snapshots")
@@ -88,4 +94,4 @@ func run() -> void:
 	check(rooms[1].battle.get_meta("_damage_number_pool",[]).is_empty(),"popup pool isolated")
 	for room in rooms: stop_audio(room); room.free()
 	stop_audio(root.get_node("GameAudio"))
-	print("COMBAT_PHASE3_ONLINE checks=",checks," failures=",failures); quit(1 if failures else 0)
+	print("COMBAT_PHASE3_ONLINE checks=",checks," failures=",failures," max_snapshot_bytes=",max_snapshot_bytes); quit(1 if failures else 0)

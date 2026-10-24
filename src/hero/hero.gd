@@ -1792,30 +1792,7 @@ func _apply_ground_shadow_profile() -> void:
 
 
 func _apply_level_up_effect_visual() -> void:
-	var frames := SpriteFrames.new()
-	if frames.has_animation("default"):
-		frames.remove_animation("default")
-	frames.add_animation("level_up")
-	frames.set_animation_speed("level_up", 13.5)
-	frames.set_animation_loop("level_up", false)
-
-	for frame_index: int in range(1, 7):
-		var texture := _load_stage1_texture(
-			"res://assets/art/effects/levelup/frames/levelup_%02d.png"
-			% frame_index
-		)
-		if texture != null:
-			frames.add_frame("level_up", texture)
-
-	level_up_effect.sprite_frames = frames
-	level_up_effect.animation = &"level_up"
-	level_up_effect.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
-	level_up_effect.centered = false
-	level_up_effect.offset = Vector2(-192.0, -410.0)
-	level_up_effect.scale = Vector2(0.42, 0.42)
-	level_up_effect.position = Vector2(0.0, 44.0)
-	level_up_effect.z_index = 6
-	level_up_effect.visible = false
+	preload("res://src/ui/hero_level_up_effect.gd").configure(level_up_effect, Callable(self, "_load_stage1_texture"))
 
 
 func _play_level_up_feedback() -> void:

@@ -87,6 +87,6 @@ func run() -> void:
 	scene._event({"op":"matched","match":"motion-fixture","resumed":true,"map":"plaza","duration":600,"battlefield":{"stage":"stage_1","bounds":[3200,3200],"map":"plaza"}})
 	check(not scene.view.motion_paused,"local resume resets baseline before ready")
 	scene._event({"op":"result","match":"motion-fixture","winner":"hero"})
-	check(scene.view.motion_paused,"terminal result stops smoothing")
+	check(scene.result_pending and scene.view.presentation_speed < 1.0 and scene.ended,"terminal result slows only presentation and blocks input")
 	scene.queue_free(); await process_frame; await create_timer(0.2).timeout
 	print("ONLINE_MOTION_PASS checks=",checks); quit()

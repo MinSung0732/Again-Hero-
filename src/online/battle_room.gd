@@ -3,11 +3,14 @@ extends Node
 const RULES := preload("res://src/online/match_rules.gd")
 const SKILLS := preload("res://src/data/demon_ultimate_catalog.gd")
 const PRESENTATION := preload("res://src/online/presentation_snapshot.gd")
+const HERO_COOLDOWNS := preload("res://src/online/hero_cooldown_wire.gd")
 const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
 const MONSTERS := preload("res://src/data/monster_catalog.gd")
 const MAPS := preload("res://src/data/ranked_map_catalog.gd")
 var presentation = PRESENTATION.new()
 var battlefield_info := {}
+var hero_skill_catalog: Array = []
+var last_hero_level := 1
 const PRIMITIVES := preload("res://src/online/primitive_mirror.gd")
 var feedback = preload("res://src/online/feedback_buffer.gd").new()
 signal completed(winner: String,reason: String)
@@ -92,6 +95,12 @@ func prepare() -> void:
 		public_hero_build_dirty = true
 		_refresh_hero_holds())
 	battle.hero.progression_changed.connect(func(_level: int,_exp: int,_next: int): public_hero_build_dirty = true)
+	battle.hero.progression_changed.connect(func(level: int,_exp: int,_next: int):
+		if level > last_hero_level and running and not finished and not connection_paused:
+			feedback.publish("level_up", battle.hero.position, level, Color.WHITE, tick)
+		last_hero_level = level)
+	hero_skill_catalog = HERO_COOLDOWNS.capture_catalog(battle.hero)
+	last_hero_level = battle.hero.level
 	battle.hero_chest_opened.connect(_chest_opened)
 	battle.summon_result.connect(func(_id: String,_accepted: bool,message: String): last_action_message = message)
 	is_prepared = true
@@ -422,7 +431,8 @@ func _build_snapshot() -> Dictionary:
 		var skill: Dictionary = SKILLS.get_skill(String(id))
 		demon_ready[id] = battle.demon_ultimate_spawn_queue.is_empty() and battle.demon_ultimate_charge+0.001 >= float(skill.get("mana_cost",SKILLS.CHARGE_MAX)) and float(battle.demon_ultimate_cooldowns.get(id,0.0)) <= 0.001
 	# Bounded snapshot serialization and presentation sort at10Hz, not physics Hz.
-	return {"op":"state","tick":tick,"hero":[hero_last.x,hero_last.y,hp,maximum,level,_hero_bars()],"hero_archetype":String(battle.hero.hero_archetype) if is_instance_valid(battle.hero) else "","bounds":[battle.current_map_size.x,battle.current_map_size.y],"battlefield":battlefield_info,"seconds":battle.run_metrics.elapsed_seconds,"mana":battle.command_power,"summon_costs":summon_costs,"demon_level":battle.demon_level,"demon_rerolls_left":battle.demon_rerolls_left,"demon_reroll_limit":battle.demon_reroll_max,"demon_exp":battle.demon_exp,"demon_exp_next":battle.demon_exp_to_next_level,"demon_charge":battle.demon_ultimate_charge,"demon_charge_max":SKILLS.CHARGE_MAX,"demon_cooldowns":battle.demon_ultimate_cooldowns,"demon_ready":demon_ready,"transcend_ready":battle.transcendence.ready and not battle.transcendence.used,"transcend_used":battle.transcendence.used,"actors":actors,"shots":shots,"visuals":visuals,"primitives":primitives,"feedback":feedback.snapshot(),"feedback_cursor":feedback.sequence,"winner":winner,"reason":reason}
+	var hero_skill_cooldowns := HERO_COOLDOWNS.encode(battle.hero, hero_skill_catalog)
+	return {"op":"state","tick":tick,"hero":[hero_last.x,hero_last.y,hp,maximum,level,_hero_bars()],"hero_archetype":String(battle.hero.hero_archetype) if is_instance_valid(battle.hero) else "","hero_skill_cooldowns":hero_skill_cooldowns,"bounds":[battle.current_map_size.x,battle.current_map_size.y],"battlefield":battlefield_info,"seconds":battle.run_metrics.elapsed_seconds,"mana":battle.command_power,"summon_costs":summon_costs,"demon_level":battle.demon_level,"demon_rerolls_left":battle.demon_rerolls_left,"demon_reroll_limit":battle.demon_reroll_max,"demon_exp":battle.demon_exp,"demon_exp_next":battle.demon_exp_to_next_level,"demon_charge":battle.demon_ultimate_charge,"demon_charge_max":SKILLS.CHARGE_MAX,"demon_cooldowns":battle.demon_ultimate_cooldowns,"demon_ready":demon_ready,"transcend_ready":battle.transcendence.ready and not battle.transcendence.used,"transcend_used":battle.transcendence.used,"actors":actors,"shots":shots,"visuals":visuals,"primitives":primitives,"feedback":feedback.snapshot(),"feedback_cursor":feedback.sequence,"winner":winner,"reason":reason}
 
 func _hero_bars() -> Array:
 	var hero = battle.hero

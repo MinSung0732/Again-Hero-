@@ -1,6 +1,7 @@
-[gd_scene load_steps=50 format=3]
+[gd_scene load_steps=51 format=3]
 
 [ext_resource type="Script" path="res://src/main/main.gd" id="1_main"]
+[ext_resource type="PackedScene" path="res://src/ui/hero_skill_cooldown_bar.tscn" id="1_cooldowns"]
 [ext_resource type="PackedScene" path="res://src/battle/Battle.tscn" id="2_battle"]
 [ext_resource type="Theme" path="res://src/ui/game_theme.tres" id="3_game_theme"]
 [ext_resource type="Script" path="res://src/audio/hero_bgm_manager.gd" id="4_hero_bgm"]
@@ -403,14 +404,7 @@ text = "[DEBUG] 마왕 Lv.1 · 레벨배율 HP x1.000 / ATK x1.000 / SPD x1.000"
 autowrap_mode = 2
 mouse_filter = 2
 
-[node name="HeroSkillCooldownBar" type="HBoxContainer" parent="HUD"]
-z_index = 120
-offset_left = 24.0
-offset_top = 304.0
-offset_right = 530.0
-offset_bottom = 372.0
-theme_override_constants/separation = 8
-mouse_filter = 2
+[node name="HeroSkillCooldownBar" parent="HUD" instance=ExtResource("1_cooldowns")]
 
 [node name="BattleToast" type="Label" parent="HUD"]
 visible = false

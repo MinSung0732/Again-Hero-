@@ -2,7 +2,9 @@ extends Node2D
 const DATA := preload("res://src/data/online_feedback_catalog.gd")
 const BANK := preload("res://src/audio/event_sfx_bank.gd")
 const POPUPS := preload("res://src/ui/damage_number_spawner.gd")
+const LEVEL_EFFECT := preload("res://src/ui/hero_level_up_effect.gd")
 var bank
+var level_sprite: AnimatedSprite2D
 var baseline := 0
 var slots: Array = []
 var cursor := 0
@@ -12,6 +14,9 @@ var result_played := false
 func _ready() -> void:
 	z_index = 80
 	bank = BANK.new(); add_child(bank); bank.configure(DATA.CUES)
+	level_sprite = AnimatedSprite2D.new(); add_child(level_sprite)
+	LEVEL_EFFECT.configure(level_sprite, func(path: String): return load(path) as Texture2D if ResourceLoader.exists(path) else null)
+	level_sprite.animation_finished.connect(func(): level_sprite.hide())
 	for _index in DATA.CAPACITY: slots.append({"left":0.0,"point":Vector2.ZERO,"kind":"","color":Color.WHITE})
 	set_process(false)
 func reset(sequence: int = 0) -> void:
@@ -21,6 +26,7 @@ func clear() -> void:
 	for popup in get_meta(POPUPS.POOL_META,[]):
 		if is_instance_valid(popup): popup.call("_deactivate_for_pool")
 	bank.stop_all(); set_process(false); queue_redraw()
+	if is_instance_valid(level_sprite): level_sprite.stop(); level_sprite.hide()
 func pause_feedback() -> void:
 	suspended = true; clear()
 func consume(events: Variant,sequence: Variant,tick: Variant) -> bool:
@@ -31,6 +37,11 @@ func consume(events: Variant,sequence: Variant,tick: Variant) -> bool:
 			if row[0]<=baseline or tick-row[1]>DATA.MAX_AGE_SECONDS*Engine.physics_ticks_per_second: continue
 			accepted += 1
 			bank.play_cue(row[2])
+			if row[2] == "level_up":
+				level_sprite.position = Vector2(row[3], row[4]) + Vector2(0.0, 44.0)
+				level_sprite.stop(); level_sprite.frame = 0; level_sprite.frame_progress = 0.0
+				level_sprite.show(); level_sprite.play(&"level_up"); set_process(true)
+				continue
 			if row[2] in ["hero_hit","monster_hit","heal"]:
 				POPUPS.show_feedback(self,int(row[10]),Vector2(row[3],row[4]),int(row[5]),Color(row[6],row[7],row[8],row[9]),row[2]=="heal")
 				set_process(true)
@@ -51,6 +62,7 @@ func _process(delta: float) -> void:
 	position = view.map_offset
 	scale = view.map_scale
 	var active := false
+	active = level_sprite.visible
 	for slot in slots:
 		if slot.left>0: slot.left = maxf(0,slot.left-delta); active = active or slot.left>0
 	if not active:

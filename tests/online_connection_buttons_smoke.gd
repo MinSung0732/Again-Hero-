@@ -83,7 +83,8 @@ func run() -> void:
 	check(room.winner == "demon" and room.reason == "reconnect_timeout","server deadline still wins")
 	hero.reconnect_button.pressed.emit()
 	check(await until(func(): return hero.ended),"late button recovers terminal result")
-	check(hero.client.result_received and hero.status.text.contains("패배") and demon.status.text.contains("승리"),"same authoritative result on both UIs")
+	check(hero.client.result_received and hero.result_pending and demon.result_pending,"both UIs hold the same authoritative result for presentation")
+	check(await until(func(): return hero.status.text.contains("패배") and demon.status.text.contains("승리")),"same authoritative result appears after presentation on both UIs")
 	for scene in screens:
 		check(scene.disconnect_button.disabled and scene.reconnect_button.disabled,"no test buttons after result")
 		check(not scene.client.set_local_test_disconnected(true),"terminal API denied")

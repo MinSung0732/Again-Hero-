@@ -296,7 +296,7 @@ func run() -> void:
 		var camera_view = scene.view
 		camera_view.bounds = Vector2(3200,3200)
 		camera_view.motion.clear()
-		camera_view.state = {"hero":[1600.0,1600.0,100.0,100.0,1],"actors":[]}
+		camera_view.state = {"hero":[1600.0,1600.0,100.0,100.0,1,[0,0,0,0,0,-79,-64,-49]],"hero_archetype":"ranged_kiter","actors":[]}
 		camera_view._layout_map()
 		var center_before: Vector2 = (camera_view.size*0.5-camera_view.map_offset)/camera_view.map_scale
 		check(center_before.distance_to(Vector2(1600,1600)) < 0.1,"camera follows hero at center")

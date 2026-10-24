@@ -18,6 +18,7 @@ var visual_depths := PackedFloat64Array()
 var display_sort := Callable(self,"_display_before")
 var actor_ids := {}
 var motion_paused := false
+var presentation_speed := 1.0
 var motion_received_us := 0
 var primitives = PRIMITIVES.new()
 var feedback
@@ -181,7 +182,7 @@ func _process(delta: float) -> void:
 	if changed: _resolve_owners(); queue_redraw()
 	if pending_textures.is_empty() and (motion_paused or not motion.active): set_process(false)
 func advance_motion(delta: float) -> void:
-	if motion_paused or not motion.advance(delta): return
+	if motion_paused or not motion.advance(delta * presentation_speed): return
 	_sort_display_depth(); queue_redraw()
 func _resolve_owners() -> void:
 	painted_owners.clear()
