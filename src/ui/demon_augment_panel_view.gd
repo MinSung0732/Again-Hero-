@@ -37,13 +37,21 @@ static func populate(panel: PanelContainer,candidates: Array,demon_level: int,re
 			comparison_view.offset_left = 18.0
 			comparison_view.offset_right = -18.0
 			comparison_view.fit_content = false
-			comparison_view.scroll_active = true
-			comparison_view.mouse_filter = Control.MOUSE_FILTER_PASS
+			comparison_view.scroll_active = false
+			comparison_view.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		comparison_view.offset_top = 228.0
 		comparison_view.offset_bottom = 344.0
-		description.offset_bottom = 224.0 if candidate.has("compare") and not candidate.compare.is_empty() else 332.0
 		var comparison: Array = candidate.get("compare",[])
 		AUGMENT_COMPARE.update(comparison_view,comparison)
+		description.offset_bottom = 224.0 if comparison_view.visible else 332.0
+		description.max_lines_visible = 2 if comparison_view.visible else 6
+		description.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+		var details := AUGMENT_COMPARE.details(button,candidate)
+		details.set_anchors_preset(Control.PRESET_TOP_WIDE)
+		details.offset_left = 18.0
+		details.offset_right = -18.0
+		details.offset_top = 352.0
+		details.offset_bottom = 400.0
 	var reroll := rows.get_node("Actions/RerollButton") as Button
 	reroll.text = "↻ 새로고침 %d / %d" % [rerolls_left,reroll_max]
 	reroll.disabled = true

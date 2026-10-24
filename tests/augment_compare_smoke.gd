@@ -66,7 +66,7 @@ func run() -> void:
 	check(str(roundi(room.battle.max_command)) == one[0].next and room.demon_holds[0].wire_candidates[0].compare[0].current == "120","held demon compare refreshes after stack")
 	var host := Control.new(); root.add_child(host)
 	var label := VIEW.add(host,zero)
-	check(label.text.contains("현재 수치:") and label.text.contains("[color="),"shared colored text")
+	check(label.text.contains("100 →") and label.text.contains("[color="),"shared colored text")
 	var own: Dictionary = room.snapshot("hero")
 	var other: Dictionary = room.snapshot("demon")
 	check(other.augment_holds.size() == 1 and other.augment_holds[0].candidates[0].id == "command_capacity" and own.augment_holds[0].candidates[0].has("compare"),"opponent holds stay private")

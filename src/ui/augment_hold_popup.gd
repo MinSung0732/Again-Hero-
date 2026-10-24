@@ -85,7 +85,7 @@ func _ready() -> void:
 		popup = PanelContainer.new(); popup.name = "HoldPopup"; add_child(popup); popup.hide()
 		var style := StyleBoxFlat.new(); style.bg_color = Color("122b3a"); style.border_color = Color("d9c77c"); style.set_border_width_all(3); style.set_content_margin_all(28)
 		popup.add_theme_stylebox_override("panel",SKIN.skin_style(style))
-		popup_rows = VBoxContainer.new(); popup_rows.add_theme_constant_override("separation",22); popup.add_child(popup_rows)
+		popup_rows = VBoxContainer.new(); popup_rows.add_theme_constant_override("separation",16); popup.add_child(popup_rows)
 		title_label = Label.new(); title_label.add_theme_font_size_override("font_size",32)
 		title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; popup_rows.add_child(title_label)
 		var choices := HBoxContainer.new(); choices.name = "HorizontalAugmentCards"

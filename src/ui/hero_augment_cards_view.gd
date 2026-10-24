@@ -19,20 +19,26 @@ static func create(parent: HBoxContainer,candidate: Dictionary,action: Callable)
 	button.add_child(margin)
 	var rows := VBoxContainer.new(); rows.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	rows.name = "VBoxContainer"
-	rows.add_theme_constant_override("separation",18); margin.add_child(rows)
+	rows.add_theme_constant_override("separation",8); margin.add_child(rows)
 	var icon := TextureRect.new(); icon.name = "AugmentIcon"; icon.texture = ICONS.texture(id)
-	icon.custom_minimum_size = Vector2(120,120); icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.custom_minimum_size = Vector2(96,96); icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	icon.mouse_filter = Control.MOUSE_FILTER_IGNORE; rows.add_child(icon)
 	var name_label := _label(rows,String(candidate.get("name",id)),26)
 	name_label.name = "Name"
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	name_label.max_lines_visible = 2
+	name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	var description := _label(rows,String(candidate.get("description","")),22)
 	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	var comparison: Array = candidate.get("compare",[])
-	AUGMENT_COMPARE.add(rows,comparison,AUGMENT_COMPARE.SOLO_HERO_FONT,true)
+	var comparison_view := AUGMENT_COMPARE.add(rows,comparison,AUGMENT_COMPARE.SOLO_HERO_FONT,true)
+	comparison_view.fit_content = false
+	comparison_view.custom_minimum_size.y = 112
+	description.max_lines_visible = 2
+	description.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	description.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	var hint := _label(rows,"탭하여 선택",20); hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	AUGMENT_COMPARE.details(rows,candidate)
 	return button
 
 static func _label(parent: Node,value: String,size_px: int) -> Label:
