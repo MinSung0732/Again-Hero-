@@ -37,12 +37,20 @@ func run() -> void:
 	check(selected == 0,"details does not select augment")
 	if details.get_child_count() == 0:
 		check(false,"details click opens modal"); quit(1); return
-	var dialog := details.get_child(0) as AcceptDialog
+	var dialog := details.get_child(0) as PopupPanel
 	check(dialog != null and dialog.visible,"details opens modal")
-	var body := dialog.get_child(dialog.get_child_count()-1) as RichTextLabel
+	var body := dialog.get_node("Content/Body") as RichTextLabel
 	check(body != null and body.text.contains("항목6") and body.text.contains("긴 설명"),"details contains full description and all meaningful stats")
 	check(dialog.process_mode == Node.PROCESS_MODE_ALWAYS,"details works during solo pause")
-	dialog.confirmed.emit()
+	check(dialog.get_theme_stylebox("panel") is StyleBoxTexture,"details uses shared pixel panel")
+	var close := dialog.get_node("Content/Close") as Button
+	check(close.custom_minimum_size.y == 84,"close uses mobile touch size")
+	check(dialog.exclusive and dialog.theme != null,"details uses game theme and modal input")
+	await process_frame
+	check(body.size.y > 0 and body.scroll_active,"body has a scrollable content area")
+	check(close.get_global_rect().position.y >= body.get_global_rect().end.y,"close does not overlap content")
+	check(dialog.size.x <= root.size.x and dialog.size.y <= root.size.y,"modal fits viewport")
+	close.pressed.emit()
 	await process_frame
 	check(details.get_child_count() == 0,"closed details is freed")
 	VIEW.update(label,[{"label":"피해","current":"10","next":"12"}])
