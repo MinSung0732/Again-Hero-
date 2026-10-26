@@ -907,8 +907,12 @@ func _receive_chests(receipts: Array) -> void:
 		if serial <= chest_last_serial: continue
 		chest_last_serial = serial
 		chest_queue.append(receipt.duplicate())
+func _clear_chest_notice(reset_serial: bool = false) -> void:
+	chest_queue.clear(); chest_seconds = 0.0
+	if reset_serial: chest_last_serial = 0
+	if chest_notice != null: chest_notice.text = ""; chest_notice.hide()
 func _advance_chest_notice(delta: float) -> void:
-	if chest_notice == null: return
+	if chest_notice == null or ended or local_preparing or waiting_for_start or connection_waiting or client.reconnecting: return
 	chest_seconds -= delta
 	if chest_seconds > 0: return
 	if chest_queue.is_empty(): chest_notice.text = ""; chest_notice.hide(); return
@@ -992,7 +996,7 @@ func _event(event: Dictionary) -> void:
 			(top_bar.get_node("ExpLabel") as Control).visible = role == "hero"
 			_show_match_layout()
 			if not bool(event.get("resumed",false)):
-				chest_queue.clear(); chest_last_serial = 0; chest_seconds = 0.0; inventory_signature = ""
+				_clear_chest_notice(true); inventory_signature = ""
 			transcendence_id = String(event.get("transcendence_id",""))
 			if event.get("roster",null) is Array: view.set_match_roster(event.roster,transcendence_id)
 			if role == "demon" and event.get("roster",null) is Array:
@@ -1147,6 +1151,7 @@ func _prepare_match(event: Dictionary,serial: int) -> void:
 	local_preparing = false; loading.show_phase("waiting",1.0)
 	client.send({"op":"ready","match":client.match_id})
 func _set_controls(enabled: bool) -> void:
+	if ended: _clear_chest_notice()
 	enabled = enabled and not local_preparing and not waiting_for_start
 	_refresh_connection_test_controls()
 	if not enabled: movement = Vector2.ZERO

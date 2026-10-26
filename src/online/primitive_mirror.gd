@@ -79,4 +79,20 @@ static func capture(weapons) -> Array:
 						var angle: float = weapons.visual_clock*effect.orbit_speed+index*TAU/effect.orbit_count
 						append(output,"circle",a+Vector2.from_angle(angle)*(inner+outer)*0.5,0,GEO.orbit_texture_extent(inner,outer),color)
 			_: area(output,a,effect.radius,Color(color,ratio))
+	if weapons.delivery != null: weapons.delivery.visit_visuals(_delivery_visual.bind(output))
+	if weapons.evolution != null: weapons.evolution.visit_visuals(_evolution_visual.bind(output))
 	return output
+
+static func _delivery_visual(_slot: Dictionary,point: Vector2,radius: float,color: Color,warning: bool,output: Array) -> void:
+	if warning: append(output,"ring",point,0,radius,color,2.0)
+	else: area(output,point,radius,color)
+
+static func _evolution_visual(kind: String,point: Vector2,edge: Vector2,radius: float,color: Color,_frames: Array,progress: float,output: Array) -> void:
+	match kind:
+		"area": area(output,point,radius,color)
+		"ring": append(output,"ring",point,0,radius,color,3.0)
+		"line": line(output,point,edge,color,2.0)
+		"arc":
+			var points := PackedVector2Array()
+			for index in 16: points.append(Vector2.from_angle(progress*index/15.0)*radius)
+			append(output,"polyline",point,0,0,color,3.0,points)

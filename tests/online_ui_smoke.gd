@@ -129,6 +129,17 @@ func run() -> void:
 		check(scene.disconnect_button == null and scene.reconnect_button == null,"ordinary screen has no connection test buttons")
 		root.size = Vector2i(1536,1920); await process_frame; await process_frame
 		check(scene.view.size.x > 1200,"tablet width expands")
+		if role == "hero":
+			scene._receive_chests([{"serial":1,"name":"시험 보상","description":"복귀 보존"}])
+			scene._advance_chest_notice(0.01)
+			check(scene.chest_notice.visible and scene.chest_notice.text.contains("시험 보상"),"received chest is shown during battle")
+			scene.connection_waiting = true
+			var chest_remaining: float = scene.chest_seconds
+			scene._advance_chest_notice(10.0)
+			check(scene.chest_notice.visible and scene.chest_seconds == chest_remaining,"reconnect grace preserves unread chest notice time")
+			scene.connection_waiting = false
+			scene._receive_chests([{"serial":1,"name":"시험 보상"}])
+			check(scene.chest_queue.is_empty(),"replayed receipt after recovery never duplicates chest")
 		scene.client.match_id = "ui-recovery"
 		scene._event({"op":"connection","match":"ui-recovery","paused":true,"remaining":15.0})
 		scene._process(0.01)
@@ -151,6 +162,7 @@ func run() -> void:
 		var result_text: String = scene.status.text
 		scene._event({"op":"result","match":"ui-recovery","winner":""})
 		check(scene.ended and scene.status.text == result_text,"terminal UI is idempotent")
+		if role == "hero": check(not scene.chest_notice.visible and scene.chest_queue.is_empty(),"result clears chest notice before end presentation")
 		scene._event({"op":"matched","hero":"ranged_rookie","map":"plaza","duration":600,"battlefield":{"stage":"stage_1","bounds":[3200,3200],"map":"plaza"}})
 		await process_frame
 		scene.battle_frame_enabled = true; scene._apply_match_frame(); await process_frame

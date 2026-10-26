@@ -8,7 +8,7 @@ func check(ok: bool,message: String) -> void:
 	if not ok: push_error(message); quit(1); assert(ok,message)
 func _initialize() -> void: run.call_deferred()
 func run() -> void:
-	check(RULES.VERSION == 22 and RULES.AUGMENT_HOLD_LIMIT == 4,"protocol and hold limit")
+	check(RULES.VERSION == 23 and RULES.AUGMENT_HOLD_LIMIT == 4,"protocol and hold limit")
 	var room = ROOM.new(); root.add_child(room); room.prepare(); room.start()
 	room.battle.process_mode = Node.PROCESS_MODE_DISABLED
 	var hero = room.battle.hero
@@ -56,6 +56,31 @@ func run() -> void:
 	check(not room.apply("demon","demon_choose",{"number":demon_number,"id":"invalid"}),"demon foreign candidate denied")
 	check(room.apply("demon","demon_choose",{"number":float(demon_number),"id":demon_id}),"demon held JSON numeric choice applies")
 	check(room.snapshot("hero").augment_holds.size() == 3 and room.snapshot("demon").augment_holds.size() == 3,"both private queues isolated")
+	# A held copy becomes invalid after another pick reaches the stack cap.
+	room.demon_holds.clear()
+	var augment_data := preload("res://src/data/demon_augment_catalog.gd")
+	var capped: Dictionary = augment_data.get_augment("command_regen")
+	var fallback: Dictionary = augment_data.get_augment("command_capacity")
+	battle.demon_build_counts[String(capped.id)] = int(capped.max_stack)
+	room._hold("demon",[capped,fallback],2)
+	room._refresh_demon_holds()
+	check(bool(room.demon_holds[0].candidates[0].get("unavailable",false)),"capped held demon card becomes unavailable")
+	check(not room.apply("demon","demon_choose",{"number":room.demon_holds[0].number,"id":String(capped.id)}),"capped held card rejected without consuming offer")
+	room.demon_holds.clear()
+	room._hold("demon",[capped],2)
+	var retained_number: int = room.demon_holds[0].number
+	var retained_rerolls: int = battle.demon_rerolls_left
+	room._refresh_demon_holds()
+	check(room.demon_holds[0].number == retained_number and room.demon_holds[0].candidates.all(func(card): return not bool(card.get("unavailable",false)) and String(card.id) != String(capped.id)),"fully exhausted held demon offer is replaced in place")
+	check(battle.demon_rerolls_left == retained_rerolls and not battle.demon_augment_selection_active,"replacement consumes no reroll and preserves active state")
+	room.demon_holds.clear()
+	var special_options: Array = augment_data.get_special_augments_for_monster("slime")
+	check(not special_options.is_empty(),"special regression uses catalog options")
+	var owned_special: Dictionary = special_options[0]
+	battle.demon_special_augments.append(String(owned_special.id))
+	room._hold("demon",[owned_special,fallback],3)
+	room._refresh_demon_holds()
+	check(bool(room.demon_holds[0].candidates[0].get("unavailable",false)),"owned special held card becomes unavailable")
 	var guide_text := JSON.stringify(GUIDE.sections())
 	check(guide_text.contains("최대 %d개" % RULES.AUGMENT_HOLD_LIMIT),"guide uses hold constant")
 	check(guide_text.contains("+10~30") and guide_text.contains("-10~25") and guide_text.contains("중도 이탈 -25"),"guide uses rating rules")

@@ -1,6 +1,6 @@
 extends RefCounted
-## Hero cooldown and level feedback shapes require matching protocol 22 peers.
-const VERSION := 22
+## Dedicated ultimate feedback requires matching protocol 23 peers.
+const VERSION := 23
 const HINT_DETAIL := "role" # "role" or "monster"
 const ROLE_HINT_LABELS := {"melee":"근접"}
 const TARGET_HINT_LABELS := {"demon":"마왕 운영","all_monsters":"모든 몬스터"}

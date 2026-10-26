@@ -101,3 +101,16 @@ func append_weapon_areas(weapons,output: Array) -> void:
 			var diameter: float = effect.radius*sqrt(2.0)
 			rect = Rect2(Vector2.ONE*-diameter*0.5,Vector2.ONE*diameter); alpha *= GEOMETRY.AREA_TEXTURE_ALPHA
 		append_texture(weapons._frame(frames,1.0-ratio),-1,pose,rect,Color(1,1,1,alpha),output,z)
+
+	if weapons.delivery != null: weapons.delivery.visit_visuals(_append_delivery_visual.bind(weapons,output))
+	if weapons.evolution != null: weapons.evolution.visit_visuals(_append_evolution_visual.bind(weapons,output))
+func _append_delivery_visual(slot: Dictionary,point: Vector2,radius: float,color: Color,warning: bool,weapons,output: Array) -> void:
+	var frames: Array = slot.frames
+	if warning or frames.is_empty(): return
+	var diameter := radius*sqrt(2.0)
+	append_texture(weapons._frame(frames,weapons._loop_progress(frames,weapons.delivery.clock)),-1,Transform2D(0.0,point),Rect2(Vector2.ONE*-diameter*.5,Vector2.ONE*diameter),Color(1,1,1,color.a*GEOMETRY.AREA_TEXTURE_ALPHA),output,weapons.hero.z_index)
+
+func _append_evolution_visual(kind: String,point: Vector2,_edge: Vector2,radius: float,color: Color,frames: Array,progress: float,weapons,output: Array) -> void:
+	if kind != "area" or frames.is_empty(): return
+	var diameter := radius*sqrt(2.0)
+	append_texture(weapons._frame(frames,progress),-1,Transform2D(0.0,point),Rect2(Vector2.ONE*-diameter*.5,Vector2.ONE*diameter),Color(1,1,1,color.a*GEOMETRY.AREA_TEXTURE_ALPHA),output,weapons.hero.z_index)

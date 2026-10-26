@@ -4408,9 +4408,9 @@ func spawn_special_monster(
 		return false
 	if not MONSTER_CATALOG.MONSTERS.has(monster_id):
 		return false
-	if hero_player_mode and not HERO_SURVIVAL.monster_allowed(monster_id,int(current_stage_data.get("number",1)),campaign_difficulty): return false
+	if hero_player_mode and not online_match_mode and not HERO_SURVIVAL.monster_allowed(monster_id,int(current_stage_data.get("number",1)),campaign_difficulty): return false
 
-	if hero_player_mode:
+	if hero_player_mode and not online_match_mode:
 		monster_id = hero_spawn_candidate(monster_id,hero_control_roster,true)
 		if monster_id.is_empty(): return false
 	if not bool(MONSTER_CATALOG.MONSTERS[monster_id].get("can_be_elite", true)):
@@ -4446,7 +4446,7 @@ func _apply_special_monster_modifiers(
 	if not bool(MONSTER_CATALOG.MONSTERS.get(monster_id, {}).get("can_be_elite", true)):
 		return
 
-	if hero_player_mode: hero_control_spawns.register(monster.get_instance_id(),monster_id,true,int(current_stage_data.get("number",1)),float(run_metrics.elapsed_seconds))
+	if hero_player_mode and not online_match_mode: hero_control_spawns.register(monster.get_instance_id(),monster_id,true,int(current_stage_data.get("number",1)),float(run_metrics.elapsed_seconds))
 	monster.set_meta("visual_variant", "elite")
 	# Direct conversions must discard excluded effects before recalculating stats.
 	# Event spawns already have filtered configs; retain their running timers.

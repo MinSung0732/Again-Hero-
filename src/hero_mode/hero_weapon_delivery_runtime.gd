@@ -164,21 +164,28 @@ func orbit_contact(slot: Dictionary,point: Vector2) -> bool:
 		if orbit_point(slot,index).distance_squared_to(point) <= float(slot.radius)*float(slot.radius): return true
 	return false
 func draw() -> void:
+	visit_visuals(_draw_visual)
+# Shared presentation sampling: clients use the authoritative slot geometry.
+func visit_visuals(visitor: Callable) -> void:
 	for slot in slots:
 		if float(slot.left) <= 0.0: continue
 		var color: Color = slot.color
 		if float(slot.warning)>0.0 and slot.mode in ["lob","lob_burst"]:
 			var progress := clampf(1.0-float(slot.warning)/.7,0.0,1.0)
 			var point: Vector2 = Vector2(slot.launch).lerp(slot.landing,progress)+Vector2(0,-sin(progress*PI)*85.0)
-			_draw(slot,point,22.0)
-			host.hero.draw_arc(host.hero.to_local(slot.landing),float(slot.radius),0,TAU,24,Color(color,.4),2.0)
+			visitor.call(slot,point,22.0,color,false)
+			visitor.call(slot,Vector2(slot.landing),float(slot.radius),Color(color,.4),true)
 			continue
 		if float(slot.warning) > 0.0:
-			host.hero.draw_arc(host.hero.to_local(slot.origin),float(slot.radius),0,TAU,32,Color(color,0.5),2.0)
+			visitor.call(slot,Vector2(slot.origin),float(slot.radius),Color(color,.5),true)
 			continue
 		if slot.mode == "orbit":
-			for index in int(slot.count): _draw(slot,orbit_point(slot,index),float(slot.radius))
-		elif slot.mode == "sentry": _draw(slot,slot.origin,32.0)
-		else: _draw(slot,slot.origin,float(slot.radius))
+			for index in int(slot.count): visitor.call(slot,orbit_point(slot,index),float(slot.radius),color,false)
+		elif slot.mode == "sentry": visitor.call(slot,Vector2(slot.origin),32.0,color,false)
+		else: visitor.call(slot,Vector2(slot.origin),float(slot.radius),color,false)
+func _draw_visual(slot: Dictionary,point: Vector2,radius: float,color: Color,warning: bool) -> void:
+	if warning:
+		host.hero.draw_arc(host.hero.to_local(point),radius,0,TAU,24 if slot.mode in ["lob","lob_burst"] else 32,color,2.0)
+	else: _draw(slot,point,radius)
 func _draw(slot: Dictionary,point: Vector2,radius: float) -> void:
 	host._draw_area(host.hero.to_local(point),radius,slot.color,slot.frames,host._loop_progress(slot.frames,clock))

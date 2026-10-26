@@ -11,7 +11,7 @@ func check(ok: bool, label: String) -> void:
 func _initialize() -> void: run.call_deferred()
 func run() -> void:
 	root.get_node("CloudStore").stop()
-	check(RULES.VERSION == 22, "protocol 22")
+	check(RULES.VERSION == 23, "protocol 23")
 	for path in ["res://src/ui/hero_skill_cooldown_bar.gd", "res://src/ui/hero_level_up_effect.gd", "res://src/online/hero_cooldown_wire.gd", "res://src/online/match_scene.gd", "res://src/online/battle_room.gd", "res://src/online/combat_feedback.gd", "res://src/online/battle_view.gd", "res://src/online/match_server.gd", "res://src/online/match_rules.gd", "res://src/data/online_feedback_catalog.gd", "res://src/main/main.gd", "res://src/hero/hero.gd"]:
 		check(load(path) != null, "load " + path)
 	for path in ["res://src/main/Main.tscn", "res://src/hero_mode/HeroMode.tscn", "res://src/online/OnlineMatch.tscn"]:

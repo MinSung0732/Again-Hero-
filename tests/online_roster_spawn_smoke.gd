@@ -40,6 +40,12 @@ func run() -> void:
 	battle.online_match_rules.population = count
 	check(not room.apply("demon","summon",{"id":"spider","point":[point.x,point.y]}) and room.last_action_message.contains("인구"),"online population cap still enforced")
 	check(battle.active_monsters.size() == count and battle.command_power == RULES.OPENING_MANA,"denied actions allocate nothing and charge nothing")
+	# Elite rewards use the verified online roster, never solo supply pacing.
+	battle.online_match_rules.population = RULES.POPULATION
+	var elite_count: int = battle.active_monsters.size()
+	check(battle.spawn_special_monster("spider",{"type":"elite","name_prefix":"엘리트"}),"online opening controller elite reward bypasses solo pacing")
+	check(battle.active_monsters.size() == elite_count+1 and String(battle.active_monsters.values().back().monster_type) == "spider","online elite preserves selected species")
+	check(battle.hero_control_spawns.members.is_empty() and battle.hero_control_spawns.next_spawn == 0.0,"online elite never consumes solo supply state")
 	# The very same factory still applies solo controller pacing.
 	battle.online_match_mode = false
 	check(battle._spawn_monster("spider",point) == null,"solo opening controller gate unchanged")

@@ -3,6 +3,7 @@ extends RefCounted
 const TARGETS := preload("res://src/systems/hero_target_policy.gd")
 const LIMIT := 24
 const MARK_LIMIT := 64
+const EMPTY_VISUAL_FRAMES := []
 var _runtime: WeakRef
 var host:
 	get: return _runtime.get_ref()
@@ -256,6 +257,8 @@ func _clamp(point: Vector2) -> Vector2:
 	if host.authority.has_method("_clamp_manual_spawn_position"): return host.authority._clamp_manual_spawn_position(point)
 	return point
 func draw() -> void:
+	visit_visuals(_draw_visual)
+func visit_visuals(visitor: Callable) -> void:
 	if not enabled: return
 	for slot in slots:
 		if float(slot.left) <= 0 or slot.kind == "counter": continue
@@ -263,16 +266,22 @@ func draw() -> void:
 		var radius: float = float(slot.radius)
 		if slot.kind == "awakening_wave": radius *= .6 if int(slot.phase)==0 else 1.0
 		if slot.kind == "return":
-			host._draw_area(host.hero.to_local(point),radius,Color(String(slot.data.color)),host.art.get(slot.id,[]),fmod(float(slot.age)*8,1.0))
+			visitor.call("area",point,Vector2.ZERO,radius,Color(String(slot.data.color)),host.art.get(slot.id,EMPTY_VISUAL_FRAMES),fmod(float(slot.age)*8,1.0))
 		else:
-			host.hero.draw_arc(host.hero.to_local(point),radius,0,TAU,32,Color(Color(String(slot.data.color)),.8),3.0)
+			visitor.call("ring",point,Vector2.ZERO,radius,Color(Color(String(slot.data.color)),.8),EMPTY_VISUAL_FRAMES,TAU)
 			if slot.kind == "cross":
 				var aim := Vector2(slot.direction).rotated(float(slot.rule.get("angle",0)))
 				for index in 2:
 					var direction: Vector2 = aim if index == 0 else aim.orthogonal()
-					host.hero.draw_line(host.hero.to_local(point-direction*radius),host.hero.to_local(point+direction*radius),Color("ffe8a3"),2.0)
+					visitor.call("line",point-direction*radius,point+direction*radius,0.0,Color("ffe8a3"),EMPTY_VISUAL_FRAMES,0.0)
 	for mark in marks:
 		if float(mark.left) <= 0: continue
 		var actor: Node2D = host.authority.resolve_battle_entity(mark.handle)
 		if not TARGETS.is_detectable(actor): continue
-		host.hero.draw_arc(host.hero.to_local(actor.global_position),20.0,0,TAU*int(mark.count)/float(mark.data.get("awakening_mark_hits",3)),16,Color("ffe8a3"),3.0)
+		visitor.call("arc",actor.global_position,Vector2.ZERO,20.0,Color("ffe8a3"),EMPTY_VISUAL_FRAMES,TAU*int(mark.count)/float(mark.data.get("awakening_mark_hits",3)))
+func _draw_visual(kind: String,point: Vector2,edge: Vector2,radius: float,color: Color,frames: Array,progress: float) -> void:
+	match kind:
+		"area": host._draw_area(host.hero.to_local(point),radius,color,frames,progress)
+		"ring": host.hero.draw_arc(host.hero.to_local(point),radius,0,progress,32,color,3.0)
+		"arc": host.hero.draw_arc(host.hero.to_local(point),radius,0,progress,16,color,3.0)
+		"line": host.hero.draw_line(host.hero.to_local(point),host.hero.to_local(edge),color,2.0)

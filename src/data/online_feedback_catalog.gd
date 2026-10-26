@@ -16,11 +16,12 @@ const CUES := {
 	"cast":{"path":"res://assets/audio/sfx/stage1_mage_v4_basic.wav","db":-23.0,"interval":0.18},
 	"summon":GAME.BATTLE_CUES.summon,
 	"transcend":GAME.BATTLE_CUES.summon,
+	"ultimate":GAME.BATTLE_CUES.ultimate,
 	"level_up":{"path":"res://assets/audio/sfx/level_up_rise07_cc0.mp3","db":-17.0,"interval":0.0},
 	"victory":CONTEXT.UI_CUES.victory,
 	"defeat":CONTEXT.UI_CUES.defeat,
 }
-const KINDS := ["hero_hit","monster_hit","heal","cast","summon","transcend","level_up"]
+const KINDS := ["hero_hit","monster_hit","heal","cast","summon","transcend","level_up","ultimate"]
 const EMPTY := []
 static func valid_cursor(value: Variant) -> bool:
 	return (value is int or value is float) and is_finite(float(value)) and value >= 0 and value <= 2147483647 and value == floorf(value)
@@ -40,3 +41,12 @@ static func valid_events(events: Variant,cursor: Variant,tick: Variant) -> bool:
 		if not (row[11] is int or row[11] is float) or row[11] not in [0,1]: return false
 		if row[2] not in ["hero_hit","monster_hit"] and row[11] != 0: return false
 	return true
+
+# Reuse solo material profiles; configure fixed players once, never on a hit.
+static func audio_cues() -> Dictionary:
+	var cues := CUES.duplicate()
+	for archetype in CONTEXT.HITS:
+		cues[hit_cue(archetype)] = {"path":CONTEXT.ROOT+String(CONTEXT.HITS[archetype].file),"db":CONTEXT.HIT_DB,"interval":CONTEXT.HIT_INTERVAL_MS/1000.0}
+	return cues
+static func hit_cue(archetype: String) -> String:
+	return "hero_hit:"+archetype if CONTEXT.HITS.has(archetype) else ""

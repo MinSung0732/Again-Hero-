@@ -83,7 +83,7 @@ func prepare() -> void:
 	battle.online_cast_feedback.connect(func(cue: String,point: Vector2):
 		if running and not finished and not connection_paused: feedback.publish(cue,point,0,Color.WHITE,tick))
 	battle.demon_ultimate_used.connect(func(_id: String,_name: String,_message: String):
-		if running and not finished and not connection_paused: feedback.publish("cast",battle.hero.position,0,Color(0.8,0.5,1.0),tick))
+		if running and not finished and not connection_paused: feedback.publish("ultimate",battle.hero.position,0,Color(0.8,0.5,1.0),tick))
 	battle.transcendent_summoned.connect(func(_id: String,actor: Node2D):
 		if running and not finished and not connection_paused and is_instance_valid(actor): feedback.publish("transcend",actor.global_position,0,Color(1.0,0.75,0.35),tick))
 	battle.demon_augment_ready.connect(_demon_offer)
@@ -191,11 +191,30 @@ func _refresh_demon_holds() -> void:
 	var changed := false
 	for index in demon_holds.size():
 		var offer: Dictionary = demon_holds[index]
+		var available := 0
 		for candidate in offer.candidates:
 			var id := String(candidate.get("id",""))
 			var stacks := int(battle.demon_build_counts.get(id,0))
+			var special := String(candidate.get("augment_type","")) == DEMON_AUGMENTS.TYPE_SPECIAL
+			var maximum := int(candidate.get("max_stack",0))
+			var selectable: bool = DEMON_AUGMENTS.can_acquire_special(id,battle.demon_special_augments) if special else maximum <= 0 or stacks < maximum
 			candidate["current_stack"] = stacks
 			candidate["compare"] = DEMON_AUGMENTS.compare(candidate,stacks)
+			if selectable:
+				candidate.erase("unavailable")
+				available += 1
+			else:
+				candidate["unavailable"] = true
+		# An older held offer may be exhausted by another pick (including exclusive
+		# special groups). Refresh it without spending the player's reroll budget.
+		if available == 0:
+			var previous_level: int = battle.demon_active_augment_level
+			var previous_ids: Array[String] = battle.demon_last_candidate_ids.duplicate()
+			battle.demon_active_augment_level = int(offer.level)
+			var replacement: Array = battle._roll_demon_augment_candidates(false)
+			battle.demon_active_augment_level = previous_level
+			battle.demon_last_candidate_ids = previous_ids
+			if not replacement.is_empty(): offer.candidates = replacement.slice(0,RULES.MAX_OFFER_CANDIDATES).duplicate(true)
 		offer.wire_candidates = _wire_candidates(offer.candidates)
 		demon_holds[index] = offer
 		changed = true
