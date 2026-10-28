@@ -33,6 +33,7 @@ func consume(events: Variant,sequence: Variant,tick: Variant) -> bool:
 	if not DATA.valid_events(events,sequence,tick): return false
 	if sequence<baseline: return false
 	if not suspended:
+		_sync_transform()
 		for row in events:
 			if row[0]<=baseline or tick-row[1]>DATA.MAX_AGE_SECONDS*Engine.physics_ticks_per_second: continue
 			accepted += 1
@@ -63,11 +64,13 @@ func result(winner: String,role: String) -> void:
 	result_played = true
 	bank.stop_all()
 	if not winner.is_empty(): bank.play_cue("victory" if winner==role else "defeat")
-func _process(delta: float) -> void:
+func _sync_transform() -> void:
 	var view = get_parent()
 	view._layout_map()
 	position = view.map_offset
 	scale = view.map_scale
+func _process(delta: float) -> void:
+	_sync_transform()
 	var active := false
 	active = level_sprite.visible
 	for slot in slots:
