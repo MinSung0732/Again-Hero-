@@ -25,11 +25,23 @@ if (-not $godot -or -not (Test-Path $godot)) {
 }
 
 $env:AGAIN_HERO_PORT = "$Port"
+# --localtest accepts loopback only; ignore an inherited production bind.
+$env:AGAIN_HERO_BIND = '127.0.0.1'
+$logDirectory = Join-Path ([System.IO.Path]::GetTempPath()) 'AgainHero'
+$null = New-Item -ItemType Directory -Path $logDirectory -Force
+$logPath = Join-Path $logDirectory ("localtest_server_{0}_{1}.log" -f (Get-Date -Format 'yyyyMMdd-HHmmss'), $PID)
+function Write-ServerLog([string]$Text) {
+    # The invitation is a temporary access credential; show it only in the console.
+    $safeText = $Text -replace '(?im)(LOCALTEST invitation code:\s*)[0-9a-f]+', '$1[redacted]'
+    [System.IO.File]::AppendAllText($logPath, $safeText + [Environment]::NewLine, [System.Text.Encoding]::UTF8)
+}
+Write-ServerLog "Godot: $godot`nProject: $repo`nBind: $($env:AGAIN_HERO_BIND):$Port"
 $address = "ws://127.0.0.1:$Port"
 $host.UI.RawUI.WindowTitle = "Again-Hero 테스트 서버 ($address)"
 Write-Host "Godot : $godot"
 Write-Host "게임  : $repo"
 Write-Host '서버를 시작하는 중...'
+Write-Host "서버 로그 : $logPath" -ForegroundColor Gray
 
 $info = New-Object System.Diagnostics.ProcessStartInfo
 $info.FileName = $godot
@@ -38,14 +50,17 @@ $info.UseShellExecute = $false
 $info.RedirectStandardOutput = $true
 $info.RedirectStandardError = $true
 $info.StandardOutputEncoding = [System.Text.Encoding]::UTF8
+$info.StandardErrorEncoding = [System.Text.Encoding]::UTF8
 $process = [System.Diagnostics.Process]::Start($info)
 # stderr is drained in the background so a full pipe never blocks the server.
-$null = $process.StandardError.ReadToEndAsync()
+$stderrTask = $process.StandardError.ReadToEndAsync()
+$serverExitCode = 1
 
 try {
-    while (-not $process.HasExited) {
+    while ($true) {
         $line = $process.StandardOutput.ReadLine()
         if ($null -eq $line) { break }
+        Write-ServerLog $line
         if ($line -match 'LOCALTEST invitation code:\s*([0-9a-fA-F]+)') {
             $code = $Matches[1]
             try { Set-Clipboard -Value $code } catch {}
@@ -62,9 +77,23 @@ try {
             Write-Host $line -ForegroundColor Green
         } elseif ($line -match 'ERROR|error') {
             Write-Host $line -ForegroundColor Red
+        } else {
+            Write-Host $line
         }
     }
 } finally {
     if (-not $process.HasExited) { $process.Kill() }
+    $process.WaitForExit()
+    $stderr = $stderrTask.GetAwaiter().GetResult()
+    if (-not [string]::IsNullOrWhiteSpace($stderr)) {
+        Write-ServerLog $stderr
+        Write-Host 'Godot 오류 출력 (전체 내용은 서버 로그에 저장됨):' -ForegroundColor Red
+        $stderr -split '\r?\n' | Select-Object -Last 80 | ForEach-Object { Write-Host $_ -ForegroundColor Red }
+    }
+    $serverExitCode = $process.ExitCode
+    Write-ServerLog "Exit code: $serverExitCode"
+    $process.Dispose()
 }
-Write-Host "서버가 종료되었습니다 (exit code $($process.ExitCode))." -ForegroundColor Yellow
+Write-Host "서버가 종료되었습니다 (exit code $serverExitCode)." -ForegroundColor Yellow
+Write-Host "서버 로그 : $logPath" -ForegroundColor Gray
+exit $serverExitCode
