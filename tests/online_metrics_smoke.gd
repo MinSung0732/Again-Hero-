@@ -30,6 +30,10 @@ func run() -> void:
 	probe.receive_bytes(100); probe.input_sent(1)
 	check(probe.rx_bytes==0 and probe.heartbeat()=={"op":"ping"},"disabled probe does no collection or extra ping data")
 	probe.enabled=true
+	probe.frame(1000000); probe.frame(1016000); probe.frame(1116000)
+	var frames: Dictionary = probe.report("hero")
+	check(frames.frame_time.count==2 and frames.frame_max_since_reset_ms==100.0 and frames.frame_stalls_since_reset==1,"frame timing captures stalls since reset")
+	probe.reset(); check(probe.report("hero").frame_max_since_reset_ms==null and probe.report("hero").frame_stalls_since_reset==0,"reset clears frame diagnostics")
 	var ping: Dictionary=probe.heartbeat()
 	probe.ping_at=Time.get_ticks_usec()-25000
 	probe.pong({"probe":int(ping.probe)+1})

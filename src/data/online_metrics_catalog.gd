@@ -5,7 +5,8 @@ const REFRESH_US := 1000000
 const PANEL_SECONDS := 1.0
 const MAX_SEQUENCE := 2147483647
 const SERVER_FIELDS := ["physics_ms","process_ms","snapshot_ms","encode_ms","snapshot_samples","encode_samples","rooms","peers","actors","projectiles","snapshot_bytes","tx_kib_s","rx_kib_s"]
-const SAMPLE_KEYS := ["rtt","gap","input","snapshot","encode"]
+const FRAME_STALL_MS := 50.0
+const SAMPLE_KEYS := ["rtt","gap","input","snapshot","encode","frame"]
 static func sequence(value: Variant) -> bool:
 	return (value is int or value is float) and is_finite(float(value)) and value>=0 and value<=MAX_SEQUENCE and value==floorf(value)
 static func server_valid(value: Variant) -> bool:

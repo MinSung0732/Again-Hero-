@@ -39,6 +39,8 @@ func consume(events: Variant,sequence: Variant,tick: Variant) -> bool:
 			var cue: String = row[2]
 			if cue == "hero_hit":
 				cue = DATA.hit_cue(String(get_parent().state.get("hero_archetype", "")))
+			elif cue == "cast":
+				cue = DATA.cast_cue(String(get_parent().state.get("hero_archetype", "")))
 			elif cue == "ultimate":
 				bank.stop_cue("summon")
 			bank.play_cue(cue)

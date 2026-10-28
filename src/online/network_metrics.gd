@@ -24,6 +24,9 @@ var rx_kib_s := 0.0
 var tx_kib_s := 0.0
 var server := {}
 var snapshot_bytes := 0
+var frame_at := 0
+var frame_max_ms := 0.0
+var frame_stalls := 0
 func _init() -> void:
 	for key in DATA.SAMPLE_KEYS: samples[key] = WINDOW.new()
 	sent_sequences.resize(DATA.INPUT_SLOTS); sent_at.resize(DATA.INPUT_SLOTS)
@@ -31,10 +34,19 @@ func _init() -> void:
 func reset() -> void:
 	for key in samples: samples[key].reset()
 	rx_bytes=0; tx_bytes=0; rx_packets=0; tx_packets=0; rate_rx=0; rate_tx=0; rx_kib_s=0; tx_kib_s=0
-	rate_at=Time.get_ticks_usec(); server={}; snapshot_bytes=0; transport_reset()
+	rate_at=Time.get_ticks_usec(); server={}; snapshot_bytes=0; frame_at=0; frame_max_ms=0.0; frame_stalls=0; transport_reset()
 func transport_reset() -> void:
 	ping_id=0; ping_at=0; last_ack=0; state_at=0; state_tick=-1
 	sent_sequences.fill(0); sent_at.fill(0)
+func frame(now: int = -1) -> void:
+	if not enabled: return
+	if now < 0: now = Time.get_ticks_usec()
+	if frame_at > 0 and now >= frame_at:
+		var elapsed := float(now-frame_at)/1000.0
+		samples.frame.push(elapsed)
+		frame_max_ms = maxf(frame_max_ms,elapsed)
+		if elapsed >= DATA.FRAME_STALL_MS: frame_stalls += 1
+	frame_at = now
 func receive_bytes(size: int) -> void:
 	if enabled: rx_bytes+=size; rx_packets+=1
 func send_bytes(size: int) -> void:
@@ -73,6 +85,6 @@ func state(event: Dictionary,role: String) -> void:
 	if sent_sequences[slot]==sequence and sent_at[slot]>0:
 		samples.input.push(float(now-sent_at[slot])/1000.0); sent_at[slot]=0
 func report(role: String) -> Dictionary:
-	return {"protocol":RULES.VERSION,"byte_scope":"websocket_payload","role":role,"os":OS.get_name(),"rtt":samples.rtt.report(),"state_gap":samples.gap.report(),"input_confirmation":samples.input.report(),"rx_bytes":rx_bytes,"tx_bytes":tx_bytes,"rx_packets":rx_packets,"tx_packets":tx_packets,"rx_kib_s":rx_kib_s,"tx_kib_s":tx_kib_s,"server":server.duplicate()}
+	return {"protocol":RULES.VERSION,"byte_scope":"websocket_payload","role":role,"os":OS.get_name(),"rtt":samples.rtt.report(),"state_gap":samples.gap.report(),"input_confirmation":samples.input.report(),"frame_time":samples.frame.report(),"frame_max_since_reset_ms":frame_max_ms if samples.frame.count>0 else null,"frame_stalls_since_reset":frame_stalls,"fps":Engine.get_frames_per_second(),"rx_bytes":rx_bytes,"tx_bytes":tx_bytes,"rx_packets":rx_packets,"tx_packets":tx_packets,"rx_kib_s":rx_kib_s,"tx_kib_s":tx_kib_s,"server":server.duplicate()}
 func server_report(rooms: int,peers: int,actors: int,projectiles: int) -> Dictionary:
 	return {"physics_ms":maxf(0,Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS)*1000.0),"process_ms":maxf(0,Performance.get_monitor(Performance.TIME_PROCESS)*1000.0),"snapshot_ms":samples.snapshot.mean(),"encode_ms":samples.encode.mean(),"snapshot_samples":samples.snapshot.count,"encode_samples":samples.encode.count,"rooms":rooms,"peers":peers,"actors":actors,"projectiles":projectiles,"snapshot_bytes":snapshot_bytes,"tx_kib_s":tx_kib_s,"rx_kib_s":rx_kib_s}

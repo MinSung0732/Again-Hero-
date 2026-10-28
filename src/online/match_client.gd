@@ -114,6 +114,7 @@ func _network_lost(message: String) -> void:
 	next_retry = now + int(RULES.RECONNECT_RETRY * 1000.0)
 	connection_recovering.emit(true,maxf(0.0,float(reconnect_deadline-now)/1000.0))
 func _process(delta: float) -> void:
+	metrics.frame()
 	metrics.tick_rates()
 	var now := Time.get_ticks_msec()
 	if reconnecting and now >= reconnect_deadline:

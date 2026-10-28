@@ -203,7 +203,7 @@ func on_cast(id: String, play_audio: bool = true, charge_attack: bool = true) ->
 	if not play_audio: return
 	var authority = hero.get_parent()
 	if id == starter and authority.get("online_match_mode") == true:
-		var cue: String = preload("res://src/data/online_feedback_catalog.gd").CAST_BY_ARCHETYPE.get(archetype,"")
+		var cue: String = preload("res://src/data/online_feedback_catalog.gd").cast_event(archetype)
 		if not cue.is_empty(): authority.online_cast_feedback.emit(cue,hero.global_position)
 	audio_serial += 1
 	if audio_call.is_valid():

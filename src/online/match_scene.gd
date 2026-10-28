@@ -101,6 +101,8 @@ var demon_info_panel: Control
 var demon_info_hints: Label
 var inventory_detail: AcceptDialog
 var chest_notice: Label
+var chest_panel: PanelContainer
+var chest_icon: TextureRect
 var chest_queue: Array = []
 var chest_last_serial := 0
 var chest_seconds := 0.0
@@ -369,13 +371,25 @@ func _ready() -> void:
 		for index in passive_buttons.size(): passive_buttons[index].pressed.connect(_show_slot_info.bind(false,index))
 		for button in weapon_buttons + passive_buttons: HERO_HUD.update_slot(button,null,"+",""); button.disabled = true
 		hero_slots.hide()
-		chest_notice = _label(self,"",23)
-		chest_notice.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
-		chest_notice.offset_left = 24; chest_notice.offset_right = -24
-		chest_notice.offset_top = -330; chest_notice.offset_bottom = -260
-		chest_notice.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		chest_panel = PanelContainer.new(); chest_panel.name = "ChestRewardNotice"; add_child(chest_panel)
+		chest_panel.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
+		chest_panel.offset_left = 24; chest_panel.offset_right = -24
+		chest_panel.offset_top = -430; chest_panel.offset_bottom = -260
+		chest_panel.add_theme_stylebox_override("panel",DETAIL.style(Color("171226"),Color("e3bc69"),20))
+		chest_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE; chest_panel.z_index = 22
+		var reward_row := HBoxContainer.new(); reward_row.mouse_filter = Control.MOUSE_FILTER_IGNORE; chest_panel.add_child(reward_row)
+		reward_row.add_theme_constant_override("separation",18)
+		chest_icon = TextureRect.new(); chest_icon.name = "RewardIcon"; chest_icon.custom_minimum_size = Vector2(96,96)
+		chest_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; chest_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		chest_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST; chest_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		reward_row.add_child(chest_icon)
+		chest_notice = _label(reward_row,"",23); chest_notice.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		chest_notice.vertical_alignment = VERTICAL_ALIGNMENT_CENTER; chest_notice.max_lines_visible = 3
+		chest_notice.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		chest_notice.mouse_filter = Control.MOUSE_FILTER_IGNORE
-		chest_notice.z_index = 22; chest_notice.hide()
+		chest_notice.hide(); chest_panel.hide()
+		# Build shared atlas regions during setup, never on the first chest event.
+		ICONS.texture("")
 	inventory_detail = AcceptDialog.new(); inventory_detail.title = "장착 정보"; add_child(inventory_detail)
 	hold_popup = HOLD_POPUP.new(); hold_popup.role = role; add_child(hold_popup)
 	hold_popup.choose.connect(func(number: int,id: String): _select_held(id,number))
@@ -910,14 +924,18 @@ func _clear_chest_notice(reset_serial: bool = false) -> void:
 	chest_queue.clear(); chest_seconds = 0.0
 	if reset_serial: chest_last_serial = 0
 	if chest_notice != null: chest_notice.text = ""; chest_notice.hide()
+	if chest_panel != null: chest_panel.hide(); chest_icon.texture = null
 func _advance_chest_notice(delta: float) -> void:
 	if chest_notice == null or ended or local_preparing or waiting_for_start or connection_waiting or client.reconnecting: return
 	chest_seconds -= delta
 	if chest_seconds > 0: return
-	if chest_queue.is_empty(): chest_notice.text = ""; chest_notice.hide(); return
+	if chest_queue.is_empty():
+		chest_notice.text = ""; chest_notice.hide(); chest_panel.hide(); return
 	var receipt: Dictionary = chest_queue.pop_front()
-	chest_notice.text = "상자 보상 · %s\n%s" % [String(receipt.name),String(receipt.get("description",""))]
-	chest_notice.show()
+	var reward_title := "진화 완료 · MAX" if bool(receipt.get("evolution",false)) else "상자 보상"
+	chest_notice.text = "%s · %s\n%s" % [reward_title,String(receipt.name),String(receipt.get("description",""))]
+	chest_icon.texture = ICONS.texture(String(receipt.get("id","")))
+	chest_notice.show(); chest_panel.show()
 	chest_seconds = 2.4
 func _update_holds(holds: Array) -> void:
 	hold_popup.set_rerolls(rerolls_left,reroll_limit)

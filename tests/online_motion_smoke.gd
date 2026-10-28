@@ -68,7 +68,10 @@ func run() -> void:
 	check(not view.update_state(bad),"fractional actor identity rejected")
 	check(view.update_state(sample(220)) and view.is_processing(),"movement schedules render processing without pending textures")
 	view._process(DATA.MOTION_SECONDS)
-	check(not view.is_processing() and not view.motion.active,"settled motion stops idle polling")
+	check(not view.motion.active,"motion settles independently of pending cold textures")
+	var texture_deadline := Time.get_ticks_msec()+6000
+	while not view.pending_textures.is_empty() and Time.get_ticks_msec()<texture_deadline: await process_frame
+	check(not view.is_processing() and view.pending_textures.is_empty(),"settled motion and completed textures stop idle polling")
 	var stale_at := Time.get_ticks_usec()+int(DATA.MOTION_RESET_SECONDS*1000000.0)+2000
 	while Time.get_ticks_usec()<stale_at: await process_frame
 	check(view.update_state(sample(230)) and view.motion.position(0,Vector2.INF)==Vector2(100,230),"stale idle gap snaps using monotonic receipt clock")

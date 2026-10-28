@@ -1,6 +1,7 @@
 extends RefCounted
 const GAME := preload("res://src/data/game_audio_catalog.gd")
 const CONTEXT := preload("res://src/data/contextual_audio_catalog.gd")
+const SUMMONER := preload("res://src/data/summoner_audio_catalog.gd")
 const CAPACITY := 32
 const HERO_RESERVED := 8
 const MAX_PRIMITIVES := 24
@@ -10,7 +11,6 @@ const MAX_AGE_SECONDS := 0.6
 const LIFETIME := 0.55
 const FONT_SIZE := 25
 const RISE_SPEED := 38.0
-const CAST_BY_ARCHETYPE := {"ranged_kiter":"cast"}
 const CUES := {
 	"hero_hit":{"path":CONTEXT.ROOT+CONTEXT.HITS.ranged_kiter.file,"db":CONTEXT.HIT_DB,"interval":CONTEXT.HIT_INTERVAL_MS/1000.0},
 	"cast":{"path":"res://assets/audio/sfx/stage1_mage_v4_basic.wav","db":-23.0,"interval":0.18},
@@ -20,6 +20,11 @@ const CUES := {
 	"level_up":{"path":"res://assets/audio/sfx/level_up_rise07_cc0.mp3","db":-17.0,"interval":0.0},
 	"victory":CONTEXT.UI_CUES.victory,
 	"defeat":CONTEXT.UI_CUES.defeat,
+}
+# Existing cast wire carries the matched hero archetype in its enclosing state.
+const CAST_PROFILES := {
+	"ranged_kiter": CUES.cast,
+	"summoner_gatekeeper": {"path":SUMMONER.BASIC,"db":SUMMONER.BASIC_DB,"interval":SUMMONER.BASIC_INTERVAL_MS/1000.0},
 }
 const KINDS := ["hero_hit","monster_hit","heal","cast","summon","transcend","level_up","ultimate"]
 const EMPTY := []
@@ -47,6 +52,13 @@ static func audio_cues() -> Dictionary:
 	var cues := CUES.duplicate()
 	for archetype in CONTEXT.HITS:
 		cues[hit_cue(archetype)] = {"path":CONTEXT.ROOT+String(CONTEXT.HITS[archetype].file),"db":CONTEXT.HIT_DB,"interval":CONTEXT.HIT_INTERVAL_MS/1000.0}
+	for archetype in CAST_PROFILES:
+		cues[cast_cue(archetype)] = CAST_PROFILES[archetype]
 	return cues
 static func hit_cue(archetype: String) -> String:
 	return "hero_hit:"+archetype if CONTEXT.HITS.has(archetype) else ""
+
+static func cast_event(archetype: String) -> String:
+	return "cast" if CAST_PROFILES.has(archetype) else ""
+static func cast_cue(archetype: String) -> String:
+	return "cast:"+archetype if CAST_PROFILES.has(archetype) else ""

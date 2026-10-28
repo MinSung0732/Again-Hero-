@@ -7,6 +7,9 @@ const MOTION_SECONDS := preload("res://src/online/match_rules.gd").SNAPSHOT_INTE
 const MOTION_RESET_SECONDS := MOTION_SECONDS * 3.0
 const MOTION_SNAP_DISTANCE := 256.0
 const MAX_TEXTURES := 512
+# Spread completed cold loads across frames instead of one combat-frame burst.
+const TEXTURE_FINALIZE_PER_FRAME := 4
+const TEXTURE_FINALIZE_BUDGET_USEC := 2000
 const COMMAND_SIZE := 22
 const PATH_INDEX := 1
 const PATH_TABLE_FIELD := "visual_paths"

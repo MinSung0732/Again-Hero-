@@ -33,6 +33,8 @@ var texture_requests := 0
 var load_drain
 var state := {}
 var textures := {}
+var actor_texture_paths := {}
+var hero_texture_path := ""
 var allowed_actor_ids: Array = RULES.ROSTER.duplicate()
 var reveal_on_sight := false
 var hero_texture: Texture2D
@@ -54,9 +56,12 @@ func set_match_roster(roster: Array,transcendence_id: String = "") -> void:
 	reveal_on_sight = allowed_actor_ids.is_empty()
 	for id in allowed_actor_ids: _load_actor_texture(String(id))
 func _load_actor_texture(id: String) -> void:
-	if textures.has(id): return
+	if actor_texture_paths.has(id): return
 	var path := String(MONSTERS.get_monster(id).get("card_icon_path",""))
-	if not path.is_empty() and ResourceLoader.exists(path): textures[id] = load(path)
+	if path.is_empty(): return
+	actor_texture_paths[id] = path
+	_request_texture(path)
+	if art_textures.get(path) is Texture2D: textures[id] = art_textures[path]
 func _admit_sighted_actor(id: String) -> bool:
 	if not reveal_on_sight or MONSTERS.get_monster(id).is_empty(): return false
 	allowed_actor_ids.append(id); _load_actor_texture(id)
@@ -71,13 +76,13 @@ func _ready() -> void:
 	feedback = preload("res://src/online/combat_feedback.gd").new(); add_child(feedback)
 	load_drain = LOAD_DRAIN.new(); load_drain.paths = pending_textures; load_drain.view_ref = weakref(self)
 	get_tree().root.add_child.call_deferred(load_drain)
-	for id in RULES.ROSTER:
-		var path := String(MONSTERS.get_monster(id).get("card_icon_path",""))
-		if not path.is_empty() and ResourceLoader.exists(path): textures[id] = load(path)
+	for id in RULES.ROSTER: _load_actor_texture(String(id))
 	var profile := HERO_ART.get_visual_profile(RULES.HERO,"")
-	var path := String(profile.get("frame_dir",""))+"/idle_01.png"
-	if ResourceLoader.exists(path): hero_texture = load(path)
+	hero_texture_path = String(profile.get("frame_dir",""))+"/idle_01.png"
+	_request_texture(hero_texture_path)
+	_refresh_fallback_textures()
 	resized.connect(queue_redraw)
+	if not pending_textures.is_empty(): set_process(true)
 func update_state(value: Dictionary) -> bool:
 	if not PRIMITIVES.valid(value.get("primitives",ART.EMPTY)): return false
 	if value.has("feedback") and not FEEDBACK_DATA.valid_events(value.feedback,value.get("feedback_cursor",null),value.get("tick",null)): return false
@@ -173,20 +178,29 @@ func _request_texture(path: String) -> void:
 	if ResourceLoader.has_cached(path):
 		art_textures[path] = load(path) as Texture2D
 	elif ResourceLoader.load_threaded_request(path,"Texture2D") == OK:
-		pending_textures.append(path); set_process(true); load_drain.set_process(true)
+		pending_textures.append(path); set_process(true)
+		if is_instance_valid(load_drain): load_drain.set_process(true)
 func _process(delta: float) -> void:
 	advance_motion(delta)
 	var changed := false
+	var finalized := 0
+	var started := Time.get_ticks_usec()
 	var index := pending_textures.size()
-	while index > 0:
+	while index > 0 and finalized < ART.TEXTURE_FINALIZE_PER_FRAME and Time.get_ticks_usec()-started < ART.TEXTURE_FINALIZE_BUDGET_USEC:
 		index -= 1
 		var path := pending_textures[index]
 		var status := ResourceLoader.load_threaded_get_status(path)
 		if status == ResourceLoader.THREAD_LOAD_IN_PROGRESS: continue
 		if status == ResourceLoader.THREAD_LOAD_LOADED: art_textures[path] = ResourceLoader.load_threaded_get(path) as Texture2D
-		pending_textures[index] = pending_textures[-1]; pending_textures.pop_back(); changed = true
-	if changed: _resolve_owners(); queue_redraw()
+		pending_textures[index] = pending_textures[-1]; pending_textures.pop_back(); changed = true; finalized += 1
+	if changed:
+		_refresh_fallback_textures(); _resolve_owners(); queue_redraw()
 	if pending_textures.is_empty() and (motion_paused or not motion.active): set_process(false)
+func _refresh_fallback_textures() -> void:
+	for id in actor_texture_paths:
+		var texture: Texture2D = art_textures.get(actor_texture_paths[id])
+		if texture != null: textures[id] = texture
+	hero_texture = art_textures.get(hero_texture_path)
 func advance_motion(delta: float) -> void:
 	if motion_paused or not motion.advance(delta * presentation_speed): return
 	_sort_display_depth(); queue_redraw()
