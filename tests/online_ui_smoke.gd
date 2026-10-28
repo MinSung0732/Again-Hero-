@@ -127,6 +127,7 @@ func run() -> void:
 		check(scene.client.socket == null,"guest without token never queues")
 		check(scene.test_code == null,"ordinary account screen has no test invitation field")
 		check(scene.disconnect_button == null and scene.reconnect_button == null,"ordinary screen has no connection test buttons")
+		check(scene.metrics_panel == null and scene.match_menu.find_child("ConnectionMetricsButton",true,false) == null,"ordinary accounts have no metrics overlay or menu action")
 		root.size = Vector2i(1536,1920); await process_frame; await process_frame
 		check(scene.view.size.x > 1200,"tablet width expands")
 		if role == "hero":
@@ -364,6 +365,19 @@ func run() -> void:
 		await process_frame
 		check(scene.initial_local_test and scene.test_code != null and scene.test_code.secret,"localtest invitation UI for both roles")
 		check(scene.disconnect_button.disabled and scene.reconnect_button.disabled,"test buttons disabled before match")
+		check(scene.metrics_panel.get_parent() == scene and scene.metrics_panel not in scene.setup_controls,"metrics overlay survives setup controls hiding")
+		scene._show_match_layout()
+		scene._open_match_menu()
+		var metrics_button: Button = scene.match_menu.find_child("ConnectionMetricsButton",true,false)
+		check(metrics_button != null,"both roles expose test metrics from battle menu")
+		metrics_button.pressed.emit(); await process_frame
+		check(scene.metrics_panel.visible and not scene.match_menu.visible and scene.metrics_label.text.contains("RTT"),"battle menu opens populated metrics above battlefield")
+		if role == "hero": check(scene.metrics_panel in scene.pad.input_exclusions,"metrics overlay cannot steer touch pad")
+		scene._reset_metrics()
+		check(scene.metrics_label.text.contains("미측정"),"reset immediately refreshes visible metrics")
+		var close_metrics: Button = scene.metrics_panel.find_children("*","Button",true,false).back()
+		close_metrics.pressed.emit()
+		check(not scene.metrics_panel.visible,"metrics close restores unobstructed battle")
 		scene.endpoint.text = "ws://127.0.0.1:24844"
 		scene._join()
 		check(scene.client.socket == null and scene.status.text.contains("입장코드"),"missing code stays disconnected")

@@ -43,7 +43,7 @@ var local_preparing := false
 var waiting_for_start := false
 var load_revision := 0
 const METRICS := preload("res://src/data/online_metrics_catalog.gd")
-var metrics_panel: VBoxContainer
+var metrics_panel: PanelContainer
 var metrics_label: Label
 var metrics_left := 0.0
 var client
@@ -209,13 +209,7 @@ func _ready() -> void:
 	if initial_local_test:
 		var show_metrics := _button(rows,"연결 측정 보기",_toggle_metrics)
 		show_metrics.custom_minimum_size.y=56
-		metrics_panel=VBoxContainer.new(); rows.add_child(metrics_panel); metrics_panel.visible=false
-		metrics_label=_label(metrics_panel,"측정 대기 중…",19)
-		var metric_actions := HBoxContainer.new(); metrics_panel.add_child(metric_actions)
-		var copy_metrics := _button(metric_actions,"측정값 복사",_copy_metrics)
-		var reset_metrics := _button(metric_actions,"측정 초기화",_reset_metrics)
-		for button in [copy_metrics,reset_metrics]:
-			button.custom_minimum_size.y=56; button.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+		_install_metrics_panel()
 	view = VIEW.new(); view.hero_role = role == "hero"; view.size_flags_vertical = Control.SIZE_EXPAND_FILL; view.custom_minimum_size.y = 400; rows.add_child(view)
 	hero_cooldown_bar = HERO_COOLDOWN_BAR.instantiate()
 	add_child(hero_cooldown_bar)
@@ -389,7 +383,7 @@ func _ready() -> void:
 	hold_popup.oldest_auto_chosen.connect(_show_auto_hold_notice)
 	# Popup, held dots and overlay panels own their touches; the free pad only starts on bare battlefield.
 	if pad != null:
-		for control in [hold_popup.popup,hold_popup.dot_row,hero_slots,hero_build_overlay,hero_build_toggle,surrender_dialog,match_menu,settings_panel]:
+		for control in [hold_popup.popup,hold_popup.dot_row,hero_slots,hero_build_overlay,hero_build_toggle,surrender_dialog,match_menu,settings_panel,metrics_panel]:
 			if control is Control: pad.input_exclusions.append(control)
 	resized.connect(_update_hold_position)
 	cancel_button = _button(rows,"매칭 취소 · 로비로",_leave)
@@ -537,6 +531,10 @@ func _install_match_menu() -> void:
 		HERO_PAUSE.build(contents,{"seconds":0.0,"kills":0,"level":1,"weapons":[]},{"resume":_close_match_menu,"settings":_open_match_settings,"rules":_show_rules,"surrender":_confirm_surrender})
 		match_menu.find_child("PauseSummary",true,false).hide()
 		match_menu.hide()
+	if initial_local_test:
+		var metric_rows: Node = match_menu.get_node("MenuPanel/Margin/VBox") if role == "demon" else match_menu.get_node("MenuPanel/MenuRows")
+		var metrics_button := _button(metric_rows,"연결 측정 (테스트)",_toggle_metrics)
+		metrics_button.name = "ConnectionMetricsButton"; metrics_button.custom_minimum_size.y = 84
 	_sync_match_settings()
 
 func _open_match_menu() -> void:
@@ -1225,9 +1223,28 @@ func _exit_tree() -> void:
 	load_revision += 1
 	if client != null: client.close()
 
+func _install_metrics_panel() -> void:
+	metrics_panel = PanelContainer.new(); metrics_panel.name = "ConnectionMetricsPanel"; add_child(metrics_panel)
+	metrics_panel.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
+	metrics_panel.offset_left = 24; metrics_panel.offset_right = -24
+	metrics_panel.offset_top = 430; metrics_panel.offset_bottom = 800
+	metrics_panel.z_index = 350
+	metrics_panel.add_theme_stylebox_override("panel",DETAIL.style(Color("171226"),Color("e3bc69"),24))
+	var content := VBoxContainer.new(); metrics_panel.add_child(content)
+	_label(content,"연결 측정 · 테스트 전용",26)
+	metrics_label = _label(content,"측정 대기 중…",19)
+	var actions := HBoxContainer.new(); content.add_child(actions)
+	for action in [["측정값 복사",_copy_metrics],["측정 초기화",_reset_metrics],["닫기",metrics_panel.hide]]:
+		var button := _button(actions,String(action[0]),action[1])
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL; button.custom_minimum_size.y = 84
+	metrics_panel.hide()
 func _toggle_metrics() -> void:
-	if metrics_panel==null: return
-	metrics_panel.visible=not metrics_panel.visible; metrics_left=0
+	if metrics_panel == null: return
+	metrics_panel.visible = not metrics_panel.visible; metrics_left = 0
+	if metrics_panel.visible:
+		_close_match_menu()
+		metrics_panel.move_to_front()
+		_refresh_metrics()
 func _metric_text(sample: Dictionary) -> String:
 	return "미측정" if sample.count==0 else "%.1f / %.1f ms" % [sample.mean_ms,sample.p95_ms]
 func _refresh_metrics() -> void:
@@ -1246,3 +1263,4 @@ func _copy_metrics() -> void:
 
 func _reset_metrics() -> void:
 	client.metrics.reset(); metrics_left=0
+	_refresh_metrics()
