@@ -152,6 +152,7 @@ var wait_seconds := -1
 var hero_skill_catalog: Array = []
 var hero_cooldown_bar: HBoxContainer
 var hero_voice
+var entry_voice_pending := false
 var result_pending := false
 var result_serial := 0
 var result_wait_seconds := 0.0
@@ -979,6 +980,7 @@ func _event(event: Dictionary) -> void:
 			matched_hero_id = String(event.get("hero",HEROES.DEFAULT_HERO))
 			hero_skill_catalog = event.get("hero_skill_catalog", []) if event.get("hero_skill_catalog", null) is Array else []
 			hero_voice.stop(); hero_voice.hero_id = matched_hero_id; hero_voice.terminal = false; hero_voice.consumed.clear(); hero_voice.streams.clear(); hero_voice._prepared = false
+			entry_voice_pending = not bool(event.get("resumed", false))
 			result_pending = false; result_wait_seconds = 0.0
 			if is_instance_valid(result_zoom_tween): result_zoom_tween.kill()
 			view.presentation_speed = 1.0; view.scale = Vector2.ONE
@@ -1072,6 +1074,9 @@ func _event(event: Dictionary) -> void:
 			view.feedback.suspended = waiting_for_start or connection_waiting or client.reconnecting
 			if waiting_for_start and last_tick > 0 and not connection_waiting and not client.reconnecting:
 				waiting_for_start = false; view.feedback.suspended = false; loading.finish(); _set_controls(true)
+				if entry_voice_pending:
+					entry_voice_pending = false
+					hero_voice.play_entry()
 			if event.has("feedback"): view.feedback.consume(event.feedback,event.feedback_cursor,event.tick)
 			if not connection_waiting:
 				var mana_value := roundi(float(event.mana))
@@ -1148,6 +1153,8 @@ func _prepare_match(event: Dictionary,serial: int) -> void:
 		if not prepared:
 			ended = true; local_preparing = false; waiting_for_start = false; loading.finish()
 			client.close(); status.text = "전장 정보를 준비하지 못했습니다."; _set_controls(false); return
+	# Resolve the shared voice pack while the loading screen still owns input.
+	if entry_voice_pending: hero_voice.prepare()
 	local_preparing = false; loading.show_phase("waiting",1.0)
 	client.send({"op":"ready","match":client.match_id})
 func _set_controls(enabled: bool) -> void:

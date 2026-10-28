@@ -48,6 +48,9 @@ static func area(output: Array,origin: Vector2,radius: float,color: Color) -> vo
 	append(output,"ring",origin,0,radius,color,GEO.OUTLINE_WIDTH)
 static func capture(weapons) -> Array:
 	var output: Array = []
+	# A delivery slot emits at most one danger outline. Reserve these before
+	# decorative fills/trails so the bounded wire never hides an active warning.
+	if weapons.delivery != null: weapons.delivery.visit_visuals(_delivery_warning.bind(output))
 	for field in weapons.fields:
 		if field.left>0: area(output,field.origin,field.radius,field.get("color",Color.WHITE))
 	for effect in weapons.effects:
@@ -83,9 +86,11 @@ static func capture(weapons) -> Array:
 	if weapons.evolution != null: weapons.evolution.visit_visuals(_evolution_visual.bind(output))
 	return output
 
-static func _delivery_visual(_slot: Dictionary,point: Vector2,radius: float,color: Color,warning: bool,output: Array) -> void:
+static func _delivery_warning(_slot: Dictionary,point: Vector2,radius: float,color: Color,warning: bool,output: Array) -> void:
 	if warning: append(output,"ring",point,0,radius,color,2.0)
-	else: area(output,point,radius,color)
+
+static func _delivery_visual(_slot: Dictionary,point: Vector2,radius: float,color: Color,warning: bool,output: Array) -> void:
+	if not warning: area(output,point,radius,color)
 
 static func _evolution_visual(kind: String,point: Vector2,edge: Vector2,radius: float,color: Color,_frames: Array,progress: float,output: Array) -> void:
 	match kind:

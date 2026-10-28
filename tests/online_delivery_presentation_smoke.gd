@@ -3,6 +3,7 @@ const DELIVERY := preload("res://src/hero_mode/hero_weapon_delivery_runtime.gd")
 const EVOLUTION := preload("res://src/hero_mode/hero_weapon_evolution_runtime.gd")
 const PRIMITIVES := preload("res://src/online/primitive_mirror.gd")
 const SAMPLE := preload("res://src/online/presentation_snapshot.gd")
+const POLICY := preload("res://src/data/online_feedback_catalog.gd")
 const ART := preload("res://src/data/online_presentation_catalog.gd")
 class Authority extends RefCounted:
 	var actor := Node2D.new()
@@ -38,7 +39,7 @@ func run() -> void:
 	check(commands.size()==1 and commands[0][0]=="ring" and is_equal_approx(float(commands[0][8]),.5),"warning is outline only")
 	slot.mode="lob"; slot.launch=Vector2.ZERO; slot.landing=Vector2(140,240)
 	commands = PRIMITIVES.capture(host)
-	check(commands.size()==3 and commands[2][1]==140 and commands[2][2]==240,"airborne lob and landing warning both mirrored")
+	check(commands.size()==3 and commands[0][0]=="ring" and commands[0][1]==140 and commands[0][2]==240,"airborne lob and landing warning both mirrored")
 	slot.warning=0.0; slot.mode="orbit"; slot.count=3; slot.phase=.3; slot.orbit_radius=100.0
 	commands = PRIMITIVES.capture(host)
 	check(commands.size()==6,"all orbit instances mirrored")
@@ -76,6 +77,20 @@ func run() -> void:
 	check(arc_end.is_equal_approx(Vector2.from_angle(TAU/3)*20),"mark progress is partial arc rather than full ring")
 	host.authority.actor.set_meta("hero_detection_hidden",true)
 	check(PRIMITIVES.capture(host).is_empty(),"hidden mark targets remain hidden")
+	# Simultaneous retained warnings cannot be displaced by full fields/effects.
+	for index in host.delivery.slots.size():
+		var warning_slot: Dictionary=host.delivery.slots[index]
+		warning_slot.merge({"left":2.0,"mode":"zone","origin":Vector2(index+1,200),"radius":50.0,"warning":.2},true)
+	for index in POLICY.MAX_PRIMITIVES:
+		host.fields.append({"left":1.0,"origin":Vector2.ZERO,"radius":100.0})
+	commands=PRIMITIVES.capture(host)
+	check(host.delivery.slots.size()<=POLICY.MAX_PRIMITIVES,"warning slots fit bounded primitive wire")
+	check(commands.size()==host.delivery.slots.size() and PRIMITIVES.valid(commands),"saturated decoration budget preserves every delivery warning")
+	for index in host.delivery.slots.size():
+		check(commands[index][0]=="ring" and commands[index][1]==index+1 and commands[index][2]==200,"warning retains deterministic slot position under saturation")
+	for warning_slot in host.delivery.slots: warning_slot.left=0.0
+	commands=PRIMITIVES.capture(host)
+	check(commands.size()==POLICY.MAX_PRIMITIVES and commands[0][0]=="circle","expired warnings release capacity back to ordinary effects")
 	host.authority.actor.free()
 	host.hero.free()
 	print("ONLINE_DELIVERY_PRESENTATION checks=",checks," failures=",failures)

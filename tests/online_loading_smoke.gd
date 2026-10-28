@@ -32,6 +32,8 @@ func run() -> void:
 	var key: String = scenes[0].client.match_id
 	var room = server.rooms[key].node
 	check(not room.running and room.tick==0,"server does not simulate before both ready")
+	for scene in scenes:
+		check(scene.entry_voice_pending and not scene.hero_voice.consumed.has("entry"),"entry voice waits for authoritative start")
 	var progress_frames := 0
 	var network_kept := true
 	var first_clock: float = scenes[0].loading.clock
@@ -46,6 +48,10 @@ func run() -> void:
 	check(await until(func(): return not scenes[0].waiting_for_start and not scenes[1].waiting_for_start),"both ready and authoritative tick reveal battle")
 	for scene in scenes:
 		check(not scene.loading.visible and not scene.local_preparing,"loading dismissed after start")
+		check(not scene.entry_voice_pending and scene.hero_voice.consumed.has("entry"),"entry voice requested once after actual battle start")
+		var consumed_before: int = scene.hero_voice.consumed.size()
+		await process_frame; await process_frame
+		check(scene.hero_voice.consumed.size() == consumed_before,"successive states do not repeat entry voice")
 		check(scene.view.battlefield.field.render_only and scene.view.battlefield.field.collision_layer_root.get_child_count()==0,"no client physics")
 		for index in scene.view.battlefield.field.depth_prop_roots.size():
 			check(is_equal_approx(float(scene.view.battlefield.prop_commands[index][21]),scene.view.battlefield.field.depth_prop_roots[index].position.y),"async resize does not change world ground anchor")
@@ -65,8 +71,9 @@ func run() -> void:
 	fresh.queue_free(); await process_frame
 	# Cancellation mid-load must never send a stale ready or leave an overlay.
 	var scene = scenes[0]
-	scene._event({"op":"matched","match":key,"map":"plaza","duration":600,"battlefield":{"stage":"stage_2","bounds":[3600,3600],"map":"plaza"}})
+	scene._event({"op":"matched","match":key,"resumed":true,"map":"plaza","duration":600,"battlefield":{"stage":"stage_2","bounds":[3600,3600],"map":"plaza"}})
 	check(scene.local_preparing and scene.loading.visible,"new prepare in progress")
+	check(not scene.entry_voice_pending,"rejoin does not queue entry voice")
 	scene._event({"op":"result","match":key,"winner":""})
 	await process_frame; await process_frame
 	check(scene.ended and not scene.loading.visible and not scene.local_preparing,"terminal event cancels old loader")
