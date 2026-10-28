@@ -46,13 +46,17 @@ func run() -> void:
 	var rows := buffer.snapshot()
 	check(rows.size()==1 and rows[0].size()==DATA.EVENT_SIZE and rows[0][10]==42 and rows[0][11]==1 and DATA.valid_events(rows,buffer.sequence,5),"critical and owner wire round trip")
 	check(buffer.snapshot(buffer.sequence).is_empty(),"ordered events send once")
+	var json_rows: Array = JSON.parse_string(JSON.stringify(rows))
+	check(DATA.valid_events(json_rows, float(buffer.sequence), 5.0),"JSON floating point critical flag is accepted")
+	json_rows[0][11] = 0.5
+	check(not DATA.valid_events(json_rows, float(buffer.sequence), 5.0),"fractional critical flag is rejected")
 	var bad: Array = rows[0].duplicate(); bad[11]=2
 	check(not DATA.valid_events([bad],buffer.sequence,5),"invalid critical bit rejected")
 	bad = rows[0].duplicate(); bad[10]=-1
 	check(not DATA.valid_events([bad],buffer.sequence,5),"invalid owner rejected")
 	bad = rows[0].duplicate(); bad[2]="unknown"
 	check(not DATA.valid_events([bad],buffer.sequence,5),"invalid kind rejected")
-	check(RULES.VERSION==23,"protocol 23")
+	check(RULES.VERSION==24,"protocol 24")
 	var room := ROOM.new(); root.add_child(room); room.prepare()
 	room.battle.hero_player_mode = false
 	for index in RULES.POPULATION:

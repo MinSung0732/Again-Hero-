@@ -31,11 +31,18 @@ func run() -> void:
 	check(room.feedback.snapshot()[-1][2]=="heal","actual recovery captured")
 	hero.player_weapons._cast(hero.player_weapons.identity.starter)
 	check(room.feedback.snapshot()[-1][2]=="cast","actual starter attack emits existing sound cue")
-	var snapshot: Dictionary = room.snapshot()
+	var codec := preload("res://src/online/snapshot_codec.gd").new()
+	var encoded := codec.encode(room.snapshot())
+	var snapshot: Dictionary = JSON.parse_string(encoded)
+	check(not encoded.is_empty() and preload("res://src/online/snapshot_codec.gd").expand(snapshot),"actual damage survives server codec and JSON transport")
 	check(DATA.valid_events(snapshot.feedback,snapshot.feedback_cursor,snapshot.tick),"authoritative wire validates")
 	check(view.update_state(snapshot),"state and primitives accepted")
 	check(client.consume(snapshot.feedback,snapshot.feedback_cursor,snapshot.tick),"consume accepted")
 	check(client.accepted==snapshot.feedback.size(),"all live feedback handled once")
+	var damage_visible := false
+	for popup in client.get_meta(preload("res://src/ui/damage_number_spawner.gd").POOL_META,[]):
+		if popup.is_pool_active() and popup.value_label != null and popup.value_label.is_visible_in_tree() and popup.numeric_amount == 7: damage_visible = true
+	check(damage_visible and client.displayed >= 3,"real monster damage, hero damage and healing reach visible Labels")
 	var accepted: int = client.accepted; var sounds: int = client.bank.played_count
 	for _repeat in 10: check(client.consume(snapshot.feedback,snapshot.feedback_cursor,snapshot.tick),"repeat snapshot valid")
 	check(client.accepted==accepted and client.bank.played_count==sounds,"repeated state cannot duplicate audio/popups")

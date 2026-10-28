@@ -3,7 +3,9 @@ extends Node2D
 const PICKUP_PLACEMENT := preload("res://src/systems/pickup_placement.gd")
 const BATTLE_SCOPE := preload("res://src/systems/battle_scope.gd")
 var _placement_pending := true
+var visuals_enabled := true
 
+const ONLINE_REGISTRY_META := &"online_exp_orb_visual_registry"
 const FRAME_COUNT := 6
 const FRAME_SIZE := Vector2(64, 56)
 const TARGET_HEIGHT := 42.0
@@ -96,8 +98,12 @@ func setup(value: int, initial_velocity: Vector2 = Vector2.ZERO, pickup_delay: f
 		IDLE_SENSE_MIN_INTERVAL,
 		IDLE_SENSE_MAX_INTERVAL
 	)
-	_apply_exp_stone_visual()
-	queue_redraw()
+	var registry = get_parent().get_meta(ONLINE_REGISTRY_META,null) if get_parent()!=null else null
+	visuals_enabled = registry == null
+	if visuals_enabled: _apply_exp_stone_visual()
+	else: visual.stop(); visual.hide()
+	if registry != null: registry.activate(self)
+	if visuals_enabled: queue_redraw()
 
 func _physics_process(delta: float) -> void:
 	if _placement_pending:
@@ -113,7 +119,7 @@ func _physics_process(delta: float) -> void:
 		)
 		burst_time = maxf(burst_time - delta, 0.0)
 
-	if not visual.visible:
+	if visuals_enabled and not visual.visible:
 		queue_redraw()
 
 	# Allow a boss drop to scatter before nearby melee pickup. Ordinary drops use zero.
@@ -245,6 +251,8 @@ func activate_global_magnet(
 
 
 func deactivate_for_pool() -> void:
+	var registry = get_parent().get_meta(ONLINE_REGISTRY_META,null) if get_parent()!=null else null
+	if registry != null: registry.retire(self)
 	pickup_delay_left = 0.0
 	magnetized = false
 	global_magnet_time_left = 0.0
@@ -321,7 +329,7 @@ func _load_texture(path: String) -> Texture2D:
 	return null
 
 func _draw() -> void:
-	if visual.visible:
+	if not visuals_enabled or visual.visible:
 		return
 
 	var pulse := 1.0 + sin(pulse_time * 6.0) * 0.10

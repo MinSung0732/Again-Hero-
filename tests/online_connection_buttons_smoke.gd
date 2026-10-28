@@ -3,6 +3,13 @@ const SERVER := preload("res://src/online/match_server.gd")
 const ACCESS := preload("res://src/online/local_test_access.gd")
 const RULES := preload("res://src/online/match_rules.gd")
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
+class RetryServer extends SERVER:
+	var reject_state_for := {}
+	func _send_encoded(id: int,encoded: String,bytes: int = -1) -> bool:
+		if reject_state_for.has(id) and encoded.contains('"op":"state"'):
+			reject_state_for.erase(id)
+			return false
+		return super._send_encoded(id,encoded,bytes)
 var checks := 0
 func check(ok: bool,message: String) -> void:
 	checks += 1
@@ -20,7 +27,7 @@ func run() -> void:
 	var local = root.get_node("LocalTestMode")
 	var saved := [local.active,local.tutorial_preview,SCOPE.user_id,SCOPE.guest_directory]
 	local.active = true; local.tutorial_preview = false; SCOPE.user_id = ""; SCOPE.guest_directory = local.test_directory
-	var server = SERVER.new(); root.add_child(server)
+	var server = RetryServer.new(); root.add_child(server)
 	var ticket := ACCESS.new_ticket()
 	check(server.start(24847,"127.0.0.1",false,ticket) == OK,"real invitation server")
 	var screens: Array = []
@@ -43,6 +50,23 @@ func run() -> void:
 	demon.view.placement.emit(spawn)
 	check(await until(func(): return not room.battle.active_monsters.is_empty()),"opening spider placement reaches actual server factory")
 	check(await until(func(): return demon.action_notice.text.contains("수동 배치")),"accepted summon feedback reaches demon UI")
+	# Actual damage -> WebSocket JSON -> both match scenes -> visible Label.
+	var previous_mode: int = room.battle.process_mode
+	room.battle.process_mode = Node.PROCESS_MODE_DISABLED
+	var victim = room.battle.active_monsters.values()[0]
+	var before_hero: int = hero.view.feedback.displayed
+	var before_demon: int = demon.view.feedback.displayed
+	for peer in server.rooms[key].members: server.reject_state_for[peer] = true
+	victim.take_damage(7)
+	check(await until(func(): return hero.view.feedback.displayed > before_hero and demon.view.feedback.displayed > before_demon),"failed sends retry actual damage on both role screens")
+	for screen in screens:
+		var visible_number := false
+		for popup in screen.view.feedback.get_meta(preload("res://src/ui/damage_number_spawner.gd").POOL_META,[]):
+			if popup.is_pool_active() and popup.value_label != null and popup.value_label.is_visible_in_tree(): visible_number = true
+		check(visible_number,"both role screens contain an active visible damage Label")
+	room.battle._spawn_exp_orb(room.battle.hero.position+Vector2(600,0),31)
+	check(await until(func(): return not hero.view.exp_orbs.slots.is_empty() and not demon.view.exp_orbs.slots.is_empty()),"actual gem drop reaches both role screens")
+	room.battle.process_mode = previous_mode
 	for scene in screens:
 		check(not scene.disconnect_button.disabled and scene.reconnect_button.disabled,"only disconnect available while connected")
 		local.active = false

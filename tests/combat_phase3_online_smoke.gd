@@ -40,7 +40,7 @@ func run() -> void:
 	root.get_node("CloudStore").stop(); root.get_node("LoginGateway").remember_session_enabled = false
 	var old_script = baseline(); var rooms: Array = []
 	var codec = CODEC.new()
-	var later_fields := ["hero_archetype", "hero_skill_cooldowns", "battlefield", "summon_costs", "demon_level", "demon_rerolls_left", "demon_reroll_limit", "demon_exp", "demon_exp_next", "demon_charge", "demon_charge_max", "demon_cooldowns", "demon_ready", "transcend_ready", "transcend_used", "visuals", "primitives", "feedback", "feedback_cursor"]
+	var later_fields := ["hero_archetype", "hero_skill_cooldowns", "battlefield", "summon_costs", "demon_level", "demon_rerolls_left", "demon_reroll_limit", "demon_exp", "demon_exp_next", "demon_charge", "demon_charge_max", "demon_cooldowns", "demon_ready", "transcend_ready", "transcend_used", "exp_orbs", "visuals", "primitives", "feedback", "feedback_cursor"]
 	for index in 2:
 		var room := ROOM.new(); root.add_child(room); room.prepare(); rooms.append(room)
 		room.feedback.publish("hero_hit",room.battle.hero.position,1,Color.WHITE,room.tick,room.battle.hero.get_instance_id())
@@ -72,7 +72,7 @@ func run() -> void:
 			shared["actors"] = trimmed
 			check(shared.size() == before.size() and JSON.stringify(before) == SERVER._encode(shared),"wire/ID/order/generation parity")
 			check(added_fields(before, after) == later_fields,"only known later snapshot fields added")
-			check(FEEDBACK.valid_events(after.feedback,after.feedback_cursor,after.tick),"protocol 23 feedback row shape valid")
+			check(FEEDBACK.valid_events(after.feedback,after.feedback_cursor,after.tick),"protocol 24 feedback row shape valid")
 			check(after.hero_skill_cooldowns is Array and after.hero_skill_cooldowns.size() <= room.hero_skill_catalog.size(),"bounded indexed hero cooldowns")
 			var snapshot_bytes := JSON.stringify(after).to_utf8_buffer().size()
 			max_snapshot_bytes = maxi(max_snapshot_bytes, snapshot_bytes)

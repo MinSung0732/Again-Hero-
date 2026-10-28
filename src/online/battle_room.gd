@@ -8,6 +8,7 @@ const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
 const MONSTERS := preload("res://src/data/monster_catalog.gd")
 const MAPS := preload("res://src/data/ranked_map_catalog.gd")
 var presentation = PRESENTATION.new()
+var exp_orb_visuals = preload("res://src/online/exp_orb_registry.gd").new()
 var battlefield_info := {}
 var hero_skill_catalog: Array = []
 var last_hero_level := 1
@@ -61,6 +62,7 @@ func prepare() -> void:
 	var scene: PackedScene = load("res://src/battle/Battle.tscn")
 	if scene == null: finish("","battle_load_failed"); return
 	battle = scene.instantiate(); battle.online_match_mode = true
+	battle.set_meta(preload("res://src/battle/exp_orb.gd").ONLINE_REGISTRY_META,exp_orb_visuals)
 	battle.combat_popup_visuals_enabled = false
 	battle.online_match_rules = {"population":RULES.POPULATION,"roster":roster,"skill_ids":skill_ids,"transcendence_id":transcendence_id}
 	battle.hero_player_mode = true; battle.hero_player_stage = String(map_data.stage_visual); battle.hero_player_hero_id = hero_id
@@ -451,7 +453,7 @@ func _build_snapshot() -> Dictionary:
 		demon_ready[id] = battle.demon_ultimate_spawn_queue.is_empty() and battle.demon_ultimate_charge+0.001 >= float(skill.get("mana_cost",SKILLS.CHARGE_MAX)) and float(battle.demon_ultimate_cooldowns.get(id,0.0)) <= 0.001
 	# Bounded snapshot serialization and presentation sort at10Hz, not physics Hz.
 	var hero_skill_cooldowns := HERO_COOLDOWNS.encode(battle.hero, hero_skill_catalog)
-	return {"op":"state","tick":tick,"hero":[hero_last.x,hero_last.y,hp,maximum,level,_hero_bars()],"hero_archetype":String(battle.hero.hero_archetype) if is_instance_valid(battle.hero) else "","hero_skill_cooldowns":hero_skill_cooldowns,"bounds":[battle.current_map_size.x,battle.current_map_size.y],"battlefield":battlefield_info,"seconds":battle.run_metrics.elapsed_seconds,"mana":battle.command_power,"summon_costs":summon_costs,"demon_level":battle.demon_level,"demon_rerolls_left":battle.demon_rerolls_left,"demon_reroll_limit":battle.demon_reroll_max,"demon_exp":battle.demon_exp,"demon_exp_next":battle.demon_exp_to_next_level,"demon_charge":battle.demon_ultimate_charge,"demon_charge_max":SKILLS.CHARGE_MAX,"demon_cooldowns":battle.demon_ultimate_cooldowns,"demon_ready":demon_ready,"transcend_ready":battle.transcendence.ready and not battle.transcendence.used,"transcend_used":battle.transcendence.used,"actors":actors,"shots":shots,"visuals":visuals,"primitives":primitives,"feedback":feedback.snapshot(),"feedback_cursor":feedback.sequence,"winner":winner,"reason":reason}
+	return {"op":"state","tick":tick,"hero":[hero_last.x,hero_last.y,hp,maximum,level,_hero_bars()],"hero_archetype":String(battle.hero.hero_archetype) if is_instance_valid(battle.hero) else "","hero_skill_cooldowns":hero_skill_cooldowns,"bounds":[battle.current_map_size.x,battle.current_map_size.y],"battlefield":battlefield_info,"seconds":battle.run_metrics.elapsed_seconds,"mana":battle.command_power,"summon_costs":summon_costs,"demon_level":battle.demon_level,"demon_rerolls_left":battle.demon_rerolls_left,"demon_reroll_limit":battle.demon_reroll_max,"demon_exp":battle.demon_exp,"demon_exp_next":battle.demon_exp_to_next_level,"demon_charge":battle.demon_ultimate_charge,"demon_charge_max":SKILLS.CHARGE_MAX,"demon_cooldowns":battle.demon_ultimate_cooldowns,"demon_ready":demon_ready,"transcend_ready":battle.transcendence.ready and not battle.transcendence.used,"transcend_used":battle.transcendence.used,"actors":actors,"exp_orbs":exp_orb_visuals.snapshot(),"shots":shots,"visuals":visuals,"primitives":primitives,"feedback":feedback.snapshot(),"feedback_cursor":feedback.sequence,"winner":winner,"reason":reason}
 
 func _hero_bars() -> Array:
 	var hero = battle.hero

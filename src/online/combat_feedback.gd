@@ -9,10 +9,15 @@ var baseline := 0
 var slots: Array = []
 var cursor := 0
 var accepted := 0
+var received := 0
+var displayed := 0
+var stale := 0
+var pool_dropped := 0
 var suspended := true
 var result_played := false
 func _ready() -> void:
 	z_index = 80
+	POPUPS.prepare_visual_pool(self)
 	bank = BANK.new(); add_child(bank); bank.configure(DATA.audio_cues())
 	level_sprite = AnimatedSprite2D.new(); add_child(level_sprite)
 	LEVEL_EFFECT.configure(level_sprite, func(path: String): return load(path) as Texture2D if ResourceLoader.exists(path) else null)
@@ -35,7 +40,11 @@ func consume(events: Variant,sequence: Variant,tick: Variant) -> bool:
 	if not suspended:
 		_sync_transform()
 		for row in events:
-			if row[0]<=baseline or tick-row[1]>DATA.MAX_AGE_SECONDS*Engine.physics_ticks_per_second: continue
+			if row[0]<=baseline: continue
+			received += 1
+			if tick-row[1]>DATA.MAX_AGE_SECONDS*Engine.physics_ticks_per_second:
+				stale += 1
+				continue
 			accepted += 1
 			var cue: String = row[2]
 			if cue == "hero_hit":
@@ -51,7 +60,9 @@ func consume(events: Variant,sequence: Variant,tick: Variant) -> bool:
 				level_sprite.show(); level_sprite.play(&"level_up"); set_process(true)
 				continue
 			if row[2] in ["hero_hit","monster_hit","heal"]:
-				POPUPS.show_feedback(self,int(row[10]),Vector2(row[3],row[4]),int(row[5]),Color(row[6],row[7],row[8],row[9]),row[2]=="heal")
+				var popup := POPUPS.show_feedback(self,int(row[10]),Vector2(row[3],row[4]),int(row[5]),Color(row[6],row[7],row[8],row[9]),row[2]=="heal")
+				if popup != null: displayed += 1
+				else: pool_dropped += 1
 				set_process(true)
 				continue
 			if row[2] in ["cast", "ultimate"]: continue
@@ -89,3 +100,9 @@ func _draw() -> void:
 		var color: Color = slot.color; color.a *= ratio
 		var radius: float = (95 if slot.kind=="transcend" else 40)*(1.4-ratio*0.4)
 		draw_arc(point,radius,0,TAU,16,color,2,false)
+
+func reset_diagnostics() -> void:
+	received = 0; accepted = 0; displayed = 0; stale = 0; pool_dropped = 0
+
+func diagnostics() -> Dictionary:
+	return {"cursor":baseline,"received":received,"accepted":accepted,"displayed":displayed,"stale":stale,"pool_dropped":pool_dropped,"suspended":suspended}

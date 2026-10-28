@@ -1077,6 +1077,13 @@ func _event(event: Dictionary) -> void:
 							if not row.get(field,null) is String or String(row[field]).length() > RULES.MAX_COMPARE_FIELD_LENGTH: return
 			if int(event.tick) <= last_tick or not view.update_state(event): return
 			last_tick = int(event.tick)
+			view.feedback.suspended = waiting_for_start or connection_waiting or client.reconnecting
+			if waiting_for_start and last_tick > 0 and not connection_waiting and not client.reconnecting:
+				waiting_for_start = false; view.feedback.suspended = false; loading.finish(); _set_controls(true)
+				if entry_voice_pending:
+					entry_voice_pending = false
+					hero_voice.play_entry()
+			if event.has("feedback"): view.feedback.consume(event.feedback,event.feedback_cursor,event.tick)
 			if not event.get("hero_skill_cooldowns", null) is Array: return
 			hero_cooldown_bar.call("refresh", HERO_COOLDOWNS.decode(event.hero_skill_cooldowns, hero_skill_catalog))
 			_update_match_hud(event)
@@ -1087,13 +1094,7 @@ func _event(event: Dictionary) -> void:
 				_update_hero_build(event.hero_build)
 				_update_hud_progress(int(event.hero_build.get("level",event.hero[4])),0,0)
 			if role == "hero": _update_demon_info(event.demon_hints)
-			view.feedback.suspended = waiting_for_start or connection_waiting or client.reconnecting
-			if waiting_for_start and last_tick > 0 and not connection_waiting and not client.reconnecting:
-				waiting_for_start = false; view.feedback.suspended = false; loading.finish(); _set_controls(true)
-				if entry_voice_pending:
-					entry_voice_pending = false
-					hero_voice.play_entry()
-			if event.has("feedback"): view.feedback.consume(event.feedback,event.feedback_cursor,event.tick)
+
 			if not connection_waiting:
 				var mana_value := roundi(float(event.mana))
 				if mana_value != hud_mana:
@@ -1273,12 +1274,16 @@ func _refresh_metrics() -> void:
 		var snapshot_text := "미측정" if value.snapshot_samples==0 else "%.2f ms" % value.snapshot_ms
 		var encode_text := "미측정" if value.encode_samples==0 else "%.2f ms" % value.encode_ms
 		metrics_label.text+="\n서버 전체 물리 %.2f ms · 스냅샷/인코딩 평균 %s / %s\n방 %d · 연결 %d · 몬스터 %d · 투사체 %d · 상태 %.1f KiB" % [value.physics_ms,snapshot_text,encode_text,value.rooms,value.peers,value.actors,value.projectiles,value.snapshot_bytes/1024.0]
+	var feedback_info: Dictionary = view.feedback.diagnostics()
+	metrics_label.text += "\n피드백 수신 %d · 숫자 표시 %d · 오래됨 %d · 풀 포화 %d" % [feedback_info.received,feedback_info.displayed,feedback_info.stale,feedback_info.pool_dropped]
 func _metrics_json() -> String:
-	return JSON.stringify(client.metrics.report(role),"\t")
+	var report: Dictionary = client.metrics.report(role)
+	report["feedback"] = view.feedback.diagnostics()
+	return JSON.stringify(report,"\t")
 func _copy_metrics() -> void:
 	if DisplayServer.get_name()!="headless": DisplayServer.clipboard_set(_metrics_json())
 	action_notice.text="측정값을 복사했습니다." if DisplayServer.get_name()!="headless" else "현재 환경에서는 클립보드를 사용할 수 없습니다."
 
 func _reset_metrics() -> void:
-	client.metrics.reset(); metrics_left=0
+	client.metrics.reset(); view.feedback.reset_diagnostics(); metrics_left=0
 	_refresh_metrics()

@@ -149,12 +149,31 @@ static func show_feedback(parent: Node2D, owner_id: int, world_position: Vector2
 			return existing
 	var popup := _acquire_popup(parent)
 	if popup == null:
-		return null
+		# Online feedback is best-effort: keep the newest hit visible under
+		# crowd pressure instead of silently dropping every hit until expiry.
+		var oldest_elapsed := -1.0
+		for entry in pool:
+			if is_instance_valid(entry) and not entry.is_queued_for_deletion() and float(entry.elapsed) > oldest_elapsed:
+				popup = entry
+				oldest_elapsed = float(entry.elapsed)
+		if popup == null: return null
+		popup.call("_deactivate_for_pool")
 	popup.position = world_position + WORLD_OFFSET + (Vector2(0.0, -10.0) if healing else Vector2.ZERO)
 	popup.set_meta(OWNER_META, owner_id)
 	if healing: popup.call("setup_heal",amount,text_color)
 	else: popup.call("setup",amount,text_color)
 	return popup
+
+
+# Called during online scene preparation, before combat events arrive.
+static func prepare_visual_pool(parent: Node2D) -> void:
+	var pool := _get_compacted_pool(parent)
+	while pool.size() < MAX_ACTIVE_POPUPS:
+		var popup := DAMAGE_NUMBER_SCENE.instantiate() as Node2D
+		parent.add_child(popup)
+		pool.append(popup)
+		var label := popup.get_node("Value") as Label
+		label.get_theme_font("font").get_string_size("0123456789+", HORIZONTAL_ALIGNMENT_LEFT, -1, label.get_theme_font_size("font_size"))
 
 
 static func _acquire_popup(parent: Node2D) -> Node2D:

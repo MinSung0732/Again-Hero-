@@ -97,8 +97,6 @@ func _process(delta: float) -> void:
 			if not room.is_prepared or not room.running or room.connection_paused or room.finished: continue
 			var started: int = Time.get_ticks_usec() if metrics.enabled else 0
 			var state: Dictionary = room.snapshot(); state["match"] = key
-			state["feedback"] = room.feedback.snapshot(int(rooms[key].get("feedback_sent",0)))
-			rooms[key]["feedback_sent"] = room.feedback.sequence
 			var bytes := -1
 			if metrics.enabled:
 				metrics.samples.snapshot.push(float(Time.get_ticks_usec()-started)/1000.0)
@@ -110,11 +108,12 @@ func _process(delta: float) -> void:
 			for id in rooms[key].members:
 				if not peers.has(id): continue
 				var own_state: Dictionary = room.snapshot_for_role(String(peers[id].role),state)
+				own_state["feedback"] = room.feedback.snapshot(int(peers[id].get("feedback_sent",0)))
 				var encoded := _encode_state(key,own_state)
 				if metrics.enabled:
 					metrics.samples.encode.push(float(Time.get_ticks_usec()-started)/1000.0)
 					bytes=encoded.to_utf8_buffer().size(); metrics.snapshot_bytes=bytes
-				_send_encoded(id,encoded,bytes)
+				if _send_encoded(id,encoded,bytes): peers[id]["feedback_sent"] = room.feedback.sequence
 	for id in queue.members:
 		if peers.has(id) and Time.get_ticks_msec()-int(peers[id].get("queue_ping",0)) > 5000:
 			peers[id]["queue_ping"] = Time.get_ticks_msec(); _send(id,{"op":"queued","role":peers[id].role})
@@ -225,6 +224,7 @@ func _match_waiters() -> void:
 		_send_matched(id,key,false)
 func _send_matched(id: int,key: String,resumed: bool) -> void:
 	var role: String = peers[id].role
+	peers[id]["feedback_sent"] = rooms[key].node.feedback.sequence
 	_send(id,_matched_payload(key,role,resumed))
 func _matched_payload(key: String,role: String,resumed: bool) -> Dictionary:
 	var room = rooms[key].node
@@ -326,13 +326,14 @@ func _encode_state(key: String,message: Dictionary) -> String:
 func _send(id: int,message: Dictionary) -> void:
 	_send_encoded(id,_encode(message))
 
-func _send_encoded(id: int,encoded: String,bytes: int = -1) -> void:
-	if not peers.has(id): return
+func _send_encoded(id: int,encoded: String,bytes: int = -1) -> bool:
+	if not peers.has(id): return false
 	var socket: WebSocketPeer = peers[id].socket
-	if socket.get_ready_state() != WebSocketPeer.STATE_OPEN: return
-	if socket.get_current_outbound_buffered_amount() > RULES.MAX_SNAPSHOT*2: socket.close(1008,"slow consumer"); return
-	if not encoded.is_empty() and socket.send_text(encoded)==OK and metrics.enabled:
-		metrics.send_bytes(bytes if bytes>=0 else encoded.to_utf8_buffer().size())
+	if socket.get_ready_state() != WebSocketPeer.STATE_OPEN: return false
+	if socket.get_current_outbound_buffered_amount() > RULES.MAX_SNAPSHOT*2: socket.close(1008,"slow consumer"); return false
+	if encoded.is_empty() or socket.send_text(encoded) != OK: return false
+	if metrics.enabled: metrics.send_bytes(bytes if bytes>=0 else encoded.to_utf8_buffer().size())
+	return true
 func _reject(id: int,reason: String) -> void:
 	_send(id,{"op":"error","reason":reason})
 	if peers.has(id): peers[id].socket.close(1008,reason)

@@ -12,6 +12,8 @@ const PRIMITIVES := preload("res://src/online/primitive_mirror.gd")
 const CAMERA_VIEW := preload("res://src/ui/battle_camera_view.gd")
 const BARS := preload("res://src/ui/battle_bar_painter.gd")
 const STATUS_BARS := preload("res://src/online/status_bar_view.gd")
+const EXP_ORBS := preload("res://src/data/online_exp_orb_catalog.gd")
+var exp_orbs = preload("res://src/online/exp_orb_view.gd").new()
 var status_bars
 var motion = preload("res://src/online/actor_motion.gd").new()
 var visual_order: Array[int] = []
@@ -84,6 +86,7 @@ func _ready() -> void:
 	resized.connect(queue_redraw)
 	if not pending_textures.is_empty(): set_process(true)
 func update_state(value: Dictionary) -> bool:
+	if not EXP_ORBS.valid(value.get("exp_orbs",EXP_ORBS.EMPTY)): return false
 	if not PRIMITIVES.valid(value.get("primitives",ART.EMPTY)): return false
 	if value.has("feedback") and not FEEDBACK_DATA.valid_events(value.feedback,value.get("feedback_cursor",null),value.get("tick",null)): return false
 	if not RULES.point(value.get("bounds",null)) or not value.get("hero",null) is Array: return false
@@ -115,6 +118,8 @@ func update_state(value: Dictionary) -> bool:
 	if value.has("battlefield") and value.battlefield.bounds != value.bounds: return false
 	if value.has("battlefield") and not prepare_battlefield(value.battlefield): return false
 	primitives.replace(value.get("primitives",ART.EMPTY))
+	exp_orbs.replace(value.get("exp_orbs",EXP_ORBS.EMPTY),self)
+	if not motion_paused and exp_orbs.needs_process(): set_process(true)
 	if not motion_paused:
 		var now := Time.get_ticks_usec()
 		if motion_received_us > 0 and now-motion_received_us >= int(ART.MOTION_RESET_SECONDS*1000000.0): motion.clear()
@@ -182,6 +187,7 @@ func _request_texture(path: String) -> void:
 		if is_instance_valid(load_drain): load_drain.set_process(true)
 func _process(delta: float) -> void:
 	advance_motion(delta)
+	if not motion_paused and exp_orbs.advance(delta*presentation_speed): queue_redraw()
 	var changed := false
 	var finalized := 0
 	var started := Time.get_ticks_usec()
@@ -195,7 +201,7 @@ func _process(delta: float) -> void:
 		pending_textures[index] = pending_textures[-1]; pending_textures.pop_back(); changed = true; finalized += 1
 	if changed:
 		_refresh_fallback_textures(); _resolve_owners(); queue_redraw()
-	if pending_textures.is_empty() and (motion_paused or not motion.active): set_process(false)
+	if pending_textures.is_empty() and (motion_paused or (not motion.active and not exp_orbs.needs_process())): set_process(false)
 func _refresh_fallback_textures() -> void:
 	for id in actor_texture_paths:
 		var texture: Texture2D = art_textures.get(actor_texture_paths[id])
@@ -210,6 +216,7 @@ func _resolve_owners() -> void:
 		var texture: Texture2D = art_textures.get(command[1])
 		if texture != null and command[2]+command[4] <= texture.get_width() and command[3]+command[5] <= texture.get_height(): painted_owners[int(command[0])] = true
 func clear_state() -> void:
+	exp_orbs.clear()
 	state = {}; painted_owners.clear(); render_visuals.clear()
 	manual_center = bounds*0.5; drag_pointer = -1
 	visual_order.clear(); visual_slots.clear(); visual_depths.clear(); actor_ids.clear(); resume_motion()
@@ -272,6 +279,7 @@ func _draw() -> void:
 		for x in range(0,int(bounds.x),300): draw_line(map_offset+Vector2(x,0)*map_scale,map_offset+Vector2(x,bounds.y)*map_scale,Color("354654"))
 		for y in range(0,int(bounds.y),300): draw_line(map_offset+Vector2(0,y)*map_scale,map_offset+Vector2(bounds.x,y)*map_scale,Color("354654"))
 	primitives.draw(self)
+	if not state.is_empty(): exp_orbs.draw(self,motion.position(0,Vector2(state.hero[0],state.hero[1])))
 	_draw_visuals()
 	if state.is_empty(): return
 	var hp: Array = state.hero
