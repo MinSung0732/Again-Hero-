@@ -62,6 +62,7 @@ func prepare() -> void:
 	var scene: PackedScene = load("res://src/battle/Battle.tscn")
 	if scene == null: finish("","battle_load_failed"); return
 	battle = scene.instantiate(); battle.online_match_mode = true
+	battle.child_entered_tree.connect(presentation.track_field_item)
 	battle.set_meta(preload("res://src/battle/exp_orb.gd").ONLINE_REGISTRY_META,exp_orb_visuals)
 	battle.combat_popup_visuals_enabled = false
 	battle.online_match_rules = {"population":RULES.POPULATION,"roster":roster,"skill_ids":skill_ids,"transcendence_id":transcendence_id}
@@ -407,6 +408,8 @@ func _build_snapshot() -> Dictionary:
 	if is_instance_valid(battle.hero):
 		hero_last = battle.hero.position; hp = battle.hero.current_hp; maximum = battle.hero.max_hp; level = battle.hero.level
 		presentation.append_tree(battle.hero,0,visuals)
+	# Reserve field-item commands before crowd/projectile presentation can fill the cap.
+	presentation.append_field_items(visuals)
 	snapshot_revision += 1
 	for raw_id in battle.active_monsters:
 		var raw = battle.active_monsters[raw_id]

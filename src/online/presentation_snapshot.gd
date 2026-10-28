@@ -3,11 +3,31 @@ extends RefCounted
 const DATA := preload("res://src/data/online_presentation_catalog.gd")
 const PNG_SOURCE := preload("res://src/ui/png_texture_source.gd")
 const GEOMETRY := preload("res://src/hero_mode/hero_weapon_geometry.gd")
+var field_items := {}
 var node_cache := {}
 var texture_cache := {}
 var coordinate_space := Transform2D.IDENTITY
 func forget_node(instance: int) -> void:
 	node_cache.erase(instance)
+# Attached before Battle enters the room tree. Only direct pickup births/exits
+# update this room-owned registry; no scene/group scans or gameplay mutations.
+func track_field_item(node: Node) -> void:
+	if not node is Node2D: return
+	var script = node.get_script()
+	if script == null or script.resource_path not in DATA.FIELD_ITEM_SCRIPTS: return
+	var instance := node.get_instance_id()
+	if field_items.has(instance): return
+	field_items[instance] = weakref(node)
+	node.tree_exited.connect(_forget_field_item.bind(instance),Object.CONNECT_ONE_SHOT)
+func _forget_field_item(instance: int) -> void:
+	field_items.erase(instance)
+	forget_node(instance)
+func append_field_items(output: Array) -> void:
+	for instance in field_items:
+		if output.size() >= DATA.MAX_COMMANDS: return
+		var item = field_items[instance].get_ref()
+		if not is_instance_valid(item) or item.is_queued_for_deletion(): continue
+		append_tree(item,-1,output)
 func _collect(node: Node,output: Array) -> void:
 	if node is AnimatedSprite2D or node is Sprite2D: output.append(weakref(node))
 	for child in node.get_children(): _collect(child,output)

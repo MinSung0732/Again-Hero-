@@ -66,6 +66,22 @@ func run() -> void:
 		check(visible_number,"both role screens contain an active visible damage Label")
 	room.battle._spawn_exp_orb(room.battle.hero.position+Vector2(600,0),31)
 	check(await until(func(): return not hero.view.exp_orbs.slots.is_empty() and not demon.view.exp_orbs.slots.is_empty()),"actual gem drop reaches both role screens")
+	room.battle._spawn_random_heal_item(); room.battle._spawn_random_magnet_item()
+	var heal = room.battle.active_heal_items.values()[0]
+	var magnet = room.battle.active_magnet_items.values()[0]
+	heal.position = room.battle.hero.position+Vector2(200,0)
+	magnet.position = room.battle.hero.position+Vector2(300,0)
+	var item_paths: Array = []
+	for item in [heal,magnet]:
+		item_paths.append(preload("res://src/ui/png_texture_source.gd").path(item.visual.sprite_frames.get_frame_texture(item.visual.animation,item.visual.frame)))
+	for path in item_paths:
+		check(await until(func(): return hero.view.state.get("visuals",[]).any(func(row): return row[1]==path) and demon.view.state.get("visuals",[]).any(func(row): return row[1]==path)),"field item PNG reaches both screens through real sockets")
+	room.battle.hero.current_hp = maxi(1,room.battle.hero.max_hp-20)
+	heal.position = room.battle.hero.position; heal._physics_process(0.0)
+	magnet.position = room.battle.hero.position; magnet._physics_process(0.0)
+	var collected_hp: int = room.battle.hero.current_hp
+	check(await until(func(): return not hero.view.state.get("visuals",[]).any(func(row): return row[1] in item_paths) and not demon.view.state.get("visuals",[]).any(func(row): return row[1] in item_paths)),"collected field items disappear on both live screens")
+	check(int(hero.view.state.hero[2])==collected_hp and int(demon.view.state.hero[2])==collected_hp,"server heal result reaches both live HUD states")
 	room.battle.process_mode = previous_mode
 	for scene in screens:
 		check(not scene.disconnect_button.disabled and scene.reconnect_button.disabled,"only disconnect available while connected")

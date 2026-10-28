@@ -2,6 +2,13 @@ extends RefCounted
 ## Wire-only presentation policy; combat sizes/anchors come from live visuals.
 const MAX_COMMANDS := 128
 const MAX_ACTORS := 216
+# Direct battle children; includes ability-created temporary heals as well as
+# ordinary drops. Registry membership never changes authoritative spawn caps.
+const FIELD_ITEM_SCRIPTS := [
+	"res://src/battle/heal_item.gd",
+	"res://src/battle/magnet_item.gd",
+	"res://src/battle/treasure_chest.gd",
+]
 # Display policy only; no movement speed or combat rule is inferred here.
 const MOTION_SECONDS := preload("res://src/online/match_rules.gd").SNAPSHOT_INTERVAL
 const MOTION_RESET_SECONDS := MOTION_SECONDS * 3.0
