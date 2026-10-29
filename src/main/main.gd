@@ -3096,7 +3096,7 @@ func _on_battle_finished(message: String, player_won: bool) -> void:
 	_result_reward_details = copy.details
 	result_analysis.text = "전투 분석 불러오는 중..."
 	$HUD/ResultBackdrop.show()
-	stage_select_result_button.text = "새 군단 편성" if player_won else "로비로 가기"
+	stage_select_result_button.text = "로비로 가기"
 	if next_stage_button.visible: next_stage_button.text = "다음 용사 도전 · Stage %d" % (int(battle.current_stage_data.get("number",1))+1)
 	_style_result_actions()
 	result_panel.show()
@@ -3259,8 +3259,6 @@ func _refresh_strategy_recommendation() -> void:
 			label.remove_theme_color_override("font_color")
 func _on_result_formation_pressed() -> void:
 	if not battle.battle_over or _scene_load_pending or _lobby_exit_pending: return
-	# A win opens the next stage's formation; a defeat just returns to the lobby.
-	if _result_won: get_tree().set_meta("campaign_team_return",String(battle.current_stage_data.get("next_stage_id","")))
 	_on_lobby_pressed()
 	if not _scene_load_pending: get_tree().remove_meta("campaign_team_return")
 

@@ -39,7 +39,7 @@ func run() -> void:
 	await capture("insight")
 	main.battle.battle_over = true
 	main._on_battle_finished("Stage 1 클리어!\n군단 해금 · 폭탄쥐\n팀편성에서 바로 사용할 수 있습니다.\n최초 클리어 골드 +1000",true); await process_frame; await process_frame
-	check(main.result_reward.text.contains("군단 해금") and main.stage_select_result_button.text == "새 군단 편성","reward+formationCTA")
+	check(main.result_reward.text.contains("군단 해금") and main.stage_select_result_button.text == "로비로 가기","reward+lobbyCTA")
 	check(main.result_analysis.text.contains("폭탄쥐") and not main._insight_view.visible,"next experiment in result and coach hidden")
 	await capture("result")
 	main.free(); current_scene = null
