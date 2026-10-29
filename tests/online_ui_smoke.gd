@@ -80,7 +80,7 @@ func run() -> void:
 			check(scene.hold_popup.popup_rows.get_node_or_null("HorizontalAugmentCards") != null,"hero uses shared horizontal card builder")
 		var holds: Array = []
 		for number in 3:
-			holds.append({"number":number+1,"candidates":[{"id":"survival_power","name":"생존력","description":"체력 증가"}]})
+			holds.append({"number":number+1,"candidates":[{"id":"survival_power","name":"생존력","description":"체력 증가","compare":[{"label":"A","current":"1","next":"2"},{"label":"B","current":"1","next":"2"},{"label":"C","current":"1","next":"2"}]}]})
 		scene._update_holds(holds); await process_frame
 		check(scene.hold_popup.dots.filter(func(dot): return dot.visible).size() == 3 and not scene.hold_popup.popup.visible,"three holds add three dots without opening")
 		check(scene.hold_popup.dot_glows.size() == RULES.AUGMENT_HOLD_LIMIT and scene.hold_popup.dot_glow_tweens[2] != null and scene.hold_popup.dot_glow_tweens[2].is_valid(),"newest held slot glows once")
@@ -91,6 +91,20 @@ func run() -> void:
 		check(scene.hold_popup.title_label.text.contains("보관 2번"),"opened offer displays its held number")
 		if role == "hero":
 			check(scene.hold_popup.cards[0].get_node_or_null("MarginContainer/VBoxContainer/AugmentIcon") != null and scene.hold_popup.cards[0].get_node_or_null("MarginContainer/VBoxContainer/Name") != null,"hero offer uses shared card structure")
+			var hero_card: Button = scene.hold_popup.cards[0]
+			var card_rows: VBoxContainer = hero_card.get_node("MarginContainer/VBoxContainer")
+			check(scene.hold_popup.popup.size.y <= 560,"hero popup height is compact")
+			check((card_rows.get_node("Name") as Label).max_lines_visible == 1 and (card_rows.get_node("Description") as Label).max_lines_visible == 1,"compact labels use one line")
+			check(hero_card.custom_minimum_size.y == 330 and scene.hold_popup.lower_button.custom_minimum_size.y >= 48,"compact card and touch targets")
+			check((card_rows.get_node("AugmentCompare") as RichTextLabel).text.split("\n").size() <= 2,"compact comparison has at most two rows")
+			check((card_rows.get_node("AugmentDetails") as Button).get_meta("candidate").compare.size() == 3,"details retain all comparison rows")
+			var solo_parent := HBoxContainer.new(); root.add_child(solo_parent)
+			var solo_card: Button = preload("res://src/ui/hero_augment_cards_view.gd").create(solo_parent,{},func(): pass)
+			check(solo_card.custom_minimum_size == Vector2(280,500),"solo card size unchanged")
+			solo_parent.queue_free()
+			for child in card_rows.get_children():
+				if child is Control and child.visible:
+					check(hero_card.get_global_rect().encloses(child.get_global_rect()),"compact card contains " + child.name)
 		else:
 			check(scene.hold_popup.cards[0].get_node_or_null("Level") != null and scene.hold_popup.popup_rows.get_node("Title").text == "마왕의 개입","demon offer uses solo card and title")
 			for viewport_size in [Vector2i(1080,1920),Vector2i(1536,1920)]:

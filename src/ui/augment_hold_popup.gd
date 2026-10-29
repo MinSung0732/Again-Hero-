@@ -89,23 +89,23 @@ func _ready() -> void:
 			card_descriptions.append(card.get_node("Description") as Label)
 	else:
 		popup = PanelContainer.new(); popup.name = "HoldPopup"; add_child(popup); popup.hide()
-		var style := StyleBoxFlat.new(); style.bg_color = Color("122b3a"); style.border_color = Color("d9c77c"); style.set_border_width_all(3); style.set_content_margin_all(28)
+		var style := StyleBoxFlat.new(); style.bg_color = Color("122b3a"); style.border_color = Color("d9c77c"); style.set_border_width_all(3); style.set_content_margin_all(18)
 		popup.add_theme_stylebox_override("panel",SKIN.skin_style(style))
-		popup_rows = VBoxContainer.new(); popup_rows.add_theme_constant_override("separation",16); popup.add_child(popup_rows)
+		popup_rows = VBoxContainer.new(); popup_rows.add_theme_constant_override("separation",8); popup.add_child(popup_rows)
 		title_label = Label.new(); title_label.add_theme_font_size_override("font_size",32)
 		title_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; popup_rows.add_child(title_label)
 		var choices := HBoxContainer.new(); choices.name = "HorizontalAugmentCards"
 		choices.add_theme_constant_override("separation",16); choices.alignment = BoxContainer.ALIGNMENT_CENTER
 		choices.size_flags_vertical = Control.SIZE_EXPAND_FILL; popup_rows.add_child(choices)
 		for index in RULES.MAX_OFFER_CANDIDATES:
-			var card: Button = HERO_CARDS.create(choices,{"id":"slot_%d" % index},_choose_card.bind(index))
+			var card: Button = HERO_CARDS.create(choices,{"id":"slot_%d" % index},_choose_card.bind(index),true)
 			card.hide(); cards.append(card)
 			card_icons.append(card.get_node("MarginContainer/VBoxContainer/AugmentIcon") as TextureRect)
 			card_names.append(card.get_node("MarginContainer/VBoxContainer/Name") as Label)
 		hero_actions = HBoxContainer.new(); hero_actions.name = "Actions"
 		hero_actions.add_theme_constant_override("separation",16); popup_rows.add_child(hero_actions)
 		reroll_button = Button.new(); reroll_button.name = "AugmentReroll"
-		reroll_button.custom_minimum_size.y = 64; reroll_button.add_theme_font_size_override("font_size",26)
+		reroll_button.custom_minimum_size.y = 52; reroll_button.add_theme_font_size_override("font_size",26)
 		reroll_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		hero_actions.add_child(reroll_button)
 	lower_button = Button.new(); lower_button.name = "Lower"; lower_button.text = "내리기"; lower_button.custom_minimum_size.y = 64
@@ -114,6 +114,7 @@ func _ready() -> void:
 		lower_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		popup_rows.get_node("Actions").add_child(lower_button)
 	else:
+		lower_button.custom_minimum_size.y = 52
 		lower_button.custom_minimum_size.x = HERO_LOWER_WIDTH
 		lower_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 		hero_actions.add_child(lower_button)
@@ -218,7 +219,7 @@ func _show_offer() -> void:
 				var position := old.get_index()
 				parent.remove_child(old); old.queue_free()
 				var option: Dictionary = options[index]
-				var card: Button = HERO_CARDS.create(parent,option,_choose_card.bind(index))
+				var card: Button = HERO_CARDS.create(parent,option,_choose_card.bind(index),true)
 				parent.move_child(card,position); cards[index] = card
 				card.custom_minimum_size.x = 200 if options.size() > 3 else 280
 				card.disabled = not controls_enabled or bool(option.get("unavailable",false))
@@ -262,6 +263,6 @@ func _layout() -> void:
 	if popup.visible:
 		if role == "demon": return
 		var width := minf(980.0,size.x-48.0)
-		var height := minf(820.0,size.y-120.0)
+		var height := minf(540.0,size.y-120.0)
 		popup.size = Vector2(width,height)
 		popup.position = Vector2((size.x-width)*0.5,(size.y-height)*0.5)
