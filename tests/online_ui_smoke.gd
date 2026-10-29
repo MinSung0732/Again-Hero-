@@ -192,11 +192,11 @@ func run() -> void:
 		if role == "hero":
 			scene._receive_chests([{"serial":1,"name":"시험 보상","description":"복귀 보존"}])
 			scene._advance_chest_notice(0.01)
-			check(scene.chest_notice.visible and scene.chest_notice.text.contains("시험 보상"),"received chest is shown during battle")
+			check(scene.chest_panel.visible and scene.chest_reel.visible and scene.chest_notice.text.contains("시험 보상"),"received chest reel is shown during battle")
 			scene.connection_waiting = true
 			var chest_remaining: float = scene.chest_seconds
 			scene._advance_chest_notice(10.0)
-			check(scene.chest_notice.visible and scene.chest_seconds == chest_remaining,"reconnect grace preserves unread chest notice time")
+			check(scene.chest_reel.visible and scene.chest_seconds == chest_remaining,"reconnect grace preserves unread chest reel time")
 			scene.connection_waiting = false
 			scene._receive_chests([{"serial":1,"name":"시험 보상"}])
 			check(scene.chest_queue.is_empty(),"replayed receipt after recovery never duplicates chest")

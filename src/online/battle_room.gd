@@ -163,7 +163,7 @@ func _chest_opened() -> void:
 	public_hero_build_dirty = true
 	_refresh_hero_holds()
 	# The server applies the reward before sending a display-only receipt.
-	chest_receipts.append({"serial":int(receipt.serial),"id":String(receipt.id),"kind":String(receipt.kind),"name":String(receipt.name),"description":String(receipt.description),"evolution":bool(receipt.evolution)})
+	chest_receipts.append({"serial":int(receipt.serial),"id":String(receipt.id),"kind":String(receipt.kind),"name":String(receipt.name),"description":String(receipt.description),"evolution":bool(receipt.evolution),"pool":receipt.pool.slice(0,RULES.CHEST_REEL_POOL_LIMIT)})
 	if chest_receipts.size() > RULES.CHEST_HISTORY_LIMIT: chest_receipts.pop_front()
 func _demon_offer(candidates: Array,_rerolls: int,level: int) -> void:
 	_hold("demon",candidates,level)

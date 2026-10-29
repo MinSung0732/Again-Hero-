@@ -20,6 +20,7 @@ const TRANSCENDENCE := preload("res://src/systems/transcendence_loadout_store.gd
 const ENTRY := preload("res://src/systems/dungeon_entry_policy.gd")
 const WEAPONS := preload("res://src/data/hero_weapon_catalog.gd")
 const ICONS := preload("res://src/ui/hero_augment_icons.gd")
+const CHEST_REEL := preload("res://src/ui/hero_chest_reel.gd")
 const TOP_LAYOUT := preload("res://src/ui/castle_battle_chrome.gd")
 const HERO_FRAME := preload("res://src/ui/hero_battle_frame.gd")
 const RESPONSIVE := preload("res://src/ui/battle_responsive_layout.gd")
@@ -102,16 +103,14 @@ var hero_build_data: Dictionary = {}
 var demon_info_panel: Control
 var demon_info_hints: Label
 var inventory_detail: AcceptDialog
-const CHEST_NOTICE_WIDTH := 0.58
-const CHEST_NOTICE_TOP := 270.0
-const CHEST_NOTICE_HEIGHT := 112.0
-const CHEST_NOTICE_SECONDS := 2.4
 var chest_notice: Label
 var chest_panel: PanelContainer
 var chest_icon: TextureRect
 var chest_queue: Array = []
 var chest_last_serial := 0
 var chest_seconds := 0.0
+var chest_reel: Control
+var chest_reel_layer: Control
 var rerolls_left := 0
 var reroll_limit := 0
 var rules_popup: PopupPanel
@@ -400,8 +399,8 @@ func _ready() -> void:
 		for button in weapon_buttons + passive_buttons: HERO_HUD.update_slot(button,null,"+",""); button.disabled = true
 		hero_slots.hide()
 		chest_panel = PanelContainer.new(); chest_panel.name = "ChestRewardNotice"; add_child(chest_panel)
-		chest_panel.anchor_left = (1.0-CHEST_NOTICE_WIDTH)*0.5; chest_panel.anchor_right = 1.0-chest_panel.anchor_left
-		chest_panel.offset_top = CHEST_NOTICE_TOP; chest_panel.offset_bottom = CHEST_NOTICE_TOP+CHEST_NOTICE_HEIGHT
+		chest_panel.anchor_left = RULES.CHEST_REEL_LEFT; chest_panel.anchor_right = RULES.CHEST_REEL_LEFT+RULES.CHEST_REEL_WIDTH
+		chest_panel.offset_top = RULES.CHEST_REEL_TOP; chest_panel.offset_bottom = RULES.CHEST_REEL_TOP+RULES.CHEST_REEL_HEIGHT
 		chest_panel.add_theme_stylebox_override("panel",DETAIL.style(Color("171226"),Color("e3bc69"),20))
 		chest_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE; chest_panel.z_index = 22
 		var reward_row := HBoxContainer.new(); reward_row.mouse_filter = Control.MOUSE_FILTER_IGNORE; chest_panel.add_child(reward_row)
@@ -1037,6 +1036,7 @@ func _render_hero_build_cards(cards: Array[Control],items: Array,weapon: bool) -
 		else: details_label.text = WEAPONS.description(id,level,false).replace("\n"," · ")
 		card.modulate.a = 1.0
 func _receive_chests(receipts: Array) -> void:
+	if role != "hero": return
 	if receipts.size() > RULES.CHEST_HISTORY_LIMIT: return
 	for receipt in receipts:
 		if not receipt is Dictionary or not RULES.number(receipt.get("serial",null)) or not receipt.get("name",null) is String: continue
@@ -1050,10 +1050,18 @@ func _clear_chest_notice(reset_serial: bool = false) -> void:
 	if reset_serial: chest_last_serial = 0
 	if chest_notice != null: chest_notice.text = ""; chest_notice.hide()
 	if chest_panel != null: chest_panel.hide(); chest_icon.texture = null
+	if is_instance_valid(chest_reel_layer): chest_reel_layer.queue_free(); chest_reel_layer = null; chest_reel = null
 func _advance_chest_notice(delta: float) -> void:
 	if chest_notice == null or ended or local_preparing or waiting_for_start or connection_waiting or client.reconnecting: return
 	chest_seconds -= delta
-	if chest_seconds > 0: return
+	if chest_seconds > 0:
+		if is_instance_valid(chest_reel):
+			var progress: float = clampf((RULES.CHEST_REEL_SPIN_SECONDS+RULES.CHEST_REEL_RESULT_SECONDS-chest_seconds)/RULES.CHEST_REEL_SPIN_SECONDS,0.0,1.0)
+			chest_reel.advance(progress)
+			chest_reel.visible = progress < 1.0
+			chest_icon.visible = progress >= 1.0; chest_notice.visible = progress >= 1.0
+		return
+	if is_instance_valid(chest_reel_layer): chest_reel_layer.queue_free(); chest_reel_layer = null; chest_reel = null
 	if chest_queue.is_empty():
 		chest_notice.text = ""; chest_notice.hide(); chest_panel.hide(); return
 	var receipt: Dictionary = chest_queue.pop_front()
@@ -1062,7 +1070,16 @@ func _advance_chest_notice(delta: float) -> void:
 	chest_notice.text = "상자 · %s\n%s" % [String(receipt.name),change]
 	chest_icon.texture = ICONS.texture(String(receipt.get("id","")))
 	chest_notice.show(); chest_panel.show()
-	chest_seconds = CHEST_NOTICE_SECONDS
+	chest_reel_layer = Control.new(); chest_reel_layer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	chest_panel.add_child(chest_reel_layer)
+	chest_reel = CHEST_REEL.new(); chest_reel_layer.add_child(chest_reel)
+	var pool: Array = receipt.get("pool",[]) if receipt.get("pool",[]) is Array else []
+	chest_reel.configure(pool.slice(0,RULES.CHEST_REEL_POOL_LIMIT),receipt)
+	chest_reel.custom_minimum_size = Vector2.ZERO
+	chest_reel.scale = Vector2.ONE * RULES.CHEST_REEL_SCALE
+	chest_reel.size = Vector2(chest_panel.size.x / RULES.CHEST_REEL_SCALE,280)
+	chest_icon.hide(); chest_notice.hide()
+	chest_seconds = RULES.CHEST_REEL_SPIN_SECONDS+RULES.CHEST_REEL_RESULT_SECONDS
 func _update_holds(holds: Array) -> void:
 	hold_popup.set_rerolls(rerolls_left,reroll_limit)
 	hold_popup.set_holds(holds)

@@ -1,6 +1,6 @@
 extends RefCounted
 ## Experience orb snapshots require matching protocol 28 peers.
-const VERSION := 33
+const VERSION := 34
 const MATCH_TIER_EXPAND_SECONDS := 20.0
 const MATCH_TIER_EXPAND_RANGE := 1
 const ELITE_CARD_LIMIT := 3
@@ -29,6 +29,14 @@ const MAX_COMPARE_ROWS := 6
 const MAX_COMPARE_FIELD_LENGTH := 32
 const AUGMENT_HOLD_LIMIT := 4
 const CHEST_HISTORY_LIMIT := 16
+const CHEST_REEL_POOL_LIMIT := 8
+const CHEST_REEL_SPIN_SECONDS := 1.4
+const CHEST_REEL_RESULT_SECONDS := 1.0
+const CHEST_REEL_SCALE := 0.4
+const CHEST_REEL_LEFT := 0.02
+const CHEST_REEL_WIDTH := 0.58
+const CHEST_REEL_TOP := 430.0
+const CHEST_REEL_HEIGHT := 112.0
 const TRANSCENDENCE_SUMMON_LIMIT := 1
 const MAX_CLIENTS := 24
 const MAX_AUTH_REQUESTS := 8
