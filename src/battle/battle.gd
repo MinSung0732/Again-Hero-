@@ -68,6 +68,8 @@ signal demon_ultimate_cooldowns_changed(cooldowns: Dictionary)
 signal demon_ultimate_used(skill_id: String, skill_name: String, message: String)
 signal stage_event_triggered(event_type: String, event_name: String, message: String)
 signal mutation_choice_ready(event_data: Dictionary, candidates: Array)
+signal online_elite_requested(event_data: Dictionary)
+signal online_hero_kill
 signal mutation_selected(event_type: String, mutation_name: String)
 signal mutation_spawn_result(success: bool, message: String)
 signal run_time_changed(elapsed_seconds: float, remaining_seconds: float)
@@ -3250,6 +3252,7 @@ func _on_monster_died(monster: Node) -> void:
 		run_metrics.record_monster_death(monster_type)
 
 	if death_type != "self_destruct" and not rewardless_death:
+		if online_match_mode: online_hero_kill.emit()
 		hero_kills_toward_heal_item = mini(
 			hero_kills_toward_heal_item + 1,
 			HEAL_ITEM_KILLS_REQUIRED
@@ -4304,6 +4307,9 @@ func _get_random_stage_event_team_monster_id() -> String:
 	return candidates[randi_range(0, candidates.size() - 1)]
 
 
+func online_open_mutation_choice(event: Dictionary) -> void:
+	if online_match_mode: _open_mutation_choice(event)
+
 func _open_mutation_choice(event: Dictionary) -> void:
 	if mutation_director.is_active():
 		return
@@ -4799,7 +4805,8 @@ func _open_next_demon_augment_if_needed() -> void:
 			demon_pending_augment_levels.pop_front()
 		demon_active_augment_level = 0
 		if replace_with_elite:
-			_open_mutation_choice(MUTATION_CATALOG.SPECIAL_AUGMENT_EXHAUSTED_EVENT)
+			if online_match_mode: online_elite_requested.emit(MUTATION_CATALOG.SPECIAL_AUGMENT_EXHAUSTED_EVENT)
+			else: _open_mutation_choice(MUTATION_CATALOG.SPECIAL_AUGMENT_EXHAUSTED_EVENT)
 			if mutation_director.is_active():
 				return
 		_open_next_demon_augment_if_needed()

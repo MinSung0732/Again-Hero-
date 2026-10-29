@@ -15,6 +15,7 @@ static func sections() -> Array:
 	var map_items: Array[String] = []
 	for entry in MAPS.all():
 		map_items.append("%s · %s · %d분" % [entry.name,MAPS.favor_label(String(entry.favor)),int(entry.duration_seconds)/60])
+		map_items.append("용사 처치 %d마리째부터 %d마리마다 엘리트 1장, 최대 %d장 보관" % [entry.elite.first_kills,entry.elite.every_kills,MATCH.ELITE_CARD_LIMIT])
 	return [
 		{"title":"출전 편성","items":["용사: 해금한 용사 중 선택", "마왕: 로비 편성 팀·스킬·초월 반입", "로비 연구 효과 미적용"]},
 		{"title":"전투","items":["마왕 소환은 수동 배치만 가능", "초월 소환은 경기당 %d회" % MATCH.TRANSCENDENCE_SUMMON_LIMIT, "마왕은 용사의 무기·패시브·레벨·선택한 증강을 볼 수 있음(보관 중인 선택지는 비공개)", "용사는 마왕 편성·스킬·초월을 볼 수 없고, 마왕이 고른 증강의 역할 방향만 볼 수 있음"]},

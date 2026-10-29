@@ -1,6 +1,8 @@
 extends RefCounted
 class_name MutationCatalog
 
+const RANKED_KILL_EVENT := {"type":"elite", "selection_mode":"team", "mutation_profile_id":"mutation_1", "name_prefix":"엘리트", "ui_title":"엘리트 소환", "ui_description":"엘리트 1종을 선택하세요."}
+
 const SPECIAL_AUGMENT_EXHAUSTED_EVENT := {
 	"type": "elite", "selection_mode": "team", "mutation_profile_id": "mutation_1",
 	"name_prefix": "엘리트", "ui_title": "엘리트 소환",

@@ -6,6 +6,7 @@ const PRESENTATION := preload("res://src/online/presentation_snapshot.gd")
 const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
 const MONSTERS := preload("res://src/data/monster_catalog.gd")
 const MAPS := preload("res://src/data/ranked_map_catalog.gd")
+const MUTATIONS := preload("res://src/data/mutation_catalog.gd")
 var presentation = PRESENTATION.new()
 var exp_orb_visuals = preload("res://src/online/exp_orb_registry.gd").new()
 var battlefield_info := {}
@@ -32,6 +33,10 @@ var public_hero_build: Dictionary = {}
 var public_hero_build_dirty := true
 var demon_holds: Array = []
 var elite_cards: Array = []
+var elite_pending: Array = []
+var hero_kills := 0
+var next_elite_kills := 0
+var elite_every_kills := 0
 var next_elite_serial := 0
 var demon_augment_hint_counts: Dictionary = {}
 var public_demon_hints: Dictionary = {"augment_hints":[]}
@@ -57,6 +62,7 @@ func set_loadouts(hero_loadout: Dictionary,demon_loadout: Dictionary) -> void:
 func prepare() -> void:
 	var map_data: Dictionary = MAPS.get_map(map_id)
 	if map_data.is_empty(): finish("","invalid_map"); return
+	configure_elite_thresholds(map_data.elite)
 	world = SubViewport.new(); world.world_2d = World2D.new(); world.size = Vector2i(1080,1600)
 	world.render_target_update_mode = SubViewport.UPDATE_DISABLED; add_child(world)
 	var scene: PackedScene = load("res://src/battle/Battle.tscn")
@@ -90,6 +96,8 @@ func prepare() -> void:
 	battle.transcendent_summoned.connect(func(_id: String,actor: Node2D):
 		if running and not finished and not connection_paused and is_instance_valid(actor): feedback.publish("transcend",actor.global_position,0,Color(1.0,0.75,0.35),tick))
 	battle.demon_augment_ready.connect(_demon_offer)
+	battle.online_hero_kill.connect(_on_hero_kill)
+	battle.online_elite_requested.connect(_queue_elite)
 
 	battle.battle_finished.connect(func(_message: String,demon_won: bool): finish("demon" if demon_won else "hero",_message))
 	battle.hero.player_augment_requested.connect(_choice)
@@ -106,6 +114,23 @@ func prepare() -> void:
 	battle.hero_chest_opened.connect(_chest_opened)
 	battle.summon_result.connect(func(_id: String,_accepted: bool,message: String): last_action_message = message)
 	is_prepared = true
+func configure_elite_thresholds(config: Dictionary) -> void:
+	next_elite_kills = maxi(1,int(config.first_kills))
+	elite_every_kills = maxi(1,int(config.every_kills))
+func _on_hero_kill() -> void:
+	if not running or finished: return
+	hero_kills += 1
+	if hero_kills >= next_elite_kills:
+		next_elite_kills += elite_every_kills
+		_queue_elite(MUTATIONS.RANKED_KILL_EVENT)
+func _queue_elite(event: Dictionary) -> void:
+	if finished: return
+	elite_pending.append(event)
+	_open_pending_elite()
+func _open_pending_elite() -> void:
+	if finished or elite_pending.is_empty() or elite_cards.size() >= RULES.ELITE_CARD_LIMIT or battle.mutation_director.is_active(): return
+	battle.online_open_mutation_choice(elite_pending[0])
+	if battle.mutation_director.is_active(): elite_pending.pop_front()
 func start() -> void:
 	if not is_prepared or finished: return
 	running = true; battle.set_external_pause(connection_paused); battle.hero.player_input_suspended = connection_paused
@@ -301,13 +326,11 @@ func apply(role: String,kind: String,argument: Variant) -> bool:
 	if role == "demon" and kind == "elite_choose" and argument is Dictionary:
 		var id: Variant = argument.get("id",null)
 		if not id is String or not battle.mutation_director.is_active() or id not in battle.mutation_director.get_candidates(): return false
-		if elite_cards.size() >= RULES.ELITE_CARD_LIMIT:
-			var oldest: Dictionary = elite_cards[0]
-			if not battle._spawn_selected_mutation(oldest.id,oldest.event): return false
-			elite_cards.pop_front()
+		if elite_cards.size() >= RULES.ELITE_CARD_LIMIT: return false
 		var card: Dictionary = battle.online_hold_mutation(id)
 		if card.is_empty(): return false
 		next_elite_serial += 1; card["serial"] = next_elite_serial; elite_cards.append(card)
+		_open_pending_elite()
 		return true
 	if role == "demon" and kind == "elite_summon" and argument is Dictionary:
 		var serial: Variant = argument.get("serial",null)
@@ -319,7 +342,7 @@ func apply(role: String,kind: String,argument: Variant) -> bool:
 			var card: Dictionary = elite_cards[index]
 			if int(card.serial) == int(serial):
 				if not battle._spawn_selected_mutation(card.id,card.event,point): return false
-				elite_cards.remove_at(index); return true
+				elite_cards.remove_at(index); _open_pending_elite(); return true
 		return false
 	if role == "demon" and kind == "summon" and argument is Dictionary:
 		# RULES.SUMMON_PLACEMENT: 랭크전 소환은 좌표를 지정한 수동 배치만 허용.
@@ -353,7 +376,7 @@ func step(delta: float) -> void:
 func finish(won: String,why: String) -> void:
 	if finished: return
 	finished = true; running = false; winner = won; reason = why
-	hero_holds.clear(); demon_holds.clear(); elite_cards.clear(); chest_receipts.clear(); choice = []
+	hero_holds.clear(); demon_holds.clear(); elite_cards.clear(); elite_pending.clear(); chest_receipts.clear(); choice = []
 	if is_instance_valid(battle): battle.set_external_pause(true)
 	completed.emit(winner,reason)
 func snapshot(role: String = "") -> Dictionary:
@@ -393,6 +416,7 @@ func snapshot_for_role(role: String,state: Dictionary) -> Dictionary:
 		var cards: Array = []
 		for card in elite_cards: cards.append([card.serial,card.id])
 		own["elite_cards"] = cards
+		own["elite_pending"] = elite_pending.size()
 		own["augment_holds"] = _wire_holds(demon_holds)
 		if public_hero_build_dirty:
 			public_hero_build = _public_hero_build()

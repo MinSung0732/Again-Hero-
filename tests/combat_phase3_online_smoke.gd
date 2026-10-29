@@ -45,8 +45,8 @@ func run() -> void:
 		var room := ROOM.new(); root.add_child(room); room.prepare(); rooms.append(room)
 		var demon_state: Dictionary = room.snapshot("demon")
 		var hero_state: Dictionary = room.snapshot("hero")
-		check(demon_state.has("elite_choice") and demon_state.has("elite_cards"),"demon receives elite fields")
-		check(not hero_state.has("elite_choice") and not hero_state.has("elite_cards"),"hero does not receive elite fields")
+		check(demon_state.has("elite_choice") and demon_state.has("elite_cards") and demon_state.has("elite_pending"),"demon receives elite fields")
+		check(not hero_state.has("elite_choice") and not hero_state.has("elite_cards") and not hero_state.has("elite_pending"),"hero does not receive elite fields")
 		room.feedback.publish("hero_hit",room.battle.hero.position,1,Color.WHITE,room.tick,room.battle.hero.get_instance_id())
 		var previous = old_script.new(); previous.battle = room.battle
 		room.battle.hero_player_mode = false
