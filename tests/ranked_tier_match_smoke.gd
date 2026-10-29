@@ -7,7 +7,7 @@ func check(ok: bool, message: String) -> void:
 	if not ok: push_error(message); quit(1); assert(ok, message)
 func _initialize() -> void: run.call_deferred()
 func run() -> void:
-	for row in [[999,0],[1000,0],[1099,0],[1100,1],[2599,15],[2600,16]]:
+	for row in [[999,0],[1000,0],[1099,0],[1100,1],[2299,11],[2300,12],[2500,13],[3299,15],[3300,16]]:
 		check(RANKED.tier_index(row[0]) == row[1], "tier boundary %s" % row[0])
 	var q = QUEUE.new()
 	q.enqueue(1,"h1","hero",2,0.0); q.enqueue(2,"h2","hero",3,1.0)

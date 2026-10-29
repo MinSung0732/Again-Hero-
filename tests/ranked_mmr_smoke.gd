@@ -25,11 +25,11 @@ func run() -> void:
 	check(is_equal_approx(fast_kill.hero,0.75) and RANKED.delta(true,fast_kill.demon) == 25 and RANKED.delta(false,fast_kill.hero) == -21,"decisive loss costs more")
 	var close_win := RANKED.margins("hero","survived",180,180,0.05)
 	check(RANKED.delta(true,close_win.hero) == 11 and RANKED.delta(false,close_win.demon) == -11,"close result moves both less")
-	for sample in [[999,"bronze_1"],[1000,"bronze_1"],[1099,"bronze_1"],[1100,"bronze_2"],[2599,"diamond_4"],[2600,"demon_lord"]]:
+	for sample in [[999,"bronze_1"],[1000,"bronze_1"],[1099,"bronze_1"],[1100,"bronze_2"],[2299,"gold_4"],[2300,"diamond_1"],[2499,"diamond_1"],[2500,"diamond_2"],[2700,"diamond_3"],[2900,"diamond_4"],[3299,"diamond_4"],[3300,"demon_lord"]]:
 		check(RANKED.tier(sample[0]) == sample[1],"tier at %d" % sample[0])
-	check(RANKED.tier(2600,100) == "hero" and RANKED.tier(2600,101) == "demon_lord","server top 100")
+	check(RANKED.tier(3300,100) == "hero" and RANKED.tier(3300,101) == "demon_lord","server top 100")
 	check(RANKED.weekly_reward_tier(1200,1800) == "gold_1" and RANKED.weekly_reward_tier(1800,1200) == "gold_1", "weekly higher role")
-	check(RANKED.weekly_reward_tier(3000,2600,101,100) == "hero", "weekly hero title beats higher unqualified MMR")
+	check(RANKED.weekly_reward_tier(3400,3300,101,100) == "hero", "weekly hero title beats higher unqualified MMR")
 	var legacy := {"mmr":1000,"tier":"bronze_1"}
 	check(LOBBY_VIEW.parse_ranked_profile(legacy).hero == legacy, "legacy profile")
 	var profiles := {"demon":legacy,"hero":{"mmr":1800,"tier":"gold_1"}}

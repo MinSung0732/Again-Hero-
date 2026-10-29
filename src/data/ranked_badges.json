@@ -26,11 +26,11 @@
     {"mmr": 1900, "id": "gold_2"},
     {"mmr": 2000, "id": "gold_3"},
     {"mmr": 2100, "id": "gold_4"},
-    {"mmr": 2200, "id": "diamond_1"},
-    {"mmr": 2300, "id": "diamond_2"},
-    {"mmr": 2400, "id": "diamond_3"},
-    {"mmr": 2500, "id": "diamond_4"},
-    {"mmr": 2600, "id": "demon_lord"}
+    {"mmr": 2300, "id": "diamond_1"},
+    {"mmr": 2500, "id": "diamond_2"},
+    {"mmr": 2700, "id": "diamond_3"},
+    {"mmr": 2900, "id": "diamond_4"},
+    {"mmr": 3300, "id": "demon_lord"}
   ],
   "scoring": {"win": {"base": 10, "margin_scale": 20}, "loss": {"base": 10, "margin_scale": 15}, "minimum_mmr": 0,
     "disconnect": {"winner_margin": 0.5, "leaver_margin": 1.0}},

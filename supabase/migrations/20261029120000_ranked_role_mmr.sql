@@ -89,4 +89,8 @@ end $$;
 revoke all on function public.get_my_ranked_profile() from public, anon;
 grant execute on function public.get_my_ranked_profile() to authenticated;
 drop function private.ranked_state(uuid);
+-- Diamond steps are 200 apart; demon lord starts at 3300 (top 100 of a role = hero title).
+update private.ranked_thresholds set minimum_mmr=minimum_mmr+10000 where tier_id in ('diamond_1','diamond_2','diamond_3','diamond_4','demon_lord');
+update private.ranked_thresholds set minimum_mmr=case tier_id when 'diamond_1' then 2300 when 'diamond_2' then 2500 when 'diamond_3' then 2700 when 'diamond_4' then 2900 else 3300 end where tier_id in ('diamond_1','diamond_2','diamond_3','diamond_4','demon_lord');
+update private.ranked_settings set hero_top_count=100 where singleton;
 commit;
