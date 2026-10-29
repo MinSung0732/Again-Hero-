@@ -223,6 +223,11 @@ func _request_ranked_profile() -> void:
 		ranked_profile_data = {}
 	if ranked_profile_pending: return
 	ranked_profile_owner = owner
+	if bool(lobby.get_node("/root/LocalTestMode").active):
+		ranked_profile_data = RANKED.local_preview_profile()
+		_show_ranked_profile()
+		ranked_profile_changed.emit()
+		return
 	if owner.is_empty() or _gateway().access_token.is_empty():
 		ranked_profile_data = {}
 		_show_ranked_profile()
@@ -277,6 +282,7 @@ func _show_ranked_profile() -> void:
 	ranked_profile_label.text = "%s · %s\nMMR %d\n%s\n%d승 %d패 · 서버 %s" % ["마왕" if perspective == "demon" else "용사",RANKED.display_name(tier_id),int(state.mmr),RANKED.next_tier_text(int(state.mmr)),int(state.get("wins",0)),int(state.get("losses",0)),rank_text(state)]
 	if other.get("mmr",null) is int or other.get("mmr",null) is float:
 		ranked_profile_label.text += "\n%s · %s · MMR %d" % ["용사" if perspective == "demon" else "마왕",RANKED.display_name(String(other.get("tier",""))),int(other.mmr)]
+	if bool(ranked_profile_data.get("local", false)): ranked_profile_label.text += "\n" + RANKED.LOCAL_PREVIEW_NOTE
 	ranked_profile_row.show()
 
 static func rank_text(state: Dictionary) -> String:

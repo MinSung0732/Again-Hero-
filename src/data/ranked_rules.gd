@@ -75,3 +75,11 @@ static func rated_allowed(test_auth: bool, local_test_ticket: String, winner: St
 
 static func _uid_valid(uid: String) -> bool:
 	return uid.length() == 36 and uid[8] == "-" and uid[13] == "-" and uid[18] == "-" and uid[23] == "-" and uid.replace("-", "").is_valid_hex_number(false)
+
+const LOCAL_PREVIEW_NOTE := "로컬 테스트 · 랭크 점수 미반영"
+
+## Local test matches are unrated, so the lobby shows each role at the starting score.
+static func local_preview_profile() -> Dictionary:
+	var mmr := int(data().get("initial_mmr", 1000))
+	var state := {"mmr":mmr,"tier":tier(mmr),"wins":0,"losses":0,"server_rank":0}
+	return {"demon":state.duplicate(),"hero":state.duplicate(),"weekly_reward_tier":tier(mmr),"local":true}

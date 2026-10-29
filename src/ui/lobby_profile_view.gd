@@ -227,6 +227,7 @@ func _refresh_rank() -> void:
 		var hero: Dictionary = data.get("hero", {})
 		weekly = RANKED.weekly_reward_tier(int(demon.get("mmr", 0)), int(hero.get("mmr", 0)), int(demon.get("server_rank", 0)), int(hero.get("server_rank", 0)))
 	rank_weekly.text = "주간 보상 기준: %s" % RANKED.display_name(weekly) if not weekly.is_empty() else RANK_ERROR
+	if bool(data.get("local", false)): rank_weekly.text += "\n" + RANKED.LOCAL_PREVIEW_NOTE
 
 func _build_picker() -> void:
 	icon_picker = preload("res://src/ui/lobby_profile_icon_picker.gd").new()
