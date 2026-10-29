@@ -11,7 +11,7 @@ func check(ok: bool, label: String) -> void:
 func _initialize() -> void: run.call_deferred()
 func run() -> void:
 	root.get_node("CloudStore").stop()
-	check(RULES.VERSION==24, "protocol 24")
+	check(RULES.VERSION==25, "protocol 25")
 	for path in ["res://src/ui/hero_skill_cooldown_bar.gd", "res://src/ui/hero_level_up_effect.gd", "res://src/online/hero_cooldown_wire.gd", "res://src/online/match_scene.gd", "res://src/online/battle_room.gd", "res://src/online/combat_feedback.gd", "res://src/online/battle_view.gd", "res://src/online/match_server.gd", "res://src/online/match_rules.gd", "res://src/data/online_feedback_catalog.gd", "res://src/main/main.gd", "res://src/hero/hero.gd"]:
 		check(load(path) != null, "load " + path)
 	for path in ["res://src/main/Main.tscn", "res://src/hero_mode/HeroMode.tscn", "res://src/online/OnlineMatch.tscn"]:
@@ -21,23 +21,16 @@ func run() -> void:
 			var instance := packed.instantiate(); check(instance != null, "instantiate " + path); instance.free()
 	var room := ROOM.new(); root.add_child(room); room.prepare(); room.start()
 	var state: Dictionary = room.snapshot()
-	var actual: Array = room.battle.hero.get_skill_cooldown_hud()
-	check(room.hero_skill_catalog.size() == actual.size(), "match catalog includes actual hero skills")
-	check(state.hero_skill_cooldowns.size() == actual.size(), "snapshot includes actual cooldowns")
-	for row in state.hero_skill_cooldowns:
-		var skill: Dictionary = actual[row[0]]
-		var expected := clampi(roundi(float(skill.cooldown_remaining) / maxf(float(room.hero_skill_catalog[row[0]].cooldown_total), 0.001) * 255.0), 0, 255)
-		check(row[1] == expected, "cooldown ratio matches actual hero")
+	check(not state.has("hero_skill_cooldowns"), "match snapshot omits AI cooldowns")
 	check(JSON.stringify(state).to_utf8_buffer().size() <= RULES.MAX_SNAPSHOT, "snapshot fits MAX_SNAPSHOT")
-	var decoded: Array = WIRE.decode(JSON.parse_string(JSON.stringify(state.hero_skill_cooldowns)), room.hero_skill_catalog)
-	check(decoded.size() == actual.size(), "JSON wire cooldowns decode")
-	for index in decoded.size():
-		check(absf(float(decoded[index].cooldown_remaining) - float(actual[index].cooldown_remaining)) <= float(room.hero_skill_catalog[index].cooldown_total) / 255.0 + 0.01, "decoded seconds match actual cooldown")
 	for role in ["demon", "hero"]:
-		var bar = load("res://src/ui/hero_skill_cooldown_bar.tscn").instantiate()
-		root.add_child(bar); bar.call("refresh", decoded)
-		check(bar.badges.size() == actual.size() and bar.visible, role + " sees same badges")
-		bar.free()
+		root.get_node("SceneTransition")._entry_options = {"role":role}
+		var online = load("res://src/online/OnlineMatch.tscn").instantiate(); root.add_child(online)
+		check(online.find_child("HeroSkillCooldownBar",true,false) == null, role + " has no AI cooldown bar")
+		online.free()
+	var solo = load("res://src/main/Main.tscn").instantiate()
+	check(solo.get_node_or_null("HUD/HeroSkillCooldownBar") != null, "solo demon keeps cooldown bar")
+	solo.free()
 	var before: int = room.feedback.sequence
 	room.battle.hero.gain_exp(400)
 	var events: Array = room.feedback.snapshot(before)

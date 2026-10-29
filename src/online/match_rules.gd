@@ -1,6 +1,6 @@
 extends RefCounted
-## Experience orb snapshots require matching protocol 24 peers.
-const VERSION := 24
+## Experience orb snapshots require matching protocol 25 peers.
+const VERSION := 25
 const HINT_DETAIL := "role" # "role" or "monster"
 const ROLE_HINT_LABELS := {"melee":"근접"}
 const TARGET_HINT_LABELS := {"demon":"마왕 운영","all_monsters":"모든 몬스터"}

@@ -16,6 +16,10 @@ static func populate(panel: PanelContainer,candidates: Array,demon_level: int,re
 		if index >= candidates.size(): continue
 		var candidate: Dictionary = candidates[index]
 		var special := String(candidate.get("augment_type","normal")) == "special"
+		button.custom_minimum_size.y = 458.0 if special else 414.0
+		var level := button.get_node("Level") as Label
+		level.offset_top = 346.0 if special else 348.0
+		level.offset_bottom = 384.0 if special else 390.0
 		var monster_id := String(candidate.get("monster_id", "")) if special else String(candidate.get("target_monster_id",""))
 		var icon := button.get_node("Icon") as TextureRect
 		icon.texture = _monster_icon(monster_id)
@@ -50,8 +54,8 @@ static func populate(panel: PanelContainer,candidates: Array,demon_level: int,re
 		details.set_anchors_preset(Control.PRESET_TOP_WIDE)
 		details.offset_left = 18.0
 		details.offset_right = -18.0
-		details.offset_top = 352.0
-		details.offset_bottom = 400.0
+		details.offset_top = 394.0 if special else 352.0
+		details.offset_bottom = 442.0 if special else 400.0
 	var reroll := rows.get_node("Actions/RerollButton") as Button
 	reroll.text = "↻ 새로고침 %d / %d" % [rerolls_left,reroll_max]
 	reroll.disabled = true

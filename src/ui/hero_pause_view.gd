@@ -31,6 +31,9 @@ static func build(parent: VBoxContainer, model: Dictionary, actions: Dictionary)
 	for entry in entries:
 		var button := DETAIL.button(body,String(entry[0]),actions[String(entry[1])]); button.name = "Pause_"+String(entry[1]); button.custom_minimum_size.y = 96
 		if entry[1] == "resume": button.grab_focus()
+		elif actions.has("surrender"):
+			var resume := body.get_node("Pause_resume") as Button
+			for state in ["normal","hover","pressed","focus"]: button.add_theme_stylebox_override(state,resume.get_theme_stylebox(state))
 		else: button.add_theme_stylebox_override("normal",DETAIL.style(Color("1a1729"),Color("d9b363"),16))
 	if not parent.resized.is_connected(fit.bind(parent)):
 		parent.resized.connect(fit.bind(parent),CONNECT_DEFERRED)

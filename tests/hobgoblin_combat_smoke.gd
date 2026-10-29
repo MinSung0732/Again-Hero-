@@ -59,6 +59,7 @@ var anubis_army_runtime = ANUBIS_ARMY_RUNTIME.new()
 var current_stage_data: Dictionary = {}
 var campaign_difficulty := "easy"
 var hero_player_mode := false
+var online_match_mode := false
 var hero: Node2D
 # Non hero-player mode: Battle.hero_spawn_candidate returns the id unchanged.
 func hero_spawn_candidate(id: String, _roster: Array, _elite: bool = false) -> String: return id

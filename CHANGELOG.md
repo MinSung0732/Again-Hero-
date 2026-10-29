@@ -1,3 +1,8 @@
+## 2026-10-29 ? Match battle UI
+
+- Fix special card layout, menus and chest notice; remove online AI cooldown wire and UI (protocol 25).
+- SceneTree: 159/160 initially passed; missing test fixture field fixed and rerun passed. Device visuals unverified.
+
 ## 2026-10-29 — 보관 증강 버튼 정리
 
 - 용사 보관창의 새로고침·내리기를 같은 행에 배치하고 양 역할의 내리기 스타일을 인접 버튼과 통일, 검은 이미지 테두리 제거.

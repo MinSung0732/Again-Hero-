@@ -24,8 +24,6 @@ const TOP_LAYOUT := preload("res://src/ui/castle_battle_chrome.gd")
 const HERO_FRAME := preload("res://src/ui/hero_battle_frame.gd")
 const RESPONSIVE := preload("res://src/ui/battle_responsive_layout.gd")
 const HERO_HUD := preload("res://src/ui/hero_survival_hud.gd")
-const HERO_COOLDOWNS := preload("res://src/online/hero_cooldown_wire.gd")
-const HERO_COOLDOWN_BAR := preload("res://src/ui/hero_skill_cooldown_bar.tscn")
 const HERO_VOICE := preload("res://src/audio/hero_voice_player.gd")
 const HERO_VOICE_DATA := preload("res://src/data/hero_voice_catalog.gd")
 const PIXEL_SKIN := preload("res://src/ui/pixel_panel_skin.gd")
@@ -100,6 +98,10 @@ var hero_build_data: Dictionary = {}
 var demon_info_panel: Control
 var demon_info_hints: Label
 var inventory_detail: AcceptDialog
+const CHEST_NOTICE_WIDTH := 0.58
+const CHEST_NOTICE_TOP := 270.0
+const CHEST_NOTICE_HEIGHT := 112.0
+const CHEST_NOTICE_SECONDS := 2.4
 var chest_notice: Label
 var chest_panel: PanelContainer
 var chest_icon: TextureRect
@@ -151,8 +153,6 @@ var ended := false
 var connection_waiting := false
 var wait_deadline := 0
 var wait_seconds := -1
-var hero_skill_catalog: Array = []
-var hero_cooldown_bar: HBoxContainer
 var hero_voice
 var entry_voice_pending := false
 var result_pending := false
@@ -213,10 +213,6 @@ func _ready() -> void:
 		show_metrics.custom_minimum_size.y=56
 		_install_metrics_panel()
 	view = VIEW.new(); view.hero_role = role == "hero"; view.size_flags_vertical = Control.SIZE_EXPAND_FILL; view.custom_minimum_size.y = 400; rows.add_child(view)
-	hero_cooldown_bar = HERO_COOLDOWN_BAR.instantiate()
-	add_child(hero_cooldown_bar)
-	hero_cooldown_bar.position = Vector2(24.0, TOP_LAYOUT.PLAY_TOP + 10.0 if role == "demon" else HERO_HUD.BATTLE_TOP + 10.0)
-	hero_cooldown_bar.hide()
 	hero_voice = HERO_VOICE.new(); add_child(hero_voice)
 	for child in rows.get_children():
 		if child is Control and child != status and child != ranking_row and child != action_notice and child != view:
@@ -372,19 +368,19 @@ func _ready() -> void:
 		for button in weapon_buttons + passive_buttons: HERO_HUD.update_slot(button,null,"+",""); button.disabled = true
 		hero_slots.hide()
 		chest_panel = PanelContainer.new(); chest_panel.name = "ChestRewardNotice"; add_child(chest_panel)
-		chest_panel.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
-		chest_panel.offset_left = 24; chest_panel.offset_right = -24
-		chest_panel.offset_top = -430; chest_panel.offset_bottom = -260
+		chest_panel.anchor_left = (1.0-CHEST_NOTICE_WIDTH)*0.5; chest_panel.anchor_right = 1.0-chest_panel.anchor_left
+		chest_panel.offset_top = CHEST_NOTICE_TOP; chest_panel.offset_bottom = CHEST_NOTICE_TOP+CHEST_NOTICE_HEIGHT
 		chest_panel.add_theme_stylebox_override("panel",DETAIL.style(Color("171226"),Color("e3bc69"),20))
 		chest_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE; chest_panel.z_index = 22
 		var reward_row := HBoxContainer.new(); reward_row.mouse_filter = Control.MOUSE_FILTER_IGNORE; chest_panel.add_child(reward_row)
 		reward_row.add_theme_constant_override("separation",18)
-		chest_icon = TextureRect.new(); chest_icon.name = "RewardIcon"; chest_icon.custom_minimum_size = Vector2(96,96)
+		chest_icon = TextureRect.new(); chest_icon.name = "RewardIcon"; chest_icon.custom_minimum_size = Vector2(64,64)
 		chest_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; chest_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 		chest_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST; chest_icon.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		reward_row.add_child(chest_icon)
 		chest_notice = _label(reward_row,"",23); chest_notice.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		chest_notice.vertical_alignment = VERTICAL_ALIGNMENT_CENTER; chest_notice.max_lines_visible = 3
+		chest_notice.vertical_alignment = VERTICAL_ALIGNMENT_CENTER; chest_notice.max_lines_visible = 2
+		chest_notice.autowrap_mode = TextServer.AUTOWRAP_OFF
 		chest_notice.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 		chest_notice.mouse_filter = Control.MOUSE_FILTER_IGNORE
 		chest_notice.hide(); chest_panel.hide()
@@ -483,7 +479,6 @@ func _show_match_layout() -> void:
 	top_bar.show()
 	status.hide(); action_notice.hide(); cancel_button.hide(); ranking_row.hide()
 	if hero_build_toggle != null: hero_build_toggle.show()
-	if hero_cooldown_bar != null: hero_cooldown_bar.hide()
 	rows.offset_bottom = -465 if role == "demon" else -210
 	_apply_match_frame()
 	if role == "demon":
@@ -529,8 +524,10 @@ func _install_match_menu() -> void:
 		buttons.get_node("ResumeButton").text = "계속 플레이"
 		buttons.get_node("ResumeButton").pressed.connect(_close_match_menu)
 		buttons.get_node("SettingsButton").pressed.connect(_open_match_settings)
-		var rules := Button.new(); rules.name = "RulesButton"; rules.text = "규칙 보기"; rules.custom_minimum_size.y = 100; buttons.add_child(rules); rules.pressed.connect(_show_rules)
-		var surrender := Button.new(); surrender.name = "SurrenderButton"; surrender.text = "기권"; surrender.custom_minimum_size.y = 100; buttons.add_child(surrender); surrender.pressed.connect(_confirm_surrender)
+		var resume := buttons.get_node("ResumeButton") as Button
+		var rules := resume.duplicate(0) as Button; rules.name = "RulesButton"; rules.text = "규칙 보기"; buttons.add_child(rules); rules.pressed.connect(_show_rules)
+		var surrender := resume.duplicate(0) as Button; surrender.name = "SurrenderButton"; surrender.text = "기권"; buttons.add_child(surrender); surrender.pressed.connect(_confirm_surrender)
+		(match_menu.get_node("MenuPanel") as Control).offset_top = -500; (match_menu.get_node("MenuPanel") as Control).offset_bottom = 500
 	else:
 		match_menu = Control.new(); match_menu.name = "OnlineMatchMenu"; add_child(match_menu)
 		match_menu.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -539,7 +536,7 @@ func _install_match_menu() -> void:
 		var panel := PanelContainer.new(); panel.name = "MenuPanel"; match_menu.add_child(panel)
 		panel.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		panel.offset_left = maxf(24,(size.x-920)*0.5); panel.offset_right = -panel.offset_left
-		panel.offset_top = minf(482,size.y*0.24); panel.offset_bottom = -24
+		panel.offset_top = minf(240,size.y*0.12); panel.offset_bottom = -24
 		panel.add_theme_stylebox_override("panel",DETAIL.style(Color("171226"),Color("e3bc69"),24))
 		var contents := VBoxContainer.new(); contents.name = "MenuRows"; panel.add_child(contents)
 		HERO_PAUSE.build(contents,{"seconds":0.0,"kills":0,"level":1,"weapons":[]},{"resume":_close_match_menu,"settings":_open_match_settings,"rules":_show_rules,"surrender":_confirm_surrender})
@@ -932,11 +929,12 @@ func _advance_chest_notice(delta: float) -> void:
 	if chest_queue.is_empty():
 		chest_notice.text = ""; chest_notice.hide(); chest_panel.hide(); return
 	var receipt: Dictionary = chest_queue.pop_front()
-	var reward_title := "진화 완료 · MAX" if bool(receipt.get("evolution",false)) else "상자 보상"
-	chest_notice.text = "%s · %s\n%s" % [reward_title,String(receipt.name),String(receipt.get("description",""))]
+	var summary := String(receipt.get("description","")).replace("\n"," · ").split(" · ",false,2)
+	var change := " · ".join(summary.slice(0,2))
+	chest_notice.text = "상자 · %s\n%s" % [String(receipt.name),change]
 	chest_icon.texture = ICONS.texture(String(receipt.get("id","")))
 	chest_notice.show(); chest_panel.show()
-	chest_seconds = 2.4
+	chest_seconds = CHEST_NOTICE_SECONDS
 func _update_holds(holds: Array) -> void:
 	hold_popup.set_rerolls(rerolls_left,reroll_limit)
 	hold_popup.set_holds(holds)
@@ -994,7 +992,6 @@ func _event(event: Dictionary) -> void:
 		"matched":
 			result_serial += 1
 			matched_hero_id = String(event.get("hero",HEROES.DEFAULT_HERO))
-			hero_skill_catalog = event.get("hero_skill_catalog", []) if event.get("hero_skill_catalog", null) is Array else []
 			hero_voice.stop(); hero_voice.hero_id = matched_hero_id; hero_voice.terminal = false; hero_voice.consumed.clear(); hero_voice.streams.clear(); hero_voice._prepared = false
 			entry_voice_pending = not bool(event.get("resumed", false))
 			result_pending = false; result_wait_seconds = 0.0
@@ -1084,8 +1081,6 @@ func _event(event: Dictionary) -> void:
 					entry_voice_pending = false
 					hero_voice.play_entry()
 			if event.has("feedback"): view.feedback.consume(event.feedback,event.feedback_cursor,event.tick)
-			if not event.get("hero_skill_cooldowns", null) is Array: return
-			hero_cooldown_bar.call("refresh", HERO_COOLDOWNS.decode(event.hero_skill_cooldowns, hero_skill_catalog))
 			_update_match_hud(event)
 			if role == "hero" and event.get("hero_inventory",null) is Dictionary and event.get("chest_receipts",null) is Array:
 				_update_hero_inventory(event.hero_inventory)
@@ -1108,7 +1103,6 @@ func _event(event: Dictionary) -> void:
 			ended = true; result_pending = true; movement = Vector2.ZERO; connection_waiting = false; queue_button.disabled = false
 			_set_controls(false)
 			_update_holds([])
-			hero_cooldown_bar.hide()
 			_show_result_after_presentation(event)
 		"action":
 			if event.get("match","") == client.match_id and event.get("message",null) is String: action_notice.text = event.message

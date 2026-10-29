@@ -16,7 +16,7 @@ func check(ok: bool,message: String) -> void:
 	if not ok: push_error(message); quit(1); assert(ok,message)
 func _initialize() -> void: run.call_deferred()
 func run() -> void:
-	for path in ["res://src/main/main.gd","res://src/hero_mode/hero_mode.gd","res://src/online/match_scene.gd","res://src/online/battle_view.gd","res://src/ui/battle_camera_view.gd","res://src/online/primitive_mirror.gd","res://src/online/combat_feedback.gd","res://src/ui/hero_pause_view.gd","res://src/ui/hero_survival_hud.gd","res://src/ui/hero_battle_frame.gd","res://src/ui/hero_pad_settings.gd","res://src/ui/demon_action_choices.gd","res://src/online/battle_room.gd","res://src/online/match_rules.gd","res://src/ui/augment_hold_popup.gd","res://src/ui/demon_augment_panel_view.gd","res://src/ui/hero_augment_cards_view.gd","res://src/ui/castle_battle_chrome.gd"]:
+	for path in ["res://src/main/main.gd","res://src/hero_mode/hero_mode.gd","res://src/online/match_scene.gd","res://src/online/battle_view.gd","res://src/ui/battle_camera_view.gd","res://src/online/primitive_mirror.gd","res://src/online/combat_feedback.gd","res://src/ui/hero_pause_view.gd","res://src/ui/hero_survival_hud.gd","res://src/ui/hero_battle_frame.gd","res://src/ui/hero_pad_settings.gd","res://src/ui/demon_action_choices.gd","res://src/online/battle_room.gd","res://src/online/match_server.gd","res://src/online/match_rules.gd","res://src/ui/augment_hold_popup.gd","res://src/ui/demon_augment_panel_view.gd","res://src/ui/hero_augment_cards_view.gd","res://src/ui/castle_battle_chrome.gd"]:
 		var script: Script = load(path)
 		check(script != null and script.can_instantiate(),"modified script loads: "+path)
 	var solo_packed: PackedScene = load("res://src/main/Main.tscn")
@@ -51,6 +51,22 @@ func run() -> void:
 		var scene = packed.instantiate(); root.add_child(scene)
 		await process_frame; await process_frame
 		check(scene.role == role,"requested role")
+		scene.match_menu.show()
+		await process_frame; await process_frame
+		var resume: Button = scene.match_menu.find_child("ResumeButton" if role == "demon" else "Pause_resume",true,false)
+		var rules_button: Button = scene.match_menu.find_child("RulesButton" if role == "demon" else "Pause_rules",true,false)
+		var surrender: Button = scene.match_menu.find_child("SurrenderButton" if role == "demon" else "Pause_surrender",true,false)
+		check(resume != null and rules_button != null and surrender != null,"menu buttons exist")
+		for button in [rules_button,surrender]:
+			check(button.get_theme_stylebox("normal") == resume.get_theme_stylebox("normal"),"menu button skin matches")
+			check(button.get_theme_font_size("font_size") == resume.get_theme_font_size("font_size"),"menu font matches")
+		check(surrender.get_global_rect().end.y <= root.size.y,"surrender fits viewport")
+		if role == "hero":
+			var scroll: ScrollContainer = scene.match_menu.find_child("PauseScroll",true,false)
+			check(not scroll.get_v_scroll_bar().visible,"hero menu does not scroll")
+		surrender.pressed.emit(); check(scene.surrender_dialog.visible,"surrender opens confirmation"); scene.surrender_dialog.hide()
+		scene.match_menu.hide()
+
 		check(scene.queue_button.custom_minimum_size.y >= 72,"mobile button size")
 		check(not scene.cancel_button.visible and not scene.action_notice.visible,"setup does not show battle instructions or matching cancel")
 		check(scene.view.size.x > 500 and scene.view.size.y > 300,"battle panel expands")
@@ -76,6 +92,13 @@ func run() -> void:
 			check(scene.hold_popup.cards[0].get_node_or_null("MarginContainer/VBoxContainer/AugmentIcon") != null and scene.hold_popup.cards[0].get_node_or_null("MarginContainer/VBoxContainer/Name") != null,"hero offer uses shared card structure")
 		else:
 			check(scene.hold_popup.cards[0].get_node_or_null("Level") != null and scene.hold_popup.popup_rows.get_node("Title").text == "마왕의 개입","demon offer uses solo card and title")
+			for viewport_size in [Vector2i(1080,1920),Vector2i(1536,1920)]:
+				root.size = viewport_size
+				preload("res://src/ui/demon_augment_panel_view.gd").populate(scene.hold_popup.popup,[{"augment_type":"special","monster_id":"slime","name":"special","description":"effect"}],1,0,0)
+				await process_frame; await process_frame
+				var card: Button = scene.hold_popup.cards[0]
+				check(not card.get_node("Level").get_global_rect().intersects(card.get_node("AugmentDetails").get_global_rect()),"special tag avoids details at " + str(viewport_size))
+			root.size = Vector2i(1080,1920)
 			var long_candidate := {"id":"survival_power","name":"룬방패수호병 최대 체력 증가","description":"최대 체력이 증가합니다"}
 			preload("res://src/ui/demon_augment_panel_view.gd").populate(scene.hold_popup.popup,[long_candidate],1,0,0)
 			var name_label: Label = scene.hold_popup.cards[0].get_node("Name")

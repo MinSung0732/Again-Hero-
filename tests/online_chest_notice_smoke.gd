@@ -21,10 +21,16 @@ func run() -> void:
 	var receipt := {"serial":1,"id":"survival_power","name":"생존력","description":"체력 증가","evolution":false}
 	scene._receive_chests([receipt]); scene._advance_chest_notice(0.01)
 	await process_frame
-	check(scene.chest_panel.visible and scene.chest_notice.text.contains("상자 보상"),"receipt opens a nonmodal reward panel")
+	check(scene.chest_panel.visible and scene.chest_notice.text.contains("상자 ·"),"receipt opens a nonmodal reward panel")
 	check(scene.chest_icon.texture == preload("res://src/ui/hero_augment_icons.gd").texture("survival_power"),"reward icon reuses solo icon catalog")
 	check(scene.chest_panel.mouse_filter == Control.MOUSE_FILTER_IGNORE and scene.chest_icon.mouse_filter == Control.MOUSE_FILTER_IGNORE and scene.chest_notice.mouse_filter == Control.MOUSE_FILTER_IGNORE,"reward notice never captures battle touches")
+	check(scene.chest_panel.size.x <= root.size.x * 0.6, "reward width at most 60 percent")
+	check(not scene.chest_panel.get_global_rect().intersects(scene.hold_popup.dot_row.get_global_rect()), "reward avoids hold dots")
 	check(scene.chest_panel.get_global_rect().position.y >= 0 and scene.chest_panel.get_global_rect().end.y <= root.size.y,"phone reward panel fits screen")
+	root.size = Vector2i(1536,1920); await process_frame
+	check(scene.chest_panel.size.x <= root.size.x * 0.6,"wide reward width at most 60 percent")
+	check(not scene.chest_panel.get_global_rect().intersects(scene.hold_popup.dot_row.get_global_rect()),"wide reward avoids hold dots")
+	root.size = Vector2i(1080,1920); await process_frame
 	var panel = scene.chest_panel; var icon = scene.chest_icon
 	var remaining: float = scene.chest_seconds
 	scene.connection_waiting = true; scene._advance_chest_notice(10.0)
@@ -33,7 +39,7 @@ func run() -> void:
 	check(scene.chest_queue.is_empty(),"snapshot replay does not duplicate reward")
 	scene._receive_chests([{"serial":2,"id":"survival_power","name":"진화 무기","description":"진화 효과","evolution":true}])
 	scene._advance_chest_notice(3.0)
-	check(scene.chest_notice.text.contains("진화 완료 · MAX"),"evolution receipt clearly marks final evolution")
+	check(scene.chest_notice.text.contains("진화 무기"),"evolution receipt clearly marks final evolution")
 	check(scene.chest_panel == panel and scene.chest_icon == icon,"consecutive rewards reuse panel and icon nodes")
 	scene._advance_chest_notice(3.0)
 	check(not scene.chest_panel.visible,"reward panel closes after queue drains")

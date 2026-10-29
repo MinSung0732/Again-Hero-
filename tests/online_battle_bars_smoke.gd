@@ -19,7 +19,7 @@ func run() -> void:
 		var instance: Node = scene.instantiate()
 		check(instance != null,"scene instantiate: "+path)
 		instance.free()
-	check(RULES.VERSION==24,"protocol 24")
+	check(RULES.VERSION==25,"protocol 25")
 	check(is_equal_approx(RULES.SNAPSHOT_INTERVAL,0.1),"10 Hz snapshots")
 	var rect := BARS.bar_rect(-35.0,-44.0,70.0,6.0,0.6)
 	check(rect == Rect2(-35.0,-44.0,42.0,6.0),"shared bar matches solo rectangle")
