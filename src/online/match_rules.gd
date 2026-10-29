@@ -1,6 +1,6 @@
 extends RefCounted
 ## Experience orb snapshots require matching protocol 28 peers.
-const VERSION := 30
+const VERSION := 31
 const ELITE_CARD_LIMIT := 3
 const HINT_DETAIL := "role" # "role" or "monster"
 const ROLE_HINT_LABELS := {"melee":"근접"}

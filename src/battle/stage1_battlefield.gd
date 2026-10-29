@@ -85,6 +85,7 @@ var async_textures_complete := false
 var current_stage_number := 1
 var textures: Dictionary = {}
 var theme_id := "castle"
+var effect_areas: Array = []
 var background_decor_layer: Node2D
 var collision_layer_root: Node2D
 var depth_prop_roots: Array[Node2D] = []
@@ -116,6 +117,7 @@ func _stable_roll(a: int, b: int, salt: int = 0) -> int:
 
 
 func _begin_configuration(stage_id: String, map_size: Vector2) -> void:
+	effect_areas.clear()
 	current_stage_number = _stage_number_from_id(stage_id)
 	stage_active = (
 		current_stage_number >= CASTLE_STAGE_MIN
@@ -173,6 +175,8 @@ func _build_theme_layout(layout: Array) -> void:
 			_add_theme_prop(item, Vector2(battlefield_size.x - position.x, position.y), not item.get("flip", false))
 
 func _add_theme_prop(item: Dictionary, position: Vector2, flip: bool) -> void:
+	if item.has("effect") and THEMES.EFFECTS.has(item.effect):
+		effect_areas.append({"id":item.effect, "position":position, "radius":float(item.radius)})
 	match item.kind:
 		"solid": _add_solid_depth_prop(item.key, position, item.scale, item.collision, flip)
 		"depth": _add_depth_prop_visual(item.key, position, item.scale, flip)
@@ -880,6 +884,11 @@ func _draw() -> void:
 	)
 	_draw_floor()
 	_draw_royal_carpet()
+	if render_only:
+		for area in effect_areas:
+			var color: Color = THEMES.EFFECTS[area.id].tint
+			color.a = 0.18
+			draw_circle(area.position, area.radius, color)
 	# Faint inlaid seal remains in world space under every actor/projectile.
 	var seal_center := battlefield_size * 0.5
 	var seal_color := Color(0.53, 0.39, 0.69, 0.17)

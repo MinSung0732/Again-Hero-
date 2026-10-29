@@ -8182,6 +8182,7 @@ func _tick_fear_state(delta: float) -> bool:
 
 func _get_effective_move_multiplier() -> float:
 	var multiplier := move_multiplier * float(get_meta("yuki_slow_multiplier",1.0))
+	multiplier *= float(get_meta("field_move_multiplier",1.0))
 	if player_controlled:
 		multiplier = maxf(multiplier, PLAYER_CONTROL_POLICY.DATA.SLOW_SPEED_FLOOR)
 		if player_root_timer > 0.0: multiplier = minf(multiplier, player_root_multiplier)

@@ -6,6 +6,7 @@ const HERO_MODE := preload("res://src/data/hero_mode_catalog.gd")
 const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
 const PICKUPS := preload("res://src/data/ranked_pickup_catalog.gd")
 const MAPS := preload("res://src/data/ranked_map_catalog.gd")
+const THEMES := preload("res://src/data/battlefield_theme_catalog.gd")
 
 static func sections() -> Array:
 	var win_low := RANKED.delta(true,0.0)
@@ -15,6 +16,13 @@ static func sections() -> Array:
 	var map_items: Array[String] = []
 	for entry in MAPS.all():
 		map_items.append("%s · %s · %d분" % [entry.name,MAPS.favor_label(String(entry.favor)),int(entry.duration_seconds)/60])
+		var shown: Array = []
+		for item in THEMES.get_theme(entry.theme).layout:
+			var id: String = item.get("effect", "")
+			if id.is_empty() or shown.has(id): continue
+			shown.append(id)
+			var effect: Dictionary = THEMES.EFFECTS[id]
+			map_items.append("%s %+.0f%%" % [effect.label, float(effect.value) * 100.0])
 		map_items.append("용사 처치 %d마리째부터 %d마리마다 엘리트 1장, 최대 %d장 보관" % [entry.elite.first_kills,entry.elite.every_kills,MATCH.ELITE_CARD_LIMIT])
 	return [
 		{"title":"출전 편성","items":["용사: 해금한 용사 중 선택", "마왕: 로비 편성 팀·스킬·초월 반입", "로비 연구 효과 미적용"]},

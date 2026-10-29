@@ -6,10 +6,18 @@ const PRESENTATION := preload("res://src/online/presentation_snapshot.gd")
 const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
 const MONSTERS := preload("res://src/data/monster_catalog.gd")
 const MAPS := preload("res://src/data/ranked_map_catalog.gd")
+const THEMES := preload("res://src/data/battlefield_theme_catalog.gd")
+const FIELD_INTERVAL := 0.25
 const MUTATIONS := preload("res://src/data/mutation_catalog.gd")
 var presentation = PRESENTATION.new()
 var exp_orb_visuals = preload("res://src/online/exp_orb_registry.gd").new()
 var battlefield_info := {}
+var field_areas: Array = []
+var field_fx: Array = []
+var field_elapsed := 0.0
+var field_attack_bonus := 0.0
+var field_damage_fraction := 0.0
+var field_heal_fraction := 0.0
 var last_hero_level := 1
 const PRIMITIVES := preload("res://src/online/primitive_mirror.gd")
 var feedback = preload("res://src/online/feedback_buffer.gd").new()
@@ -78,7 +86,9 @@ func prepare() -> void:
 	battle.hero.configure_battlefield(battle.current_map_size)
 	battle.hero.position = battle.current_map_size * 0.5
 	var field = battle.get_node_or_null("Stage1Battlefield")
-	if field != null: field.configure(battle.current_stage_id,battle.current_map_size,map_data.theme)
+	if field != null:
+		field.configure(battle.current_stage_id,battle.current_map_size,map_data.theme)
+		field_areas = field.effect_areas
 	battle.run_time_limit_seconds = float(map_data.duration_seconds)
 	battle.run_metrics.reset(battle.run_time_limit_seconds,int(battle.hero.current_hp),int(battle.hero.max_hp))
 	var modifiers: Dictionary = map_data.modifiers
@@ -373,9 +383,50 @@ func step(delta: float) -> void:
 	if not running or finished or connection_paused: return
 	tick += 1; move_age += delta
 	if move_age > RULES.INPUT_TIMEOUT and is_instance_valid(battle.hero): battle.hero.set_player_move_input(Vector2.ZERO)
+	if field_areas.is_empty(): return
+	field_elapsed += delta
+	if field_elapsed >= FIELD_INTERVAL:
+		field_elapsed = fmod(field_elapsed, FIELD_INTERVAL)
+		_update_field_effects()
+
+func _update_field_effects() -> void:
+	if not is_instance_valid(battle.hero): return
+	var hero = battle.hero
+	field_fx.clear()
+	if hero.current_hp > 0 and not hero.is_dying:
+		for area in field_areas:
+			if hero.position.distance_squared_to(area.position) <= area.radius * area.radius and not field_fx.has(area.id):
+				field_fx.append(area.id)
+	var move_multiplier := 1.0
+	var attack_bonus := 0.0
+	var damage_rate := 0.0
+	var heal_rate := 0.0
+	for id in field_fx:
+		var effect: Dictionary = THEMES.EFFECTS[id]
+		if effect.target != "hero": continue
+		match effect.stat:
+			"move_speed": move_multiplier *= 1.0 + float(effect.value)
+			"attack_speed": attack_bonus += float(effect.value)
+			"damage_per_second": damage_rate += float(effect.value)
+			"heal_per_second": heal_rate += float(effect.value)
+	hero.set_meta("field_move_multiplier",move_multiplier)
+	hero.common_attack_speed_bonus += attack_bonus - field_attack_bonus
+	field_attack_bonus = attack_bonus
+	field_damage_fraction = field_damage_fraction + float(hero.max_hp) * damage_rate * FIELD_INTERVAL if damage_rate > 0.0 else 0.0
+	field_heal_fraction = field_heal_fraction + float(hero.max_hp) * heal_rate * FIELD_INTERVAL if heal_rate > 0.0 else 0.0
+	var damage := int(field_damage_fraction)
+	var healing := int(field_heal_fraction)
+	field_damage_fraction -= damage; field_heal_fraction -= healing
+	if damage > 0: hero.take_status_damage(damage)
+	if healing > 0 and not finished and hero.current_hp > 0: hero.heal_direct(healing)
 func finish(won: String,why: String) -> void:
 	if finished: return
 	finished = true; running = false; winner = won; reason = why
+	field_fx.clear()
+	if is_instance_valid(battle) and is_instance_valid(battle.hero):
+		battle.hero.set_meta("field_move_multiplier",1.0)
+		battle.hero.common_attack_speed_bonus -= field_attack_bonus
+	field_attack_bonus = 0.0
 	hero_holds.clear(); demon_holds.clear(); elite_cards.clear(); elite_pending.clear(); chest_receipts.clear(); choice = []
 	if is_instance_valid(battle): battle.set_external_pause(true)
 	completed.emit(winner,reason)
@@ -383,6 +434,7 @@ func snapshot(role: String = "") -> Dictionary:
 	var profile = battle.get("combat_profile")
 	var started: int = Time.get_ticks_usec() if profile != null and profile.enabled else 0
 	var state := _build_snapshot()
+	if not field_fx.is_empty(): state["field_fx"] = field_fx.duplicate()
 	if started: profile.record(profile.Scope.NETWORK_SNAPSHOT,started)
 	return snapshot_for_role(role,state)
 func snapshot_for_role(role: String,state: Dictionary) -> Dictionary:
