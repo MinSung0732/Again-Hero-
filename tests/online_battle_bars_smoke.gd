@@ -19,7 +19,7 @@ func run() -> void:
 		var instance: Node = scene.instantiate()
 		check(instance != null,"scene instantiate: "+path)
 		instance.free()
-	check(RULES.VERSION==27,"protocol 25")
+	check(RULES.VERSION==28,"protocol 25")
 	check(is_equal_approx(RULES.SNAPSHOT_INTERVAL,0.1),"10 Hz snapshots")
 	var rect := BARS.bar_rect(-35.0,-44.0,70.0,6.0,0.6)
 	check(rect == Rect2(-35.0,-44.0,42.0,6.0),"shared bar matches solo rectangle")
@@ -85,7 +85,7 @@ func run() -> void:
 	var actor_row := [1,"slime",100,100,50,100,monster_bars]
 	var full := snapshot.duplicate(true)
 	full.actors.clear()
-	for index in RULES.POPULATION:
+	for index in room.battle.get_population_limit():
 		var row := actor_row.duplicate(true)
 		row[0] = index+1
 		full.actors.append(row)
@@ -93,6 +93,7 @@ func run() -> void:
 		room.presentation.append_tree(monster,index+1,visual_rows)
 		full.visuals.append_array(visual_rows)
 	var bytes := JSON.stringify(full).to_utf8_buffer().size()
-	check(bytes <= RULES.MAX_SNAPSHOT,"population cap snapshot size")
+	check(full.actors.size() == 100 and view.update_state(full),"100 actors accepted by client")
+	check(bytes <= RULES.MAX_SNAPSHOT,"100 actor snapshot size")
 	print("ONLINE_BATTLE_BARS_PASS checks=",checks," bytes=",bytes)
 	view.queue_free(); room.queue_free(); await process_frame; quit()

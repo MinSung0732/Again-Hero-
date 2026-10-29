@@ -44,7 +44,7 @@ func run() -> void:
 		check(room.battle.current_map_size == entry.map_size,"map size")
 		check(room.battle.hero.battlefield_size == entry.map_size,"hero bounds")
 		check(is_equal_approx(room.battle.hero.exp_gain_multiplier,float(entry.modifiers.get("hero_exp_multiplier",1.0))),"hero EXP modifier")
-		check(is_equal_approx(room.battle.command_regen_per_second,12.0*float(entry.modifiers.get("command_regen_multiplier",1.0))),"mana regen modifier")
+		check(is_equal_approx(room.battle.command_regen_per_second,4.0*float(entry.modifiers.get("command_regen_multiplier",1.0))),"mana regen modifier")
 		check(room.battlefield_info.map == entry.id,"battlefield map")
 		server.rooms[entry.id] = {"node":room,"seats":{"hero":{"resume_token":"hero-token"},"demon":{"resume_token":"demon-token"}}}
 		var payload: Dictionary = server._matched_payload(entry.id,"hero",false)

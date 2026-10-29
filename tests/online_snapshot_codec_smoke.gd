@@ -82,9 +82,9 @@ func run() -> void:
 	var key: String = hero.match_id; var room = server.rooms[key].node
 	stop_audio(room); stop_audio(root.get_node("GameAudio"))
 	room.battle.set_external_pause(true)
-	for index in RULES.POPULATION/2:
+	for index in room.battle.get_population_limit()/2:
 		room.battle._spawn_monster(RULES.ROSTER[0],room.battle.hero.position+Vector2(300+index,0))
-	check(await until(func(): return server.rooms[key].codec.used_table and not received.hero.is_empty() and received.hero[-1].actors.size()==RULES.POPULATION/2 and not received.demon.is_empty() and received.demon[-1].actors.size()==RULES.POPULATION/2),"both real clients receive packed roster state")
+	check(await until(func(): return server.rooms[key].codec.used_table and not received.hero.is_empty() and received.hero[-1].actors.size()==room.battle.get_population_limit()/2 and not received.demon.is_empty() and received.demon[-1].actors.size()==room.battle.get_population_limit()/2),"both real clients receive packed roster state")
 	for role in received:
 		var event: Dictionary = received[role][-1]
 		var valid := not event.has(ART.PATH_TABLE_FIELD)
@@ -92,7 +92,7 @@ func run() -> void:
 		check(valid,"render/event consumers see original path strings only")
 	var before_count: int = received.hero.size()
 	hero._network_lost("codec fixture reconnect")
-	check(await until(func(): return hero.socket!=null and not hero.reconnecting and received.hero.size()>before_count and received.hero[-1].actors.size()==RULES.POPULATION/2),"fresh socket immediately decodes same-room recovery state")
+	check(await until(func(): return hero.socket!=null and not hero.reconnecting and received.hero.size()>before_count and received.hero[-1].actors.size()==room.battle.get_population_limit()/2),"fresh socket immediately decodes same-room recovery state")
 	check(hero.match_id==key and server.rooms.size()==1,"codec recovery preserves authoritative room")
 	# An old protocol must fail at join rather than misrender indexed rows.
 	var old := WebSocketPeer.new(); old.connect_to_url("ws://127.0.0.1:24849")

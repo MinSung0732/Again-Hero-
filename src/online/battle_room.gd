@@ -71,7 +71,7 @@ func prepare() -> void:
 	battle.child_entered_tree.connect(presentation.track_field_item)
 	battle.set_meta(preload("res://src/battle/exp_orb.gd").ONLINE_REGISTRY_META,exp_orb_visuals)
 	battle.combat_popup_visuals_enabled = false
-	battle.online_match_rules = {"population":RULES.POPULATION,"roster":roster,"skill_ids":skill_ids,"transcendence_id":transcendence_id}
+	battle.online_match_rules = {"roster":roster,"skill_ids":skill_ids,"transcendence_id":transcendence_id}
 	battle.hero_player_mode = true; battle.hero_player_stage = String(map_data.stage_visual); battle.hero_player_hero_id = hero_id
 	world.add_child(battle); battle.set_external_pause(true)
 	battle.current_map_size = map_data.map_size

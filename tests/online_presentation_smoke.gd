@@ -75,7 +75,7 @@ func run() -> void:
 	sampler.append_texture(atlas,0,Transform2D.IDENTITY,Rect2(-8,-9,16,18),Color.WHITE,commands)
 	check(commands.size()==1 and commands[0][2]==1 and commands[0][3]==2 and commands[0][4]==16 and commands[0][5]==18,"original atlas crop retained")
 	# Fill the real roster cap and all existing generic projectile slots.
-	while battle.active_monsters.size() < RULES.POPULATION:
+	while battle.active_monsters.size() < room.battle.get_population_limit():
 		battle.command_power = RULES.OPENING_MANA
 		check(room.apply("demon","summon",{"id":RULES.ROSTER[0],"point":[point.x,point.y]}),"populate online cap")
 	var weapons = battle.hero.player_weapons

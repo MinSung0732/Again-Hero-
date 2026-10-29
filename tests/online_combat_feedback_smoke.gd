@@ -56,15 +56,16 @@ func run() -> void:
 	check(not DATA.valid_events([bad],buffer.sequence,5),"invalid owner rejected")
 	bad = rows[0].duplicate(); bad[2]="unknown"
 	check(not DATA.valid_events([bad],buffer.sequence,5),"invalid kind rejected")
-	check(RULES.VERSION==27,"protocol 25")
+	check(RULES.VERSION==28,"protocol 25")
 	var room := ROOM.new(); root.add_child(room); room.prepare()
 	room.battle.hero_player_mode = false
-	for index in RULES.POPULATION:
+	for index in room.battle.get_population_limit():
 		room.battle._spawn_monster("orc",room.battle.hero.position+Vector2(90+index*3,50))
 	room.battle.hero_player_mode = true
 	for index in DATA.CAPACITY:
 		room.feedback.publish("monster_hit",room.battle.hero.position+Vector2(index,0),100,color,room.tick,1000+index,index==0)
 	var state := room.snapshot()
+	check(state.actors.size() == 100,"100 real monsters in snapshot")
 	var encoded := JSON.stringify(state)
 	check(encoded.to_utf8_buffer().size() <= RULES.MAX_SNAPSHOT,"population cap snapshot fits")
 	for kind in DATA.KINDS: check(DATA.KINDS.find(kind) >= 0,"effect kind in catalog")

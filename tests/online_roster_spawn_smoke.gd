@@ -37,11 +37,12 @@ func run() -> void:
 	check(not room.apply("demon","summon",{"id":"spider","point":[-1,-1]}) and room.last_action_message.contains("전장"),"bounds preserved")
 	check(not room.apply("demon","summon",{"id":"zeus","point":[point.x,point.y]}),"outside online roster rejected")
 	check(battle._spawn_monster("zeus",point) == null,"factory also enforces online roster")
-	battle.online_match_rules.population = count
+	var original_max_command: float = battle.max_command
+	battle.max_command = float(count)
 	check(not room.apply("demon","summon",{"id":"spider","point":[point.x,point.y]}) and room.last_action_message.contains("인구"),"online population cap still enforced")
 	check(battle.active_monsters.size() == count and battle.command_power == RULES.OPENING_MANA,"denied actions allocate nothing and charge nothing")
 	# Elite rewards use the verified online roster, never solo supply pacing.
-	battle.online_match_rules.population = RULES.POPULATION
+	battle.max_command = original_max_command
 	var elite_count: int = battle.active_monsters.size()
 	check(battle.spawn_special_monster("spider",{"type":"elite","name_prefix":"엘리트"}),"online opening controller elite reward bypasses solo pacing")
 	check(battle.active_monsters.size() == elite_count+1 and String(battle.active_monsters.values().back().monster_type) == "spider","online elite preserves selected species")

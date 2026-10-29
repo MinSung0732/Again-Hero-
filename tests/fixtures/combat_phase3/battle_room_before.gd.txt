@@ -24,7 +24,7 @@ func prepare() -> void:
 	var scene: PackedScene = load("res://src/battle/Battle.tscn")
 	if scene == null: finish("","battle_load_failed"); return
 	battle = scene.instantiate(); battle.online_match_mode = true
-	battle.online_match_rules = {"population":RULES.POPULATION,"roster":RULES.ROSTER}
+	battle.online_match_rules = {"population":48,"roster":RULES.ROSTER}
 	battle.hero_player_mode = true; battle.hero_player_stage = "stage_1"; battle.hero_player_hero_id = RULES.HERO
 	world.add_child(battle); battle.set_external_pause(true)
 	battle.run_time_limit_seconds = RULES.DURATION

@@ -2208,7 +2208,7 @@ func _spawn_monster(
 ):
 	var reserved_boss := _is_reserved_hero_boss_request(monster_type,spawn_modifiers)
 	if online_match_mode and (active_monsters.size() >= get_population_limit() or (monster_type not in online_match_rules.get("roster",[]) and not (bool(spawn_modifiers.get("transcendence_summon",false)) and monster_type == String(online_match_rules.get("transcendence_id",""))))): return null
-	# Online uses its explicit roster/population; solo survival supply pacing
+	# Online uses its roster and command-based population; solo survival supply pacing
 	# must not block the opposing player's paid summons (notably controllers).
 	var solo_hero_spawn := hero_player_mode and not online_match_mode
 	if solo_hero_spawn and run_metrics.elapsed_seconds >= HERO_SURVIVAL.DURATION and not reserved_boss: return null
@@ -2583,7 +2583,7 @@ func get_population_count() -> int:
 	return direct_population_ids.size()
 
 func get_population_limit() -> int:
-	if online_match_mode: return int(online_match_rules.get("population",48))
+	if online_match_mode: return maxi(floori(max_command), 0)
 	if hero_player_mode: return HERO_SURVIVAL.monster_limit(int(current_stage_data.get("number",1)))
 	return maxi(floori(max_command), 0)
 

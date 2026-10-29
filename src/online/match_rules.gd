@@ -1,6 +1,6 @@
 extends RefCounted
-## Experience orb snapshots require matching protocol 27 peers.
-const VERSION := 27
+## Experience orb snapshots require matching protocol 28 peers.
+const VERSION := 28
 const ELITE_CARD_LIMIT := 3
 const HINT_DETAIL := "role" # "role" or "monster"
 const ROLE_HINT_LABELS := {"melee":"근접"}
@@ -10,9 +10,8 @@ const ID := "duel_smoke_v1"
 const HERO := "ranged_rookie"
 const ROSTER := ["slime","spider","orc","bomb_rat","skeleton_archer"]
 const DURATION := 180.0 # Legacy test fixture only; live matches use ranked map duration.
-const POPULATION := 48
 const OPENING_MANA := 48.0
-const MANA_PER_SECOND := 12.0
+const MANA_PER_SECOND := 4.0
 const SNAPSHOT_INTERVAL := 0.1
 const INPUT_TIMEOUT := 0.35
 const CHOICE_TIMEOUT := 8.0 # Legacy fixture compatibility; ranked matches do not use a choice timer.

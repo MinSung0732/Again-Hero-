@@ -13,7 +13,7 @@ func stop_audio(host: Node) -> void:
 func run() -> void:
 	root.get_node("CloudStore").stop()
 	var rows: Array = []
-	for count in [0,RULES.POPULATION/2,RULES.POPULATION]:
+	for count in [0,50,100]:
 		var room = ROOM.new(); root.add_child(room); room.prepare()
 		stop_audio(room); stop_audio(root.get_node("GameAudio"))
 		for index in int(count):
