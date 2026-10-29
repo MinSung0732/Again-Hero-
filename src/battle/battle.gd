@@ -986,6 +986,9 @@ func _start_battle() -> void:
 	# Stages 1~10 share the Demon Castle map, progressively destroyed per stage.
 	# Keep actor/prop depth rules consistent across the whole castle arc.
 	if hero_player_mode: hero_control_roster = HERO_SURVIVAL.roster_for(int(current_stage_data.get("number",1)),campaign_difficulty)
+	var scene_ids: Array = online_match_rules.get("roster", []) if online_match_mode else HERO_SURVIVAL.entry_monster_ids(int(current_stage_data.get("number",1)),campaign_difficulty) if hero_player_mode else allowed_monster_ids
+	MONSTER_CATALOG.warm_scenes(scene_ids, get_instance_id())
+	if not registered_id.is_empty(): MONSTER_CATALOG.warm_scenes([registered_id], get_instance_id())
 	y_sort_enabled = _uses_castle_battlefield(current_stage_id)
 	var castle_battlefield := get_node_or_null("Stage1Battlefield")
 	if (
@@ -1320,6 +1323,7 @@ func set_allowed_monster_ids(monster_ids: Array) -> void:
 		allowed_monster_ids.append(monster_id)
 
 	loadout_restriction_enabled = not allowed_monster_ids.is_empty()
+	if is_inside_tree(): MONSTER_CATALOG.warm_scenes(allowed_monster_ids, get_instance_id())
 
 func try_summon(monster_type: String) -> bool:
 	if online_match_mode:
@@ -5767,6 +5771,7 @@ func get_run_analysis_summary() -> String:
 
 func _finish_battle(message: String, player_won: bool, hero_outcome: StringName = &"") -> void:
 	if battle_over: return
+	MONSTER_CATALOG.release_warm(get_instance_id())
 	if _mission_service != null:
 		_mission_service.flush()
 	battle_over = true
@@ -5782,6 +5787,7 @@ func _record_mission_action(event: String, amount: float) -> void:
 		_mission_service.record(event, amount)
 
 func _exit_tree() -> void:
+	MONSTER_CATALOG.release_warm(get_instance_id())
 	if is_instance_valid(_mission_service):
 		_mission_service.flush()
 

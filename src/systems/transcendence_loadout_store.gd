@@ -16,10 +16,10 @@ static func load_id() -> String:
 		var legacy := ConfigFile.new()
 		if SCOPE.load_config(legacy,LEGACY_PATH) == OK:
 			id = String(legacy.get_value("loadout","monster_id",""))
-	return id if DATA.is_transcendent(id) and COLLECTION.is_unlocked(id) and DATA.MONSTERS.get_scene(id) != null else ""
+	return id if DATA.is_transcendent(id) and COLLECTION.is_unlocked(id) and DATA.MONSTERS.has_scene(id) else ""
 
 static func save_id(id: String) -> bool:
-	if not id.is_empty() and (not DATA.is_transcendent(id) or not COLLECTION.is_unlocked(id) or DATA.MONSTERS.get_scene(id) == null):
+	if not id.is_empty() and (not DATA.is_transcendent(id) or not COLLECTION.is_unlocked(id) or not DATA.MONSTERS.has_scene(id)):
 		return false
 	var config := ConfigFile.new()
 	var result := SCOPE.load_config(config,SAVE_PATH)

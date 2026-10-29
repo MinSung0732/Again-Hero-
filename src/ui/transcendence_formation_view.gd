@@ -268,7 +268,7 @@ func _build_card(box: VBoxContainer, id: String, selected: String, registered_ca
 	box.add_child(actions)
 	var register_button := button(actions, "등록 해제" if chosen else "등록하기", _register.bind("" if chosen else id))
 	register_button.name = "RegisterButton"
-	register_button.disabled = not unlocked or (not chosen and DATA.MONSTERS.get_scene(id) == null)
+	register_button.disabled = not unlocked or (not chosen and not DATA.MONSTERS.has_scene(id))
 	if registered_card:
 		register_button.custom_minimum_size.y = 48
 	else:
@@ -317,7 +317,7 @@ func _add_banner(frame: Control, id: String) -> bool:
 	return true
 
 func _can_register(id: String) -> bool:
-	return id in DATA.get_ids() and COLLECTION.is_unlocked(id, collection_state) and DATA.MONSTERS.get_scene(id) != null
+	return id in DATA.get_ids() and COLLECTION.is_unlocked(id, collection_state) and DATA.MONSTERS.has_scene(id)
 
 func _register(id: String) -> void:
 	if STORE.save_id(id):
