@@ -1,3 +1,7 @@
+## 온라인 엘리트 카드
+- 마왕이 변이를 보관하고 지휘력 없이 수동 소환하며, 초과 카드는 자동 등장한다. 프로토콜 26.
+- 검증: 관련 테스트 및 diff 확인.
+
 ## 2026-10-29 ? Match battle UI
 
 - Fix special card layout, menus and chest notice; remove online AI cooldown wire and UI (protocol 25).

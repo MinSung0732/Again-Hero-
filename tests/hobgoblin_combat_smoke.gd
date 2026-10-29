@@ -94,6 +94,8 @@ func _spawn_monster(id: String, _point: Vector2, _cost: float, _split: bool, mod
  return actor
 func _apply_special_monster_modifiers(actor: Node, _id: String, _data: Dictionary) -> void: actor.queue_free()
 func _emit_stats() -> void: pass
+# Online manual placement is not exercised here (online_match_mode is false).
+func _clamp_manual_spawn_position(point: Vector2) -> Vector2: return point
 func _queue_population_update() -> void: pass
 func _get_special_augment_config(id: String) -> Dictionary: return configs.get(id,{})
 func _get_demon_level_monster_hp_multiplier(_spawn_seconds: float = -1.0) -> float: return 1.0

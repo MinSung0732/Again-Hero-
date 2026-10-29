@@ -4323,10 +4323,11 @@ func _open_mutation_choice(event: Dictionary) -> void:
 		return
 	mutation_choice_revision += 1
 
-	flow_pause_manager.request_pause(
-		PAUSE_REASON_MUTATION_CHOICE,
-		FULL_MODAL_PAUSE_DOMAINS
-	)
+	if not online_match_mode:
+		flow_pause_manager.request_pause(
+			PAUSE_REASON_MUTATION_CHOICE,
+			FULL_MODAL_PAUSE_DOMAINS
+		)
 	_sync_combat_pause_state()
 	mutation_choice_ready.emit(
 		mutation_director.get_event(),
@@ -4361,6 +4362,19 @@ func _execute_selected_mutation(monster_id: String, expected_revision: int) -> b
 	# Resume queued level rewards after this choice and its UI callbacks finish.
 	call_deferred("_open_next_demon_augment_if_needed")
 
+	return _spawn_selected_mutation(monster_id, event)
+
+func online_hold_mutation(monster_id: String) -> Dictionary:
+	if not online_match_mode or not mutation_director.is_active() or monster_id not in mutation_director.get_candidates(): return {}
+	var event: Dictionary = mutation_director.get_event().duplicate(true)
+	mutation_director.reset()
+	mutation_choice_revision += 1
+	flow_pause_manager.release_pause(PAUSE_REASON_MUTATION_CHOICE)
+	_sync_combat_pause_state()
+	call_deferred("_open_next_demon_augment_if_needed")
+	return {"id": monster_id, "event": event}
+
+func _spawn_selected_mutation(monster_id: String, event: Dictionary, manual_position: Variant = null) -> bool:
 	if event.is_empty():
 		event = {
 			"type": "elite",
@@ -4378,6 +4392,9 @@ func _execute_selected_mutation(monster_id: String, expected_revision: int) -> b
 			float(event.get("spawn_distance", 260.0)),
 			260.0
 		)
+	if manual_position is Vector2:
+		event = event.duplicate(true)
+		event["online_spawn_position"] = manual_position
 
 	var event_type := String(event.get("type", "elite"))
 	var name_prefix := String(event.get("name_prefix", "돌연변이"))
@@ -4418,6 +4435,13 @@ func spawn_special_monster(
 		return false
 
 	var spawn_position := _get_special_monster_spawn_position(monster_id, special_data)
+	if online_match_mode and special_data.get("online_spawn_position", null) is Vector2:
+		spawn_position = _clamp_manual_spawn_position(special_data.online_spawn_position)
+		var profile := MONSTER_CATALOG.get_elite_spawn_profile(monster_id)
+		if int(profile.get("position_policy", MONSTER_CATALOG.DEFAULT_ELITE_SPAWN.position_policy)) == MONSTER_CATALOG.EliteSpawnPosition.FARTHEST_ATTACK_RANGE:
+			var offset: Vector2 = spawn_position - hero.position
+			var attack_range := maxf(float(MONSTER_CATALOG.get_base_stats(monster_id).get("attack_range", 1.0)) - 1.0, 1.0)
+			spawn_position = _clamp_manual_spawn_position(hero.position + offset.limit_length(attack_range))
 	var monster = _spawn_monster(
 		monster_id,
 		spawn_position,

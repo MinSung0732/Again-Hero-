@@ -43,6 +43,10 @@ func run() -> void:
 	var later_fields := ["hero_archetype", "battlefield", "summon_costs", "demon_level", "demon_rerolls_left", "demon_reroll_limit", "demon_exp", "demon_exp_next", "demon_charge", "demon_charge_max", "demon_cooldowns", "demon_ready", "transcend_ready", "transcend_used", "exp_orbs", "visuals", "primitives", "feedback", "feedback_cursor"]
 	for index in 2:
 		var room := ROOM.new(); root.add_child(room); room.prepare(); rooms.append(room)
+		var demon_state: Dictionary = room.snapshot("demon")
+		var hero_state: Dictionary = room.snapshot("hero")
+		check(demon_state.has("elite_choice") and demon_state.has("elite_cards"),"demon receives elite fields")
+		check(not hero_state.has("elite_choice") and not hero_state.has("elite_cards"),"hero does not receive elite fields")
 		room.feedback.publish("hero_hit",room.battle.hero.position,1,Color.WHITE,room.tick,room.battle.hero.get_instance_id())
 		var previous = old_script.new(); previous.battle = room.battle
 		room.battle.hero_player_mode = false

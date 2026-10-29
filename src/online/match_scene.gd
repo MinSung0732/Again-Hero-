@@ -1052,6 +1052,11 @@ func _event(event: Dictionary) -> void:
 			if not RULES.number(event.get("seconds",null)) or not RULES.number(event.get("mana",null)): return
 			if not event.get("augment_holds",null) is Array or event.augment_holds.size() > RULES.AUGMENT_HOLD_LIMIT: return
 			if role == "demon":
+				if not event.get("elite_choice",null) is Dictionary or not event.elite_choice.get("candidates",null) is Array or not event.get("elite_cards",null) is Array or event.elite_cards.size() > RULES.ELITE_CARD_LIMIT: return
+				for id in event.elite_choice.candidates:
+					if not id is String: return
+				for card in event.elite_cards:
+					if not card is Array or card.size() != 2 or not RULES.number(card[0]) or float(card[0]) != floorf(float(card[0])) or not card[1] is String: return
 				if not RULES.number(event.get("demon_charge",null)) or not RULES.number(event.get("demon_charge_max",null)): return
 				if not event.get("demon_cooldowns",null) is Dictionary or not event.get("demon_ready",null) is Dictionary or not event.get("summon_costs",null) is Dictionary or not event.get("transcend_ready",null) is bool or not event.get("transcend_used",null) is bool: return
 				if not RULES.number(event.get("demon_level",null)) or not RULES.number(event.get("demon_exp",null)) or not RULES.number(event.get("demon_exp_next",null)): return

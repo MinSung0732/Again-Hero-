@@ -31,6 +31,8 @@ var selected_hero_augments: Array[String] = []
 var public_hero_build: Dictionary = {}
 var public_hero_build_dirty := true
 var demon_holds: Array = []
+var elite_cards: Array = []
+var next_elite_serial := 0
 var demon_augment_hint_counts: Dictionary = {}
 var public_demon_hints: Dictionary = {"augment_hints":[]}
 var public_demon_hints_dirty := true
@@ -296,6 +298,29 @@ func apply(role: String,kind: String,argument: Variant) -> bool:
 		return _select_offer(role,argument)
 	if kind == "reroll" and argument is Dictionary:
 		return _reroll_held(role,argument)
+	if role == "demon" and kind == "elite_choose" and argument is Dictionary:
+		var id: Variant = argument.get("id",null)
+		if not id is String or not battle.mutation_director.is_active() or id not in battle.mutation_director.get_candidates(): return false
+		if elite_cards.size() >= RULES.ELITE_CARD_LIMIT:
+			var oldest: Dictionary = elite_cards[0]
+			if not battle._spawn_selected_mutation(oldest.id,oldest.event): return false
+			elite_cards.pop_front()
+		var card: Dictionary = battle.online_hold_mutation(id)
+		if card.is_empty(): return false
+		next_elite_serial += 1; card["serial"] = next_elite_serial; elite_cards.append(card)
+		return true
+	if role == "demon" and kind == "elite_summon" and argument is Dictionary:
+		var serial: Variant = argument.get("serial",null)
+		var x: Variant = argument.get("x",null); var y: Variant = argument.get("y",null)
+		if not RULES.number(serial) or float(serial) != floorf(float(serial)) or not RULES.point([x,y]): return false
+		var point := Vector2(float(x),float(y))
+		if not battle.is_spawn_position_valid(point): return false
+		for index in elite_cards.size():
+			var card: Dictionary = elite_cards[index]
+			if int(card.serial) == int(serial):
+				if not battle._spawn_selected_mutation(card.id,card.event,point): return false
+				elite_cards.remove_at(index); return true
+		return false
 	if role == "demon" and kind == "summon" and argument is Dictionary:
 		# RULES.SUMMON_PLACEMENT: 랭크전 소환은 좌표를 지정한 수동 배치만 허용.
 		if not argument.get("id",null) is String: return false
@@ -325,13 +350,10 @@ func step(delta: float) -> void:
 	if not running or finished or connection_paused: return
 	tick += 1; move_age += delta
 	if move_age > RULES.INPUT_TIMEOUT and is_instance_valid(battle.hero): battle.hero.set_player_move_input(Vector2.ZERO)
-	if battle.mutation_director.is_active():
-		var candidates: Array = battle.mutation_director.get_candidates()
-		if not candidates.is_empty(): battle.try_choose_mutation(String(candidates[0]))
 func finish(won: String,why: String) -> void:
 	if finished: return
 	finished = true; running = false; winner = won; reason = why
-	hero_holds.clear(); demon_holds.clear(); chest_receipts.clear(); choice = []
+	hero_holds.clear(); demon_holds.clear(); elite_cards.clear(); chest_receipts.clear(); choice = []
 	if is_instance_valid(battle): battle.set_external_pause(true)
 	completed.emit(winner,reason)
 func snapshot(role: String = "") -> Dictionary:
@@ -367,6 +389,10 @@ func snapshot_for_role(role: String,state: Dictionary) -> Dictionary:
 			public_demon_hints_dirty = false
 		own["demon_hints"] = public_demon_hints
 	elif role == "demon":
+		own["elite_choice"] = {"candidates": battle.mutation_director.get_candidates() if battle.mutation_director.is_active() else []}
+		var cards: Array = []
+		for card in elite_cards: cards.append([card.serial,card.id])
+		own["elite_cards"] = cards
 		own["augment_holds"] = _wire_holds(demon_holds)
 		if public_hero_build_dirty:
 			public_hero_build = _public_hero_build()
