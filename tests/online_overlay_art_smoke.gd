@@ -35,7 +35,13 @@ func run() -> void:
 			check(z(scene.hold_popup.popup)>z(scene.view.status_bars) and z(scene.hold_popup.popup)>z(popup),"augment panel is above world HP bars and damage labels")
 			var dot = scene.hold_popup.dots[0]
 			check(dot.text=="1" and dot.custom_minimum_size==BUTTON_ART.BADGE_SIZE,"collapsed slot has readable number and mobile target")
-			check(dot.get_theme_stylebox("normal") is StyleBoxTexture and scene.hold_popup.lower_button.get_theme_stylebox("normal") is StyleBoxTexture,"badge and lower button use prepared art")
+			check(dot.get_theme_stylebox("normal") is StyleBoxTexture,"badge uses prepared art")
+			check(scene.hold_popup.lower_button.get_theme_stylebox("normal") == scene.hold_popup.reroll_button.get_theme_stylebox("normal"),"lower matches the adjacent action style")
+			check(scene.hold_popup.lower_button.get_parent() == scene.hold_popup.reroll_button.get_parent(),"lower and reroll share an action row")
+			if role == "hero":
+				check(scene.hold_popup.lower_button.custom_minimum_size.x == scene.hold_popup.HERO_LOWER_WIDTH and scene.hold_popup.lower_button.size_flags_horizontal == Control.SIZE_SHRINK_CENTER,"hero lower remains compact even without rerolls")
+			else:
+				check(scene.hold_popup.lower_button.size_flags_horizontal == Control.SIZE_EXPAND_FILL,"demon lower shares row width")
 			scene.hold_popup.lower_button.pressed.emit()
 			check(not scene.hold_popup.popup.visible and dot.visible,"lower keeps stored augment available")
 			dot.pressed.emit(); check(scene.hold_popup.popup.visible,"authored badge reopens its original offer")

@@ -15,6 +15,7 @@ const NEW_HOLD_GLOW_COLOR := Color(1.0,0.86,0.3,0.55)
 const NEW_HOLD_GLOW_IN := 0.18
 const NEW_HOLD_GLOW_OUT := 0.5
 const NEW_HOLD_GLOW_MARGIN := 10.0
+const HERO_LOWER_WIDTH := 260.0
 signal choose(number: int,id: String)
 signal reroll(number: int)
 signal oldest_auto_chosen
@@ -37,6 +38,7 @@ var popup: PanelContainer
 var popup_rows: VBoxContainer
 var title_label: Label
 var reroll_button: Button
+var hero_actions: HBoxContainer
 var lower_button: Button
 var confirm_button: Button
 var selected_index := -1
@@ -100,21 +102,43 @@ func _ready() -> void:
 			card.hide(); cards.append(card)
 			card_icons.append(card.get_node("MarginContainer/VBoxContainer/AugmentIcon") as TextureRect)
 			card_names.append(card.get_node("MarginContainer/VBoxContainer/Name") as Label)
+		hero_actions = HBoxContainer.new(); hero_actions.name = "Actions"
+		hero_actions.add_theme_constant_override("separation",16); popup_rows.add_child(hero_actions)
 		reroll_button = Button.new(); reroll_button.name = "AugmentReroll"
 		reroll_button.custom_minimum_size.y = 64; reroll_button.add_theme_font_size_override("font_size",26)
-		popup_rows.add_child(reroll_button)
+		reroll_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		hero_actions.add_child(reroll_button)
 	lower_button = Button.new(); lower_button.name = "Lower"; lower_button.text = "내리기"; lower_button.custom_minimum_size.y = 64
 	if role == "demon":
 		lower_button.custom_minimum_size.y = confirm_button.custom_minimum_size.y
 		lower_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		popup_rows.get_node("Actions").add_child(lower_button)
 	else:
-		popup_rows.add_child(lower_button)
-	BUTTON_ART.apply(lower_button,BUTTON_ART.LOWER_PATH)
+		lower_button.custom_minimum_size.x = HERO_LOWER_WIDTH
+		lower_button.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+		hero_actions.add_child(lower_button)
+	_style_actions()
 	lower_button.pressed.connect(close_popup)
 	reroll_button.pressed.connect(_reroll_open)
 	resized.connect(_layout)
 	_layout()
+
+# Match the surrounding augment controls and avoid stretching image matte into the panel.
+func _style_actions() -> void:
+	if role == "demon":
+		for state in ["normal", "hover", "pressed", "disabled"]:
+			lower_button.add_theme_stylebox_override(state, reroll_button.get_theme_stylebox(state))
+	else:
+		var style := StyleBoxFlat.new()
+		style.bg_color = Color("223d50"); style.border_color = Color("c9a45e")
+		style.set_border_width_all(2); style.set_content_margin_all(10)
+		var action_style := SKIN.skin_style(style)
+		for button in [reroll_button, lower_button]:
+			for state in ["normal", "hover", "pressed", "disabled"]:
+				button.add_theme_stylebox_override(state, action_style)
+			button.add_theme_stylebox_override("focus", StyleBoxEmpty.new())
+			button.add_theme_color_override("font_color", Color("efe5c9"))
+	lower_button.add_theme_font_size_override("font_size", 26)
 
 func set_holds(next_holds: Array) -> void:
 	if holds == next_holds: return
