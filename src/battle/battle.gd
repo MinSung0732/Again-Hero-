@@ -1453,8 +1453,8 @@ func _execute_summon_at_position(monster_type: String, spawn_position: Vector2) 
 		true
 	)
 
-func debug_unlock_transcendence() -> bool:
-	if not LocalTestMode.active or battle_over or external_pause or demon_augment_selection_active:
+func debug_unlock_transcendence(allow_without_local_mode := false) -> bool:
+	if (not LocalTestMode.active and not allow_without_local_mode) or battle_over or external_pause or demon_augment_selection_active:
 		return false
 	var id: String = transcendence.monster_id
 	if not TRANSCENDENCE_DATA.is_transcendent(id) or not bool(MONSTER_CATALOG.MONSTERS.get(id, {}).get("combat_enabled", true)):

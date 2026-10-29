@@ -163,8 +163,13 @@ func _receive(id: int,message: Dictionary) -> void:
 		if sequence <= int(peer.seq): return
 		peer.seq = sequence
 		if message.get("kind",null) is String:
-			var accepted: bool = match_data.node.apply(peer.role,message.kind,message.get("argument",null))
-			if message.kind in ["summon","skill","transcend"]: _send(id,{"op":"action","match":peer.room,"accepted":accepted,"message":match_data.node.last_action_message})
+			var accepted: bool
+			if message.kind == "transcend_unlock_test":
+				var allowed: bool = not bool(match_data.get("rated",true)) and (test_auth or not local_test_ticket.is_empty())
+				accepted = match_data.node.apply(peer.role,message.kind,message.get("argument",null),allowed)
+			else:
+				accepted = match_data.node.apply(peer.role,message.kind,message.get("argument",null))
+			if message.kind in ["summon","skill","transcend","transcend_unlock_test"]: _send(id,{"op":"action","match":peer.room,"accepted":accepted,"message":match_data.node.last_action_message})
 func _authenticate(id: int,token: String,role: String,loadout: Dictionary,local_credentials: Dictionary = {}) -> void:
 	var uid := ""
 	if not local_credentials.is_empty():

@@ -322,9 +322,12 @@ func _select_offer(role: String,argument: Dictionary) -> bool:
 		choice = hero_holds[0].candidates if not hero_holds.is_empty() else []
 		return true
 	return false
-func apply(role: String,kind: String,argument: Variant) -> bool:
+func apply(role: String,kind: String,argument: Variant,allow_test_unlock := false) -> bool:
 	last_action_message = "사용할 수 없는 행동입니다."
 	if not running or finished or connection_paused or not is_instance_valid(battle.hero): return false
+	if role == "demon" and kind == "transcend_unlock_test":
+		if not allow_test_unlock or battle.transcendence.ready or battle.transcendence.used: return false
+		return battle.debug_unlock_transcendence(true)
 	if role == "hero" and kind == "move" and RULES.point(argument,1.0):
 		var direction := Vector2(float(argument[0]),float(argument[1]))
 		if direction.length_squared() > 1.001: return false
