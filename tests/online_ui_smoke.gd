@@ -25,6 +25,7 @@ func run() -> void:
 	check(pause_packed != null and pause_packed.can_instantiate(),"shared solo pause scene loads")
 	var solo := solo_packed.instantiate()
 	check(solo.get_node_or_null("HUD/BottomBar/CommandBar") != null and solo.get_node_or_null("HUD/DemonUltimatePanel/UltimateButtons") != null,"solo paths survive shared scene extraction")
+	check(solo.get_node_or_null("HUD/MutationPanel/Margin/VBox/Choices/Choice2") != null,"solo mutation path survives extraction")
 	check(solo.get_node_or_null("HUD/DemonAugmentPanel/Margin/VBox/Title") != null,"solo demon augment path survives extraction")
 	check(Vector2(solo.get_node("BattleViewportContainer/BattleViewport").size) == CAMERA_VIEW.DEMON_SIZE,"demon camera size follows solo viewport")
 	solo.free()
@@ -106,6 +107,24 @@ func run() -> void:
 			check(name_label.text.contains("\n") and name_label.get_theme_font("font").get_height(name_label.get_theme_font_size("font_size")) * 2 <= name_label.size.y and name_label.get_global_rect().end.y <= description.get_global_rect().position.y,"two-line demon name fits before description")
 		scene.hold_popup.lower_button.pressed.emit()
 		check(not scene.hold_popup.popup.visible and scene.hold_popup.dots[1].visible,"lower closes popup and keeps dot")
+		if role == "hero": check(scene.elite_panel == null and scene.elite_buttons.is_empty(),"hero has no elite UI")
+		else:
+			var saved_client = scene.client
+			var elite_spy := CommandSpy.new(); scene.client = elite_spy
+			var saved_wait: bool = scene.waiting_for_start; scene.waiting_for_start = false
+			scene._update_elite_ui(["slime","spider","orc"],[[1,"slime"],[2,"spider"]])
+			check(scene.elite_panel.visible and scene.elite_panel.get_node("Margin/VBox/Choices").get_child_count() == 3,"elite choices shown")
+			scene.elite_panel.get_node("Margin/VBox/Choices/Choice0").pressed.emit()
+			check(elite_spy.kind == "elite_choose" and elite_spy.argument == {"id":"slime"},"elite choice command")
+			scene._update_elite_ui([],[[1,"slime"],[2,"spider"]])
+			check(not scene.elite_panel.visible and scene.elite_buttons[0].visible and scene.elite_buttons[1].visible and not scene.elite_buttons[2].visible,"elite cards reflect snapshot")
+			scene.elite_buttons[1].pressed.emit()
+			scene.view._layout_map()
+			var tap := InputEventMouseButton.new(); tap.button_index = MOUSE_BUTTON_LEFT; tap.pressed = true; tap.position = scene.view.size * 0.5
+			var world: Vector2 = (tap.position - scene.view.map_offset) / scene.view.map_scale
+			scene.view._gui_input(tap)
+			check(elite_spy.kind == "elite_summon" and elite_spy.argument == {"serial":2,"x":world.x,"y":world.y},"elite placement sends camera transformed world coordinates")
+			scene._update_elite_ui([],[]); scene.client = saved_client; scene.waiting_for_start = saved_wait
 		var real_client = scene.client
 		var command_spy := CommandSpy.new(); scene.client = command_spy
 		scene.hold_popup.open_index(1); scene.hold_popup.cards[0].pressed.emit()
@@ -390,6 +409,14 @@ func run() -> void:
 		check(scene.disconnect_button.disabled and scene.reconnect_button.disabled,"test buttons disabled before match")
 		check(scene.metrics_panel.get_parent() == scene and scene.metrics_panel not in scene.setup_controls,"metrics overlay survives setup controls hiding")
 		scene._show_match_layout()
+		if role == "demon":
+			scene._update_elite_ui([],[[1,"slime"],[2,"spider"],[3,"orc"]])
+			for dimensions in [Vector2i(1080,1920),Vector2i(1536,1920)]:
+				root.size = dimensions; await process_frame; await process_frame
+				for card in scene.elite_buttons:
+					var rect: Rect2 = card.get_global_rect()
+					check(not rect.intersects(scene.bottom_bar.get_global_rect()) and not rect.intersects(scene.hold_popup.dot_row.get_global_rect()) and not rect.intersects(scene.hero_build_toggle.get_global_rect()),"elite cards clear battle controls")
+			scene._update_elite_ui([],[])
 		scene._open_match_menu()
 		var metrics_button: Button = scene.match_menu.find_child("ConnectionMetricsButton",true,false)
 		check(metrics_button != null,"both roles expose test metrics from battle menu")

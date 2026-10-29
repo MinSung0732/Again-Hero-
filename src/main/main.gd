@@ -1,4 +1,5 @@
 extends Control
+const MUTATION_VIEW = preload("res://src/ui/mutation_panel_view.gd")
 
 const HERO_PRESENTATION := preload("res://src/data/hero_presentation_catalog.gd")
 
@@ -1582,37 +1583,7 @@ func _on_mutation_choice_ready(
 			false
 		)
 
-	mutation_title.text = String(
-		event_data.get("ui_title", "돌연변이 선택")
-	)
-	mutation_trigger.text = String(
-		event_data.get(
-			"ui_description",
-			"편성 몬스터 1종을 돌연변이로 투입합니다."
-		)
-	)
-
-	var buttons: Array[Button] = [
-		mutation_choice_0,
-		mutation_choice_1,
-		mutation_choice_2,
-	]
-	for index in range(buttons.size()):
-		var button := buttons[index]
-		if index >= current_mutation_candidates.size():
-			button.hide()
-			continue
-
-		button.show()
-		var monster_id := String(current_mutation_candidates[index])
-		button.text = ""
-
-		var icon: TextureRect = button.get_node("Icon") as TextureRect
-		var name_label: Label = button.get_node("Name") as Label
-		var select_label: Label = button.get_node("Select") as Label
-		icon.texture = _load_monster_mutation_icon(monster_id)
-		name_label.text = _get_catalog_monster_name(monster_id)
-		select_label.text = "선택"
+	MUTATION_VIEW.populate(mutation_panel, event_data, current_mutation_candidates, _load_monster_mutation_icon, _get_catalog_monster_name)
 
 	status_label.text = String(event_data.get("status_message", "Stage 이벤트: 돌연변이로 투입할 편성 몬스터를 선택하세요."))
 

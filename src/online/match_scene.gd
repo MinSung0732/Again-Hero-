@@ -35,6 +35,9 @@ const SETTINGS := preload("res://src/ui/BattleSettings.tscn")
 const DEMON_MENU := preload("res://src/ui/BattlePauseMenu.tscn")
 const HERO_PAUSE := preload("res://src/ui/hero_pause_view.gd")
 const DETAIL := preload("res://src/ui/hero_inventory_detail.gd")
+const MUTATION_PANEL := preload("res://src/ui/mutation_panel.tscn")
+const MUTATION_VIEW := preload("res://src/ui/mutation_panel_view.gd")
+const PRESENTATION := preload("res://src/data/online_presentation_catalog.gd")
 const PAD_SETTINGS := preload("res://src/ui/hero_pad_settings.gd")
 var loading
 var local_preparing := false
@@ -132,6 +135,12 @@ var ultimate_status_text := "필살기   0 / 100"
 var skill_direction := "east"
 var transcend_button: Button
 var transcendence_id := ""
+var elite_panel: Control
+var elite_buttons: Array[Button] = []
+var elite_candidates: Array = []
+var elite_cards: Array = []
+var selected_elite := -1
+var elite_choice_pending := false
 var transcend_placement := false
 var demon_skills: Array = []
 var queue_button: Button
@@ -264,9 +273,13 @@ func _ready() -> void:
 	surrender_dialog.dialog_text = "대전을 포기하고 로비로 돌아가시겠습니까?"
 	surrender_dialog.confirmed.connect(_leave); add_child(surrender_dialog)
 	top_bar.get_node("StageMenuButton").pressed.connect(_open_match_menu)
+	if role == "demon": _install_elite_ui()
 	view.placement.connect(func(point: Vector2):
 		if role == "demon" and not ended and not local_preparing and not waiting_for_start and not connection_waiting and not client.reconnecting:
-			if transcend_placement:
+			if selected_elite >= 0:
+				if client.command("elite_summon",{"serial":selected_elite,"x":point.x,"y":point.y}):
+					selected_elite = -1; _refresh_elite_controls()
+			elif transcend_placement:
 				if client.command("transcend",{"point":[point.x,point.y]}): transcend_placement = false
 			else: client.command("summon",{"id":selected_monster,"point":[point.x,point.y]}))
 	if role == "demon":
@@ -767,7 +780,72 @@ func _update_demon_controls(event: Dictionary) -> void:
 		transcend_button.text = "초월 소환 완료" if event.transcend_used else "초월 소환 · 위치 지정" if event.transcend_ready else "초월 해금 대기"
 		if event.transcend_used: transcend_placement = false
 
+func _elite_icon(id: String) -> Texture2D:
+	var path := String(MONSTERS.get_monster(id).get("card_icon_path", ""))
+	return load(path) as Texture2D if not path.is_empty() and ResourceLoader.exists(path) else null
+
+func _elite_name(id: String) -> String:
+	return String(MONSTERS.get_monster(id).get("name", id))
+
+func _install_elite_ui() -> void:
+	elite_panel = MUTATION_PANEL.instantiate(); add_child(elite_panel)
+	for index in 3:
+		var choice: Button = elite_panel.get_node("Margin/VBox/Choices/Choice%d" % index)
+		choice.pressed.connect(_choose_elite.bind(index))
+	for index in RULES.ELITE_CARD_LIMIT:
+		var button := Button.new(); button.name = "EliteCard%d" % index
+		button.position = Vector2(16, 16 + index * 192); button.size = Vector2(140, 180)
+		button.focus_mode = Control.FOCUS_NONE; button.z_index = 20; button.hide()
+		view.add_child(button); elite_buttons.append(button)
+		var style := StyleBoxFlat.new(); style.bg_color = Color("281832"); style.border_color = Color("d9b45b"); style.set_border_width_all(2)
+		var frame: StyleBox = PIXEL_SKIN.skin_style(style)
+		if ResourceLoader.exists(PRESENTATION.ELITE_CARD_FRAME):
+			var image_style := StyleBoxTexture.new(); image_style.texture = load(PRESENTATION.ELITE_CARD_FRAME); frame = image_style
+		button.add_theme_stylebox_override("normal", frame); button.add_theme_stylebox_override("hover", frame); button.add_theme_stylebox_override("pressed", frame); button.add_theme_stylebox_override("disabled", frame)
+		var icon := TextureRect.new(); icon.name = "Icon"; icon.position = Vector2(22, 8); icon.size = Vector2(96, 96); icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; icon.mouse_filter = Control.MOUSE_FILTER_IGNORE; button.add_child(icon)
+		var label := Label.new(); label.name = "Name"; label.position = Vector2(5, 104); label.size = Vector2(130, 40); label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; label.clip_text = true; label.add_theme_font_size_override("font_size", 20); label.mouse_filter = Control.MOUSE_FILTER_IGNORE; button.add_child(label)
+		var caption := Label.new(); caption.text = "엘리트"; caption.position = Vector2(5, 145); caption.size = Vector2(130, 25); caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; caption.add_theme_font_size_override("font_size", 18); caption.mouse_filter = Control.MOUSE_FILTER_IGNORE; button.add_child(caption)
+		button.pressed.connect(_select_elite.bind(index))
+
+func _update_elite_ui(candidates: Array, cards: Array) -> void:
+	if elite_candidates != candidates:
+		elite_candidates = candidates.duplicate(); elite_choice_pending = false
+		MUTATION_VIEW.populate(elite_panel, {"ui_title":"엘리트 선택", "ui_description":"보관할 엘리트를 선택하세요."}, elite_candidates, _elite_icon, _elite_name)
+	elite_panel.visible = not elite_candidates.is_empty()
+	if elite_cards != cards:
+		elite_choice_pending = false
+		elite_cards = cards.duplicate(true)
+		var found := false
+		for index in elite_buttons.size():
+			var button := elite_buttons[index]; button.visible = index < elite_cards.size()
+			if button.visible:
+				var card: Array = elite_cards[index]; var id := String(card[1])
+				button.get_node("Icon").texture = _elite_icon(id); button.get_node("Name").text = _elite_name(id)
+				if int(card[0]) == selected_elite: found = true
+		if not found: selected_elite = -1
+	_refresh_elite_controls()
+
+func _refresh_elite_controls() -> void:
+	if elite_panel == null or client == null: return
+	var disabled: bool = ended or local_preparing or waiting_for_start or connection_waiting or client.reconnecting
+	for index in 3:
+		(elite_panel.get_node("Margin/VBox/Choices/Choice%d" % index) as Button).disabled = disabled or elite_choice_pending
+	for index in elite_buttons.size():
+		var button := elite_buttons[index]; button.disabled = disabled
+		var selected: bool = index < elite_cards.size() and int(elite_cards[index][0]) == selected_elite
+		button.modulate = Color(0.55,0.55,0.55) if disabled else (Color(1.5,1.3,0.65) if selected else Color.WHITE)
+
+func _choose_elite(index: int) -> void:
+	if index >= elite_candidates.size() or elite_choice_pending: return
+	if client.command("elite_choose", {"id":elite_candidates[index]}):
+		elite_choice_pending = true; _refresh_elite_controls()
+
+func _select_elite(index: int) -> void:
+	if index >= elite_cards.size(): return
+	selected_elite = int(elite_cards[index][0]); transcend_placement = false; _refresh_elite_controls()
+
 func _select_monster(id: String) -> void:
+	selected_elite = -1; _refresh_elite_controls()
 	selected_monster = id
 	transcend_placement = false
 	action_notice.text = "소환 선택: %s · 전장 터치로 배치" % String(MONSTERS.get_monster(id).get("name",id))
@@ -795,6 +873,7 @@ func _use_skill(id: String) -> void:
 	if not ended and not connection_waiting and not client.reconnecting:
 		client.command("skill",{"id":id,"direction":skill_direction if id == "line_assault" else ""})
 func _select_transcendence() -> void:
+	selected_elite = -1; _refresh_elite_controls()
 	transcend_placement = true
 	action_notice.text = "초월 소환 위치를 전장에서 터치해 주세요."
 func _select_held(id: String,number: int) -> void:
@@ -1100,7 +1179,9 @@ func _event(event: Dictionary) -> void:
 				if mana_value != hud_mana:
 					hud_mana = mana_value
 			_update_holds(event.augment_holds)
-			if role == "demon": _update_demon_controls(event)
+			if role == "demon":
+				_update_demon_controls(event)
+				_update_elite_ui(event.elite_choice.candidates,event.elite_cards)
 		"result":
 			if event.get("match","") != client.match_id or ended: return
 			if event.has("feedback"): view.feedback.consume(event.feedback,event.get("feedback_cursor",null),event.get("tick",null))
@@ -1174,7 +1255,10 @@ func _prepare_match(event: Dictionary,serial: int) -> void:
 	local_preparing = false; loading.show_phase("waiting",1.0)
 	client.send({"op":"ready","match":client.match_id})
 func _set_controls(enabled: bool) -> void:
-	if ended: _clear_chest_notice()
+	if ended:
+		_clear_chest_notice()
+		if elite_panel != null: elite_panel.hide()
+		for button in elite_buttons: button.hide()
 	enabled = enabled and not local_preparing and not waiting_for_start
 	_refresh_connection_test_controls()
 	if not enabled: movement = Vector2.ZERO
@@ -1184,6 +1268,7 @@ func _set_controls(enabled: bool) -> void:
 	if role == "demon":
 		for index in summon_buttons.size(): summon_buttons[index].disabled = not enabled or summon_mana + 0.001 < float(summon_costs.get(summon_ids[index],MONSTERS.get_base_cost(summon_ids[index])))
 	if hold_popup != null: hold_popup.set_controls(enabled and not connection_waiting and not client.reconnecting)
+	if elite_panel != null: _refresh_elite_controls()
 	if role == "demon":
 		for button in skill_row.get_children(): button.disabled = not enabled or button.disabled
 		if transcend_button != null: transcend_button.disabled = not enabled or transcend_button.disabled

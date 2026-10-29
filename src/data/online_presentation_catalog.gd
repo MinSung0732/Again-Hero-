@@ -1,4 +1,5 @@
 extends RefCounted
+const ELITE_CARD_FRAME := "res://assets/art/UI/battle_hud_v2/elite_card_frame.png"
 ## Wire-only presentation policy; combat sizes/anchors come from live visuals.
 const MAX_COMMANDS := 128
 const MAX_ACTORS := 216
