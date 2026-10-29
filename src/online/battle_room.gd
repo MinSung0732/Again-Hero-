@@ -78,7 +78,7 @@ func prepare() -> void:
 	battle.hero.configure_battlefield(battle.current_map_size)
 	battle.hero.position = battle.current_map_size * 0.5
 	var field = battle.get_node_or_null("Stage1Battlefield")
-	if field != null: field.configure(battle.current_stage_id,battle.current_map_size)
+	if field != null: field.configure(battle.current_stage_id,battle.current_map_size,map_data.theme)
 	battle.run_time_limit_seconds = float(map_data.duration_seconds)
 	battle.run_metrics.reset(battle.run_time_limit_seconds,int(battle.hero.current_hp),int(battle.hero.max_hp))
 	var modifiers: Dictionary = map_data.modifiers
@@ -86,7 +86,7 @@ func prepare() -> void:
 	battle.command_power = RULES.OPENING_MANA
 	battle.command_regen_per_second = RULES.MANA_PER_SECOND * float(modifiers.get("command_regen_multiplier",1.0))
 	battle.set_allowed_monster_ids(roster)
-	battlefield_info = {"stage":battle.current_stage_id,"bounds":[battle.current_map_size.x,battle.current_map_size.y],"map":map_id}
+	battlefield_info = {"stage":battle.current_stage_id,"bounds":[battle.current_map_size.x,battle.current_map_size.y],"map":map_id,"theme":map_data.theme}
 	battle.online_visual_entity_exited.connect(presentation.forget_node)
 	battle.online_combat_feedback.connect(_feedback)
 	battle.online_cast_feedback.connect(func(cue: String,point: Vector2):

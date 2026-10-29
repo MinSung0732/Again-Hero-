@@ -52,8 +52,9 @@ static func _fields_valid(command: Array) -> bool:
 		if command[index] < 0 or command[index] > 1: return false
 	return true
 static func battlefield_valid(value: Variant) -> bool:
-	if not value is Dictionary or value.size() not in [2,3] or not value.get("stage",null) is String or not value.get("bounds",null) is Array or value.bounds.size() != 2: return false
-	if value.size() == 3 and not value.has("map"): return false
+	if not value is Dictionary or not value.get("stage",null) is String or not value.get("bounds",null) is Array or value.bounds.size() != 2: return false
+	for key in value:
+		if key not in ["stage","bounds","map","theme"]: return false
 	if value.has("map") and preload("res://src/data/ranked_map_catalog.gd").get_map(String(value.map)).is_empty(): return false
 	var stages := preload("res://src/data/stage_catalog.gd")
 	if not stages.STAGES.has(value.stage): return false

@@ -33,6 +33,7 @@ const TILE_ROOT := "res://assets/art/UI/tiles"
 const FLOOR_ROOT := TILE_ROOT + "/again_hero_A_48_black_grid"
 const WALL_ROOT := TILE_ROOT + "/again_hero_B_walls"
 const OBJECT_ROOT := TILE_ROOT + "/again_hero_C_objects"
+const THEMES := preload("res://src/data/battlefield_theme_catalog.gd")
 
 const TEXTURE_PATHS := {
 	"illustrated_floor": "res://assets/art/UI/battle_castle_v3/flagstone_floor.png",
@@ -83,6 +84,7 @@ var render_only := false
 var async_textures_complete := false
 var current_stage_number := 1
 var textures: Dictionary = {}
+var theme_id := "castle"
 var background_decor_layer: Node2D
 var collision_layer_root: Node2D
 var depth_prop_roots: Array[Node2D] = []
@@ -136,28 +138,40 @@ func _begin_configuration(stage_id: String, map_size: Vector2) -> void:
 	)
 
 
-func configure(stage_id: String, map_size: Vector2) -> void:
+func _set_theme(theme: String) -> void:
+	var selected := theme if theme in THEMES.ids() else "castle"
+	if theme_id != selected:
+		theme_id = selected
+		textures.clear()
+		async_textures_complete = false
+
+func configure(stage_id: String, map_size: Vector2, theme: String = "castle") -> void:
+	_set_theme(theme)
 	_begin_configuration(stage_id,map_size)
 	if not stage_active: return
 	_ensure_textures()
 	_finish_configuration()
 
 func _finish_configuration() -> void:
-	_build_floor_damage_paths()
+	if THEMES.get_theme(theme_id).floor_damage: _build_floor_damage_paths()
+	else: floor_damage_paths.clear()
 	_build_castle_decor()
 	queue_redraw()
 
-func configure_async(stage_id: String,map_size: Vector2,current: Callable,progress: Callable) -> bool:
+func configure_async(stage_id: String,map_size: Vector2,current: Callable,progress: Callable,theme: String = "castle") -> bool:
+	_set_theme(theme)
 	_begin_configuration(stage_id,map_size)
 	if not stage_active: return true
 	var policy := preload("res://src/data/online_loading_catalog.gd")
 	if not async_textures_complete:
 		textures.clear()
-		var total := TEXTURE_PATHS.size()+policy.CARPETS.size()
+		var theme_data: Dictionary = THEMES.get_theme(theme_id)
+		var carpets: Array = policy.CARPETS if theme_data.strip_carpet else []
+		var total := TEXTURE_PATHS.size()+carpets.size()
 		var completed := 0
 		for key in TEXTURE_PATHS:
 			if not current.is_valid() or not current.call(): return false
-			var path: String = TEXTURE_PATHS[key]
+			var path: String = theme_data.overrides.get(key,TEXTURE_PATHS[key])
 			var resource: Texture2D
 			var warmup := get_node_or_null("/root/PresentationWarmup")
 			if warmup != null: resource = warmup.get_texture(path)
@@ -176,7 +190,7 @@ func configure_async(stage_id: String,map_size: Vector2,current: Callable,progre
 			if resource != null: textures[key] = resource
 			completed += 1; progress.call(float(completed)/total)
 			await get_tree().process_frame
-		for key in policy.CARPETS:
+		for key in carpets:
 			if not current.is_valid() or not current.call(): return false
 			var carpet := _texture(key)
 			if carpet != null:
@@ -233,8 +247,9 @@ func _clear_depth_props() -> void:
 func _ensure_textures() -> void:
 	if not textures.is_empty():
 		return
+	var theme_data: Dictionary = THEMES.get_theme(theme_id)
 	for key in TEXTURE_PATHS.keys():
-		var path := String(TEXTURE_PATHS[key])
+		var path := String(theme_data.overrides.get(key,TEXTURE_PATHS[key]))
 		var warmup := get_node_or_null("/root/PresentationWarmup")
 		if warmup != null:
 			var cached: Texture2D = warmup.get_texture(path)
@@ -255,6 +270,7 @@ func _ensure_textures() -> void:
 	# Original carpet tiles include a grey stone backing. Strip that backing
 	# once during covered scene preparation, not during drawing/combat, so
 	# torn holes reveal the actual floor rather than a mismatched square tile.
+	if not theme_data.strip_carpet: return
 	for key in preload("res://src/data/online_loading_catalog.gd").CARPETS:
 		var carpet := _texture(key)
 		if carpet == null:
@@ -274,6 +290,7 @@ func _texture(key: String) -> Texture2D:
 
 func _floor_texture_for_cell(column: int, row: int) -> Texture2D:
 	var base_floor := _texture("floor")
+	if not THEMES.get_theme(theme_id).floor_damage: return base_floor
 	var destruction := _destruction_level()
 	if destruction <= 0:
 		return base_floor
@@ -418,7 +435,7 @@ func _add_background_visual(
 	sprite.flip_h = flip_h
 	sprite.z_index = z_offset
 	sprite.rotation = rotation_radians
-	sprite.modulate = PROP_TINT
+	sprite.modulate = THEMES.get_theme(theme_id).prop_tint
 	background_decor_layer.add_child(sprite)
 	return sprite
 
@@ -449,7 +466,7 @@ func _add_depth_prop_visual(
 	sprite.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	sprite.scale = Vector2(scale_factor, scale_factor)
 	sprite.flip_h = flip_h
-	sprite.modulate = PROP_TINT
+	sprite.modulate = THEMES.get_theme(theme_id).prop_tint
 	sprite.position = Vector2(
 		0.0,
 		-float(texture.get_height()) * scale_factor * 0.5
