@@ -42,6 +42,7 @@ var icon_picker: RefCounted
 var banner_picker: RefCounted
 var rank_icons := {}
 var rank_labels := {}
+var rank_smalls := {}
 var rank_weekly: Label
 
 func install(owner: RefCounted, parent: Control) -> void:
@@ -202,6 +203,10 @@ func _build_rank_section(parent: Control) -> void:
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		rank_labels[role] = label
+		var small := _label(content, "", 16, Color("ada7c9"))
+		small.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		small.visible = false
+		rank_smalls[role] = small
 	rank_weekly = _label(section, RANK_ERROR, 22)
 	rank_weekly.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
@@ -216,11 +221,19 @@ func _refresh_rank() -> void:
 		if not (state.get("mmr") is int or state.get("mmr") is float):
 			icon.texture = null
 			label.text = RANK_ERROR
+			rank_smalls[role].visible = false
 			continue
 		var tier_id := String(state.get("tier", ""))
 		var path := RANKED.icon_path(tier_id)
 		icon.texture = _texture(path) if not path.is_empty() else null
-		label.text = "%s\nMMR %d\n%d승 %d패 · 서버 %s" % [RANKED.display_name(tier_id), int(state.mmr), int(state.get("wins", 0)), int(state.get("losses", 0)), modes.rank_text(state)]
+		var lines: Dictionary = RANKED.card_lines(state)
+		label.text = "%s\n%s" % [lines.name, lines.score]
+		var small: Label = rank_smalls[role]
+		var details: Array[String] = []
+		if not String(lines.small).is_empty(): details.append(String(lines.small))
+		details.append(RANKED.record_text(state))
+		details.append("서버 %s" % modes.rank_text(state))
+		small.text = "\n".join(details); small.visible = true
 	var weekly := String(data.get("weekly_reward_tier", ""))
 	if weekly.is_empty() and not data.is_empty():
 		var demon: Dictionary = data.get("demon", {})

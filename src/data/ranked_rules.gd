@@ -83,3 +83,19 @@ static func local_preview_profile() -> Dictionary:
 	var mmr := int(data().get("initial_mmr", 1000))
 	var state := {"mmr":mmr,"tier":tier(mmr),"wins":0,"losses":0,"server_rank":0}
 	return {"demon":state.duplicate(),"hero":state.duplicate(),"weekly_reward_tier":tier(mmr),"local":true}
+
+## Compact card text: tier name + score. The hero title shows its server rank large and MMR small.
+static func card_lines(state: Dictionary) -> Dictionary:
+	var tier_id := String(state.get("tier", ""))
+	var mmr := int(state.get("mmr", 0))
+	var rank := int(state.get("server_rank", 0))
+	if tier_id == "hero" and rank > 0:
+		return {"name":display_name(tier_id), "score":"%d위" % rank, "small":"MMR %d" % mmr}
+	return {"name":display_name(tier_id), "score":"MMR %d" % mmr, "small":""}
+
+static func record_text(state: Dictionary) -> String:
+	var wins := int(state.get("wins", 0))
+	var losses := int(state.get("losses", 0))
+	var total := wins + losses
+	var rate := "-" if total == 0 else "%d%%" % roundi(100.0 * wins / total)
+	return "%d승 %d패 · 승률 %s" % [wins, losses, rate]

@@ -70,7 +70,7 @@ func run() -> void:
 	lobby._switch_tab("main")
 	await process_frame
 	view.toggle_ranked()
-	check(view.ranked_button.button_pressed and lobby.enter_stage_button.text == "매칭 연결 테스트", "ranked pressed and entry relabeled")
+	check(view.ranked_button.button_pressed and lobby.enter_stage_button.text == view.RANKED_ENTRY_TEXT, "ranked pressed and entry relabeled")
 	check(view.ranked_button.get_theme_stylebox("normal").bg_color == Color("523068"), "ranked skin follows toggle")
 	check(lobby.hero_name_label.text == "달빛마왕" and lobby.stage_status_label.text.contains("변동 없음"), "real nickname and no fabricated ranking")
 	var selected: int = lobby.selected_stage_index

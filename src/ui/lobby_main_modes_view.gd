@@ -14,6 +14,9 @@ const SUPABASE := preload("res://src/network/supabase_client.gd")
 const ART := "res://assets/art/UI/main_modes/"
 const RANK_ICON_SIZE := 128
 const RANK_ERROR := "랭크 정보를 불러올 수 없음"
+const RANKED_LOBBY_INFO := "랭크 맵 %d종 무작위 · 같은 티어 우선 매칭"
+const RANKED_ENTRY_TEXT := "랭크 매칭 시작"
+const MAPS := preload("res://src/data/ranked_map_catalog.gd")
 var idle_style: StyleBoxTexture
 var active_style: StyleBoxTexture
 var icons: Dictionary = {}
@@ -32,6 +35,8 @@ var ranked_profile_row: HBoxContainer
 var ranked_profile_card: PanelContainer
 var ranked_profile_icon: TextureRect
 var ranked_profile_label: Label
+var ranked_profile_score: Label
+var ranked_profile_small: Label
 var ranked_profile_client
 var ranked_profile_owner := ""
 var ranked_profile_data := {}
@@ -85,8 +90,17 @@ func install(host) -> void:
 	ranked_profile_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	ranked_profile_icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	ranked_profile_row.add_child(ranked_profile_icon)
-	ranked_profile_label = Label.new(); ranked_profile_label.add_theme_font_size_override("font_size",20)
-	ranked_profile_row.add_child(ranked_profile_label)
+	ranked_profile_row.add_theme_constant_override("separation",14)
+	var rank_text_column := VBoxContainer.new(); rank_text_column.alignment = BoxContainer.ALIGNMENT_CENTER
+	ranked_profile_row.add_child(rank_text_column)
+	ranked_profile_label = Label.new(); ranked_profile_label.add_theme_font_size_override("font_size",24)
+	rank_text_column.add_child(ranked_profile_label)
+	ranked_profile_score = Label.new(); ranked_profile_score.add_theme_font_size_override("font_size",30)
+	ranked_profile_score.add_theme_color_override("font_color",Color("ffd37a"))
+	rank_text_column.add_child(ranked_profile_score)
+	ranked_profile_small = Label.new(); ranked_profile_small.add_theme_font_size_override("font_size",16)
+	ranked_profile_small.add_theme_color_override("font_color",Color("ada7c9"))
+	rank_text_column.add_child(ranked_profile_small)
 	ranked_profile_client = SUPABASE.new(); lobby.add_child(ranked_profile_client)
 	ranked_profile_client.request_completed.connect(_on_ranked_profile)
 	notice = AcceptDialog.new()
@@ -269,21 +283,29 @@ func _show_ranked_profile() -> void:
 	if ranked_profile_data.is_empty():
 		ranked_profile_icon.texture = null
 		ranked_profile_label.text = RANK_ERROR
+		_set_rank_detail("", "")
 		return
 	var state: Dictionary = ranked_profile_data.get(perspective, {})
-	var other: Dictionary = ranked_profile_data.get("hero" if perspective == "demon" else "demon", {})
 	if not (state.get("mmr",null) is int or state.get("mmr",null) is float):
 		ranked_profile_icon.texture = null
 		ranked_profile_label.text = RANK_ERROR
+		_set_rank_detail("", "")
 		return
 	var tier_id := String(state.get("tier",""))
 	var icon_path := RANKED.icon_path(tier_id)
 	ranked_profile_icon.texture = load(icon_path) if not icon_path.is_empty() and ResourceLoader.exists(icon_path) else null
-	ranked_profile_label.text = "%s · %s\nMMR %d\n%s\n%d승 %d패 · 서버 %s" % ["마왕" if perspective == "demon" else "용사",RANKED.display_name(tier_id),int(state.mmr),RANKED.next_tier_text(int(state.mmr)),int(state.get("wins",0)),int(state.get("losses",0)),rank_text(state)]
-	if other.get("mmr",null) is int or other.get("mmr",null) is float:
-		ranked_profile_label.text += "\n%s · %s · MMR %d" % ["용사" if perspective == "demon" else "마왕",RANKED.display_name(String(other.get("tier",""))),int(other.mmr)]
-	if bool(ranked_profile_data.get("local", false)): ranked_profile_label.text += "\n" + RANKED.LOCAL_PREVIEW_NOTE
+	var lines: Dictionary = RANKED.card_lines(state)
+	ranked_profile_label.text = String(lines.name)
+	var small := String(lines.small)
+	if bool(ranked_profile_data.get("local", false)): small = RANKED.LOCAL_PREVIEW_NOTE if small.is_empty() else small + "\n" + RANKED.LOCAL_PREVIEW_NOTE
+	_set_rank_detail(String(lines.score), small)
 	ranked_profile_row.show()
+
+func _set_rank_detail(score: String, small: String) -> void:
+	if ranked_profile_score != null:
+		ranked_profile_score.text = score; ranked_profile_score.visible = not score.is_empty()
+	if ranked_profile_small != null:
+		ranked_profile_small.text = small; ranked_profile_small.visible = not small.is_empty()
 
 static func rank_text(state: Dictionary) -> String:
 	var rank := int(state.get("server_rank", 0))
@@ -403,12 +425,12 @@ func refresh() -> void:
 	lobby.portrait_texture.self_modulate = Color.WHITE
 	lobby.portrait_badge.visible = false
 	lobby.portrait_texture.get_node("StageLock").visible = false
-	lobby.stage_description_label.text = "견습마도사 고정 · 3분 생존 · 서버 연결 필요"
+	lobby.stage_description_label.text = RANKED_LOBBY_INFO % MAPS.MAPS.size()
 	lobby.stage_status_label.text = "랭킹 점수\n변동 없음"
 	lobby.stage_reward_label.text = "테스트 보상\n없음"
 	lobby.stage_repeat_reward_label.text = "대전 방식\n1 vs 1"
 	if lobby.stamina_view != null: lobby.stamina_view.configure_entry(true,0)
-	lobby.enter_stage_button.text = "매칭 연결 테스트"
+	lobby.enter_stage_button.text = RANKED_ENTRY_TEXT
 	lobby.enter_stage_button.disabled = false
 	var navigable := false
 	lobby.prev_stage_button.disabled = not navigable
