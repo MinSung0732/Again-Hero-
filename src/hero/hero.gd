@@ -4028,7 +4028,7 @@ func _get_battlefield_movement_bounds() -> Rect2:
 		var field := battle.get_node_or_null("Stage1Battlefield")
 		if field != null:
 			collision_mask |= SAGE_PHASE_BOUNDARY_COLLISION_MASK
-			minimum.y = field.TOP_WALL_COLLISION_BOTTOM + field.TOP_WALL_COLLISION_HEIGHT * 0.5 + FIELD_MARGIN
+			minimum.y = field.get_top_wall_collision_bottom() + 28.0
 	return Rect2(minimum, battlefield_size - Vector2.ONE * FIELD_MARGIN - minimum)
 
 

@@ -24,8 +24,5 @@ static func ids() -> Array[String]:
 	for entry in MAPS: result.append(entry.id)
 	return result
 
-static func favor_label(favor: String) -> String:
-	match favor:
-		"hero": return "용사 유리"
-		"demon": return "마왕 유리"
-		_: return "균형"
+static func favor_label(_favor: String) -> String:
+	return "랭킹 매칭"

@@ -18,7 +18,7 @@ func run():
 	battle.hero_player_mode = true
 	var hero = battle.hero
 	var bounds: Rect2 = hero._get_battlefield_movement_bounds()
-	check(bounds.position.y == 357.0,"real castle wall + hero clearance is 357, not item margin 150")
+	check(is_equal_approx(bounds.position.y, battle.get_node("Stage1Battlefield").get_top_wall_collision_bottom() + 28.0),"real castle wall + hero clearance")
 	for point in [Vector2(-100,-100),Vector2(300,150),Vector2(99999,99999),Vector2(200,500),bounds.position,bounds.end]:
 		var safe: Vector2 = placement.clamp_local(battle,point)
 		check(inside(safe,bounds),"all four edges are reachable")

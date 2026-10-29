@@ -20,6 +20,7 @@ func run() -> void:
 	var field = FIELD.new(); parent.add_child(field)
 	field.configure("stage_1",Vector2(3200,3200))
 	check(field.depth_prop_roots.size() == 19 and field.collision_layer_root.get_child_count() == 20 and field.background_decor_layer.get_child_count() == 78, "castle baseline")
+	check_top_wall(field, "castle")
 	check(field.textures.size() == FIELD.TEXTURE_PATHS.size(), "castle texture keys")
 	for key in FIELD.TEXTURE_PATHS:
 		check(field.textures.has(key), "castle key " + key)
@@ -37,6 +38,7 @@ func run() -> void:
 		var positions := []
 		for size in [2560.0, 4000.0]:
 			field.configure("stage_1", Vector2(size,size), id)
+			check_top_wall(field, id)
 			var actual := []
 			var depth_index := 0
 			var solids := 0
@@ -47,6 +49,8 @@ func run() -> void:
 					if mirrored == 1: pos.x = size - pos.x
 					if item.kind == "solid":
 						solids += 1
+						check(item.collision.x <= field.textures[item.key].get_width() * item.scale * 0.6, "solid width " + id + " " + item.key)
+						check(item.collision.y >= 30 and item.collision.y <= 45, "solid height " + id + " " + item.key)
 						check(pos.distance_to(Vector2.ONE * size * 0.5) >= 300.0, "hero start blocked " + id)
 					if item.kind == "ground":
 						var found := false
@@ -87,3 +91,10 @@ func run() -> void:
 	parent.queue_free()
 	print("PASS battlefield themes")
 	quit()
+
+func check_top_wall(field, id: String) -> void:
+	var bottom: float = FIELD.TOP_WALL_Y + field.textures.wall_large.get_height() * FIELD.PERIMETER_WALL_SCALE * 0.5
+	check(is_equal_approx(field.get_top_wall_collision_bottom(), bottom), "wall image bottom " + id)
+	var boundary: StaticBody2D = field.collision_layer_root.get_child(0)
+	var shape: RectangleShape2D = boundary.get_child(0).shape
+	check(boundary.collision_layer == FIELD.BOUNDARY_COLLISION_LAYER and is_equal_approx(boundary.position.y + shape.size.y * 0.5, bottom), "wall collision bottom " + id)

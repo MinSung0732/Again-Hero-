@@ -26,12 +26,12 @@ func run():
 	for point in [Vector2(-100,-100),Vector2(99999,-1),Vector2(-1,99999),Vector2(99999,99999)]:
 		dummy.position = point
 		dummy._physics_process(1.0/60.0)
-		check(dummy.position.x >= 72 and dummy.position.y >= 357 and dummy.position.x <= battle.current_map_size.x-72 and dummy.position.y <= battle.current_map_size.y-72, "dummy contained at every corner after real action path")
+		check(dummy.position.x >= 72 and dummy.position.y >= dummy._get_battlefield_movement_bounds().position.y and dummy.position.x <= battle.current_map_size.x-72 and dummy.position.y <= battle.current_map_size.y-72, "dummy contained at every corner after real action path")
 	check((dummy.collision_mask & 8) != 0, "hard wall collision restored")
 	dummy.petrify_timer = 1.0
 	dummy.petrify_anchor = Vector2(-100,-100)
 	dummy._physics_process(1.0/60.0)
-	check(dummy.position.y >= 357 and dummy.petrify_anchor == dummy.global_position, "petrify cannot restore an outside anchor")
+	check(dummy.position.y >= dummy._get_battlefield_movement_bounds().position.y and dummy.petrify_anchor == dummy.global_position, "petrify cannot restore an outside anchor")
 	dummy.petrify_timer = 0
 	for id in ["zeus","bulgasal"]:
 		var monster = preload("res://src/data/monster_catalog.gd").get_scene(id).instantiate()
@@ -69,7 +69,7 @@ func run():
 	for point in [Vector2(-100,-100),Vector2(99999,99999)]:
 		hero.position = point
 		hero._physics_process(1.0/60.0)
-		check(hero.position.x >= 72 and hero.position.y >= 357 and hero.position.x <= normal.current_map_size.x-72 and hero.position.y <= normal.current_map_size.y-72, "ordinary dungeon hero contained")
+		check(hero.position.x >= 72 and hero.position.y >= hero._get_battlefield_movement_bounds().position.y and hero.position.x <= normal.current_map_size.x-72 and hero.position.y <= normal.current_map_size.y-72, "ordinary dungeon hero contained")
 	normal.free()
 	print("MOVEMENT_PRESENTATION_BOUNDS: ", "FAIL" if failed else "PASS")
 	quit(1 if failed else 0)

@@ -14,8 +14,6 @@ const PERIMETER_WALL_SCALE := 0.96
 const PERIMETER_WALL_OVERLAP := 44.0
 const PERIMETER_OUTSET := 58.0
 const TOP_WALL_Y := 62.0
-const TOP_WALL_COLLISION_BOTTOM := 190.0
-const TOP_WALL_COLLISION_HEIGHT := 190.0
 
 const THRONE_GROUND_Y := 560.0
 const THRONE_BRAZIER_OFFSET_X := 470.0
@@ -605,6 +603,11 @@ func _wall_key_for_slot(slot_index: int, salt: int) -> String:
 	return "wall_broken_%d" % mild_variant
 
 
+func get_top_wall_collision_bottom() -> float:
+	var wall_texture := _texture("wall_large")
+	return TOP_WALL_Y + (float(wall_texture.get_height()) * PERIMETER_WALL_SCALE * 0.5 if wall_texture != null else 0.0)
+
+
 func _build_top_wall() -> void:
 	var wall_texture := _texture("wall_large")
 	if wall_texture == null:
@@ -619,7 +622,7 @@ func _build_top_wall() -> void:
 	var slot_index := 0
 
 	# The upper wall remains inside the arena for the interior-castle read.
-	# Its full visual band is solid (0..190 px), so actors cannot occupy the
+	# Its visual band is solid down to the image bottom, so actors cannot occupy the
 	# narrow strip behind the wall and get trapped there.
 	while x < battlefield_size.x + panel_width * 0.5:
 		_add_background_visual(
@@ -633,11 +636,11 @@ func _build_top_wall() -> void:
 	_add_collision(
 		Vector2(
 			battlefield_size.x * 0.5,
-			TOP_WALL_COLLISION_BOTTOM
+			get_top_wall_collision_bottom()
 		),
 		Vector2(
 			battlefield_size.x,
-			TOP_WALL_COLLISION_HEIGHT
+			get_top_wall_collision_bottom()
 		),
 		BOUNDARY_COLLISION_LAYER
 	)

@@ -25,6 +25,7 @@ func check(value: bool, message: String) -> void:
 func _initialize() -> void: run.call_deferred()
 func run() -> void:
 	check(not GUIDE.sections().is_empty(), "ranked guide renders")
+	check(str(GUIDE.sections()).contains("랭킹 매칭"), "ranked guide label")
 	var field = FIELD.new(); root.add_child(field)
 	var room = ROOM.new(); root.add_child(room)
 	room.battle = Battle.new(); root.add_child(room.battle)

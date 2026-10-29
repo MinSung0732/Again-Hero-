@@ -35,7 +35,9 @@ func run() -> void:
 	for index in 100:
 		check(MAPS.pick(rng).id in MAPS.ids(),"selected known map")
 	var guide_text := str(GUIDE.sections())
-	for entry in maps: check(guide_text.contains(entry.name),"guide map name")
+	for entry in maps:
+		check(guide_text.contains(entry.name),"guide map name")
+		check(MAPS.favor_label(entry.favor) == "랭킹 매칭" and guide_text.contains("%s · 랭킹 매칭 · %d분" % [entry.name, int(entry.duration_seconds) / 60]), "ranked label")
 	var server = SERVER.new(); root.add_child(server)
 	for entry in maps:
 		var room = ROOM.new(); room.map_id = entry.id; root.add_child(room); room.prepare()
@@ -43,6 +45,10 @@ func run() -> void:
 		check(room.battle.run_time_limit_seconds == float(entry.duration_seconds),"battle duration")
 		check(room.battle.current_map_size == entry.map_size,"map size")
 		check(room.battle.hero.battlefield_size == entry.map_size,"hero bounds")
+		var field = room.battle.get_node("Stage1Battlefield")
+		var wall_bottom: float = field.get_top_wall_collision_bottom()
+		var hero_top: float = room.battle.hero._get_battlefield_movement_bounds().position.y
+		check(hero_top <= wall_bottom + 40.0 and is_equal_approx(hero_top, wall_bottom + 28.0), "hero wall clearance " + entry.id)
 		check(is_equal_approx(room.battle.hero.exp_gain_multiplier,float(entry.modifiers.get("hero_exp_multiplier",1.0))),"hero EXP modifier")
 		check(is_equal_approx(room.battle.command_regen_per_second,4.0*float(entry.modifiers.get("command_regen_multiplier",1.0))),"mana regen modifier")
 		check(room.battlefield_info.map == entry.id,"battlefield map")
