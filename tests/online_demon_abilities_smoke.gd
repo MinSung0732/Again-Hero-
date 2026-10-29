@@ -9,7 +9,7 @@ func check(ok: bool,message: String) -> void:
 	if not ok: push_error(message); quit(1); assert(ok,message)
 func _initialize() -> void: run.call_deferred()
 func run() -> void:
-	check(RULES.VERSION==31 and SCENE != null,"matching protocol and client parse")
+	check(RULES.VERSION==32 and SCENE != null,"matching protocol and client parse")
 	var room = ROOM.new(); root.add_child(room)
 	room.set_loadouts({"hero_id":RULES.HERO},{"team_ids":["slime","spider","orc"],"skill_ids":["encirclement"],"transcendence_id":"zeus"})
 	room.prepare(); room.start()
@@ -22,6 +22,7 @@ func run() -> void:
 	check(room.apply("demon","skill",{"id":"encirclement"}),"loaded skill accepted")
 	check(float(battle.demon_ultimate_cooldowns.encirclement) > 0.0 and battle.demon_ultimate_charge < 100.0,"battle charges gauge and starts cooldown")
 	var skill_state: Dictionary = room.snapshot()
+	check(int(skill_state.max_command) == roundi(battle.max_command),"snapshot includes maximum command")
 	check(skill_state.demon_cooldowns.encirclement > 0.0 and not skill_state.demon_ready.encirclement and skill_state.demon_charge < skill_state.demon_charge_max,"cooldown and availability reach snapshot")
 	check(is_equal_approx(float(skill_state.summon_costs.slime),battle.get_monster_cost("slime")) and skill_state.demon_level == battle.demon_level,"live summon cost and demon progress reach snapshot")
 	check(not room.snapshot("hero").has("summon_costs") and not room.snapshot("hero").has("demon_exp"),"private lower HUD state stays with demon")

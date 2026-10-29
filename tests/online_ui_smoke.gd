@@ -427,7 +427,26 @@ func run() -> void:
 		check(scene.metrics_panel.get_parent() == scene and scene.metrics_panel not in scene.setup_controls,"metrics overlay survives setup controls hiding")
 		scene._show_match_layout()
 		if role == "demon":
+			var toggle: CheckButton = scene.bottom_bar.get_node("PlacementModeToggle")
+			check(toggle.visible and not toggle.button_pressed and toggle.text == "수동 배치" and toggle.mouse_filter == Control.MOUSE_FILTER_IGNORE and toggle.focus_mode == Control.FOCUS_NONE,"manual placement toggle is visible and fixed")
+			check(scene.bottom_bar.get_node("Status").text.contains("수동 배치만"),"manual placement status")
+			check(scene.transcend_button.get_parent() == scene and scene.transcend_button.has_node("PixelAssetFrame"),"transcend button uses solo pixel frame outside bottom bar")
+			scene._build_summon_cards(["slime","spider"])
+			var icon_y: float = scene.summon_buttons[1].get_node("Icon").position.y
+			scene._select_monster("spider")
+			check(scene.summon_buttons[0].modulate == Color.WHITE and scene.summon_buttons[1].modulate == scene.RULES.SELECTED_CARD_COLOR,"only selected monster highlighted")
+			check(is_equal_approx(scene.summon_buttons[1].get_node("Icon").position.y,icon_y-scene.RULES.SELECTED_CARD_RAISE),"selected card raised")
+			await process_frame
+			check(is_equal_approx(scene.summon_buttons[1].get_node("Icon").position.y,icon_y-scene.RULES.SELECTED_CARD_RAISE),"selected card stays raised after layout")
+			scene.summon_buttons[1].disabled = true
+			check(scene.summon_buttons[1].modulate == scene.RULES.SELECTED_CARD_COLOR,"disabled selection remains highlighted")
+			scene._update_summon_cards(20.0,{},150.0)
+			check(scene.bottom_bar.get_node("CommandBar").max_value == 150.0,"snapshot command maximum displayed")
 			scene._update_elite_ui([],[[1,"slime"],[2,"spider"],[3,"orc"]])
+			scene._select_elite(0)
+			check(scene.summon_buttons[1].modulate == Color.WHITE and scene.bottom_bar.get_node("Status").text == scene.RULES.ELITE_STATUS,"elite placement clears monster highlight")
+			scene._select_transcendence()
+			check(scene.summon_buttons[1].modulate == Color.WHITE and scene.bottom_bar.get_node("Status").text == scene.RULES.TRANSCEND_STATUS,"transcend placement clears monster highlight")
 			for dimensions in [Vector2i(1080,1920),Vector2i(1536,1920)]:
 				root.size = dimensions; await process_frame; await process_frame
 				for card in scene.elite_buttons:

@@ -27,6 +27,7 @@ const HERO_HUD := preload("res://src/ui/hero_survival_hud.gd")
 const HERO_VOICE := preload("res://src/audio/hero_voice_player.gd")
 const HERO_VOICE_DATA := preload("res://src/data/hero_voice_catalog.gd")
 const PIXEL_SKIN := preload("res://src/ui/pixel_panel_skin.gd")
+const PIXEL_FRAME := preload("res://src/ui/battle_pixel_frame_assembler.gd")
 const STAGES := preload("res://src/data/stage_catalog.gd")
 const MAPS := preload("res://src/data/ranked_map_catalog.gd")
 const HOLD_POPUP := preload("res://src/ui/augment_hold_popup.gd")
@@ -120,6 +121,7 @@ var skill_buttons := {}
 var summon_ids: Array[String] = []
 var summon_buttons: Array[Button] = []
 var summon_mana := -1.0
+var summon_maximum := -1.0
 var summon_costs := {}
 var summon_cost_signature := ""
 var skill_state_signature := ""
@@ -278,9 +280,10 @@ func _ready() -> void:
 		if role == "demon" and not ended and not local_preparing and not waiting_for_start and not connection_waiting and not client.reconnecting:
 			if selected_elite >= 0:
 				if client.command("elite_summon",{"serial":selected_elite,"x":point.x,"y":point.y}):
-					selected_elite = -1; _refresh_elite_controls()
+					selected_elite = -1; _refresh_elite_controls(); _refresh_summon_selection()
 			elif transcend_placement:
-				if client.command("transcend",{"point":[point.x,point.y]}): transcend_placement = false
+				if client.command("transcend",{"point":[point.x,point.y]}):
+					transcend_placement = false; _refresh_summon_selection()
 			else: client.command("summon",{"id":selected_monster,"point":[point.x,point.y]}))
 	if role == "demon":
 		hero_build_toggle = _info_button("용사 빌드",_toggle_hero_build)
@@ -351,11 +354,21 @@ func _ready() -> void:
 		skill_row = demon_panel.get_node("UltimateButtons")
 		for button in action_row.get_children(): button.hide()
 		for button in skill_row.get_children(): button.hide()
-		bottom_bar.get_node("PlacementModeToggle").hide()
+		var placement_toggle := bottom_bar.get_node("PlacementModeToggle") as CheckButton
+		placement_toggle.button_pressed = false; placement_toggle.text = "수동 배치"
+		placement_toggle.mouse_filter = Control.MOUSE_FILTER_IGNORE; placement_toggle.focus_mode = Control.FOCUS_NONE
+		var placement_status := bottom_bar.get_node("Status") as Label
+		placement_status.text = RULES.MANUAL_STATUS if RULES.SUMMON_PLACEMENT == "manual" else ""
+		placement_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		placement_status.add_theme_font_size_override("font_size",14)
 		transcend_button = Button.new(); transcend_button.text = "초월 소환 · 위치 지정"
-		transcend_button.position = Vector2(810,14); transcend_button.size = Vector2(218,56)
-		transcend_button.pressed.connect(_select_transcendence); bottom_bar.add_child(transcend_button)
-		TOP_LAYOUT.install_panels([transcend_button])
+		transcend_button.anchor_left = 1.0; transcend_button.anchor_right = 1.0
+		transcend_button.anchor_top = 0.63; transcend_button.anchor_bottom = 0.63
+		transcend_button.offset_left = -156; transcend_button.offset_right = -12
+		transcend_button.offset_bottom = 156; transcend_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		transcend_button.pressed.connect(_select_transcendence); add_child(transcend_button)
+		PIXEL_FRAME.clear_button_style(transcend_button)
+		PIXEL_FRAME.add_split_frame(transcend_button,"res://assets/art/UI/03_middle_right_panel",0.25,"res://assets/art/UI/05_right_bars/part_02.png",18)
 		transcend_button.disabled = true; transcend_button.hide()
 		ACTION_CHOICES.ensure_buttons(demon_panel.get_node("ActionChoiceGrid"),direction_buttons,skill_row.get_child(0),_on_direction_choice,5)
 	if role == "hero":
@@ -677,6 +690,11 @@ func _build_summon_cards(roster: Array) -> void:
 		for index in roster.size():
 			if String(roster[index]) != summon_ids[index]: same = false; break
 		if same: return
+	for button in summon_buttons:
+		if bool(button.get_meta("selected_raised",false)):
+			for child in button.get_children():
+				if child is Control: child.position.y += RULES.SELECTED_CARD_RAISE
+			button.set_meta("selected_raised",false)
 	summon_ids.clear()
 	for id in roster: summon_ids.append(String(id))
 	var template := action_row.get_node("Slot1") as Button
@@ -710,15 +728,31 @@ func _build_summon_cards(roster: Array) -> void:
 		button.pressed.connect(_select_monster.bind(id))
 		summon_buttons.append(button)
 	if not summon_ids.is_empty(): selected_monster = summon_ids[0]
+	_refresh_summon_selection(false)
 	_layout_top_bar()
 
-func _update_summon_cards(mana: float,costs: Dictionary) -> void:
+func _refresh_summon_selection(show_selected: bool = true) -> void:
+	for index in summon_buttons.size():
+		var selected := selected_elite < 0 and not transcend_placement and summon_ids[index] == selected_monster
+		summon_buttons[index].modulate = RULES.SELECTED_CARD_COLOR if selected else Color.WHITE
+		var button := summon_buttons[index]
+		if bool(button.get_meta("selected_raised",false)) != selected:
+			for child in button.get_children():
+				if child is Control: child.position.y += -RULES.SELECTED_CARD_RAISE if selected else RULES.SELECTED_CARD_RAISE
+			button.set_meta("selected_raised",selected)
+	var label := bottom_bar.get_node("Status") as Label
+	if selected_elite >= 0: label.text = RULES.ELITE_STATUS
+	elif transcend_placement: label.text = RULES.TRANSCEND_STATUS
+	elif show_selected and not selected_monster.is_empty(): label.text = RULES.SELECTED_STATUS % String(MONSTERS.get_monster(selected_monster).get("name",selected_monster))
+	else: label.text = RULES.MANUAL_STATUS if RULES.SUMMON_PLACEMENT == "manual" else ""
+
+func _update_summon_cards(mana: float,costs: Dictionary,maximum: float = 100.0) -> void:
 	var signature := JSON.stringify(costs)
-	if is_equal_approx(mana,summon_mana) and signature == summon_cost_signature: return
+	if is_equal_approx(mana,summon_mana) and is_equal_approx(maximum,summon_maximum) and signature == summon_cost_signature: return
 	summon_mana = mana
+	summon_maximum = maximum
 	summon_costs = costs
 	summon_cost_signature = signature
-	var maximum := 100.0
 	var label := bottom_bar.get_node("CommandLabel") as Label
 	label.text = "지휘력 %d / %d" % [roundi(mana),roundi(maximum)]
 	var bar := bottom_bar.get_node("CommandBar") as ProgressBar
@@ -754,7 +788,7 @@ func _update_hero_slots(inventory: Dictionary) -> void:
 
 func _update_demon_controls(event: Dictionary) -> void:
 	rerolls_left = int(event.get("demon_rerolls_left",0)); reroll_limit = int(event.get("demon_reroll_limit",0))
-	_update_summon_cards(float(event.mana),event.summon_costs)
+	_update_summon_cards(float(event.mana),event.summon_costs,maxf(1.0,float(event.get("max_command",100))))
 	var skill_signature := JSON.stringify([event.get("demon_level",1),event.get("demon_exp",0.0),event.get("demon_exp_next",1.0),event.demon_charge,event.demon_charge_max,event.demon_cooldowns,event.demon_ready,event.transcend_ready,event.transcend_used,connection_waiting,waiting_for_start])
 	if skill_signature != skill_state_signature:
 		skill_state_signature = skill_signature
@@ -778,7 +812,8 @@ func _update_demon_controls(event: Dictionary) -> void:
 			cooldown_bar.visible = cooldown > 0.01; cooldown_bar.value = cooldown
 		transcend_button.disabled = connection_waiting or client.reconnecting or waiting_for_start or not event.transcend_ready or event.transcend_used
 		transcend_button.text = "초월 소환 완료" if event.transcend_used else "초월 소환 · 위치 지정" if event.transcend_ready else "초월 해금 대기"
-		if event.transcend_used: transcend_placement = false
+		if event.transcend_used and transcend_placement:
+			transcend_placement = false; _refresh_summon_selection()
 
 func _elite_icon(id: String) -> Texture2D:
 	var path := String(MONSTERS.get_monster(id).get("card_icon_path", ""))
@@ -822,7 +857,8 @@ func _update_elite_ui(candidates: Array, cards: Array) -> void:
 				var card: Array = elite_cards[index]; var id := String(card[1])
 				button.get_node("Icon").texture = _elite_icon(id); button.get_node("Name").text = _elite_name(id)
 				if int(card[0]) == selected_elite: found = true
-		if not found: selected_elite = -1
+		if not found and selected_elite >= 0:
+			selected_elite = -1; _refresh_summon_selection()
 	_refresh_elite_controls()
 
 func _refresh_elite_controls() -> void:
@@ -843,11 +879,13 @@ func _choose_elite(index: int) -> void:
 func _select_elite(index: int) -> void:
 	if index >= elite_cards.size(): return
 	selected_elite = int(elite_cards[index][0]); transcend_placement = false; _refresh_elite_controls()
+	_refresh_summon_selection()
 
 func _select_monster(id: String) -> void:
 	selected_elite = -1; _refresh_elite_controls()
 	selected_monster = id
 	transcend_placement = false
+	_refresh_summon_selection()
 	action_notice.text = "소환 선택: %s · 전장 터치로 배치" % String(MONSTERS.get_monster(id).get("name",id))
 func _select_skill_direction(direction: String) -> void:
 	skill_direction = direction
@@ -875,6 +913,7 @@ func _use_skill(id: String) -> void:
 func _select_transcendence() -> void:
 	selected_elite = -1; _refresh_elite_controls()
 	transcend_placement = true
+	_refresh_summon_selection()
 	action_notice.text = "초월 소환 위치를 전장에서 터치해 주세요."
 func _select_held(id: String,number: int) -> void:
 	if not ended and not connection_waiting and not client.reconnecting:

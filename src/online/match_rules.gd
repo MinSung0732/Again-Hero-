@@ -1,11 +1,17 @@
 extends RefCounted
 ## Experience orb snapshots require matching protocol 28 peers.
-const VERSION := 31
+const VERSION := 32
 const ELITE_CARD_LIMIT := 3
 const HINT_DETAIL := "role" # "role" or "monster"
 const ROLE_HINT_LABELS := {"melee":"근접"}
 const TARGET_HINT_LABELS := {"demon":"마왕 운영","all_monsters":"모든 몬스터"}
 const SUMMON_PLACEMENT := "manual" # 랭크전 마왕 소환은 수동 배치만, 자동 배치 금지.
+const MANUAL_STATUS := "랭킹전 · 수동 배치만 가능 · 카드 선택 후 전장 터치"
+const SELECTED_STATUS := "%s 선택됨 · 전장을 터치"
+const ELITE_STATUS := "엘리트 소환 위치를 전장에서 터치"
+const TRANSCEND_STATUS := "초월 소환 위치를 전장에서 터치"
+const SELECTED_CARD_COLOR := Color(1.5,1.3,0.65)
+const SELECTED_CARD_RAISE := 6.0
 const ID := "duel_smoke_v1"
 const HERO := "ranged_rookie"
 const ROSTER := ["slime","spider","orc","bomb_rat","skeleton_archer"]
