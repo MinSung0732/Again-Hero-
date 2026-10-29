@@ -31,7 +31,8 @@ func run() -> void:
 		check(not prop.visible,"static prop drawn only by merged mirror")
 		var command: Array = view.battlefield.prop_commands[index]
 		check(is_equal_approx(float(command[21]),prop.position.y),"UI offset removed from ground sort anchor")
-		check(is_equal_approx(float(command[10]),prop.position.x),"UI offset removed from prop world X")
+		var sprite: Sprite2D = prop.get_child(0)
+		check(is_equal_approx(float(command[10]),prop.position.x + sprite.position.x),"UI offset removed from prop world X")
 	var builds: int = view.battlefield.rebuilds
 	for index in 10: check(view.prepare_battlefield(room.battlefield_info),"repeat descriptor accepted")
 	check(view.battlefield.rebuilds==builds,"unchanged snapshots never rebuild static scene")

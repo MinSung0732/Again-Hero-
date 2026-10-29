@@ -35,6 +35,13 @@ func run() -> void:
 	for theme in ["cursed_swamp", "sunlit_meadow"]:
 		field.configure("stage_1", Vector2(3200,3200), theme)
 		room.field_areas = field.effect_areas
+		for item in THEMES.get_theme(theme).layout:
+			if not item.has("effect"): continue
+			var expected: Vector2 = item.pos * 3200.0
+			var found := false
+			for area in room.field_areas:
+				if area.id == item.effect and area.position.is_equal_approx(expected) and area.radius == item.radius: found = true
+			check(found, "effect position " + theme + " " + item.effect)
 		var count: int = room.field_areas.size()
 		for id in THEMES.EFFECTS:
 			var area: Dictionary = {}

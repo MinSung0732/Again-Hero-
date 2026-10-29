@@ -3,6 +3,8 @@ const FIELD := preload("res://src/battle/stage1_battlefield.gd")
 const THEMES := preload("res://src/data/battlefield_theme_catalog.gd")
 const MAPS := preload("res://src/data/ranked_map_catalog.gd")
 const CARPETS := preload("res://src/data/online_loading_catalog.gd").CARPETS
+const FOOTPRINTS := preload("res://src/data/prop_footprint_catalog.gd").FOOTPRINTS
+const MEASURE := preload("res://tools/measure_prop_footprints.gd")
 
 func check(ok: bool, message: String) -> void:
 	if not ok: push_error(message); quit(1); assert(ok,message)
@@ -11,6 +13,9 @@ func _initialize() -> void:
 	run.call_deferred()
 
 func run() -> void:
+	for path in FOOTPRINTS:
+		var image := Image.load_from_file(path)
+		check(not image.is_empty() and MEASURE.measure(image) == FOOTPRINTS[path], "footprint measurement " + path)
 	for id in THEMES.ids():
 		var theme: Dictionary = THEMES.get_theme(id)
 		for key in theme.overrides:
@@ -20,6 +25,7 @@ func run() -> void:
 	var field = FIELD.new(); parent.add_child(field)
 	field.configure("stage_1",Vector2(3200,3200))
 	check(field.depth_prop_roots.size() == 19 and field.collision_layer_root.get_child_count() == 20 and field.background_decor_layer.get_child_count() == 78, "castle baseline")
+	check_solid_geometry(field, "castle")
 	check_top_wall(field, "castle")
 	check(field.textures.size() == FIELD.TEXTURE_PATHS.size(), "castle texture keys")
 	for key in FIELD.TEXTURE_PATHS:
@@ -43,6 +49,8 @@ func run() -> void:
 			var depth_index := 0
 			var solids := 0
 			for item in theme.layout:
+				if item.key in ["swamp_thorn_bush", "swamp_bone_pile", "meadow_flower_patch", "crystal", "flag_a", "flag_b"]:
+					check(item.kind != "solid", "low decoration collision " + id + " " + item.key)
 				check(item.pos.x >= 0.0 and item.pos.x <= 1.0 and item.pos.y >= 0.0 and item.pos.y <= 1.0, "layout bounds " + id)
 				for mirrored in range(2 if item.get("mirror", false) else 1):
 					var pos: Vector2 = item.pos * size
@@ -64,6 +72,7 @@ func run() -> void:
 						actual.append(prop.position)
 						depth_index += 1
 			check(field.depth_prop_roots.size() == depth_index and field.collision_layer_root.get_child_count() == solids + 1, "layout counts " + id)
+			check_solid_geometry(field, id)
 			if positions.is_empty(): positions = actual
 			else:
 				for i in actual.size(): check(actual[i].is_equal_approx(positions[i] * (4000.0 / 2560.0)), "position scaling " + id)
@@ -98,3 +107,27 @@ func check_top_wall(field, id: String) -> void:
 	var boundary: StaticBody2D = field.collision_layer_root.get_child(0)
 	var shape: RectangleShape2D = boundary.get_child(0).shape
 	check(boundary.collision_layer == FIELD.BOUNDARY_COLLISION_LAYER and is_equal_approx(boundary.position.y + shape.size.y * 0.5, bottom), "wall collision bottom " + id)
+
+func check_solid_geometry(field, id: String) -> void:
+	for body in field.collision_layer_root.get_children():
+		if body.collision_layer != FIELD.DECOR_COLLISION_LAYER: continue
+		var shape: RectangleShape2D = body.get_child(0).shape
+		var ground: Vector2 = body.position + Vector2(0, shape.size.y * 0.5)
+		var found := false
+		for prop in field.depth_prop_roots:
+			if not prop.position.is_equal_approx(ground): continue
+			var sprite: Sprite2D = prop.get_child(0)
+			var data: Dictionary = FOOTPRINTS.get(sprite.texture.resource_path, {})
+			check(not data.is_empty(), "missing footprint " + id)
+			var base: Rect2 = data.base
+			var sx: float = sprite.scale.x
+			var center: float = base.position.x + base.size.x * 0.5 - sprite.texture.get_width() * 0.5
+			if sprite.flip_h: center = -center
+			var base_center: float = prop.position.x + sprite.position.x + center * sx
+			var bottom: float = prop.position.y + sprite.position.y + (base.end.y - sprite.texture.get_height() * 0.5) * sx
+			check(absf(body.position.x - base_center) + shape.size.x * 0.5 <= base.size.x * sx * 0.5 + 0.01, "collision outside base " + id)
+			check(absf(ground.y - bottom) <= 4.0, "collision bottom " + id)
+			check(shape.size.y >= 28.0 and shape.size.y <= 40.0, "collision height " + id)
+			found = true
+			break
+		check(found, "collision without prop " + id)

@@ -32,6 +32,7 @@ const FLOOR_ROOT := TILE_ROOT + "/again_hero_A_48_black_grid"
 const WALL_ROOT := TILE_ROOT + "/again_hero_B_walls"
 const OBJECT_ROOT := TILE_ROOT + "/again_hero_C_objects"
 const THEMES := preload("res://src/data/battlefield_theme_catalog.gd")
+const FOOTPRINTS := preload("res://src/data/prop_footprint_catalog.gd").FOOTPRINTS
 
 const TEXTURE_PATHS := {
 	"illustrated_floor": "res://assets/art/UI/battle_castle_v3/flagstone_floor.png",
@@ -497,9 +498,21 @@ func _add_depth_prop_visual(
 		0.0,
 		-float(texture.get_height()) * scale_factor * 0.5
 	)
+	var footprint := _prop_footprint(key)
+	if not footprint.is_empty():
+		var base: Rect2 = footprint.base
+		var center_x: float = base.position.x + base.size.x * 0.5 - texture.get_width() * 0.5
+		sprite.position.x = (-center_x if not flip_h else center_x) * scale_factor
+		sprite.position.y = (texture.get_height() * 0.5 - base.end.y) * scale_factor
 	sprite.z_index = 0
 	sort_root.add_child(sprite)
 	return sort_root
+
+
+func _prop_footprint(key: String) -> Dictionary:
+	var theme: Dictionary = THEMES.get_theme(theme_id)
+	var path: String = theme.overrides.get(key, theme.extra_textures.get(key, TEXTURE_PATHS.get(key, "")))
+	return FOOTPRINTS.get(path, {})
 
 
 func _add_collision(
@@ -539,6 +552,10 @@ func _add_solid_depth_prop(
 		scale_factor,
 		flip_h
 	)
+	var footprint := _prop_footprint(key)
+	if not footprint.is_empty():
+		var base: Rect2 = footprint.base
+		collision_size = Vector2(minf(collision_size.x, base.size.x * scale_factor * 0.7), clampf(collision_size.y, 28.0, 40.0))
 	_add_collision(ground_position, collision_size)
 
 
@@ -828,8 +845,7 @@ func _build_castle_decor() -> void:
 	)
 
 	# One mirrored pillar pair breaks at Stages 3, 5, 7, and 9. Collision
-	# footprints stay identical, so destruction remains visual rather than a
-	# hidden gameplay geometry change.
+	# footprints follow the visible base of each damaged pillar.
 	for index in range(SIDE_PILLAR_COUNT):
 		var ground_y := SIDE_PILLAR_START_Y + float(index) * SIDE_PILLAR_STEP_Y
 		var pillar_key := "pillar_a" if index % 2 == 0 else "pillar_b"

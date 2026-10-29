@@ -28,7 +28,7 @@ const LAYOUTS := {
 		{"key":"swamp_mire_pool", "pos":Vector2(0.76,0.63), "scale":1.2, "kind":"ground", "effect":"swamp_slow", "radius":120.0},
 		{"key":"swamp_mire_pool", "pos":Vector2(0.48,0.88), "scale":1.0, "kind":"ground", "effect":"swamp_slow", "radius":120.0},
 		{"key":"swamp_thorn_bush", "pos":Vector2(0.15,0.58), "scale":0.8, "kind":"depth", "mirror":true, "effect":"thorn_sting", "radius":110.0},
-		{"key":"swamp_thorn_bush", "pos":Vector2(0.39,0.36), "scale":0.8, "kind":"solid", "collision":Vector2(75,35), "effect":"thorn_sting", "radius":110.0},
+		{"key":"swamp_thorn_bush", "pos":Vector2(0.39,0.36), "scale":0.8, "kind":"depth", "effect":"thorn_sting", "radius":110.0},
 		{"key":"swamp_bone_pile", "pos":Vector2(0.25,0.83), "scale":0.8, "kind":"depth", "mirror":true},
 		{"key":"swamp_bone_pile", "pos":Vector2(0.62,0.27), "scale":0.8, "kind":"depth"},
 		{"key":"crystal", "pos":Vector2(0.10,0.74), "scale":0.7, "kind":"depth", "mirror":true},
