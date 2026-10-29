@@ -22,6 +22,14 @@ static func tier(mmr: int, server_rank: int = 0) -> String:
 		return "hero"
 	return found
 
+static func tier_index(mmr: int) -> int:
+	var thresholds: Array = data().get("mmr_thresholds", [])
+	var index := 0
+	for i in thresholds.size():
+		if mmr < int(thresholds[i].get("mmr", 0)): break
+		index = i
+	return index
+
 static func icon_path(tier_id: String) -> String:
 	for asset in data().get("assets", []):
 		if String(asset.get("id", "")) == tier_id: return String(asset.get("icon_path", ""))

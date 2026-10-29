@@ -116,7 +116,7 @@ func _process(delta: float) -> void:
 				if _send_encoded(id,encoded,bytes): peers[id]["feedback_sent"] = room.feedback.sequence
 	for id in queue.members:
 		if peers.has(id) and Time.get_ticks_msec()-int(peers[id].get("queue_ping",0)) > 5000:
-			peers[id]["queue_ping"] = Time.get_ticks_msec(); _send(id,{"op":"queued","role":peers[id].role})
+			peers[id]["queue_ping"] = Time.get_ticks_msec(); _send_queued(id)
 func _physics_process(delta: float) -> void:
 	for key in rooms: rooms[key].node.step(delta)
 func _receive(id: int,message: Dictionary) -> void:
@@ -183,14 +183,24 @@ func _authenticate(id: int,token: String,role: String,loadout: Dictionary,local_
 		if peers.has(id): _reject(id,"loadout_mismatch")
 		return
 	if not peers.has(id): return
+	var mmr: int = int(RANKED.data().get("initial_mmr", 1000))
+	if rated: mmr = await result_store.fetch_mmr(uid)
+	if not peers.has(id): return
 	if reserved_uids.has(uid): _reject(id,"duplicate_account"); return
 	for other in peers:
 		if other != id and peers[other].uid == uid:
 			var prior: Dictionary = peers[other]
 			if not rooms.has(prior.room) or not rooms[prior.room].node.finished: _reject(id,"duplicate_account"); return
 	peers[id].uid = uid; peers[id].role = role; peers[id].loadout = loadout.duplicate(true); peers[id].rated = rated; peers[id].created = Time.get_ticks_msec()
-	if not queue.enqueue(id,uid,role): _reject(id,"queue_rejected"); return
-	_send(id,{"op":"queued","role":role})
+	if not queue.enqueue(id,uid,role,RANKED.tier_index(mmr) if rated else -1): _reject(id,"queue_rejected"); return
+	_send_queued(id)
+func _send_queued(id: int) -> void:
+	if not queue.members.has(id) or not peers.has(id): return
+	var entry: Dictionary = queue.members[id]
+	var thresholds: Array = RANKED.data().get("mmr_thresholds", [])
+	var tier_id := String(thresholds[entry.tier].id) if entry.tier >= 0 and entry.tier < thresholds.size() else ""
+	var expanded: bool = entry.tier >= 0 and Time.get_ticks_msec() / 1000.0 - float(entry.since) >= RULES.MATCH_TIER_EXPAND_SECONDS
+	_send(id,{"op":"queued","role":peers[id].role,"tier":tier_id,"expanded":expanded})
 func _loadout_verification_required(local_credentials: Dictionary = {}) -> bool:
 	return not test_auth and local_credentials.is_empty() and loadout_store != null and loadout_store.configured()
 func _match_waiters() -> void:

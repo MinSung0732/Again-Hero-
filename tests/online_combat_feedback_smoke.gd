@@ -56,7 +56,7 @@ func run() -> void:
 	check(not DATA.valid_events([bad],buffer.sequence,5),"invalid owner rejected")
 	bad = rows[0].duplicate(); bad[2]="unknown"
 	check(not DATA.valid_events([bad],buffer.sequence,5),"invalid kind rejected")
-	check(RULES.VERSION==32,"protocol 32")
+	check(RULES.VERSION==33,"protocol 33")
 	var room := ROOM.new(); root.add_child(room); room.prepare()
 	room.battle.hero_player_mode = false
 	for index in room.battle.get_population_limit():

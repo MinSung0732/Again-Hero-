@@ -1109,7 +1109,11 @@ func _join() -> void:
 		loading.begin(role); _set_controls(false)
 func _event(event: Dictionary) -> void:
 	match String(event.get("op","")):
-		"queued": status.text = "상대 역할 플레이어를 찾는 중..."
+		"queued":
+			var tier_id := String(event.get("tier", ""))
+			if tier_id.is_empty(): status.text = "상대 역할 플레이어를 찾는 중..."
+			elif bool(event.get("expanded", false)): status.text = "범위를 넓혀 찾는 중 (±%d 티어)" % RULES.MATCH_TIER_EXPAND_RANGE
+			else: status.text = "같은 티어 상대 찾는 중 · %s" % RANKED.display_name(tier_id)
 		"matched":
 			result_serial += 1
 			matched_hero_id = String(event.get("hero",HEROES.DEFAULT_HERO))

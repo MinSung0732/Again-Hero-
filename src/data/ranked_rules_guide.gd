@@ -30,6 +30,6 @@ static func sections() -> Array:
 		{"title":"증강 보관","items":["선택지는 받을 때 고정되며, 받아 두고 원할 때 선택", "최대 %d개 보관, 초과 시 가장 오래된 선택지 자동 선택" % MATCH.AUGMENT_HOLD_LIMIT, "용사 증강 새로고침 %d회(보관 항목에 사용)" % HERO_MODE.AUGMENT_REROLLS, "마왕 증강 새로고침 %d회(보관 항목에 사용)" % DEMON_AUGMENTS.BASE_REROLLS, "경기 종료 시 남은 증강 소멸", "증강을 고르는 동안에도 전투 진행"]},
 		{"title":"상자","items":["일반 %d처치마다 상자(첫 상자도 가능)" % PICKUPS.CHEST_KILLS, "첫 정예 처치 시 첫 상자, 이후 정예 %d처치마다" % PICKUPS.CHEST_ELITE_KILLS, "상자 결과는 서버가 결정하고 즉시 적용", "랭크전 상자 골드 없음", "상자 연출 중에도 전투 진행"]},
 		{"title":"랭크 전용 맵","items":map_items},
-		{"title":"MMR","items":["승리 +%d~%d, 패배 -%d~%d" % [win_low,win_high,loss_low,loss_high], "경기 내용 반영: 마왕 승리는 처치 속도, 용사 승리는 남은 HP", "중도 이탈 %d" % RANKED.delta(false,1.0)]},
+		{"title":"MMR","items":["같은 티어 우선 매칭, %d초 후 ±%d 티어까지 확장" % [int(MATCH.MATCH_TIER_EXPAND_SECONDS),MATCH.MATCH_TIER_EXPAND_RANGE], "승리 +%d~%d, 패배 -%d~%d" % [win_low,win_high,loss_low,loss_high], "경기 내용 반영: 마왕 승리는 처치 속도, 용사 승리는 남은 HP", "중도 이탈 %d" % RANKED.delta(false,1.0)]},
 		{"title":"추후 추가","items":["주간 보상 준비 중"]},
 	]
