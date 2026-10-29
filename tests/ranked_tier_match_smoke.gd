@@ -27,7 +27,16 @@ func run() -> void:
 	q.enqueue(13,"d6","demon",-1,5.0); q.enqueue(14,"d7","demon",-1,6.0)
 	check(q.pair(10000.0) == [11,13] and q.pair(10000.0) == [12,14], "unrated FIFO")
 	var store = STORE.new(); root.add_child(store)
-	check(await store.fetch_mmr("missing") == int(RANKED.data().initial_mmr), "unconfigured default")
+	check(await store.fetch_mmr("missing", "demon") == int(RANKED.data().initial_mmr), "unconfigured default")
+	store.endpoint = "https://example.invalid"; store.service_key = "fixture"
+	var uid := "00000000-0000-4000-8000-000000000001"
+	var expires := Time.get_ticks_msec() / 1000.0 + 60.0
+	store.mmr_cache[uid + ":demon"] = {"mmr":1200,"expires":expires}
+	store.mmr_cache[uid + ":hero"] = {"mmr":1800,"expires":expires}
+	check(await store.fetch_mmr(uid, "demon") == 1200 and await store.fetch_mmr(uid, "hero") == 1800, "role caches are independent")
+	store.service_key = ""
+	await store.record("fixture",uid,uid,"hero","kill",{})
+	check(not store.mmr_cache.has(uid + ":demon") and not store.mmr_cache.has(uid + ":hero"), "record invalidates each role")
 	store.queue_free()
 	print("ranked tier matching passed")
 	quit()

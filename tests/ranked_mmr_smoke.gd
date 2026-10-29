@@ -2,6 +2,7 @@ extends SceneTree
 const RANKED := preload("res://src/data/ranked_rules.gd")
 const SERVER := preload("res://src/online/match_server.gd")
 const STORE := preload("res://src/online/ranked_result_store.gd")
+const LOBBY_VIEW := preload("res://src/ui/lobby_main_modes_view.gd")
 var checks := 0
 
 func check(ok: bool, message: String) -> void:
@@ -27,6 +28,18 @@ func run() -> void:
 	for sample in [[999,"bronze_1"],[1000,"bronze_1"],[1099,"bronze_1"],[1100,"bronze_2"],[2599,"diamond_4"],[2600,"demon_lord"]]:
 		check(RANKED.tier(sample[0]) == sample[1],"tier at %d" % sample[0])
 	check(RANKED.tier(2600,100) == "hero" and RANKED.tier(2600,101) == "demon_lord","server top 100")
+	check(RANKED.weekly_reward_tier(1200,1800) == "gold_1" and RANKED.weekly_reward_tier(1800,1200) == "gold_1", "weekly higher role")
+	check(RANKED.weekly_reward_tier(3000,2600,101,100) == "hero", "weekly hero title beats higher unqualified MMR")
+	var legacy := {"mmr":1000,"tier":"bronze_1"}
+	check(LOBBY_VIEW.parse_ranked_profile(legacy).hero == legacy, "legacy profile")
+	var profiles := {"demon":legacy,"hero":{"mmr":1800,"tier":"gold_1"}}
+	check(LOBBY_VIEW.parse_ranked_profile(profiles).hero.mmr == 1800, "role profiles")
+	check(LOBBY_VIEW.parse_ranked_profile({}).is_empty(), "invalid profile")
+	var file := FileAccess.open("res://supabase/migrations/20261029120000_ranked_role_mmr.sql", FileAccess.READ)
+	check(file != null, "role migration exists")
+	var sql := file.get_as_text().to_lower()
+	for fragment in ["check (role in ('demon','hero'))", "primary key (user_id, role)", "where user_id=p_demon_user and role='demon'", "where user_id=p_hero_user and role='hero'", "q.role=p_role", "pg_advisory_xact_lock", "revoke all on function public.record_ranked_result", "to service_role", "grant execute on function public.get_my_ranked_profile() to authenticated", "ranked_weekly_best"]:
+		check(sql.contains(fragment), "role SQL: " + fragment)
 	var server = SERVER.new(); root.add_child(server)
 	server.result_store = STORE.new(); server.add_child(server.result_store)
 	server.result_store.endpoint = "https://example.invalid"; server.result_store.service_key = "fixture"

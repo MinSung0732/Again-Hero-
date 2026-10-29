@@ -184,7 +184,7 @@ func _authenticate(id: int,token: String,role: String,loadout: Dictionary,local_
 		return
 	if not peers.has(id): return
 	var mmr: int = int(RANKED.data().get("initial_mmr", 1000))
-	if rated: mmr = await result_store.fetch_mmr(uid)
+	if rated: mmr = await result_store.fetch_mmr(uid,role)
 	if not peers.has(id): return
 	if reserved_uids.has(uid): _reject(id,"duplicate_account"); return
 	for other in peers:

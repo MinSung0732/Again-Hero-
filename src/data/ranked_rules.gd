@@ -30,6 +30,12 @@ static func tier_index(mmr: int) -> int:
 		index = i
 	return index
 
+static func weekly_reward_tier(demon_mmr: int, hero_mmr: int, demon_rank: int = 0, hero_rank: int = 0) -> String:
+	var demon_tier := tier(demon_mmr, demon_rank)
+	var hero_tier := tier(hero_mmr, hero_rank)
+	if demon_tier == "hero" or hero_tier == "hero": return "hero"
+	return demon_tier if tier_index(demon_mmr) >= tier_index(hero_mmr) else hero_tier
+
 static func icon_path(tier_id: String) -> String:
 	for asset in data().get("assets", []):
 		if String(asset.get("id", "")) == tier_id: return String(asset.get("icon_path", ""))

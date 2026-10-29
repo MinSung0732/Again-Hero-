@@ -29,6 +29,7 @@ var ranked_profile_icon: TextureRect
 var ranked_profile_label: Label
 var ranked_profile_client
 var ranked_profile_owner := ""
+var ranked_profile_data := {}
 var easy_button: Button
 var hard_button: Button
 var character_button: Button
@@ -207,6 +208,7 @@ func _gateway() -> Node:
 
 func _request_ranked_profile() -> void:
 	ranked_profile_row.hide()
+	ranked_profile_data = {}
 	ranked_profile_owner = _gateway().user_id
 	if ranked_profile_owner.is_empty() or _gateway().access_token.is_empty(): return
 	ranked_profile_client.set_access_token(_gateway().access_token)
@@ -216,12 +218,30 @@ func _request_ranked_profile() -> void:
 func _on_ranked_profile(tag: String,status_code: int,payload: Variant) -> void:
 	if tag != "ranked_profile" or not ranked or ranked_profile_owner != _gateway().user_id: return
 	ranked_profile_row.hide()
-	if status_code != 200 or not payload is Dictionary or not (payload.get("mmr",null) is int or payload.get("mmr",null) is float): return
-	var tier_id := String(payload.get("tier",""))
+	if status_code != 200: return
+	ranked_profile_data = parse_ranked_profile(payload)
+	_show_ranked_profile()
+
+static func parse_ranked_profile(payload: Variant) -> Dictionary:
+	if not payload is Dictionary: return {}
+	if payload.get("demon") is Dictionary and payload.get("hero") is Dictionary:
+		return payload
+	if payload.get("mmr",null) is int or payload.get("mmr",null) is float:
+		return {"demon":payload, "hero":payload}
+	return {}
+
+func _show_ranked_profile() -> void:
+	if not ranked or ranked_profile_data.is_empty(): return
+	var state: Dictionary = ranked_profile_data.get(perspective, {})
+	var other: Dictionary = ranked_profile_data.get("hero" if perspective == "demon" else "demon", {})
+	if not (state.get("mmr",null) is int or state.get("mmr",null) is float): return
+	var tier_id := String(state.get("tier",""))
 	var icon_path := RANKED.icon_path(tier_id)
 	if icon_path.is_empty() or not ResourceLoader.exists(icon_path): return
 	ranked_profile_icon.texture = load(icon_path)
-	ranked_profile_label.text = "MMR %d · %s · 서버 %d위" % [int(payload.mmr),RANKED.display_name(tier_id),int(payload.get("server_rank",0))]
+	ranked_profile_label.text = "%s MMR %d · %s · 서버 %d위" % ["마왕" if perspective == "demon" else "용사",int(state.mmr),RANKED.display_name(tier_id),int(state.get("server_rank",0))]
+	if other.get("mmr",null) is int or other.get("mmr",null) is float:
+		ranked_profile_label.text += "\n%s MMR %d · %s · 서버 %d위" % ["용사" if perspective == "demon" else "마왕",int(other.mmr),RANKED.display_name(String(other.get("tier",""))),int(other.get("server_rank",0))]
 	ranked_profile_row.show()
 
 func change_character(_direction: int) -> void:
@@ -271,6 +291,7 @@ func refresh() -> void:
 		if ranked: _request_ranked_profile()
 	if not UNLOCKS.unlocked("hero", current_stage()):
 		perspective = "demon"
+	_show_ranked_profile()
 	if perspective == "hero":
 		HERO_STORE.select_battle_stage(current_stage())
 		difficulty = HERO_STORE.difficulty()
