@@ -170,6 +170,7 @@ var result_pending := false
 var result_serial := 0
 var result_wait_seconds := 0.0
 var result_focus: ColorRect
+var result_overlay: Control
 var result_zoom_tween: Tween
 func _ready() -> void:
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
@@ -569,7 +570,7 @@ func _install_match_menu() -> void:
 		match_menu.find_child("PauseSummary",true,false).hide()
 		match_menu.hide()
 	if initial_local_test:
-		var metric_rows: Node = match_menu.get_node("MenuPanel/Margin/VBox") if role == "demon" else match_menu.get_node("MenuPanel/MenuRows")
+		var metric_rows: Node = match_menu.get_node("MenuPanel/Margin/VBox") if role == "demon" else match_menu.get_node("MenuPanel/MenuRows/PauseScroll").get_child(0)
 		var metrics_button := _button(metric_rows,"연결 측정 (테스트)",_toggle_metrics)
 		metrics_button.name = "ConnectionMetricsButton"; metrics_button.custom_minimum_size.y = 84
 	_sync_match_settings()
@@ -1116,6 +1117,7 @@ func _event(event: Dictionary) -> void:
 			if is_instance_valid(result_zoom_tween): result_zoom_tween.kill()
 			view.presentation_speed = 1.0; view.scale = Vector2.ONE
 			if is_instance_valid(result_focus): result_focus.queue_free(); result_focus = null
+			if is_instance_valid(result_overlay): result_overlay.queue_free(); result_overlay = null
 			hero_build_signature = ""; hero_build_data = {}
 			var map_data: Dictionary = MAPS.get_map(String(event.get("map","")))
 			if map_data.is_empty(): return
@@ -1277,6 +1279,25 @@ func _show_result_after_presentation(event: Dictionary) -> void:
 			ranking_row.show()
 	if not ranking_row.visible: status.text += "\n점수 변동 없음"
 	if pad != null: pad.enabled = false; pad.reset()
+	_show_result_overlay()
+
+func _show_result_overlay() -> void:
+	_close_match_menu()
+	if is_instance_valid(metrics_panel): metrics_panel.hide()
+	result_overlay = Control.new(); result_overlay.name = "ResultOverlay"; result_overlay.z_index = 500
+	add_child(result_overlay); result_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var dim := ColorRect.new(); dim.color = Color(0,0,0,0.8); result_overlay.add_child(dim)
+	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var panel := PanelContainer.new(); result_overlay.add_child(panel)
+	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	panel.offset_left = -400; panel.offset_right = 400; panel.offset_top = -220; panel.offset_bottom = 220
+	panel.add_theme_stylebox_override("panel",DETAIL.style(Color("171226"),Color("e3bc69"),24))
+	var content := VBoxContainer.new(); content.add_theme_constant_override("separation",24); panel.add_child(content)
+	var title := _label(content,status.text,36); title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	if ranking_row.visible:
+		var rank := _label(content,ranking_label.text,26); rank.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var leave_button := _button(content,"로비로 가기",_leave); leave_button.name = "ResultLobbyButton"
+	leave_button.custom_minimum_size.y = 96
 func _prepare_match(event: Dictionary,serial: int) -> void:
 	var current := func(): return is_inside_tree() and serial == load_revision and not ended and not client.reconnecting
 	await get_tree().process_frame
@@ -1357,7 +1378,7 @@ func _process(delta: float) -> void:
 	var direction := keyboard.limit_length(1.0) if keyboard.length_squared() > 0 else movement
 	client.command("move",[direction.x,direction.y])
 func _leave() -> void:
-	load_revision += 1; ended = true; view.feedback.pause_feedback(); view.pause_motion(); loading.finish()
+	load_revision += 1; result_serial += 1; ended = true; view.feedback.pause_feedback(); view.pause_motion(); loading.finish()
 	if client != null: client.close()
 	if role == "hero": get_tree().set_meta("hero_lobby_return",true)
 	get_node("/root/SceneTransition").change_scene("res://src/lobby/Lobby.tscn","로비 준비 중...")
