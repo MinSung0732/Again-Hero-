@@ -43,6 +43,12 @@ func run() -> void:
 			check(not scene.result_pending and button != null and button.is_visible_in_tree() and not button.disabled,"result lobby button shown " + role + " " + outcome[1])
 			check(not is_instance_valid(scene.result_focus),"presentation no longer blocks input")
 			var before: int = scene.leaves; click(button); check(scene.leaves == before+1,"result accepts input and calls leave")
+			check(not get_root().get_tree().has_meta(scene.RULES.REQUEUE_META),"lobby button does not requeue")
+			var requeue: Button = scene.result_overlay.find_child("ResultRequeueButton",true,false)
+			check(requeue != null and requeue.is_visible_in_tree() and not requeue.disabled,"result requeue button shown " + role)
+			before = scene.leaves; click(requeue)
+			check(scene.leaves == before+1 and bool(get_root().get_tree().get_meta(scene.RULES.REQUEUE_META,false)),"requeue flags lobby entry and leaves")
+			get_root().get_tree().remove_meta(scene.RULES.REQUEUE_META)
 			scene.result_overlay.queue_free(); scene.result_overlay = null
 		scene.queue_free(); await process_frame
 	local.active = old_active; local.tutorial_preview = old_preview

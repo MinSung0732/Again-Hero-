@@ -1339,8 +1339,16 @@ func _show_result_overlay() -> void:
 	var title := _label(content,status.text,36); title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	if ranking_row.visible:
 		var rank := _label(content,ranking_label.text,26); rank.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	var leave_button := _button(content,"로비로 가기",_leave); leave_button.name = "ResultLobbyButton"
-	leave_button.custom_minimum_size.y = 96
+	var actions := HBoxContainer.new(); actions.add_theme_constant_override("separation",18); content.add_child(actions)
+	var leave_button := _button(actions,"로비로 가기",_leave); leave_button.name = "ResultLobbyButton"
+	var requeue_button := _button(actions,"새로 매칭",_requeue); requeue_button.name = "ResultRequeueButton"
+	for button in [leave_button,requeue_button]:
+		button.custom_minimum_size.y = 96; button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+
+## The lobby consumes this meta once and presses its ranked entry for the same role.
+func _requeue() -> void:
+	get_tree().set_meta(RULES.REQUEUE_META,true)
+	_leave()
 func _prepare_match(event: Dictionary,serial: int) -> void:
 	var current := func(): return is_inside_tree() and serial == load_revision and not ended and not client.reconnecting
 	await get_tree().process_frame
@@ -1424,6 +1432,7 @@ func _leave() -> void:
 	load_revision += 1; result_serial += 1; ended = true; view.feedback.pause_feedback(); view.pause_motion(); loading.finish()
 	if client != null: client.close()
 	if role == "hero": get_tree().set_meta("hero_lobby_return",true)
+	if role in ["demon","hero"]: get_tree().set_meta(RULES.RANKED_RETURN_META,role)
 	get_node("/root/SceneTransition").change_scene("res://src/lobby/Lobby.tscn","로비 준비 중...")
 func _exit_tree() -> void:
 	load_revision += 1

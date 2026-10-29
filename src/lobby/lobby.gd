@@ -5,6 +5,7 @@ const SKILL_ART := preload("res://src/data/skill_icon_catalog.gd")
 const STAGE_CATALOG := preload("res://src/data/stage_catalog.gd")
 const HERO_PROFILES := preload("res://src/data/hero_profiles.gd")
 const STAGE_PROGRESS := preload("res://src/systems/stage_progress.gd")
+const MATCH_RULES := preload("res://src/online/match_rules.gd")
 const RESEARCH_CATALOG := preload("res://src/data/research_catalog.gd")
 const RELIC_CATALOG := preload("res://src/data/relic_catalog.gd")
 const MONSTER_CATALOG := preload("res://src/data/monster_catalog.gd")
@@ -395,6 +396,7 @@ func _ready() -> void:
 	_refresh_stage_card()
 	TutorialFlow.call_deferred("install_lobby", self)
 	call_deferred("_consume_campaign_team_return")
+	call_deferred("_consume_ranked_requeue")
 
 func _install_hero_lobby_view() -> void:
 	var script: Script = load("res://src/ui/hero_lobby_view.gd")
@@ -5487,6 +5489,27 @@ func _enter_practice_battle() -> void:
 
 func _can_open_main_tool() -> bool:
 	return current_tab == "main" and not _battle_entry_pending and not TutorialFlow.locks_lobby()
+
+## Leaving a ranked match reopens the ranked lobby for the same role; result
+## "새로 매칭" also presses entry once the lobby transition has finished.
+## Gives up quietly after the wait limit.
+func _consume_ranked_requeue() -> void:
+	if not get_tree().has_meta(MATCH_RULES.RANKED_RETURN_META): return
+	var requeue_role := String(get_tree().get_meta(MATCH_RULES.RANKED_RETURN_META))
+	var press_entry := get_tree().has_meta(MATCH_RULES.REQUEUE_META)
+	get_tree().remove_meta(MATCH_RULES.RANKED_RETURN_META)
+	if press_entry: get_tree().remove_meta(MATCH_RULES.REQUEUE_META)
+	if main_modes_view == null or requeue_role not in ["demon", "hero"]: return
+	var deadline := Time.get_ticks_msec() + int(MATCH_RULES.REQUEUE_WAIT_SECONDS * 1000.0)
+	while is_inside_tree() and (SceneTransition.is_transitioning() or _stage_transition_running or main_modes_view.switching_perspective):
+		if Time.get_ticks_msec() >= deadline: return
+		await get_tree().process_frame
+	if not is_inside_tree(): return
+	if main_modes_view.perspective != requeue_role:
+		await main_modes_view.choose_perspective(requeue_role)
+		if not is_inside_tree() or main_modes_view.perspective != requeue_role: return
+	if not main_modes_view.ranked: main_modes_view.toggle_ranked()
+	if press_entry and main_modes_view.ranked: _enter_selected_stage()
 
 func _consume_campaign_team_return() -> void:
 	if not get_tree().has_meta("campaign_team_return"): return

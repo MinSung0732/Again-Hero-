@@ -107,9 +107,12 @@ func run() -> void:
 	check(view.title_plate.get_global_rect().is_equal_approx(lobby.team_tab.get_node("TitlePlate").get_global_rect()), "shared title frame position")
 	check(view.actions.title.disabled and view.gallery.disabled, "future features cannot fake ownership or run")
 	check(view.reserved.get_child_count() == 0 and view.reserved.custom_minimum_size.y == 182, "empty future space has no cutscene action")
-	var rank_rect: Rect2 = view.card.get_node("ProfileInformation/RankingPlaceholder").get_global_rect()
+	# The 10-29 per-role rank section replaced the in-card placeholder; it sits below the card.
+	var rank_section: Control = view.root.find_child("RankSection", true, false)
+	check(rank_section != null, "per-role rank section exists")
+	var rank_rect: Rect2 = rank_section.get_global_rect()
 	print("PROFILE_LAYOUT: card=", view.card.get_global_rect(), " rank=", rank_rect)
-	check(view.card.get_global_rect().encloses(rank_rect), "ranking text fits card")
+	check(rank_rect.position.y >= view.card.get_global_rect().end.y - 1.0 and view.scroll.get_global_rect().grow(1.0).position.x <= rank_rect.position.x and rank_rect.end.x <= view.scroll.get_global_rect().end.x + 1.0, "rank section below card, inside profile width")
 	for button in view.actions.values():
 		check(button.size.x <= view.scroll.size.x / 2 and button.size.y >= 120, "two touch-sized columns")
 	await capture("female")
