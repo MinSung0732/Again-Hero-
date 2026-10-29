@@ -9,6 +9,7 @@ const MAX_POINTS := 70
 const EVENT_SIZE := 12
 const MAX_AGE_SECONDS := 0.6
 const LIFETIME := 0.55
+const STATE_AUDIO := {"chest": "chest", "demon_level": "demon_level", "elite_selected": "click", "augment_selected": "click", "denied": "denied"}
 const FONT_SIZE := 25
 const RISE_SPEED := 38.0
 const CUES := {

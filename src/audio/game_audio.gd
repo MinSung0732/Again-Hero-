@@ -15,6 +15,7 @@ var suppress_click_until := 0
 var backgrounded := false
 var last_demon_level := 0
 var result_owner: WeakRef
+var online_owner: WeakRef
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
@@ -155,6 +156,29 @@ func _battle_exiting(reference: WeakRef) -> void:
 func play_battle(cue: String, authority: Node) -> void:
 	if battle_owner != null and battle_owner.get_ref() == authority:
 		battle_bank.play_cue(cue)
+
+func attach_online(owner: Node) -> void:
+	result_owner = null
+	stop_frontend()
+	battle_bank.stop_all()
+	battle_bank.authority = null
+	online_owner = weakref(owner)
+	owner.tree_exiting.connect(_online_exiting.bind(weakref(owner)), CONNECT_ONE_SHOT)
+
+func play_online(cue: String, owner: Node) -> void:
+	if online_owner == null or online_owner.get_ref() != owner:
+		return
+	if DATA.BATTLE_CUES.has(cue):
+		battle_bank.play_cue(cue)
+	else:
+		feedback(cue)
+
+func _online_exiting(reference: WeakRef) -> void:
+	if online_owner != null and online_owner.get_ref() == reference.get_ref():
+		battle_bank.stop_all()
+		online_owner = null
+		if music_owner != null and music_owner.get_ref() == reference.get_ref():
+			stop_frontend()
 
 func _summon(id: String, success: bool, _message: String) -> void:
 	if not success:

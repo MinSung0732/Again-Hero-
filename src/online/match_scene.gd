@@ -172,7 +172,10 @@ var result_wait_seconds := 0.0
 var result_focus: ColorRect
 var result_overlay: Control
 var result_zoom_tween: Tween
+var online_bgm: Node
+var audio_demon_level := 0
 func _ready() -> void:
+	get_node("/root/GameAudio").enter_frontend(self, "lobby")
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var options: Dictionary = get_node("/root/SceneTransition").consume_entry_options()
 	role = String(options.get("role","hero")); initial_owner = get_node("/root/LoginGateway").user_id
@@ -597,12 +600,13 @@ func _confirm_surrender() -> void:
 	surrender_dialog.popup_centered()
 
 func _sync_match_settings() -> void:
+	var audio_settings = get_node("/root/AudioSettings")
 	var tabs := settings_panel.get_node("Panel/Margin/VBox/SettingsTabs") as TabContainer
-	for pair in [["BGMRow",AudioSettings.bgm_level],["SFXRow",AudioSettings.sfx_level]]:
+	for pair in [["BGMRow",audio_settings.bgm_level],["SFXRow",audio_settings.sfx_level]]:
 		(tabs.get_node("Sound/"+String(pair[0])+"/Slider") as HSlider).set_value_no_signal(float(pair[1]))
 		(tabs.get_node("Sound/"+String(pair[0])+"/Value") as Label).text = str(pair[1])
-	(tabs.get_node("Sound/BGMMute") as CheckBox).set_pressed_no_signal(AudioSettings.bgm_muted)
-	(tabs.get_node("Sound/SFXMute") as CheckBox).set_pressed_no_signal(AudioSettings.sfx_muted)
+	(tabs.get_node("Sound/BGMMute") as CheckBox).set_pressed_no_signal(audio_settings.bgm_muted)
+	(tabs.get_node("Sound/SFXMute") as CheckBox).set_pressed_no_signal(audio_settings.sfx_muted)
 	(tabs.get_node("Gameplay/CameraLock") as CheckBox).set_pressed_no_signal(true if role == "hero" else camera_view_locked)
 	(tabs.get_node("Gameplay/BattleFrame") as CheckBox).set_pressed_no_signal(battle_frame_enabled)
 	if pad_mode_selector != null: pad_mode_selector.select(PAD.MODES.find(online_pad_mode))
@@ -637,13 +641,13 @@ func _save_match_gameplay_setting(key: String,value: bool) -> void:
 	config.set_value("gameplay",key,value); config.save(GAMEPLAY_SETTINGS_PATH)
 
 func _set_audio_level(value: float,bgm: bool) -> void:
-	if bgm: AudioSettings.set_bgm_level(roundi(value))
-	else: AudioSettings.set_sfx_level(roundi(value))
+	if bgm: get_node("/root/AudioSettings").set_bgm_level(roundi(value))
+	else: get_node("/root/AudioSettings").set_sfx_level(roundi(value))
 	_sync_match_settings()
 
 func _set_audio_mute(value: bool,bgm: bool) -> void:
-	if bgm: AudioSettings.set_bgm_muted(value)
-	else: AudioSettings.set_sfx_muted(value)
+	if bgm: get_node("/root/AudioSettings").set_bgm_muted(value)
+	else: get_node("/root/AudioSettings").set_sfx_muted(value)
 	_sync_match_settings()
 
 func _update_hold_position() -> void:
@@ -851,6 +855,7 @@ func _update_elite_ui(candidates: Array, cards: Array) -> void:
 		MUTATION_VIEW.populate(elite_panel, {"ui_title":"엘리트 선택", "ui_description":"보관할 엘리트를 선택하세요."}, elite_candidates, _elite_icon, _elite_name)
 	elite_panel.visible = not elite_candidates.is_empty()
 	if elite_cards != cards:
+		if elite_choice_pending and cards.size() > elite_cards.size(): get_node("/root/GameAudio").play_online(view.FEEDBACK_DATA.STATE_AUDIO.elite_selected, self)
 		elite_choice_pending = false
 		elite_cards = cards.duplicate(true)
 		var found := false
@@ -920,7 +925,8 @@ func _select_transcendence() -> void:
 	action_notice.text = "초월 소환 위치를 전장에서 터치해 주세요."
 func _select_held(id: String,number: int) -> void:
 	if not ended and not connection_waiting and not client.reconnecting:
-		client.command("choose" if role == "hero" else "demon_choose",{"id":id,"number":number})
+		if client.command("choose" if role == "hero" else "demon_choose",{"id":id,"number":number}):
+			get_node("/root/GameAudio").play_online(view.FEEDBACK_DATA.STATE_AUDIO.augment_selected, self)
 func _reroll_held(number: int) -> void:
 	if not ended and not connection_waiting and not client.reconnecting and rerolls_left > 0:
 		client.command("reroll",{"number":number})
@@ -1037,6 +1043,7 @@ func _receive_chests(receipts: Array) -> void:
 		var serial := int(receipt.serial)
 		if serial <= chest_last_serial: continue
 		chest_last_serial = serial
+		get_node("/root/GameAudio").play_online(view.FEEDBACK_DATA.STATE_AUDIO.chest, self)
 		chest_queue.append(receipt.duplicate())
 func _clear_chest_notice(reset_serial: bool = false) -> void:
 	chest_queue.clear(); chest_seconds = 0.0
@@ -1105,6 +1112,7 @@ func _join() -> void:
 	status.text = "서버에 연결 중..." if error == OK else "서버에 연결하지 못했습니다."
 	queue_button.disabled = error == OK
 	if error == OK:
+		get_node("/root/GameAudio").enter_frontend(self, "lobby")
 		cancel_button.show(); action_notice.show()
 		loading.begin(role); _set_controls(false)
 func _event(event: Dictionary) -> void:
@@ -1115,6 +1123,8 @@ func _event(event: Dictionary) -> void:
 			elif bool(event.get("expanded", false)): status.text = "범위를 넓혀 찾는 중 (±%d 티어)" % RULES.MATCH_TIER_EXPAND_RANGE
 			else: status.text = "같은 티어 상대 찾는 중 · %s" % RANKED.display_name(tier_id)
 		"matched":
+			audio_demon_level = 0
+			if is_instance_valid(online_bgm): online_bgm.queue_free(); online_bgm = null
 			result_serial += 1
 			matched_hero_id = String(event.get("hero",HEROES.DEFAULT_HERO))
 			hero_voice.stop(); hero_voice.hero_id = matched_hero_id; hero_voice.terminal = false; hero_voice.consumed.clear(); hero_voice.streams.clear(); hero_voice._prepared = false
@@ -1208,10 +1218,15 @@ func _event(event: Dictionary) -> void:
 			view.feedback.suspended = waiting_for_start or connection_waiting or client.reconnecting
 			if waiting_for_start and last_tick > 0 and not connection_waiting and not client.reconnecting:
 				waiting_for_start = false; view.feedback.suspended = false; loading.finish(); _set_controls(true)
+				_start_online_audio()
 				if entry_voice_pending:
 					entry_voice_pending = false
 					hero_voice.play_entry()
 			if event.has("feedback"): view.feedback.consume(event.feedback,event.feedback_cursor,event.tick)
+			if role == "demon" and event.has("demon_level"):
+				var level := int(event.demon_level)
+				if audio_demon_level > 0 and level > audio_demon_level: get_node("/root/GameAudio").play_online(view.FEEDBACK_DATA.STATE_AUDIO.demon_level, self)
+				audio_demon_level = level
 			_update_match_hud(event)
 			if role == "hero" and event.get("hero_inventory",null) is Dictionary and event.get("chest_receipts",null) is Array:
 				_update_hero_inventory(event.hero_inventory)
@@ -1239,6 +1254,7 @@ func _event(event: Dictionary) -> void:
 			_show_result_after_presentation(event)
 		"action":
 			if event.get("match","") == client.match_id and event.get("message",null) is String:
+				if event.get("accepted", true) == false: get_node("/root/GameAudio").play_online(view.FEEDBACK_DATA.STATE_AUDIO.denied, self)
 				action_notice.text = event.message
 				if event.message == "용사와 너무 가까움": view.show_manual_spawn_restricted_area()
 		"error":
@@ -1275,7 +1291,9 @@ func _show_result_after_presentation(event: Dictionary) -> void:
 	if is_instance_valid(result_zoom_tween): result_zoom_tween.kill()
 	view.presentation_speed = 1.0; view.scale = Vector2.ONE
 	if is_instance_valid(result_focus): result_focus.queue_free(); result_focus = null
-	view.feedback.result(winner, role); view.pause_motion()
+	if is_instance_valid(online_bgm): online_bgm.stop_bgm()
+	if not winner.is_empty(): get_node("/root/GameAudio").battle_result(self, winner == role)
+	view.pause_motion()
 	status.text = "대전 종료 · "+("무효 경기" if winner.is_empty() else "승리" if winner == role else "패배")
 	var ranking: Variant = event.get("ranking",null)
 	if event.get("rated",false) == true and ranking is Dictionary and RULES.number(ranking.get("mmr",null)) and RULES.number(ranking.get("delta",null)):
@@ -1393,6 +1411,15 @@ func _leave() -> void:
 func _exit_tree() -> void:
 	load_revision += 1
 	if client != null: client.close()
+
+func _start_online_audio() -> void:
+	if is_instance_valid(online_bgm): return
+	get_node("/root/GameAudio").attach_online(self)
+	online_bgm = load("res://src/audio/hero_bgm_manager.gd").new()
+	for player_name in ["PlayerA", "PlayerB"]:
+		var player := AudioStreamPlayer.new(); player.name = player_name; online_bgm.add_child(player)
+	add_child(online_bgm)
+	online_bgm.start_hero_loop(matched_hero_id)
 
 func _install_metrics_panel() -> void:
 	metrics_panel = PanelContainer.new(); metrics_panel.name = "ConnectionMetricsPanel"; add_child(metrics_panel)
