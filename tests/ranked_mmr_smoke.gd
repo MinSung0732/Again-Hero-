@@ -28,6 +28,8 @@ func run() -> void:
 	for sample in [[999,"bronze_1"],[1000,"bronze_1"],[1099,"bronze_1"],[1100,"bronze_2"],[2299,"gold_4"],[2300,"diamond_1"],[2499,"diamond_1"],[2500,"diamond_2"],[2700,"diamond_3"],[2900,"diamond_4"],[3299,"diamond_4"],[3300,"demon_lord"]]:
 		check(RANKED.tier(sample[0]) == sample[1],"tier at %d" % sample[0])
 	check(RANKED.tier(3300,100) == "hero" and RANKED.tier(3300,101) == "demon_lord","server top 100")
+	for sample in [[1099,"다음 등급까지 1점"],[2299,"다음 등급까지 1점"],[2900,"다음 등급까지 400점"],[3300,"상위 100위 안이면 용사 등급"],[3500,"상위 100위 안이면 용사 등급"]]:
+		check(RANKED.next_tier_text(sample[0]) == sample[1], "next tier at %d" % sample[0])
 	check(RANKED.weekly_reward_tier(1200,1800) == "gold_1" and RANKED.weekly_reward_tier(1800,1200) == "gold_1", "weekly higher role")
 	check(RANKED.weekly_reward_tier(3400,3300,101,100) == "hero", "weekly hero title beats higher unqualified MMR")
 	var legacy := {"mmr":1000,"tier":"bronze_1"}

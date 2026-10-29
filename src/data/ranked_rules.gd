@@ -30,6 +30,12 @@ static func tier_index(mmr: int) -> int:
 		index = i
 	return index
 
+static func next_tier_text(mmr: int) -> String:
+	for entry in data().get("mmr_thresholds", []):
+		var threshold := int(entry.get("mmr", 0))
+		if threshold > mmr: return "다음 등급까지 %d점" % (threshold - mmr)
+	return "상위 %d위 안이면 용사 등급" % int(data().get("hero_qualification", {}).get("top_count", 100))
+
 static func weekly_reward_tier(demon_mmr: int, hero_mmr: int, demon_rank: int = 0, hero_rank: int = 0) -> String:
 	var demon_tier := tier(demon_mmr, demon_rank)
 	var hero_tier := tier(hero_mmr, hero_rank)

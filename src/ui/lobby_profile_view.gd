@@ -7,6 +7,9 @@ const APPEARANCE := preload("res://src/systems/demon_appearance_store.gd")
 const APPEARANCES := preload("res://src/data/demon_appearance_catalog.gd")
 const FRAMES := preload("res://src/ui/commerce_frame_skin.gd")
 const DRAG_BUTTON := preload("res://src/ui/drag_safe_button.gd")
+const RANKED := preload("res://src/data/ranked_rules.gd")
+const RANK_ICON_SIZE := 96
+const RANK_ERROR := "랭크 정보를 불러올 수 없음"
 
 var settings_ref: WeakRef
 var settings: RefCounted:
@@ -37,6 +40,9 @@ var shade: GradientTexture2D
 var _locked_texture: Texture2D
 var icon_picker: RefCounted
 var banner_picker: RefCounted
+var rank_icons := {}
+var rank_labels := {}
+var rank_weekly: Label
 
 func install(owner: RefCounted, parent: Control) -> void:
 	settings_ref = weakref(owner)
@@ -68,6 +74,7 @@ func install(owner: RefCounted, parent: Control) -> void:
 	column.add_theme_constant_override("separation", 22)
 	scroll.add_child(column)
 	_build_card(column)
+	_build_rank_section(column)
 	rename_button = _button(column, "마왕 이름 변경 (계정 연동 %d회)" % PROFILE.NAMES.LINKED_RENAMES, false)
 	rename_button.name = "NicknameChange"
 	rename_button.custom_minimum_size.y = 96
@@ -164,12 +171,62 @@ func _build_card(parent: Control) -> void:
 	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	info.add_child(line)
 	_rect(line, Vector2(14, 328), Vector2(278, 2))
-	var rank := _label(info, "랭킹 티어\n준비 중\n\n랭킹 점수\n준비 중", 26, Color("ead9fa"))
-	rank.autowrap_mode = TextServer.AUTOWRAP_OFF
-	rank.name = "RankingPlaceholder"
-	rank.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_rect(rank, Vector2(0, 350), Vector2(306, 186))
 	_frame(card)
+
+func _build_rank_section(parent: Control) -> void:
+	var section := VBoxContainer.new()
+	section.name = "RankSection"
+	parent.add_child(section)
+	var heading := _label(section, "랭크", 30, Color("f1d798"))
+	heading.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 12)
+	section.add_child(row)
+	for role in ["hero", "demon"]:
+		var panel := PanelContainer.new()
+		panel.name = role.capitalize() + "Rank"
+		panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		panel.add_theme_stylebox_override("panel", FRAMES.style("shop_featured_frame", 10))
+		row.add_child(panel)
+		var content := VBoxContainer.new()
+		panel.add_child(content)
+		var title := _label(content, "용사 모드" if role == "hero" else "마왕 모드", 24)
+		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		var icon := _image(content)
+		icon.custom_minimum_size = Vector2(RANK_ICON_SIZE, RANK_ICON_SIZE)
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
+		rank_icons[role] = icon
+		var label := _label(content, RANK_ERROR, 20)
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		rank_labels[role] = label
+	rank_weekly = _label(section, RANK_ERROR, 22)
+	rank_weekly.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+
+func _refresh_rank() -> void:
+	if lobby.main_modes_view == null: return
+	var modes = lobby.main_modes_view
+	var data: Dictionary = modes.ranked_profile_data if modes.ranked_profile_owner == lobby.get_node("/root/LoginGateway").user_id else {}
+	for role in ["hero", "demon"]:
+		var state: Dictionary = data.get(role, {})
+		var icon: TextureRect = rank_icons[role]
+		var label: Label = rank_labels[role]
+		if not (state.get("mmr") is int or state.get("mmr") is float):
+			icon.texture = null
+			label.text = RANK_ERROR
+			continue
+		var tier_id := String(state.get("tier", ""))
+		var path := RANKED.icon_path(tier_id)
+		icon.texture = _texture(path) if not path.is_empty() else null
+		label.text = "%s\nMMR %d\n%d승 %d패 · 서버 %s" % [RANKED.display_name(tier_id), int(state.mmr), int(state.get("wins", 0)), int(state.get("losses", 0)), modes.rank_text(state)]
+	var weekly := String(data.get("weekly_reward_tier", ""))
+	if weekly.is_empty() and not data.is_empty():
+		var demon: Dictionary = data.get("demon", {})
+		var hero: Dictionary = data.get("hero", {})
+		weekly = RANKED.weekly_reward_tier(int(demon.get("mmr", 0)), int(hero.get("mmr", 0)), int(demon.get("server_rank", 0)), int(hero.get("server_rank", 0)))
+	rank_weekly.text = "주간 보상 기준: %s" % RANKED.display_name(weekly) if not weekly.is_empty() else RANK_ERROR
 
 func _build_picker() -> void:
 	icon_picker = preload("res://src/ui/lobby_profile_icon_picker.gd").new()
@@ -328,6 +385,12 @@ func _open_gender_change() -> void:
 	refresh()
 
 func show() -> void:
+	if lobby.main_modes_view != null:
+		var modes = lobby.main_modes_view
+		if not modes.ranked_profile_changed.is_connected(_refresh_rank):
+			modes.ranked_profile_changed.connect(_refresh_rank)
+		modes._request_ranked_profile()
+		_refresh_rank()
 	refresh()
 	root.show()
 	title_plate.show()
