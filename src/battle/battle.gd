@@ -3346,7 +3346,8 @@ func _chest_kill_requirement() -> int:
 	return HERO_SURVIVAL.CHEST_KILLS if hero_player_mode else CHEST_KILLS_REQUIRED
 
 func _hero_chest_eligible(source: String) -> bool:
-	if online_match_mode: return false
+	if online_match_mode:
+		return preload("res://src/data/ranked_pickup_catalog.gd").chest_eligible(source,hero_chests_spawned,hero_kills_toward_chest,hero_elite_kills_toward_chest)
 	if source != "kills" and source != "elite": return false
 	if hero_chests_spawned == 0: return source == "elite"
 	return hero_elite_kills_toward_chest >= HERO_SURVIVAL.CHEST_ELITE_KILLS if source == "elite" else hero_kills_toward_chest >= HERO_SURVIVAL.CHEST_KILLS

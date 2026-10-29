@@ -42,7 +42,9 @@ while queue:
   elif dest.suffix.lower() in ['.png','.webp','.jpg']:
    Image.new('RGBA',(64,64),(0,0,0,0)).save(dest);placeholders.append(path)
   elif dest.suffix.lower()=='.tres' and '/clean_frames/' in path:
-   dest.write_text('[gd_resource type="StyleBoxTexture" format=3]\n[resource]\n');placeholders.append(path)
+   tracked=subprocess.run(['git','show','HEAD:'+path],cwd=r,capture_output=True)
+   if tracked.returncode != 0:raise SystemExit('Missing style resource: '+path)
+   dest.write_bytes(tracked.stdout)
   elif dest.suffix.lower() in ['.ttf','.otf']:
    shutil.copyfile(next(Path('/usr/share/fonts').rglob('*.ttf')),dest);placeholders.append(path)
   elif dest.suffix.lower()=='.svg':

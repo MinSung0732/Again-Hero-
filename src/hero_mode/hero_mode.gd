@@ -230,7 +230,7 @@ func _build_ui() -> void:
 	pad.input_exclusions.append(stats_panel)
 	inventory_dim = ColorRect.new(); inventory_dim.name = "InventoryModalDim"; inventory_dim.color = Color(0,0,0,0.58)
 	inventory_dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT); inventory_dim.mouse_filter = Control.MOUSE_FILTER_STOP; add_child(inventory_dim); inventory_dim.hide()
-	overlay = PanelContainer.new(); add_child(overlay)
+	overlay = PanelContainer.new(); overlay.z_index = preload("res://src/ui/battle_ui_layers.gd").AUGMENT_OVERLAY; add_child(overlay)
 	overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	overlay.offset_left = 65; overlay.offset_right = -65; overlay.offset_top = 390; overlay.offset_bottom = -150
 	var style := StyleBoxFlat.new(); style.bg_color = Color("122b3a"); style.border_color = Color("d9c77c"); style.set_border_width_all(3); style.set_content_margin_all(28)

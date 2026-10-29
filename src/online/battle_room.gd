@@ -442,6 +442,7 @@ func _build_snapshot() -> Dictionary:
 			for pattern in weapons.native_skills.actors_by_pattern:
 				for actor in weapons.native_skills.actors_by_pattern[pattern]:
 					if is_instance_valid(actor) and not battle.online_visual_projectiles.has(actor.get_instance_id()): presentation.append_tree(actor,-1,visuals)
+	presentation.append_field_item_bars(primitives)
 	visuals.sort_custom(_visual_order)
 	stale_wire_ids.clear()
 	for instance in ids:

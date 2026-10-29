@@ -4,10 +4,12 @@ const MAX_COMMANDS := 128
 const MAX_ACTORS := 216
 # Direct battle children; includes ability-created temporary heals as well as
 # ordinary drops. Registry membership never changes authoritative spawn caps.
+const HERO_TOP_BACKDROP_PATH := "res://assets/art/UI/hero_hud/ranked_top_backdrop.png"
+const CHEST_SCRIPT := "res://src/battle/treasure_chest.gd"
 const FIELD_ITEM_SCRIPTS := [
 	"res://src/battle/heal_item.gd",
 	"res://src/battle/magnet_item.gd",
-	"res://src/battle/treasure_chest.gd",
+	CHEST_SCRIPT,
 ]
 # Display policy only; no movement speed or combat rule is inferred here.
 const MOTION_SECONDS := preload("res://src/online/match_rules.gd").SNAPSHOT_INTERVAL

@@ -228,7 +228,7 @@ func _ready() -> void:
 		var chrome: Control = TOP_LAYOUT.install_backdrop(self)
 		chrome.hide()
 	else:
-		top_backing = TOP_LAYOUT.install_top_backdrop(self,HERO_HUD.BATTLE_TOP,HERO_HUD.BACKGROUND_COLOR)
+		top_backing = TOP_LAYOUT.install_top_backdrop(self,HERO_HUD.BATTLE_TOP,HERO_HUD.BACKGROUND_COLOR,preload("res://src/data/online_presentation_catalog.gd").HERO_TOP_BACKDROP_PATH,HERO_HUD.BATTLE_TOP)
 		var hero_frame: Control = HERO_FRAME.new()
 		hero_frame.name = "HeroBattleFrame"
 		hero_frame.mouse_filter = Control.MOUSE_FILTER_IGNORE

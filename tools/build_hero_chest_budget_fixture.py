@@ -1,5 +1,6 @@
 """Extract production chest eligibility/session/creation; replace only asset factory."""
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 repo = Path(__file__).resolve().parents[1]
@@ -12,6 +13,7 @@ def method(name):
     return source[start:end]+'\n'
 base = '''extends Node2D
 const HERO_SURVIVAL := preload("res://src/data/hero_mode_catalog.gd")
+const PICKUP_PLACEMENT := preload("res://src/systems/pickup_placement.gd")
 const CHEST_KILLS_REQUIRED := 50
 const MAX_ACTIVE_CHESTS := 2
 class Chest extends Node2D:
@@ -23,6 +25,7 @@ class Router extends RefCounted:
 var battle_command_router := Router.new()
 var run_metrics := Metrics.new()
 var hero_player_mode := true
+var online_match_mode := false
 var battle_over := false
 var hero_kills_toward_chest := 0
 var hero_chests_spawned := 0
@@ -39,3 +42,7 @@ func _on_treasure_chest_destroyed(_position: Vector2, _chest: Node) -> void: pas
 methods = ''.join(method(name) for name in ['_chest_kill_requirement','_hero_chest_eligible','_try_spawn_chest_from_kills','_spawn_chest_for_session','_spawn_random_treasure_chest'])
 methods = methods.replace('TREASURE_CHEST_SCENE.instantiate()', 'Chest.new()')
 (out/'tests/hero_chest_budget_harness.gd').write_text(base+methods)
+
+shutil.copyfile(repo/"src/data/ranked_pickup_catalog.gd",out/"src/data/ranked_pickup_catalog.gd")
+(out/"src/systems").mkdir(parents=True,exist_ok=True)
+shutil.copyfile(repo/"src/systems/pickup_placement.gd",out/"src/systems/pickup_placement.gd")

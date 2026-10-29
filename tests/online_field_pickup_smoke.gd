@@ -28,7 +28,7 @@ func run() -> void:
 	var battle = room.battle
 	battle.process_mode = Node.PROCESS_MODE_DISABLED
 	other.battle.process_mode = Node.PROCESS_MODE_DISABLED
-	check(not battle._hero_chest_eligible("kills"),"natural chest eligibility is reserved for the next stage")
+	check(not battle._hero_chest_eligible("kills"),"natural chest requires its configured kill progress")
 	battle._spawn_random_heal_item(); battle._spawn_random_magnet_item()
 	check(battle._spawn_random_treasure_chest(),"existing chest factory still works")
 	var heal = battle.active_heal_items.values()[0]

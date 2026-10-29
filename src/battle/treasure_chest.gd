@@ -16,6 +16,8 @@ static var _frames_cache: SpriteFrames
 
 var current_hp: int = 100
 var destroyed_flag := false
+var reward_emitted := false
+const BAR := preload("res://src/ui/treasure_chest_bar_painter.gd")
 
 
 func _ready() -> void:
@@ -68,8 +70,7 @@ func _start_death_animation() -> void:
 		collision_shape.set_deferred("disabled", true)
 
 	if not is_instance_valid(visual):
-		destroyed.emit(global_position)
-		queue_free()
+		_finish_destruction()
 		return
 
 	visual.modulate = Color.WHITE
@@ -89,9 +90,14 @@ func _on_visual_animation_finished() -> void:
 			if not destroyed_flag:
 				visual.play(&"idle")
 		"death":
-			destroyed.emit(global_position)
-			queue_free()
+			_finish_destruction()
 
+
+func _finish_destruction() -> void:
+	if reward_emitted: return
+	reward_emitted = true
+	destroyed.emit(global_position)
+	queue_free()
 
 func _apply_visual() -> void:
 	if not is_instance_valid(visual):
@@ -149,20 +155,4 @@ func _apply_visual() -> void:
 
 
 func _draw() -> void:
-	if destroyed_flag:
-		return
-	var hp_ratio := clampf(
-		float(current_hp) / float(maxi(max_hp, 1)),
-		0.0,
-		1.0
-	)
-	draw_rect(
-		Rect2(-28, -38, 56, 5),
-		Color(0.10, 0.08, 0.06, 0.90),
-		true
-	)
-	draw_rect(
-		Rect2(-27, -37, 54.0 * hp_ratio, 3),
-		Color(0.94, 0.70, 0.20),
-		true
-	)
+	if not destroyed_flag: BAR.draw(self,current_hp,max_hp)

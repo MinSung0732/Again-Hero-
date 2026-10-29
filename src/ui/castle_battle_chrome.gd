@@ -49,7 +49,7 @@ static func install_lower_backdrop(layer: Control, height: float) -> TextureRect
 	layer.add_child(backing)
 	return backing
 
-static func install_top_backdrop(layer: Control, height: float, color: Color, texture_path: String = "") -> ColorRect:
+static func install_top_backdrop(layer: Control, height: float, color: Color, texture_path: String = "", art_height: float = 300.0) -> ColorRect:
 	var backing := ColorRect.new()
 	backing.name = "BattleTopBacking"
 	backing.color = color
@@ -68,7 +68,7 @@ static func install_top_backdrop(layer: Control, height: float, color: Color, te
 		art.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 		backing.add_child(art)
 		art.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
-		art.offset_bottom = 300.0
+		art.offset_bottom = art_height
 	return backing
 
 static func install_panels(targets: Array, art_source: Node = null) -> void:

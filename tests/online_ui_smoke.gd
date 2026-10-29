@@ -177,8 +177,8 @@ func run() -> void:
 		if role == "hero":
 			check(is_equal_approx(scene.view.get_global_rect().position.y,scene.demon_info_panel.get_global_rect().end.y) and scene.get_node_or_null("CastleBattleChrome") == null,"no castle gray layer or gap below demon info")
 		else:
-			var dot_style := scene.hold_popup.dots[0].get_theme_stylebox("normal") as StyleBoxFlat
-			check(dot_style != null and dot_style.border_color == Color("d9b45b") and dot_style.bg_color == Color("281832"),"held dots use dark gold skin")
+			var dot_style := scene.hold_popup.dots[0].get_theme_stylebox("normal") as StyleBoxTexture
+			check(dot_style != null and dot_style.texture != null,"held slots use authored gold badge texture")
 		scene.battle_frame_enabled = false; scene._apply_match_frame(); await process_frame
 		check(not frame.visible and is_equal_approx(scene.view.get_global_rect().position.x,0.0) and is_equal_approx(scene.view.get_global_rect().position.y,470.0 if role == "hero" else 350.0),"frame off expands to solo role area")
 		var top_backing: Control = scene.get_node("BattleTopBacking")

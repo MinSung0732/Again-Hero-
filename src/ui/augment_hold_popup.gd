@@ -1,4 +1,5 @@
 extends Control
+const BUTTON_ART := preload("res://src/ui/augment_hold_art.gd")
 const RULES := preload("res://src/online/match_rules.gd")
 const ICONS := preload("res://src/ui/hero_augment_icons.gd")
 const DEMON_AUGMENTS := preload("res://src/data/demon_augment_catalog.gd")
@@ -9,6 +10,7 @@ const DEMON_VIEW := preload("res://src/ui/demon_augment_panel_view.gd")
 const HERO_CARDS := preload("res://src/ui/hero_augment_cards_view.gd")
 const SKIN := preload("res://src/ui/pixel_panel_skin.gd")
 # New held offer: the slot glows soft yellow once (fade in, then out).
+const OVERLAY_Z := preload("res://src/ui/battle_ui_layers.gd").AUGMENT_OVERLAY
 const NEW_HOLD_GLOW_COLOR := Color(1.0,0.86,0.3,0.55)
 const NEW_HOLD_GLOW_IN := 0.18
 const NEW_HOLD_GLOW_OUT := 0.5
@@ -43,13 +45,14 @@ var opened_number := -1
 var last_chosen_number := -1
 
 func _ready() -> void:
+	z_index = OVERLAY_Z
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	dot_row = HBoxContainer.new(); dot_row.name = "HoldDots"
 	dot_row.add_theme_constant_override("separation",16); add_child(dot_row)
 	for index in RULES.AUGMENT_HOLD_LIMIT:
-		var dot := Button.new(); dot.name = "Dot%d" % index; dot.text = "●"
-		dot.custom_minimum_size = Vector2(60,60); dot.add_theme_font_size_override("font_size",34)
+		var dot := Button.new(); dot.name = "Dot%d" % index; dot.text = str(index+1)
+		dot.custom_minimum_size = BUTTON_ART.BADGE_SIZE; dot.add_theme_font_size_override("font_size",34)
 		if role == "demon":
 			var dot_style := StyleBoxFlat.new()
 			dot_style.bg_color = Color("281832"); dot_style.border_color = Color("d9b45b")
@@ -57,6 +60,7 @@ func _ready() -> void:
 			for state in ["normal","hover","pressed","disabled"]:
 				dot.add_theme_stylebox_override(state,dot_style)
 			dot.add_theme_color_override("font_color",Color("eac14d"))
+		BUTTON_ART.apply(dot,BUTTON_ART.BADGE_PATH)
 		dot_row.add_child(dot); dot.pressed.connect(open_index.bind(index)); dot.hide(); dots.append(dot)
 		# Glow panels are built once per slot and only tweened when an offer arrives.
 		var glow := Panel.new(); glow.name = "NewGlow"; glow.mouse_filter = Control.MOUSE_FILTER_IGNORE; glow.show_behind_parent = true
@@ -106,6 +110,7 @@ func _ready() -> void:
 		popup_rows.get_node("Actions").add_child(lower_button)
 	else:
 		popup_rows.add_child(lower_button)
+	BUTTON_ART.apply(lower_button,BUTTON_ART.LOWER_PATH)
 	lower_button.pressed.connect(close_popup)
 	reroll_button.pressed.connect(_reroll_open)
 	resized.connect(_layout)
@@ -227,7 +232,9 @@ func _reroll_open() -> void:
 
 func _layout() -> void:
 	if dot_row == null or popup == null: return
-	dot_row.position = Vector2(maxf(0.0,(size.x-RULES.AUGMENT_HOLD_LIMIT*76.0)/2.0),maxf(0.0,lower_top-72.0))
+	var visible_slots := maxi(1,mini(holds.size(),RULES.AUGMENT_HOLD_LIMIT))
+	var row_width := visible_slots*BUTTON_ART.BADGE_SIZE.x+(visible_slots-1)*dot_row.get_theme_constant("separation")
+	dot_row.position = Vector2(maxf(0.0,(size.x-row_width)/2.0),maxf(0.0,lower_top-BUTTON_ART.BADGE_SIZE.y-BUTTON_ART.BADGE_GAP))
 	if popup.visible:
 		if role == "demon": return
 		var width := minf(980.0,size.x-48.0)

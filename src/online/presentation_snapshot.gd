@@ -28,6 +28,19 @@ func append_field_items(output: Array) -> void:
 		var item = field_items[instance].get_ref()
 		if not is_instance_valid(item) or item.is_queued_for_deletion(): continue
 		append_tree(item,-1,output)
+func append_field_item_bars(output: Array) -> void:
+	var primitives := preload("res://src/online/primitive_mirror.gd")
+	var bar := preload("res://src/ui/treasure_chest_bar_painter.gd")
+	for instance in field_items:
+		if output.size() >= primitives.DATA.MAX_PRIMITIVES: return
+		var item = field_items[instance].get_ref()
+		if not is_instance_valid(item) or item.is_queued_for_deletion() or not item.is_visible_in_tree(): continue
+		if item.get_script().resource_path != DATA.CHEST_SCRIPT or item.destroyed_flag: continue
+		for rect in [bar.BACKGROUND,bar.fill_rect(item.current_hp,item.max_hp)]:
+			if not rect.has_area(): continue
+			var points := PackedVector2Array([rect.position,Vector2(rect.end.x,rect.position.y),rect.end,Vector2(rect.position.x,rect.end.y)])
+			for index in points.size(): points[index] = item.global_transform*points[index]
+			primitives.append(output,"polygon",Vector2.ZERO,0,0,bar.BACKGROUND_COLOR if rect==bar.BACKGROUND else bar.FILL_COLOR,0,points)
 func _collect(node: Node,output: Array) -> void:
 	if node is AnimatedSprite2D or node is Sprite2D: output.append(weakref(node))
 	for child in node.get_children(): _collect(child,output)
