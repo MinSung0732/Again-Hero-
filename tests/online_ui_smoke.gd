@@ -99,6 +99,9 @@ func run() -> void:
 				await process_frame; await process_frame
 				var card: Button = scene.hold_popup.cards[0]
 				check(not card.get_node("Level").get_global_rect().intersects(card.get_node("AugmentDetails").get_global_rect()),"special tag avoids details at " + str(viewport_size))
+				preload("res://src/ui/demon_augment_panel_view.gd").populate(scene.hold_popup.popup,[{"augment_type":"normal","target_monster_id":"slime","name":"normal","description":"effect","current_stack":0,"max_stack":10}],1,0,0)
+				await process_frame; await process_frame
+				check(not card.get_node("Level").get_global_rect().intersects(card.get_node("AugmentDetails").get_global_rect()),"normal stack label avoids details at " + str(viewport_size))
 			root.size = Vector2i(1080,1920)
 			var long_candidate := {"id":"survival_power","name":"룬방패수호병 최대 체력 증가","description":"최대 체력이 증가합니다"}
 			preload("res://src/ui/demon_augment_panel_view.gd").populate(scene.hold_popup.popup,[long_candidate],1,0,0)
