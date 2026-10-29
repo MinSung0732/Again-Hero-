@@ -155,8 +155,28 @@ func configure(stage_id: String, map_size: Vector2, theme: String = "castle") ->
 func _finish_configuration() -> void:
 	if THEMES.get_theme(theme_id).floor_damage: _build_floor_damage_paths()
 	else: floor_damage_paths.clear()
-	_build_castle_decor()
+	var layout: Array = THEMES.get_theme(theme_id).layout
+	if layout.is_empty():
+		_build_castle_decor()
+	else:
+		_build_top_wall()
+		_build_side_walls()
+		_build_bottom_wall()
+		_build_theme_layout(layout)
 	queue_redraw()
+
+func _build_theme_layout(layout: Array) -> void:
+	for item in layout:
+		var position: Vector2 = item.pos * battlefield_size
+		_add_theme_prop(item, position, item.get("flip", false))
+		if item.get("mirror", false):
+			_add_theme_prop(item, Vector2(battlefield_size.x - position.x, position.y), not item.get("flip", false))
+
+func _add_theme_prop(item: Dictionary, position: Vector2, flip: bool) -> void:
+	match item.kind:
+		"solid": _add_solid_depth_prop(item.key, position, item.scale, item.collision, flip)
+		"depth": _add_depth_prop_visual(item.key, position, item.scale, flip)
+		"ground": _add_background_visual(item.key, position, item.scale, flip, -1)
 
 func configure_async(stage_id: String,map_size: Vector2,current: Callable,progress: Callable,theme: String = "castle") -> bool:
 	_set_theme(theme)
@@ -167,11 +187,13 @@ func configure_async(stage_id: String,map_size: Vector2,current: Callable,progre
 		textures.clear()
 		var theme_data: Dictionary = THEMES.get_theme(theme_id)
 		var carpets: Array = policy.CARPETS if theme_data.strip_carpet else []
-		var total := TEXTURE_PATHS.size()+carpets.size()
+		var paths: Dictionary = TEXTURE_PATHS.duplicate()
+		paths.merge(theme_data.extra_textures)
+		var total := paths.size()+carpets.size()
 		var completed := 0
-		for key in TEXTURE_PATHS:
+		for key in paths:
 			if not current.is_valid() or not current.call(): return false
-			var path: String = theme_data.overrides.get(key,TEXTURE_PATHS[key])
+			var path: String = theme_data.overrides.get(key,paths[key])
 			var resource: Texture2D
 			var warmup := get_node_or_null("/root/PresentationWarmup")
 			if warmup != null: resource = warmup.get_texture(path)
@@ -248,8 +270,10 @@ func _ensure_textures() -> void:
 	if not textures.is_empty():
 		return
 	var theme_data: Dictionary = THEMES.get_theme(theme_id)
-	for key in TEXTURE_PATHS.keys():
-		var path := String(theme_data.overrides.get(key,TEXTURE_PATHS[key]))
+	var paths: Dictionary = TEXTURE_PATHS.duplicate()
+	paths.merge(theme_data.extra_textures)
+	for key in paths:
+		var path := String(theme_data.overrides.get(key,paths[key]))
 		var warmup := get_node_or_null("/root/PresentationWarmup")
 		if warmup != null:
 			var cached: Texture2D = warmup.get_texture(path)
