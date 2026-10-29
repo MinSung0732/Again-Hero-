@@ -347,7 +347,9 @@ func apply(role: String,kind: String,argument: Variant) -> bool:
 		var x: Variant = argument.get("x",null); var y: Variant = argument.get("y",null)
 		if not RULES.number(serial) or float(serial) != floorf(float(serial)) or not RULES.point([x,y]): return false
 		var point := Vector2(float(x),float(y))
-		if not battle.is_spawn_position_valid(point): return false
+		if not battle.is_spawn_position_valid(point):
+			last_action_message = "용사와 너무 가까움" if battle.is_manual_spawn_too_close_to_hero(point) else "배치 불가\n전장 안쪽을 터치"
+			return false
 		for index in elite_cards.size():
 			var card: Dictionary = elite_cards[index]
 			if int(card.serial) == int(serial):

@@ -279,6 +279,8 @@ func _ready() -> void:
 	if role == "demon": _install_elite_ui()
 	view.placement.connect(func(point: Vector2):
 		if role == "demon" and not ended and not local_preparing and not waiting_for_start and not connection_waiting and not client.reconnecting:
+			if not view.state.is_empty() and point.distance_squared_to(Vector2(view.state.hero[0],view.state.hero[1])) < view.battle_constants.MANUAL_SPAWN_HERO_MIN_DISTANCE * view.battle_constants.MANUAL_SPAWN_HERO_MIN_DISTANCE:
+				action_notice.text = "용사와 너무 가까움"; view.show_manual_spawn_restricted_area(); return
 			if selected_elite >= 0:
 				if client.command("elite_summon",{"serial":selected_elite,"x":point.x,"y":point.y}):
 					selected_elite = -1; _refresh_elite_controls(); _refresh_summon_selection()
@@ -1232,7 +1234,9 @@ func _event(event: Dictionary) -> void:
 			_update_holds([])
 			_show_result_after_presentation(event)
 		"action":
-			if event.get("match","") == client.match_id and event.get("message",null) is String: action_notice.text = event.message
+			if event.get("match","") == client.match_id and event.get("message",null) is String:
+				action_notice.text = event.message
+				if event.message == "용사와 너무 가까움": view.show_manual_spawn_restricted_area()
 		"error":
 			view.feedback.pause_feedback(); view.pause_motion()
 			load_revision += 1; local_preparing = false; waiting_for_start = false; loading.finish()

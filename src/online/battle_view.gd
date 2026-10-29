@@ -13,6 +13,7 @@ const CAMERA_VIEW := preload("res://src/ui/battle_camera_view.gd")
 const BARS := preload("res://src/ui/battle_bar_painter.gd")
 const STATUS_BARS := preload("res://src/online/status_bar_view.gd")
 const EXP_ORBS := preload("res://src/data/online_exp_orb_catalog.gd")
+var battle_constants
 var exp_orbs = preload("res://src/online/exp_orb_view.gd").new()
 var status_bars
 var motion = preload("res://src/online/actor_motion.gd").new()
@@ -47,6 +48,7 @@ var bounds := Vector2(3600,3600)
 var hero_role := true
 var camera_view_locked := true
 var manual_center := Vector2.ZERO
+var manual_spawn_warning_timer := 0.0
 var drag_pointer := -1
 var drag_distance := 0.0
 const DRAG_THRESHOLD := 12.0
@@ -69,6 +71,7 @@ func _admit_sighted_actor(id: String) -> bool:
 	allowed_actor_ids.append(id); _load_actor_texture(id)
 	return true
 func _ready() -> void:
+	battle_constants = load("res://src/battle/battle.gd")
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	clip_contents = true
 	set_process(false)
@@ -170,7 +173,7 @@ func _display_before(a: int,b: int) -> bool:
 	return a < b
 func pause_motion() -> void:
 	motion_paused = true
-	set_process(not pending_textures.is_empty())
+	set_process(manual_spawn_warning_timer > 0.0 or not pending_textures.is_empty())
 	# Freeze the displayed point; the first resumed state establishes a new baseline.
 func resume_motion() -> void:
 	motion.clear(); motion_paused = false; motion_received_us = 0
@@ -186,6 +189,9 @@ func _request_texture(path: String) -> void:
 		pending_textures.append(path); set_process(true)
 		if is_instance_valid(load_drain): load_drain.set_process(true)
 func _process(delta: float) -> void:
+	if manual_spawn_warning_timer > 0.0:
+		manual_spawn_warning_timer = maxf(0.0,manual_spawn_warning_timer-delta)
+		queue_redraw()
 	advance_motion(delta)
 	if not motion_paused and exp_orbs.advance(delta*presentation_speed): queue_redraw()
 	var changed := false
@@ -201,7 +207,10 @@ func _process(delta: float) -> void:
 		pending_textures[index] = pending_textures[-1]; pending_textures.pop_back(); changed = true; finalized += 1
 	if changed:
 		_refresh_fallback_textures(); _resolve_owners(); queue_redraw()
-	if pending_textures.is_empty() and (motion_paused or (not motion.active and not exp_orbs.needs_process())): set_process(false)
+	if manual_spawn_warning_timer <= 0.0 and pending_textures.is_empty() and (motion_paused or (not motion.active and not exp_orbs.needs_process())): set_process(false)
+func show_manual_spawn_restricted_area() -> void:
+	manual_spawn_warning_timer = battle_constants.MANUAL_SPAWN_WARNING_DURATION
+	set_process(true); queue_redraw()
 func _refresh_fallback_textures() -> void:
 	for id in actor_texture_paths:
 		var texture: Texture2D = art_textures.get(actor_texture_paths[id])
@@ -217,6 +226,7 @@ func _resolve_owners() -> void:
 		if texture != null and command[2]+command[4] <= texture.get_width() and command[3]+command[5] <= texture.get_height(): painted_owners[int(command[0])] = true
 func clear_state() -> void:
 	exp_orbs.clear()
+	manual_spawn_warning_timer = 0.0
 	state = {}; painted_owners.clear(); render_visuals.clear()
 	manual_center = bounds*0.5; drag_pointer = -1
 	visual_order.clear(); visual_slots.clear(); visual_depths.clear(); actor_ids.clear(); resume_motion()
@@ -284,6 +294,11 @@ func _draw() -> void:
 	if state.is_empty(): return
 	var hp: Array = state.hero
 	var hero_point: Vector2 = motion.position(0,Vector2(hp[0],hp[1]))
+	if manual_spawn_warning_timer > 0.0:
+		var alpha: float = manual_spawn_warning_timer / battle_constants.MANUAL_SPAWN_WARNING_DURATION
+		var center := map_offset+hero_point*map_scale
+		draw_circle(center,battle_constants.MANUAL_SPAWN_HERO_MIN_DISTANCE*scale_ratio,Color(1.0,0.18,0.16,0.08*alpha))
+		draw_circle(center,battle_constants.MANUAL_SPAWN_HERO_MIN_DISTANCE*scale_ratio,Color(1.0,0.32,0.24,0.78*alpha),false,6.0*scale_ratio)
 	_actor(hero_point,hero_texture,Color("73deff"),true,not painted_owners.has(0))
 	if status_bars != null: status_bars.move_actor(0,hero_point)
 	for actor in state.actors:
