@@ -221,6 +221,7 @@ var research_reset_button
 var stage_ids: Array[String] = []
 var selected_stage_index: int = 0
 var current_tab: String = "main"
+var _trimmed_preview_cache := {}
 var _team_formation_view = TEAM_FORMATION_VIEW.new()
 var _team_upgrade_feedback: Node2D
 var _formation_card_cache = preload("res://src/ui/formation_card_cache.gd").new()
@@ -4108,9 +4109,10 @@ func _present_elite_detail_icons(monster_id: String) -> void:
 		slot.row.visible = i < skills.size()
 		if i >= skills.size(): continue
 		var skill: Dictionary = skills[i]
-		slot.icon.configure("elite",monster_id,String(skill.get("id",skill.name)))
+		slot.icon.configure("elite",monster_id,String(skill.get("id",skill.name)),monster_detail_elite_portrait.texture)
 		slot.icon.tooltip_text = String(skill.name)
-		var timing := "상시 패시브" if bool(skill.get("passive",false)) else "선쿨 %.1f초 · 쿨 %.1f초" % [maxf(float(skill.get("initial_cooldown",0)),0),maxf(float(skill.get("cooldown",0)),0)]
+		var timing := "상시 패시브" if bool(skill.get("passive",false)) else "선쿨 %.1f초
+쿨 %.1f초" % [maxf(float(skill.get("initial_cooldown",0)),0),maxf(float(skill.get("cooldown",0)),0)]
 		slot.text.text = "[color=#ffe29a]%s[/color]\n[color=#b89ac7]%s[/color]\n%s" % [String(skill.name),timing,String(skill.get("description",""))]
 
 
@@ -4137,9 +4139,10 @@ func _build_normal_detail_text(
 		)
 	lines.append("[center][color=#c9b6d3]%s[/color][/center]" % " · ".join(identity_parts))
 	if not TRANSCENDENCE_DATA.is_transcendent(monster_id):
-		lines.append("[center][color=#f0cb68]코스트 %.1f[/color]   [color=#bdb0c5]마왕 EXP %.1f[/color][/center]" % [
-			float(data.get("base_cost", 0.0)),
-			float(data.get("summon_exp", 0.0)),
+		# Non-breaking spaces keep each label with its value when the column wraps.
+		lines.append("[center][color=#f0cb68]코스트 %s[/color] · [color=#bdb0c5]마왕 EXP %s[/color][/center]" % [
+			String.num(float(data.get("base_cost", 0.0)), 1),
+			String.num(float(data.get("summon_exp", 0.0)), 1),
 		])
 	lines.append("")
 	if not bool(data.get("combat_enabled",true)):
@@ -4318,10 +4321,30 @@ func _load_elite_preview(monster_id: String) -> Texture2D:
 		var start_index := int(idle.get("start", 1))
 		path = "%s/frame_%02d.png" % [asset_dir, start_index]
 
-	var texture := _load_texture(path)
+	var texture := _trimmed_preview(path)
 	if texture != null:
 		return texture
 	return _team_monster_card_icon(monster_id)
+
+# Elite idle frames carry wide transparent margins for combat effects; crop once per path so
+# the detail portrait matches the normal card scale.
+func _trimmed_preview(path: String) -> Texture2D:
+	if _trimmed_preview_cache.has(path):
+		return _trimmed_preview_cache[path]
+	var texture := _load_texture(path)
+	var result: Texture2D = texture
+	if texture != null:
+		var image := texture.get_image()
+		if image != null:
+			if image.is_compressed(): image.decompress()
+			var used := image.get_used_rect()
+			if used.size.x > 0 and used.size.y > 0 and used.size != image.get_size():
+				var atlas := AtlasTexture.new()
+				atlas.atlas = texture
+				atlas.region = Rect2(used)
+				result = atlas
+	_trimmed_preview_cache[path] = result
+	return result
 
 func _remove_team_monster(monster_id: String) -> void:
 	if monster_id not in team_selected_ids:

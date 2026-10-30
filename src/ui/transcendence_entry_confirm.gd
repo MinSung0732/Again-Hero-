@@ -28,7 +28,7 @@ func install(lobby: Control) -> void:
 	box.add_theme_constant_override("separation", 28)
 	margin.add_child(box)
 	var message := Label.new()
-	message.text = "초월편성이 완료되지 않았습니다.\n시작하시겠습니까?"
+	message.text = "초월 편성이 완료되지 않았습니다.\n시작하시겠습니까?"
 	message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	message.add_theme_font_size_override("font_size", 30)
 	box.add_child(message)

@@ -28,8 +28,10 @@ func _init() -> void:
 	placeholder.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	image.add_child(placeholder)
 	placeholder.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-func configure(domain: String, owner_id: String, skill_id: String) -> void:
+# Skills without authored art show their owner's portrait instead of a text placeholder.
+func configure(domain: String, owner_id: String, skill_id: String, fallback: Texture2D = null) -> void:
 	set_meta("icon_key",ART.key(domain,owner_id,skill_id))
 	image.texture = ART.texture(domain,owner_id,skill_id)
+	if image.texture == null: image.texture = fallback
 	placeholder.visible = image.texture == null
 	tooltip_text = "기술 아이콘" if image.texture != null else "스킬 아이콘 자리"

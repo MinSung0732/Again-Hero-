@@ -141,13 +141,13 @@ func _texture(path: String) -> Texture2D:
 		textures[path] = load(path) as Texture2D if ResourceLoader.exists(path) else null
 	return textures[path]
 
-func _skill(parent: Node, domain: String, owner: String, id: String, title: String, text: String) -> void:
+func _skill(parent: Node, domain: String, owner: String, id: String, title: String, text: String, fallback: Texture2D = null) -> void:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 20)
 	parent.add_child(row)
 	var icon := ICON.new()
 	row.add_child(icon)
-	icon.configure(domain, owner, id)
+	icon.configure(domain, owner, id, fallback)
 	var column := VBoxContainer.new()
 	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_child(column)
@@ -481,7 +481,7 @@ func select_monster(category: String, id: String) -> void:
 			for skill in skills:
 				var text := String(skill.get("description", ""))
 				if skill.has("cooldown"): text += "\n재사용 %s초" % str(skill.cooldown)
-				_skill(content, "elite", id, String(skill.get("id", skill.name)), skill.name, text)
+				_skill(content, "elite", id, String(skill.get("id", skill.name)), skill.name, text, elite_art)
 			var groups := DATA.related_augment_groups(id)
 			for kind in ["normal","special"]:
 				var section := VBoxContainer.new()
