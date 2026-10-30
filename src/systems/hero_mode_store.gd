@@ -1,4 +1,6 @@
 extends RefCounted
+const STAMINA := preload("res://src/systems/stamina_store.gd")
+const STAMINA_RULES := preload("res://src/data/stamina_catalog.gd")
 const RESPEC := preload("res://src/systems/research_respec_store.gd")
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
 const STAGES := preload("res://src/data/stage_catalog.gd")
@@ -143,7 +145,8 @@ static func record_chest(entry: Dictionary, chest_serial: int, gold_bonus: float
 	units += roundi(DATA.CHEST_GOLD*1000*(1.0+clampf(gold_bonus,0,DATA.growth_max_bonus("gold"))))
 	config.set_value("hero_run_gold","entry",serial); config.set_value("hero_run_gold","chest",chest_serial); config.set_value("hero_run_gold","units",units)
 	return {"success":SCOPE.save_config(config,PATH) == OK,"pending":floori(units/1000.0)}
-static func award_run(stage: String,entry: Dictionary,elapsed: float,kills: int,won: bool,value: String = "easy", outcome: String = "", gold_bonus: float = -1.0) -> Dictionary:
+static func award_run(stage: String,entry: Dictionary,elapsed: float,kills: int,won: bool,value: String = "easy", outcome: String = "", gold_bonus: float = -1.0, earned_exp: int = 0, exit_elapsed_ms: int = -1) -> Dictionary:
+	if earned_exp < 0: return {"success":false}
 	if not is_finite(gold_bonus) or outcome not in ["","victory","defeat","abandon"] or (won and outcome in ["defeat","abandon"]) or (not won and outcome == "victory"): return {"success":false}
 	if not can_enter(stage,value): return {"success":false}
 	if STAGES.get_stage(stage).is_empty() or not is_finite(elapsed) or elapsed < 0.0 or kills < 0 or (won and elapsed < DATA.DURATION): return {"success":false}
@@ -155,24 +158,49 @@ static func award_run(stage: String,entry: Dictionary,elapsed: float,kills: int,
 	if serial != int(progress.get_value("stamina","active_entry",0)) or not bool(progress.get_value("stamina","active_claimed",false)) or String(progress.get_value("stamina","active_stage","")) != stage: return {"success":false}
 	if serial <= int(config.get_value("hero_progress","last_reward_entry",0)): return {"success":true,"research":0,"gold":0}
 	if int(STAGES.get_stage(stage).get("number",0)) > _highest_battle_stage_in_config(config): return {"success":false}
-	var eligible := elapsed >= 30.0 and kills > 0
-	var points: int = DATA.WIN_RESEARCH if won else (DATA.PARTIAL_RESEARCH if eligible else 0)
-	var gold: int = DATA.WIN_GOLD if won else (DATA.PARTIAL_GOLD if eligible else 0)
+	var wall_ms := exit_elapsed_ms if exit_elapsed_ms >= 0 else roundi(elapsed*1000.0)
+	var early := outcome == "abandon" and wall_ms <= STAMINA_RULES.EARLY_EXIT_WINDOW_MS
+	if early and not bool(STAMINA.refund_early_exit(entry,wall_ms).get("success",false)): return {"success":false}
+	if early and not _load(progress,"user://stage_progress.cfg"): return {"success":false}
+	var rules: Dictionary = DATA.REWARD_RULES
+	var eligible := elapsed >= float(rules.minimum_seconds) and kills > 0 and not early
+	var multiplier := DATA.reward_multiplier(int(STAGES.get_stage(stage).number),value)
+	var progress_ratio := 1.0 if won else clampf(elapsed/DATA.DURATION,0.0,1.0)
+	var research_bonus := minf(float(rules.research)*float(rules.bonus_cap),floori(float(kills)/int(rules.kill_research))+floori(float(earned_exp)/int(rules.exp_research)))
+	var gold_performance := minf(float(rules.gold)*float(rules.bonus_cap),floori(float(kills)/int(rules.kill_gold))+floori(float(earned_exp)/int(rules.exp_gold)))
+	var points := floori((float(rules.research)*(1.0 if won else float(rules.defeat_base))+research_bonus)*progress_ratio*multiplier) if won or eligible else 0
+	var gold := floori((float(rules.gold)*(1.0 if won else float(rules.defeat_base))+gold_performance)*progress_ratio*multiplier) if won or eligible else 0
+
+	var research_base := floori(float(rules.research)*(1.0 if won else float(rules.defeat_base))*progress_ratio*multiplier) if won or eligible else 0
+	var gold_base := floori(float(rules.gold)*(1.0 if won else float(rules.defeat_base))*progress_ratio*multiplier) if won or eligible else 0
+	var gold_before_growth := gold
 	var ratio := float(DATA.CHEST_GOLD_RATES["victory" if won else "abandon" if outcome == "abandon" else "defeat"])
 	var units := int(config.get_value("hero_run_gold","units",0)) if int(config.get_value("hero_run_gold","entry",0)) == serial else 0
-	var chest_paid := floori(maxi(0,units)*ratio/1000.0)
+	var chest_paid := floori(maxi(0,units)*ratio/1000.0) if not early else 0
 	var bonus := clampf(gold_bonus if gold_bonus >= 0.0 else _shared_growth(config,"gold")*float(DATA.GROWTH.gold.value),0,DATA.growth_max_bonus("gold"))
 	gold = floori(gold*(1.0+bonus))+chest_paid
 	config.set_value("hero_progress","last_reward_entry",serial)
 	config.set_value("hero_progress",stage+"_best_seconds",maxf(elapsed,float(config.get_value("hero_progress",stage+"_best_seconds",0.0))))
+	var first_token := 0
+	var all_token := 0
 	if won:
+		if int(config.get_value("hero_progress",stage+"_wins",0)) == 0 and int(config.get_value("hero_progress",stage+"_easy_wins",0)) == 0 and int(config.get_value("hero_progress",stage+"_hard_wins",0)) == 0:
+			first_token = int(rules.first_clear_token)
 		config.set_value("hero_progress",stage+"_wins",int(config.get_value("hero_progress",stage+"_wins",0))+1)
 		var wins_key := stage+"_"+value+"_wins"
 		config.set_value("hero_progress",wins_key,int(config.get_value("hero_progress",wins_key,0))+1)
+	if won and value == "easy" and not bool(config.get_value("hero_progress","easy_all_clear_rewarded",false)):
+		var all_cleared := true
+		for id in STAGES.get_ordered_stage_ids():
+			if int(config.get_value("hero_progress",String(id)+"_easy_wins",0)) <= 0: all_cleared = false; break
+		if all_cleared:
+			all_token = int(rules.easy_all_clear_token)
+			config.set_value("hero_progress","easy_all_clear_rewarded",true)
+	if not PROGRESS.add_token_in_config(progress,"hero_token",first_token+all_token): return {"success":false}
 	progress.set_value("meta","research_points",int(progress.get_value("meta","research_points",0))+points)
 	progress.set_value("meta","gold",int(progress.get_value("meta","gold",0))+gold)
 	var success := SCOPE.save_configs({"stage_progress.cfg":progress,"team_loadout.cfg":config}) == OK
-	return {"success":success,"research":points if success else 0,"gold":gold if success else 0,"chest_earned":floori(maxi(0,units)/1000.0),"chest_paid":chest_paid if success else 0,"chest_rate":ratio}
+	return {"success":success,"research":points if success else 0,"gold":gold if success else 0,"chest_earned":floori(maxi(0,units)/1000.0),"chest_paid":chest_paid if success else 0,"chest_rate":ratio,"research_base":research_base if success else 0,"research_performance":points-research_base if success else 0,"gold_base":gold_base if success else 0,"gold_performance":gold_before_growth-gold_base if success else 0,"gold_growth":gold-chest_paid-gold_before_growth if success else 0,"first_clear_token":first_token if success else 0,"all_clear_token":all_token if success else 0}
 
 static func character_unlocked(subject: String) -> bool:
 	var id := CHARACTERS.hero_for_stage(subject) if subject.begins_with("stage_") else subject

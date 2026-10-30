@@ -420,7 +420,9 @@ func refresh() -> void:
 			lobby.enter_stage_button.text = "용사 도전 · 15분 생존"
 			lobby.stage_description_label.text = "직접 이동 · 자동 공격 · 15분 생존"
 			lobby.stage_status_label.text = "AI 마왕\n15분 생존"
-			lobby.stage_reward_label.text = "승리 보상\n연구 +%d\n골드 +%d" % [preload("res://src/data/hero_mode_catalog.gd").WIN_RESEARCH,preload("res://src/data/hero_mode_catalog.gd").WIN_GOLD]
+			var reward_data = preload("res://src/data/hero_mode_catalog.gd")
+			var reward_multiplier: float = reward_data.reward_multiplier(int(lobby.STAGE_CATALOG.get_stage(stage).get("number",1)),difficulty)
+			lobby.stage_reward_label.text = "승리 기본 보상\n연구 +%d\n골드 +%d" % [floori(int(reward_data.REWARD_RULES.research)*reward_multiplier),floori(int(reward_data.REWARD_RULES.gold)*reward_multiplier)]
 			lobby.stage_repeat_reward_label.text = "무기 진화\nLv.10 상자"
 			section.get_node("SectionTitle").text = "용사 원정"
 			section.get_node("SectionSubtitle").text = "쉬움 클리어 → 다음 전장 해금"

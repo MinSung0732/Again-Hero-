@@ -54,6 +54,7 @@ var choice_generation := 0
 var choosing := false
 var paused := false
 var run_abandoned := false
+var abandon_elapsed_ms := -1
 var run_chest_gold := 0
 var chest_gold_saved := false
 var settled := false
@@ -391,6 +392,12 @@ func _kill_count() -> int:
 	var total := 0
 	for value in battle.run_metrics.monster_death_counts.values(): total += int(value)
 	return total
+func _earned_exp() -> int:
+	var hero = battle.hero
+	var total: int = hero.current_exp
+	for level in range(1,int(hero.level)):
+		total += int(hero._required_exp_for_level(level))
+	return total
 func _on_finished(message: String,won: bool) -> void:
 	if roulette_tween != null: roulette_tween.kill()
 	rolling = false; pending_chests = 0; paused = false
@@ -408,7 +415,7 @@ func _show_result() -> void:
 	overlay.offset_top = -initial_half_height; overlay.offset_bottom = initial_half_height
 	overlay.add_theme_stylebox_override("panel",INVENTORY_DETAIL.style(Color("171226"),Color("e3bc69") if finished_won else Color("d7828d"),24))
 	if not settled:
-		result_reward = STORE.award_run(stage,entry,battle.run_metrics.elapsed_seconds,_kill_count(),finished_won,run_difficulty,"abandon" if run_abandoned else "victory" if finished_won else "defeat",float(battle.hero.player_weapons.gold_bonus))
+		result_reward = STORE.award_run(stage,entry,battle.run_metrics.elapsed_seconds,_kill_count(),finished_won,run_difficulty,"abandon" if run_abandoned else "victory" if finished_won else "defeat",float(battle.hero.player_weapons.gold_bonus),_earned_exp(),abandon_elapsed_ms)
 		settled = bool(result_reward.get("success",false))
 	var equipped: Array = []
 	var runtime = battle.hero.player_weapons
@@ -416,7 +423,7 @@ func _show_result() -> void:
 		for id in runtime.weapon_ids:
 			equipped.append({"id":id,"rank":"MAX" if runtime.evolved.has(id) else "Lv.%d" % int(runtime.levels.get(id,1))})
 	var next_stage := String(STAGES.get_stage(stage).get("next_stage_id",""))
-	var model := {"won":finished_won,"message":finished_message,"seconds":battle.run_metrics.elapsed_seconds,"kills":_kill_count(),"level":battle.hero.level,"weapons":equipped,"settled":settled,"research":int(result_reward.get("research",0)),"gold":int(result_reward.get("gold",0)),"chest_earned":int(result_reward.get("chest_earned",0)),"chest_paid":int(result_reward.get("chest_paid",0)),"chest_rate":float(result_reward.get("chest_rate",0)),"next_available":finished_won and STORE.can_start(next_stage,run_difficulty)}
+	var model := {"won":finished_won,"message":finished_message,"seconds":battle.run_metrics.elapsed_seconds,"kills":_kill_count(),"level":battle.hero.level,"weapons":equipped,"settled":settled,"research":int(result_reward.get("research",0)),"gold":int(result_reward.get("gold",0)),"chest_earned":int(result_reward.get("chest_earned",0)),"chest_paid":int(result_reward.get("chest_paid",0)),"chest_rate":float(result_reward.get("chest_rate",0)),"research_base":int(result_reward.get("research_base",0)),"research_performance":int(result_reward.get("research_performance",0)),"gold_base":int(result_reward.get("gold_base",0)),"gold_performance":int(result_reward.get("gold_performance",0)),"gold_growth":int(result_reward.get("gold_growth",0)),"first_clear_token":int(result_reward.get("first_clear_token",0)),"all_clear_token":int(result_reward.get("all_clear_token",0)),"next_available":finished_won and STORE.can_start(next_stage,run_difficulty)}
 	RESULT_VIEW.build(overlay_rows,model,{"settle":_show_result,"next":_next_stage.bind(next_stage),"retry":_retry,"leave":_leave})
 
 func _retry() -> void:
@@ -439,6 +446,7 @@ func _leave() -> void:
 			var refund := STAMINA.refund_early_exit(entry,elapsed)
 			if not bool(refund.get("success",false)):
 				_show_stamina_notice("스테미너 반환 저장에 실패했습니다. 다시 눌러 주세요."); return
+			abandon_elapsed_ms = elapsed
 			run_abandoned = true
 			battle.finish_abandoned_run()
 		if not settled: return
@@ -642,6 +650,7 @@ func _restart_from_pause() -> void:
 	var elapsed := maxi(Time.get_ticks_msec()-entry_started_ms,int((Time.get_unix_time_from_system()-entry_started_unix)*1000.0))
 	if not bool(STAMINA.refund_early_exit(entry,elapsed).get("success",false)):
 		_show_stamina_notice("스테미너 반환 저장 실패 · 다시 시도하세요."); return
+	abandon_elapsed_ms = elapsed
 	run_abandoned = true
 	battle.finish_abandoned_run()
 	if settled: _retry()

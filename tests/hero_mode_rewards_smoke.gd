@@ -1,0 +1,68 @@
+extends SceneTree
+const STORE := preload("res://src/systems/hero_mode_store.gd")
+const SCOPE := preload("res://src/systems/account_save_scope.gd")
+const STAMINA := preload("res://src/systems/stamina_store.gd")
+const PROGRESS := preload("res://src/systems/stage_progress.gd")
+var failures := 0
+func _initialize() -> void: call_deferred("run")
+func check(ok: bool, label: String) -> void:
+	if not ok: failures += 1; push_error("REWARDS: "+label)
+func entry(stage: String, free: bool = true) -> Dictionary:
+	var ticket := STAMINA.try_enter(stage,free,-1,false)
+	check(bool(ticket.get("success",false)),"entry "+stage)
+	return STAMINA.claim_battle_entry(stage)
+func load_cfg(path: String) -> ConfigFile:
+	var cfg := ConfigFile.new(); SCOPE.load_config(cfg,path); return cfg
+func run() -> void:
+	root.get_node("CloudStore").stop(); root.get_node("LoginGateway").remember_session_enabled = false
+	SCOPE.select_guest(); SCOPE.guest_directory = "user://rewards_"+str(Time.get_ticks_usec()); DirAccess.make_dir_recursive_absolute(SCOPE.guest_directory)
+	var progress := ConfigFile.new()
+	for i in range(1,4): progress.set_value("cleared","stage_%d" % i,true)
+	check(SCOPE.save_config(progress,PROGRESS.SAVE_PATH) == OK,"seed")
+	var e := entry("stage_1")
+	var first_blocker := SCOPE.guest_directory.path_join("gameplay_transaction.json.tmp")
+	check(DirAccess.make_dir_recursive_absolute(first_blocker) == OK,"block first clear")
+	var failed := STORE.award_run("stage_1",e,900,400,true,"easy","victory",0.0,20000)
+	check(not failed.success and PROGRESS.get_hero_token() == 0 and not STORE.battle_stage_cleared("stage_1") and int(load_cfg(PROGRESS.SAVE_PATH).get_value("meta","gold",0)) == 0 and int(load_cfg(PROGRESS.SAVE_PATH).get_value("meta","research_points",0)) == 0,"first-clear save failure atomic")
+	check(DirAccess.remove_absolute(first_blocker) == OK,"unblock first clear")
+	var r := STORE.award_run("stage_1",e,900,400,true,"easy","victory",0.0,20000)
+	check(r.success and r.research == 340 and r.gold == 216 and r.first_clear_token == 20,"stage1 easy example and first token")
+	check(STORE.award_run("stage_1",e,900,400,true,"easy","victory",0.0,20000).research == 0 and PROGRESS.get_hero_token() == 20,"duplicate receipt")
+	e = entry("stage_1"); r = STORE.award_run("stage_1",e,450,150,false,"easy","defeat",0.0,6000)
+	check(r.research == 58 and r.gold == 37 and int(r.first_clear_token) == 0,"defeat progress and normal token")
+	e = entry("stage_1"); r = STORE.award_run("stage_1",e,900,99999,true,"easy","victory",0.0,999999)
+	check(r.research == 360 and r.gold == 225 and r.first_clear_token == 0,"bonus caps and repeat stage")
+	var cfg := load_cfg(STORE.PATH)
+	for i in range(1,10): cfg.set_value("hero_progress","stage_%d_easy_wins" % i,1)
+	check(SCOPE.save_config(cfg,STORE.PATH) == OK,"unlock stages")
+	for row in [[5,"easy",503,319,86,55],[5,"hard",754,479,129,82],[10,"easy",707,449,121,77],[10,"hard",1060,673,182,116],[1,"hard",510,324,87,55]]:
+		var stage := "stage_%d" % row[0]
+		if row[1] == "hard":
+			cfg = load_cfg(STORE.PATH); cfg.set_value("hero_progress",stage+"_easy_wins",1); SCOPE.save_config(cfg,STORE.PATH)
+		e = entry(stage); r = STORE.award_run(stage,e,900,400,true,row[1],"victory",0.0,20000)
+		check(r.research == row[2] and r.gold == row[3],"victory example "+str(row))
+		e = entry(stage); r = STORE.award_run(stage,e,450,150,false,row[1],"defeat",0.0,6000)
+		check(r.research == row[4] and r.gold == row[5],"defeat example "+str(row))
+	# Fresh isolated flags: hard alone must not satisfy the all-easy milestone.
+	cfg = load_cfg(STORE.PATH); cfg.set_value("hero_progress","stage_10_easy_wins",0); cfg.set_value("hero_progress","easy_all_clear_rewarded",false); SCOPE.save_config(cfg,STORE.PATH)
+	e = entry("stage_9"); r = STORE.award_run("stage_9",e,900,1,true,"hard","victory",0.0)
+	check(r.success and r.all_clear_token == 0,"hard does not count for all easy")
+	e = entry("stage_10"); var before := PROGRESS.get_hero_token(); progress = load_cfg(PROGRESS.SAVE_PATH); var old_research := int(progress.get_value("meta","research_points",0)); var old_gold := int(progress.get_value("meta","gold",0))
+	var blocker := SCOPE.guest_directory.path_join("gameplay_transaction.json.tmp")
+	check(DirAccess.make_dir_recursive_absolute(blocker) == OK,"block save")
+	r = STORE.award_run("stage_10",e,900,1,true,"easy","victory",0.0)
+	progress = load_cfg(PROGRESS.SAVE_PATH)
+	check(not r.success and PROGRESS.get_hero_token() == before and int(progress.get_value("meta","research_points",0)) == old_research and int(progress.get_value("meta","gold",0)) == old_gold and not STORE.battle_stage_cleared("stage_10"),"failed save changes nothing")
+	check(DirAccess.remove_absolute(blocker) == OK,"unblock save")
+	r = STORE.award_run("stage_10",e,900,1,true,"easy","victory",0.0)
+	check(r.success and r.all_clear_token == 50 and PROGRESS.get_hero_token() == before+50,"retry all easy once")
+	e = entry("stage_10"); r = STORE.award_run("stage_10",e,900,1,true,"easy","victory",0.0)
+	check(r.all_clear_token == 0 and r.first_clear_token == 0,"no repeated milestone")
+	check(STAMINA.grant(20,"reward-test").success,"fund stamina")
+	e = entry("stage_1",false); var amount := int(STAMINA.read_state().amount)
+	check(STORE.record_chest(e,1,0.0).success,"early chest")
+	r = STORE.award_run("stage_1",e,30,1,false,"easy","abandon",0.0,100,30000)
+	check(r.success and r.research == 0 and r.gold == 0 and int(STAMINA.read_state().amount) == amount+4,"early abandon refund and no reward")
+	STORE.award_run("stage_1",e,30,1,false,"easy","abandon",0.0,100,30000)
+	check(int(STAMINA.read_state().amount) == amount+4,"refund once")
+	print("REWARDS ","PASS" if failures == 0 else "FAIL", " failures=",failures); quit(0 if failures == 0 else 1)

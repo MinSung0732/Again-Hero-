@@ -40,7 +40,7 @@ func run() -> void:
 	check(not STORE.award_run("stage_1",entry,900,100,true).success and not STORE.hard_stage_unlocked("stage_1"),"actual failed save cannot unlock hero hard")
 	check(DirAccess.remove_absolute(blocked_journal) == OK,"restore isolated transaction target")
 	var reward := STORE.award_run("stage_1",entry,900,100,true)
-	check(reward.success and int(reward.research) == MODE.WIN_RESEARCH,"victory and reward commit together")
+	check(reward.success and int(reward.research) == 252,"victory and reward commit together")
 	# Battlefields open one at a time through contiguous easy wins (2026-10-15).
 	check(STORE.highest_battle_stage() == 2 and STORE.battle_stage_cleared("stage_1") and STORE.hard_stage_unlocked("stage_1"),"victory records easy clear and opens matching hard")
 	check(STORE.award_run("stage_1",entry,900,100,true).research == 0 and STORE.highest_battle_stage() == 2,"duplicate receipt cannot pay or unlock twice")

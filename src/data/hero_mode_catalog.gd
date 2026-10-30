@@ -92,10 +92,9 @@ static func opening_objective(elapsed: float, chest_claimed: bool, next_event: f
 	if not chest_claimed: return "정예 격파\n강화 상자"
 	return "다음 공세\n%02d초" % maxi(0,ceili(next_event-elapsed))
 const SKILL_SLOTS := 2
-const WIN_RESEARCH := 100
-const WIN_GOLD := 60
-const PARTIAL_RESEARCH := 5
-const PARTIAL_GOLD := 3
+const REWARD_RULES := {"research":240,"gold":150,"stage_step":0.12,"difficulty":{"easy":1.0,"hard":1.5},"bonus_cap":0.5,"kill_research":8,"kill_gold":12,"exp_research":400,"exp_gold":600,"defeat_base":0.35,"minimum_seconds":30.0,"first_clear_token":20,"easy_all_clear_token":50}
+static func reward_multiplier(stage_number: int, difficulty: String) -> float:
+	return (1.0+float(REWARD_RULES.stage_step)*(stage_number-1))*float(REWARD_RULES.difficulty.get(difficulty,1.0))
 const CHEST_GOLD := 8
 const CHEST_GOLD_RATES := {"victory":1.0,"defeat":0.4,"abandon":0.3}
 const GROWTH := {

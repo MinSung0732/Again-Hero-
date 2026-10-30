@@ -128,7 +128,7 @@ func run() -> void:
 		var reward := STORE.award_run("stage_1",entry,900 if outcome == "victory" else 60,10,outcome == "victory","easy",outcome,0.0)
 		var expected := 16 if outcome == "victory" else 6 if outcome == "defeat" else 4
 		check(reward.success and reward.chest_paid == expected,"correct rounded settlement "+outcome)
-		check(int(progress_config().get_value("meta","gold",0)) == wallet+(60 if outcome == "victory" else 3)+expected,"wallet has one atomic deposit")
+		check(int(progress_config().get_value("meta","gold",0)) == wallet+(150 if outcome == "victory" else 3)+expected,"wallet has one atomic deposit")
 		check(STORE.award_run("stage_1",entry,900 if outcome == "victory" else 60,10,outcome == "victory","easy",outcome,0.0).gold == 0,"duplicate settlement has no deposit")
 		check(not STORE.record_chest(entry,3,0.0).success,"settled run cannot add more gold")
 	entry = enter("stage_1")
@@ -136,7 +136,7 @@ func run() -> void:
 	check(not STORE.record_chest(wrong,1).success and not STORE.record_chest(entry,1,INF).success,"owner/nonfinite chest input rejected")
 	check(STORE.record_chest(entry,1,0.15).pending == 9 and STORE.record_chest(entry,2,0.15).pending == 18,"fractional gold preserved in pending units")
 	var bonus_reward := STORE.award_run("stage_1",entry,900,10,true,"easy","victory",0.15)
-	check(bonus_reward.gold == 87 and bonus_reward.chest_paid == 18,"gold research affects base and chests once")
+	check(bonus_reward.gold == 190 and bonus_reward.chest_paid == 18,"gold research affects base and chests once")
 	check(not STORE.award_run("stage_1",entry,900,10,true,"easy","abandon").success,"outcome mismatch rejected")
 	# Updated gold cap applies to the snapshot and current-save fallback; old 15% snapshots remain valid.
 	for outcome in ["victory","defeat","abandon"]:
@@ -145,12 +145,12 @@ func run() -> void:
 		check(STORE.record_chest(entry,2,0.3).pending == 20,"new cap receipt replay unchanged")
 		var reward := STORE.award_run("stage_1",entry,900 if outcome == "victory" else 60,10,outcome == "victory","easy",outcome,0.3)
 		var chest_paid := 20 if outcome == "victory" else 8 if outcome == "defeat" else 6
-		check(reward.success and reward.chest_paid == chest_paid and reward.gold == (78 if outcome == "victory" else 3)+chest_paid,"new bonus settles once "+outcome)
+		check(reward.success and reward.chest_paid == chest_paid and reward.gold == (195 if outcome == "victory" else 3)+chest_paid,"new bonus settles once "+outcome)
 		check(STORE.award_run("stage_1",entry,900 if outcome == "victory" else 60,10,outcome == "victory","easy",outcome,0.3).gold == 0,"new cap no repeated payout")
 	saved = hero_config(); saved.set_value("hero_growth","shared_gold",10); SCOPE.save_config(saved,STORE.PATH)
 	entry = enter("stage_1")
 	check(STORE.record_chest(entry,1,99.0).pending == 10,"oversized snapshot capped by catalog")
-	check(STORE.award_run("stage_1",entry,900,10,true).gold == 88,"saved maximum gold fallback applies 30 percent")
+	check(STORE.award_run("stage_1",entry,900,10,true).gold == 205,"saved maximum gold fallback applies 30 percent")
 	cfg = progress_config(); cfg.set_value("meta","research_points",100000); SCOPE.save_config(cfg,PROGRESS.SAVE_PATH)
 	for id in STORE.DATA.GROWTH:
 		var old := STORE.growth_level("ranged_rookie",id); var points := int(progress_config().get_value("meta","research_points",0))

@@ -149,15 +149,19 @@ static func get_token(currency: String) -> int:
 	ACCOUNT_SCOPE.load_config(config, SAVE_PATH)
 	return maxi(int(config.get_value("meta", currency, 0)), 0)
 
-static func add_token(currency: String, amount: int) -> bool:
+static func add_token_in_config(config: ConfigFile, currency: String, amount: int) -> bool:
 	var definitions: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://src/data/token_currencies.json"))
 	if not definitions is Dictionary or not definitions.has(currency): return false
-	var config := ConfigFile.new()
-	var error := ACCOUNT_SCOPE.load_config(config, SAVE_PATH)
-	if error != OK and error != ERR_FILE_NOT_FOUND: return false
 	var balance := maxi(int(config.get_value("meta", currency, 0)), 0)
 	if amount < -balance: return false
 	config.set_value("meta", currency, balance + amount)
+	return true
+
+static func add_token(currency: String, amount: int) -> bool:
+	var config := ConfigFile.new()
+	var error := ACCOUNT_SCOPE.load_config(config, SAVE_PATH)
+	if error != OK and error != ERR_FILE_NOT_FOUND: return false
+	if not add_token_in_config(config, currency, amount): return false
 	return ACCOUNT_SCOPE.save_configs({SAVE_PATH.get_file(): config}) == OK
 
 static func get_demon_token() -> int: return get_token("demon_token")

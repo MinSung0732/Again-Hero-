@@ -45,7 +45,7 @@ func run() -> void:
 	check(ticket.success and not entry.is_empty(),"real entry receipt")
 	check(not STORE.award_run("stage_1",entry,5.0,1,true).success,"premature victory refused")
 	var grant := STORE.award_run("stage_1",entry,DATA.DURATION,20,true)
-	check(grant.success and grant.research == DATA.WIN_RESEARCH,"survival reward")
+	check(grant.success and grant.research == 242,"survival reward")
 	var repeated := STORE.award_run("stage_1",entry,DATA.DURATION,20,true)
 	check(repeated.success and repeated.research == 0,"receipt duplicate protected")
 	var wrong := entry.duplicate(); wrong.owner = "wrong"

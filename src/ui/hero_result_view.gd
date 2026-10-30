@@ -33,8 +33,15 @@ static func build(parent: VBoxContainer, model: Dictionary, actions: Dictionary)
 	if not bool(model.settled):
 		DETAIL.label(rewards,"보상 저장에 실패했습니다. 재시도 후 이동하세요.",24,Color("ee929b"))
 		var retry := DETAIL.button(parent,"보상 저장 재시도",actions.settle); retry.name = "ResultSettle"; retry.grab_focus(); return
+	if model.has("research_base"):
+		DETAIL.label(rewards,"연구 기본 %d + 성과 %d" % [int(model.research_base),int(model.research_performance)],22,Color("dc9af6"))
+		DETAIL.label(rewards,"골드 기본 %d + 성과 %d + 성장 %d" % [int(model.gold_base),int(model.gold_performance),int(model.gold_growth)],22,Color("ffcf77"))
 	if int(model.get("chest_earned",0)) > 0:
 		DETAIL.label(rewards,"상자 누적 %d → 지급 %d골드 (%d%%)" % [int(model.chest_earned),int(model.chest_paid),roundi(float(model.chest_rate)*100)],22,Color("ffcf77")).name = "ResultChestGold"
+	if int(model.get("first_clear_token",0)) > 0:
+		DETAIL.label(rewards,"스테이지 첫 클리어 · 용사토큰 +%d" % int(model.first_clear_token),22,Color("dc9af6"))
+	if int(model.get("all_clear_token",0)) > 0:
+		DETAIL.label(rewards,"쉬움 전체 클리어 · 용사토큰 +%d" % int(model.all_clear_token),22,Color("dc9af6"))
 	var reward_grid := GridContainer.new(); reward_grid.columns = 2; reward_grid.add_theme_constant_override("h_separation",20); rewards.add_child(reward_grid)
 	for pair in [["연구 포인트",int(model.research),Color("dc9af6")],["골드",int(model.gold),Color("ffcf77")]]:
 		var cell := VBoxContainer.new(); cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL; reward_grid.add_child(cell)
