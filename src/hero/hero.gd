@@ -8847,7 +8847,10 @@ func _begin_death_sequence() -> void:
 		tween.tween_property(hero_sprite, "modulate:a", 0.0, 0.48)
 		tween.tween_property(hero_sprite, "rotation", 0.18, 0.48)
 
-	await get_tree().create_timer(0.52).timeout
+	if get_parent() != null and get_parent().get("online_match_mode") == true:
+		await COMBAT_DELAY.wait(self, 0.52)
+	else:
+		await get_tree().create_timer(0.52).timeout
 	if not is_inside_tree():
 		return
 

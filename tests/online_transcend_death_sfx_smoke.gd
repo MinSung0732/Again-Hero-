@@ -33,6 +33,7 @@ func run() -> void:
 	check(view.cinematic_blend > 0.0 and view.cinematic_zoom > 1.0, "death focuses map")
 	view.cinematic.advance(5.0)
 	check(not view.cinematic.active and view.cinematic_blend == 0.0 and view.cinematic_zoom == 1.0 and Engine.time_scale == initial_scale, "death restores map without time change")
+	room.step(room.room_freeze_left + 0.01) # Combat SFX resumes after the death cinematic.
 	var server_bank = BANK.new(); room.battle.add_child(server_bank); server_bank.configure(ZEUS.CUES, room.battle, true, "res://src/data/zeus_audio_catalog.gd")
 	var before: int = room.feedback.sequence
 	check(server_bank.play_cue("judgment"), "server cue accepted")

@@ -124,6 +124,7 @@ var summon_maximum := -1.0
 var summon_costs := {}
 var summon_cost_signature := ""
 var skill_state_signature := ""
+var cinematic_controls_active := false
 var inventory_items := {"weapons":[],"passives":[]}
 @onready var demon_panel: Control = $DemonUltimatePanel
 @onready var bottom_bar: Control = $BottomBar
@@ -282,7 +283,7 @@ func _ready() -> void:
 	top_bar.get_node("StageMenuButton").pressed.connect(_open_match_menu)
 	if role == "demon": _install_elite_ui()
 	view.placement.connect(func(point: Vector2):
-		if role == "demon" and not ended and not local_preparing and not waiting_for_start and not connection_waiting and not client.reconnecting:
+		if role == "demon" and not ended and not local_preparing and not waiting_for_start and not connection_waiting and not client.reconnecting and not cinematic_controls_active:
 			if not view.state.is_empty() and point.distance_squared_to(Vector2(view.state.hero[0],view.state.hero[1])) < view.battle_constants.MANUAL_SPAWN_HERO_MIN_DISTANCE * view.battle_constants.MANUAL_SPAWN_HERO_MIN_DISTANCE:
 				action_notice.text = "용사와 너무 가까움"; view.show_manual_spawn_restricted_area(); return
 			if selected_elite >= 0:
@@ -762,7 +763,7 @@ func _update_summon_cards(mana: float,costs: Dictionary,maximum: float = 100.0) 
 	for index in summon_buttons.size():
 		var cost := float(costs.get(summon_ids[index],MONSTERS.get_base_cost(summon_ids[index])))
 		summon_buttons[index].get_node("Cost").text = ("%.1f" % cost) if summon_ids.size() > 3 else "%s · %.1f" % [MONSTERS.get_role_label(MONSTERS.get_role(summon_ids[index])),cost]
-		summon_buttons[index].disabled = ended or connection_waiting or client.reconnecting or local_preparing or waiting_for_start or mana + 0.001 < cost
+		summon_buttons[index].disabled = ended or connection_waiting or client.reconnecting or local_preparing or waiting_for_start or cinematic_controls_active or mana + 0.001 < cost
 
 func _show_slot_info(weapon: bool,index: int) -> void:
 	var items: Array = inventory_items.weapons if weapon else inventory_items.passives
@@ -791,7 +792,7 @@ func _update_hero_slots(inventory: Dictionary) -> void:
 func _update_demon_controls(event: Dictionary) -> void:
 	rerolls_left = int(event.get("demon_rerolls_left",0)); reroll_limit = int(event.get("demon_reroll_limit",0))
 	_update_summon_cards(float(event.mana),event.summon_costs,maxf(1.0,float(event.get("max_command",100))))
-	var skill_signature := JSON.stringify([event.get("demon_level",1),event.get("demon_exp",0.0),event.get("demon_exp_next",1.0),event.demon_charge,event.demon_charge_max,event.demon_cooldowns,event.demon_ready,event.transcend_ready,event.transcend_used,connection_waiting,waiting_for_start])
+	var skill_signature := JSON.stringify([event.get("demon_level",1),event.get("demon_exp",0.0),event.get("demon_exp_next",1.0),event.demon_charge,event.demon_charge_max,event.demon_cooldowns,event.demon_ready,event.transcend_ready,event.transcend_used,connection_waiting,waiting_for_start,cinematic_controls_active])
 	if skill_signature != skill_state_signature:
 		skill_state_signature = skill_signature
 		(demon_panel.get_node("DemonLevelLabel") as Label).text = "마왕 Lv.%d" % int(event.get("demon_level",1))
@@ -808,7 +809,7 @@ func _update_demon_controls(event: Dictionary) -> void:
 			var cooldown := float(event.demon_cooldowns.get(id,0.0))
 			var button: Button = skill_buttons[id]
 			button.get_node("SkillContent").update_state("쿨 %.0f초" % ceilf(cooldown) if cooldown > 0.01 else "사용 가능" if bool(event.demon_ready.get(id,false)) else "필요 %.0f" % float(data.get("mana_cost",0.0)),bool(event.demon_ready.get(id,false)))
-			button.disabled = connection_waiting or client.reconnecting or waiting_for_start or not bool(event.demon_ready.get(id,false))
+			button.disabled = connection_waiting or client.reconnecting or waiting_for_start or cinematic_controls_active or not bool(event.demon_ready.get(id,false))
 			var cooldown_bar := button.get_node("CooldownBar") as ProgressBar
 			cooldown_bar.max_value = maxf(0.1,float(data.get("cooldown",0.0)))
 			cooldown_bar.visible = cooldown > 0.01; cooldown_bar.value = cooldown
@@ -820,7 +821,7 @@ func _update_demon_controls(event: Dictionary) -> void:
 func _transcend_state() -> Dictionary:
 	var ready := bool(transcend_snapshot.get("transcend_ready", false))
 	var used := bool(transcend_snapshot.get("transcend_used", false))
-	var paused: bool = ended or connection_waiting or client == null or client.reconnecting or waiting_for_start or not transcend_controls_enabled
+	var paused: bool = ended or connection_waiting or client == null or client.reconnecting or waiting_for_start or cinematic_controls_active or not transcend_controls_enabled
 	return {"id":transcendence_id, "ready":ready, "used":used, "finished":ended,
 		"show_unlock":initial_local_test and not ready and not used, "paused":paused,
 		"disabled":paused, "title":"위치 지정 중" if transcend_placement else "초월 소환"}
@@ -919,6 +920,7 @@ func _close_direction_select() -> void:
 	(demon_panel.get_node("UltimateLabel") as Label).text = ultimate_status_text
 	demon_panel.get_node("UltimateLabel").remove_theme_color_override("font_color")
 func _use_skill(id: String) -> void:
+	if cinematic_controls_active: return
 	if id == "line_assault" and not demon_panel.get_node("ActionChoiceGrid").visible:
 		_open_direction_select(); return
 	if id == "line_assault": _close_direction_select()
@@ -1238,7 +1240,7 @@ func _event(event: Dictionary) -> void:
 						if not row is Dictionary: return
 						for field in ["label","current","next"]:
 							if not row.get(field,null) is String or String(row[field]).length() > RULES.MAX_COMPARE_FIELD_LENGTH: return
-			if int(event.tick) <= last_tick or not view.update_state(event): return
+			if int(event.tick) < last_tick or not view.update_state(event): return
 			last_tick = int(event.tick)
 			view.feedback.suspended = waiting_for_start or connection_waiting or client.reconnecting
 			if waiting_for_start and last_tick > 0 and not connection_waiting and not client.reconnecting:
@@ -1404,6 +1406,11 @@ func _test_connection(disconnected: bool) -> void:
 		_refresh_connection_test_controls()
 func _process(delta: float) -> void:
 	if client == null: return
+	var cinematic_active: bool = is_instance_valid(view) and is_instance_valid(view.cinematic) and view.cinematic.active
+	if role == "demon" and cinematic_active != cinematic_controls_active:
+		cinematic_controls_active = cinematic_active
+		summon_mana = -1.0; skill_state_signature = ""
+		if not view.state.is_empty() and view.state.has("demon_ready"): _update_demon_controls(view.state)
 	_advance_chest_notice(delta)
 	if top_bar.visible and not loading.visible:
 		if status.text != last_status_text:

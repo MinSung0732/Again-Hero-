@@ -33,6 +33,10 @@ var is_prepared := false
 var running := false
 var finished := false
 var connection_paused := false
+var room_freeze_left := 0.0
+var freeze_started_msec := 0
+var frozen_move := Vector2.ZERO
+var has_frozen_move := false
 var input_suspended_before_disconnect := false
 var winner := ""
 var reason := ""
@@ -118,10 +122,12 @@ func prepare() -> void:
 	battle.transcendent_summoned.connect(func(id: String,actor: Node2D):
 		if running and not finished and not connection_paused and is_instance_valid(actor):
 			transcendent_actor = actor
-			feedback.publish("transcend",actor.global_position,preload("res://src/data/online_feedback_catalog.gd").transcend_index(id),Color(1.0,0.75,0.35),tick))
+			feedback.publish("transcend",actor.global_position,FEEDBACK_DATA.transcend_index(id),Color(1.0,0.75,0.35),tick)
+			_freeze_cinematic(id, false))
 	battle.transcendent_died.connect(func(id: String, actor: Node2D):
 		if running and not finished and not connection_paused and id == transcendence_id and is_instance_valid(actor):
-			feedback.publish("transcend_death", actor.global_position, FEEDBACK_DATA.transcend_index(id), Color.WHITE, tick))
+			feedback.publish("transcend_death", actor.global_position, FEEDBACK_DATA.transcend_index(id), Color.WHITE, tick)
+			_freeze_cinematic(id, true))
 	battle.demon_augment_ready.connect(_demon_offer)
 	battle.online_hero_kill.connect(_on_hero_kill)
 	battle.online_elite_requested.connect(_queue_elite)
@@ -168,7 +174,16 @@ func set_connection_paused(value: bool) -> void:
 	if value: input_suspended_before_disconnect = battle.hero.player_input_suspended
 	battle.hero.set_player_move_input(Vector2.ZERO)
 	battle.hero.player_input_suspended = true if value else input_suspended_before_disconnect
-	battle.set_external_pause(value or not running)
+	battle.set_external_pause(value or not running or room_freeze_left > 0.0)
+func _freeze_cinematic(id: String, death: bool) -> void:
+	if not FEEDBACK_DATA.CINEMATIC.ENTRIES.has(id): return
+	var entry: Dictionary = FEEDBACK_DATA.CINEMATIC.ENTRIES[id]
+	if death: entry = entry.get("death", FEEDBACK_DATA.CINEMATIC.DEATH_DEFAULT)
+	var seconds := float(entry.duration)
+	if seconds <= 0.0: return
+	if room_freeze_left <= 0.0: freeze_started_msec = Time.get_ticks_msec()
+	room_freeze_left = maxf(room_freeze_left, seconds)
+	battle.set_external_pause(true)
 func _choice(candidates: Array) -> void:
 	_hold("hero",candidates,0)
 	_enforce_hold_limit("hero")
@@ -342,6 +357,11 @@ func _select_offer(role: String,argument: Dictionary) -> bool:
 func apply(role: String,kind: String,argument: Variant,allow_test_unlock := false) -> bool:
 	last_action_message = "사용할 수 없는 행동입니다."
 	if not running or finished or connection_paused or not is_instance_valid(battle.hero): return false
+	if room_freeze_left > 0.0:
+		if role == "hero" and kind == "move" and RULES.point(argument,1.0):
+			var direction := Vector2(float(argument[0]),float(argument[1]))
+			if direction.length_squared() <= 1.001: frozen_move = direction; has_frozen_move = true
+		return false
 	if role == "demon" and kind == "transcend_unlock_test":
 		if not allow_test_unlock or battle.transcendence.ready or battle.transcendence.used: return false
 		return battle.debug_unlock_transcendence(true)
@@ -402,7 +422,17 @@ func apply(role: String,kind: String,argument: Variant,allow_test_unlock := fals
 		return accepted
 	return false
 func step(delta: float) -> void:
-	if not running or finished or connection_paused: return
+	if not running or finished: return
+	if room_freeze_left > 0.0:
+		room_freeze_left = maxf(0.0, room_freeze_left - delta)
+		if room_freeze_left <= 0.0:
+			if battle.exp_magnet_until_msec > 0: battle.exp_magnet_until_msec += Time.get_ticks_msec() - freeze_started_msec
+			battle.set_external_pause(connection_paused)
+			if has_frozen_move and not connection_paused:
+				battle.hero.set_player_move_input(frozen_move); move_age = 0.0
+			has_frozen_move = false
+		return
+	if connection_paused: return
 	tick += 1; move_age += delta
 	if move_age > RULES.INPUT_TIMEOUT and is_instance_valid(battle.hero): battle.hero.set_player_move_input(Vector2.ZERO)
 	if field_areas.is_empty(): return
