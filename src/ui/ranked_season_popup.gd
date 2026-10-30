@@ -8,6 +8,7 @@ const RULES := preload("res://src/data/ranked_rules.gd")
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
 const PROGRESS := preload("res://src/systems/stage_progress.gd")
 const SKIN := preload("res://src/ui/pixel_panel_skin.gd")
+const MODAL_LAYER := 130 # Same tier as DungeonEntryNotice.
 var lobby: Control
 var panel: PanelContainer
 var result: Dictionary = {}
@@ -57,7 +58,13 @@ func _build() -> void:
 	layer.name = "RankedSeasonOverlay"
 	layer.color = Color(0, 0, 0, 0.75)
 	layer.mouse_filter = Control.MOUSE_FILTER_STOP
-	lobby.add_child(layer)
+	# Own canvas layer: lobby art raised with z_index must not draw over the modal.
+	var canvas := CanvasLayer.new()
+	canvas.name = "RankedSeasonLayer"
+	canvas.layer = MODAL_LAYER
+	lobby.add_child(canvas)
+	layer.theme = lobby.theme
+	canvas.add_child(layer)
 	layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var center := CenterContainer.new()
 	center.mouse_filter = Control.MOUSE_FILTER_IGNORE

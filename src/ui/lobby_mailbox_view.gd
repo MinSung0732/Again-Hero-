@@ -4,6 +4,7 @@ const DATA := preload("res://src/data/mailbox_catalog.gd")
 const STORE := preload("res://src/systems/mailbox_store.gd")
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
 const SKIN := preload("res://src/ui/pixel_panel_skin.gd")
+const MODAL_LAYER := 130 # Same tier as DungeonEntryNotice.
 var lobby: Control
 var root: ColorRect
 var list: VBoxContainer
@@ -23,7 +24,13 @@ func install(owner: Control) -> void:
 	root.name = "MailboxOverlay"
 	root.color = Color(0, 0, 0, 0.75)
 	root.mouse_filter = Control.MOUSE_FILTER_STOP
-	lobby.add_child(root)
+	# Own canvas layer: lobby art raised with z_index must not draw over the modal.
+	var canvas := CanvasLayer.new()
+	canvas.name = "MailboxLayer"
+	canvas.layer = MODAL_LAYER
+	lobby.add_child(canvas)
+	root.theme = lobby.theme
+	canvas.add_child(root)
 	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	root.gui_input.connect(_outside_input)
 	var center := CenterContainer.new()

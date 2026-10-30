@@ -20,7 +20,7 @@ func run() -> void:
 	var view = lobby.ranked_season_popup
 	assert(view.shown and view.result.demon.final_mmr == 2300 and view.result.hero.server_rank == 3)
 	assert(view.result.demon_token == 250 and view.result.hero_token == 250)
-	var overlay = lobby.get_node("RankedSeasonOverlay")
+	var overlay = lobby.get_node("RankedSeasonLayer/RankedSeasonOverlay")
 	assert(overlay is ColorRect and overlay.mouse_filter == Control.MOUSE_FILTER_STOP and overlay.color.a > 0.0)
 	for viewport_size in [Vector2i(1080, 1920), Vector2i(1080, 2400)]:
 		root.size = viewport_size
