@@ -38,7 +38,14 @@ func cast(id: String,data: Dictionary,origin: Vector2,damage: int,reach: float,r
 		budget_interval = 0.75
 		interval = maxf(0.2,0.75*host.haste)
 	if mode == "orbit": duration = maxf(duration,cooldown+0.1)
-	for index in count:
+	# Thrown emitters gain one landing per extra projectile on the next distinct enemies;
+	# the per-landing budget stays the base share, so multishot adds damage like other shots.
+	var extras := mini(2,int(data.get("extra_projectiles",0))) if bool(rule.get("thrown",false)) else 0
+	if extras > 0: host.pick_extra_targets(origin,reach,target,extras)
+	for index in count+extras:
+		if index >= count:
+			var extra: int = index-count
+			target = host.extra_targets[extra] if extra < host.extra_targets.size() else target
 		var slot := _free()
 		if slot.is_empty(): break
 		host._activate_visual(slot)
@@ -51,6 +58,8 @@ func cast(id: String,data: Dictionary,origin: Vector2,damage: int,reach: float,r
 		slot.interval = interval; slot.warning = float(rule.get("duration",1.0)) if mode == "bombard" else WARNING+index*0.18 if mode == "fault" else WARNING if mode in ["random","sigil"] else index*0.4 if mode == "trail" else 0.0
 		if mode in ["lob","lob_burst"]: slot.warning = .7
 		slot["launch"] = origin; slot["landing"] = _clamp(target.global_position if TARGETS.is_detectable(target) else origin)
+		if index >= count and (index-count >= host.extra_targets.size()):
+			slot.landing = _clamp(Vector2(slot.landing)+Vector2.RIGHT.rotated(TAU*float(index-count+1)/float(extras+1))*clampf(reach*0.32,45.0,180.0))
 		slot.phase = TAU*index/count; slot.count = clampi(int(data.get("orbit_count",4)),2,10)
 		slot.origin = origin
 		slot.radius = clampf(reach*0.32,45.0,180.0)
@@ -60,7 +69,7 @@ func cast(id: String,data: Dictionary,origin: Vector2,damage: int,reach: float,r
 			slot.origin = _clamp(origin+Vector2.from_angle(TAU*index/count)*90.0)
 			slot.radius = minf(reach,750.0)
 		elif mode == "random": slot.origin = _random_map_point(origin,reach,index,count)
-		elif mode in ["sigil","bombard"]: slot.origin = _clamp(target.global_position if TARGETS.is_detectable(target) else origin)
+		elif mode in ["sigil","bombard"]: slot.origin = Vector2(slot.landing) if index >= count else _clamp(target.global_position if TARGETS.is_detectable(target) else origin)
 		elif mode == "fault":
 			var aim := origin.direction_to(target.global_position) if TARGETS.is_detectable(target) else Vector2.RIGHT
 			slot.origin = _clamp(origin+aim*reach*float(index+1)/float(count))
@@ -152,8 +161,9 @@ func tick(delta: float) -> void:
 			if String(slot.max_kind) == "reactive_zone" and not bool(slot.detonated): _detonate(slot)
 			host._hit(actor,int(slot.damage),"field",int(slot.rank),slot.data)
 		if mode == "sentry" and is_instance_valid(nearest):
-			for extra in 1+mini(2,int(slot.data.get("extra_projectiles",0))):
-				host._launch_projectile(nearest,slot.origin,int(slot.damage),int(slot.rank),slot.color,slot.data,float(extra)*0.08,false,float(slot.radius))
+			host._launch_projectile(nearest,slot.origin,int(slot.damage),int(slot.rank),slot.color,slot.data,0.0,false,float(slot.radius))
+			host.hero._fill_monster_nodes_near(slot.origin,float(slot.radius),host.scratch)
+			host._launch_extras(nearest,slot.origin,int(slot.damage),int(slot.rank),slot.color,slot.data,float(slot.radius),mini(2,int(slot.data.get("extra_projectiles",0))),0.08)
 func _detonate(slot: Dictionary) -> void:
 	if bool(slot.detonated) or int(slot.evolution_damage) <= 0: return
 	slot.detonated = true

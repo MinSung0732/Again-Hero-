@@ -86,6 +86,31 @@ func run() -> void:
 		select_weapon(runtime,id,0); runtime._cast(id); var base := active_shots(runtime)
 		select_weapon(runtime,id,2); runtime._cast(id)
 		check(active_shots(runtime) == base+2,id+" extra shots even with a single target")
+	# 10-31: extras fan out — distinct enemies first, otherwise side-offset so shots never stack.
+	select_weapon(runtime,"purifier_hero_holy_bolt",2); runtime._cast("purifier_hero_holy_bolt")
+	var starts := {}
+	for shot in runtime.projectiles:
+		if shot.active: starts[Vector2(shot.position).snapped(Vector2.ONE)] = true
+	check(starts.size() == 3,"single-target extras start on separate lanes")
+	var others: Array = []
+	for offset in [Vector2(160,40),Vector2(170,-60)]:
+		var other := BASE.Target.new(); arena.add_child(other); arena.targets.append(other); other.position = offset; others.append(other)
+	select_weapon(runtime,"purifier_hero_holy_bolt",2); runtime._cast("purifier_hero_holy_bolt")
+	var handles := {}
+	for shot in runtime.projectiles:
+		if shot.active: handles[shot.handle] = true
+	check(handles.size() == 3,"extras pick distinct nearby enemies")
+	for other in others: arena.targets.erase(other); other.free()
+	var thrown := ["pistol_hero_grenade","chemical_hero_poison_flask","sage_astra_collapsed_seed","chemical_hero_acid_vial","chemical_hero_reaction_bomb","pistol_hero_smoke_canister"]
+	for id in thrown:
+		check(DATA.projectile_quantity_kind(id) == "thrown",id+" thrown weapon counts as projectile")
+		select_weapon(runtime,id,0); runtime._cast(id)
+		var base := 0
+		for slot in runtime.delivery.slots: base += 1 if slot.left > 0 else 0
+		select_weapon(runtime,id,2); runtime._cast(id)
+		var landings := 0
+		for slot in runtime.delivery.slots: landings += 1 if slot.left > 0 else 0
+		check(landings == base+2,id+" extra throws add landings")
 	for id in ["pistol_hero_suppressor"]:
 		select_weapon(runtime,id,2)
 		runtime._cast(id)

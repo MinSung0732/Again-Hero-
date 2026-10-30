@@ -32,6 +32,8 @@ var weapon_ids: Array[String] = []
 var available_weapons: Array = []
 var cooldowns: Dictionary = {}
 var scratch: Array = []
+# Reused per cast: extra projectiles pick distinct nearby enemies instead of trailing the first shot.
+var extra_targets: Array[Node2D] = []
 var pulse_scratch: Array = []
 var splash_scratch: Array = []
 var resolved: Dictionary = {}
@@ -464,8 +466,7 @@ func _cast(id: String) -> void:
 			if evolution != null: evolution.on_native_basic(data,origin,closest,damage,reach)
 			if identity.archetype == "rogue_combo" and bool(data.get("visual_effect_unique",false)):
 				_effect(origin,closest.global_position,24.0,"combo",color,data)
-			for extra in int(data.get("extra_projectiles",0)):
-				_launch_projectile(closest,origin,damage,rank,color,data,float(extra+1)*0.06,false,reach)
+			_launch_extras(closest,origin,damage,rank,color,data,reach,int(data.get("extra_projectiles",0)),0.06)
 			_after_cast(data,origin,direction,closest,damage,reach,rank)
 		return
 	if is_instance_valid(closest) or pattern == "summon" or pattern == "guard" or pattern == "heal": _pose(direction)
@@ -551,8 +552,7 @@ func _cast(id: String) -> void:
 	if pattern == "bolt" and is_instance_valid(closest):
 		for remaining in maxi(0,hits-struck):
 			_launch_projectile(closest,origin,damage,rank,color,data,float(remaining+1)*0.08,false,reach)
-		for extra in int(data.get("extra_projectiles",0)):
-			_launch_projectile(closest,origin,damage,rank,color,data,float(extra+1)*0.08,false,reach)
+		_launch_extras(closest,origin,damage,rank,color,data,reach,int(data.get("extra_projectiles",0)),0.08)
 	if pattern == "beam": _effect(origin,origin+direction*reach,GEOMETRY.beam_half_width(rank)*float(data.get("area_scale",1.0)),pattern,color,data)
 	elif pattern not in ["bolt","chain"]: _effect(origin,origin+direction*reach,reach,pattern,color,data)
 	hero._damage_treasure_chests(origin,minf(reach,220.0),damage)
@@ -650,6 +650,7 @@ func _launch_projectile(actor: Node2D, origin: Vector2, damage: int, rank: int, 
 		shot.active = true; shot.handle = handle; shot.position = origin
 		shot.damage = damage; shot.rank = rank; shot.color = color; shot.age = 0.0
 		shot.data = data; shot.delay = delay; shot.melee = melee; shot.reach = reach if reach > 0 else float(data.get("range",900.0)); shot.traveled = 0.0
+		shot["sway"] = 1.0
 		shot["finisher"] = finisher
 		shot["visual_radius"] = DATA.projectile_visual_radius(data)*float(data.get("awakening_visual_scale",1.0))
 		shot["frames"] = ART.cache.get(String(data.get("effect_dir","")),EMPTY_ART)
@@ -664,8 +665,38 @@ func _launch_projectile(actor: Node2D, origin: Vector2, damage: int, rank: int, 
 func launch_summon_extras(id: String, target: Node2D, origin: Vector2, damage: int, reach: float) -> void:
 	if not levels.has(id) or not is_instance_valid(target): return
 	var data := stats_for(id)
-	for extra in mini(2,projectile_bonus):
-		_launch_projectile(target,origin,damage,int(levels[id]),Color(String(data.color)),data,float(extra+1)*0.08,false,reach)
+	hero._fill_monster_nodes_near(origin,reach,scratch)
+	_launch_extras(target,origin,damage,int(levels[id]),Color(String(data.color)),data,reach,mini(2,projectile_bonus),0.08)
+
+## Vampire-survivor multishot: each extra goes to the next nearest distinct enemy in reach.
+## With fewer enemies, extras start beside the first shot and sway the opposite way so they
+## stay readable instead of stacking on one path. Uses the scratch list filled by the cast.
+func _launch_extras(primary: Node2D, origin: Vector2, damage: int, rank: int, color: Color, data: Dictionary, reach: float, count: int, stagger: float) -> void:
+	if count <= 0 or not is_instance_valid(primary): return
+	pick_extra_targets(origin,reach,primary,count)
+	for extra in count:
+		var target: Node2D = extra_targets[extra] if extra < extra_targets.size() else primary
+		var index := _launch_projectile(target,origin,damage,rank,color,data,float(extra+1)*stagger,false,reach)
+		if index < 0 or target != primary: continue
+		var side := -1.0 if extra % 2 == 0 else 1.0
+		var shot: Dictionary = projectiles[index]
+		shot.position = origin+Vector2(shot.direction).orthogonal()*side*GEOMETRY.EXTRA_SHOT_OFFSET*float(extra/2+1)
+		shot.direction = Vector2(shot.direction).rotated(side*GEOMETRY.EXTRA_SHOT_SPREAD*float(extra/2+1))
+		shot["sway"] = side
+
+func pick_extra_targets(origin: Vector2, reach: float, primary: Node2D, count: int) -> Array[Node2D]:
+	extra_targets.clear()
+	for pick in count:
+		var best: Node2D = null
+		var best_distance := reach*reach
+		for raw in scratch:
+			var actor := raw as Node2D
+			if actor == primary or not TARGETS.is_detectable(actor) or extra_targets.has(actor): continue
+			var distance := origin.distance_squared_to(actor.global_position)
+			if distance <= best_distance: best_distance = distance; best = actor
+		if best == null: break
+		extra_targets.append(best)
+	return extra_targets
 
 func _tick_projectiles(delta: float) -> void:
 	var redraw := false
@@ -692,7 +723,7 @@ func _tick_projectiles(delta: float) -> void:
 		var position: Vector2 = shot.position
 		shot["direction"] = position.direction_to(actor.global_position)
 		if String(shot.flight)=="curve":
-			shot.direction = Vector2(shot.direction).rotated(sin(float(shot.age)*6.0)*.35)
+			shot.direction = Vector2(shot.direction).rotated(sin(float(shot.age)*6.0)*.35*float(shot.get("sway",1.0)))
 			shot.position = position+Vector2(shot.direction)*step
 		else: shot.position = position.move_toward(actor.global_position,step)
 		shot.traveled = float(shot.traveled)+position.distance_to(shot.position)

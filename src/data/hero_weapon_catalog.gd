@@ -2514,6 +2514,7 @@ static func projectile_quantity_kind(id: String) -> String:
 	var rule := DELIVERY.spec(id,data)
 	if String(rule.get("mode","")) == "sentry": return "sentry"
 	if String(data.get("pattern","")) == "orbit": return "orbit"
+	if bool(rule.get("thrown",false)): return "thrown"
 	if not rule.is_empty(): return ""
 	if String(data.get("pattern","")) in PROJECTILE_PATTERNS: return "shots"
 	if String(data.get("summon_kind","")) in ["watcher","gatekeeper"]: return "summon"

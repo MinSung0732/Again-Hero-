@@ -32,6 +32,9 @@ static func orbit_texture_extent(inner: float,outer: float) -> float:
 const SLASH_DOT := 0.35
 const ORBIT_HALF_WIDTH := 100.0
 const PROJECTILE_RADIUS := 12.0
+## Multishot fallback when fewer enemies than shots: side offset (px) and angle (rad) per pair.
+const EXTRA_SHOT_OFFSET := 22.0
+const EXTRA_SHOT_SPREAD := 0.22
 static func reach(data: Dictionary, rank: int, awakened: bool) -> float:
 	if data.has("reach_scale"): return float(data.range)*float(data.reach_scale)
 	return float(data.range)*(1.0+0.035*(rank-1))*(1.25 if awakened else 1.0)

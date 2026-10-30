@@ -1,5 +1,6 @@
 extends RefCounted
 ## Only thematic persistent weapons use emitters. No all-hero distribution quota.
+## "thrown": the emitter is a thrown/fired object, so projectile-count passives add landings.
 const MODES := {
   "ranged_rookie_rune_ring": {
     "mode": "sigil",
@@ -29,6 +30,7 @@ const MODES := {
     "budget": 1.8
   },
   "pistol_hero_grenade": {
+    "thrown": true,
     "mode": "bombard",
     "label": "표적 수류탄 · 예고 후 단발 폭발",
     "duration": 1.1,
@@ -78,6 +80,7 @@ const MODES := {
     "budget": 1.4
   },
   "chemical_hero_poison_flask": {
+    "thrown": true,
     "mode": "lob",
     "label": "포물선 시약 병 · 착지 후 혼합장",
     "duration": 4,
@@ -133,6 +136,7 @@ const MODES := {
     "budget": 1.8
   },
   "sage_astra_collapsed_seed": {
+    "thrown": true,
     "mode": "sigil",
     "label": "표적 중력 별씨",
     "duration": 2.8,
@@ -140,6 +144,7 @@ const MODES := {
     "budget": 1.8
   },
   "chemical_hero_acid_vial": {
+    "thrown": true,
     "mode": "lob",
     "label": "포물선 산성 약병 · 착지 후 산성 지대",
     "duration": 3.5,
@@ -147,6 +152,7 @@ const MODES := {
     "budget": 2.0
   },
   "chemical_hero_reaction_bomb": {
+    "thrown": true,
     "mode": "lob_burst",
     "label": "촉매 폭탄 투척 · 착지 시 폭발",
     "duration": 1.1,
@@ -154,6 +160,7 @@ const MODES := {
     "budget": 1.3
   },
   "pistol_hero_smoke_canister": {
+    "thrown": true,
     "mode": "lob",
     "label": "연막 유탄 곡사 · 착지 후 연막",
     "duration": 3.5,
