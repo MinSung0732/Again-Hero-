@@ -4,26 +4,33 @@ begin;
 create table private.ranked_reward_tiers (
  tier_id text primary key, reset_mmr integer not null, demon_token integer not null, hero_token integer not null
 );
+create table private.ranked_hero_reward_bands (min_rank integer not null, max_rank integer not null, amount integer not null);
 -- BEGIN GENERATED RANKED REWARDS
 insert into private.ranked_reward_tiers(tier_id,reset_mmr,demon_token,hero_token) values
- ('bronze_1',1000,1,1),
- ('bronze_2',1000,2,2),
- ('bronze_3',1000,3,3),
- ('bronze_4',1000,4,4),
- ('silver_1',1400,5,5),
- ('silver_2',1400,6,6),
- ('silver_3',1400,7,7),
- ('silver_4',1400,8,8),
- ('gold_1',1800,9,9),
- ('gold_2',1800,10,10),
- ('gold_3',1800,11,11),
- ('gold_4',1800,12,12),
- ('diamond_1',2300,13,13),
- ('diamond_2',2300,14,14),
- ('diamond_3',2300,15,15),
- ('diamond_4',2300,16,16),
- ('demon_lord',2900,17,17),
- ('hero',2900,18,18);
+ ('bronze_1',1000,20,20),
+ ('bronze_2',1000,22,22),
+ ('bronze_3',1000,24,24),
+ ('bronze_4',1000,26,26),
+ ('silver_1',1400,30,30),
+ ('silver_2',1400,32,32),
+ ('silver_3',1400,34,34),
+ ('silver_4',1400,36,36),
+ ('gold_1',1800,40,40),
+ ('gold_2',1800,42,42),
+ ('gold_3',1800,44,44),
+ ('gold_4',1800,46,46),
+ ('diamond_1',2300,60,60),
+ ('diamond_2',2300,64,64),
+ ('diamond_3',2300,68,68),
+ ('diamond_4',2300,72,72),
+ ('demon_lord',2900,85,85),
+ ('hero',2900,0,0);
+insert into private.ranked_hero_reward_bands(min_rank,max_rank,amount) values
+ (1,1,300),
+ (2,10,250),
+ (11,20,200),
+ (21,50,150),
+ (51,100,100);
 -- END GENERATED RANKED REWARDS
 -- Keep the live profile's preview consistent with settlement, including ties.
 create or replace function private.ranked_weekly_best(p_user uuid) returns jsonb
@@ -111,14 +118,16 @@ begin
  select u.user_id,start_date,
  (select jsonb_build_object('final_tier',tier,'final_mmr',mmr,'server_rank',server_rank,'wins',wins,'losses',losses) from ranked_week_states where user_id=u.user_id and role='demon'),
  (select jsonb_build_object('final_tier',tier,'final_mmr',mmr,'server_rank',server_rank,'wins',wins,'losses',losses) from ranked_week_states where user_id=u.user_id and role='hero'),
- best.tier,r.demon_token,r.hero_token
+ best.tier,coalesce(b.amount,r.demon_token),coalesce(b.amount,r.hero_token)
  from (select distinct user_id from ranked_week_states) u
- cross join lateral (select tier from ranked_week_states where user_id=u.user_id order by mmr desc, role limit 1) best
- join private.ranked_reward_tiers r on r.tier_id=best.tier;
+ cross join lateral (select tier,server_rank from ranked_week_states where user_id=u.user_id order by mmr desc, role limit 1) best
+ join private.ranked_reward_tiers r on r.tier_id=best.tier
+ left join private.ranked_hero_reward_bands b on best.tier='hero' and best.server_rank between b.min_rank and b.max_rank
+ where exists (select 1 from ranked_week_states played where played.user_id=u.user_id and played.wins+played.losses>=1);
  insert into public.mailbox(user_id,kind,title,body,attachments)
  select user_id,'ranked_weekly','주간 랭크 보상','지난 주 랭크 정산 보상입니다.',jsonb_build_object('demon_token',demon_token,'hero_token',hero_token)
  from public.ranked_season_results where week_start=start_date;
- update public.ranked_profiles p set mmr=r.reset_mmr,wins=0,losses=0,updated_at=now()
+ update public.ranked_profiles p set mmr=case when s.mmr=r.reset_mmr and s.tier not in ('hero','demon_lord') then coalesce((select max(t.reset_mmr) from private.ranked_reward_tiers t where t.reset_mmr<r.reset_mmr),r.reset_mmr) else r.reset_mmr end,wins=0,losses=0,updated_at=now()
  from ranked_week_states s join private.ranked_reward_tiers r on r.tier_id=s.tier
  where p.user_id=s.user_id and p.role=s.role;
 end $$;

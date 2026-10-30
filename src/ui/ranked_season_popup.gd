@@ -53,19 +53,26 @@ func _build() -> void:
 	var layer := ColorRect.new()
 	layer.name = "RankedSeasonOverlay"
 	layer.color = Color(0, 0, 0, 0.75)
-	layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	layer.mouse_filter = Control.MOUSE_FILTER_STOP
 	lobby.add_child(layer)
+	layer.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var center := CenterContainer.new()
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	layer.add_child(center)
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	panel = PanelContainer.new()
-	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	panel.offset_left = -420; panel.offset_right = 420
-	panel.offset_top = -500; panel.offset_bottom = 500
-	layer.add_child(panel)
+	panel.name = "Frame"
+	panel.custom_minimum_size = Vector2(840, 0)
+	var frame := lobby.panel_style.duplicate() as StyleBox
+	frame.set_content_margin_all(36)
+	panel.add_theme_stylebox_override("panel", frame)
+	center.add_child(panel)
+	SKIN.apply(panel)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 18)
 	panel.add_child(box)
 	_label(box, "주간 랭킹 정산", 40)
-	for role in ["demon", "hero"]:
+	for role in ["hero", "demon"]:
 		var state: Variant = result.get(role)
 		if not state is Dictionary: continue
 		var tier := String(state.get("final_tier", ""))
@@ -76,7 +83,11 @@ func _build() -> void:
 		if tier == "hero" and int(state.get("server_rank", 0)) > 0: text += " %d위" % int(state.server_rank)
 		text += " · MMR %d" % int(state.get("final_mmr", 0))
 		_label(line, text, 28)
-	_label(box, "보상 기준 · " + RULES.display_name(String(result.get("reward_tier", ""))), 28)
+	var reward_tier := String(result.get("reward_tier", ""))
+	var hero: Dictionary = result.get("hero", {})
+	var demon: Dictionary = result.get("demon", {})
+	var reward_role := "용사" if int(hero.get("final_mmr", -1)) > int(demon.get("final_mmr", -1)) else "마왕"
+	_label(box, "보상 기준: " + reward_role + " ? " + RULES.display_name(reward_tier), 28)
 	var currencies := DATA.currencies()
 	for key in ["demon_token", "hero_token"]:
 		var line := HBoxContainer.new()
@@ -88,8 +99,9 @@ func _build() -> void:
 	for spec in [["우편함으로", true], ["확인", false]]:
 		var button := Button.new()
 		button.text = spec[0]
-		button.custom_minimum_size = Vector2(220, 80)
+		button.custom_minimum_size = Vector2(220, 120)
 		SKIN.apply(button)
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		buttons.add_child(button)
 		button.pressed.connect(_close.bind(spec[1], layer))
 
@@ -101,7 +113,7 @@ func _label(parent: Node, text: String, size: int) -> void:
 
 func _icon(parent: Node, path: String) -> void:
 	var icon := TextureRect.new()
-	icon.custom_minimum_size = Vector2(64, 64)
+	icon.custom_minimum_size = Vector2(96, 96)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	if not path.is_empty(): icon.texture = DATA.texture(path)

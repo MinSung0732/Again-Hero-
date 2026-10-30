@@ -13,3 +13,7 @@ A single production game UI icon for a dark purple and gold gothic PIXEL ART mob
 ## friends
 
 A single production game UI icon for a dark purple and gold gothic PIXEL ART mobile game. Two overlapping anonymous person bust silhouettes, round heads and shoulder shapes: larger warm ivory/gold person in front lower right, smaller pale lavender person behind upper left. Simple friendly people-list symbol, strong separation between both heads and shoulders, no facial detail. Crisp low-resolution pixel art, thick dark plum outline, 3-tone shading. Centered isolated object, occupies 75% square canvas, even transparent margin, fully transparent background, readable at 48px. No button frame, no background, no labels, no letters, no gradients, no blur, no antialiasing. One icon only.
+
+## mailbox
+
+Built-in image_gen; reference: friends.png. Prompt: isolated ivory envelope with red wax seal, gothic purple and gold pixel art, dark plum outline, transparent background. Resized with nearest-neighbor to 128×128.

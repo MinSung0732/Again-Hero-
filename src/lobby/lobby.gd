@@ -383,6 +383,10 @@ func _ready() -> void:
 	stamina_view.install(self)
 	main_tools_view = preload("res://src/ui/lobby_tool_trays.gd").new()
 	main_tools_view.install(main_tab, _can_open_main_tool)
+	main_tools_view.register_action(&"mailbox", func():
+		_switch_tab("other")
+		settings_view.show_mailbox()
+	)
 	exploration_rewards_view = preload("res://src/ui/lobby_exploration_rewards_view.gd").new()
 	exploration_rewards_view.install(main_tab, main_tools_view, get_node("/root/ExplorationRewards"), _refresh_header)
 	missions_view = preload("res://src/ui/lobby_missions_view.gd").new()

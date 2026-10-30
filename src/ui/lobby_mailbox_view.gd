@@ -85,6 +85,7 @@ func _render() -> void:
 	if owner == null: return
 	var button: Button = owner.other_menu_buttons.get("mailbox")
 	var count := STORE.unread_count(mail)
+	if is_instance_valid(lobby.main_tools_view): lobby.main_tools_view.set_notification_count(&"mailbox", count)
 	if button != null: button.text = DATA.TITLE + (" (%d)" % count if count > 0 else "") + POLICY.MENU_ARROW
 	all_button.disabled = busy or count == 0
 	var definitions := DATA.currencies()

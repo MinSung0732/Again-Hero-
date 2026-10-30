@@ -13,6 +13,7 @@ const BADGE_PATH := CATALOG.BADGE_PATH
 var can_open: Callable
 var _badges := {}
 var _notifications := {}
+var _counts := {}
 var _entries := {}
 var _textures := {}
 var _actions := {}
@@ -102,7 +103,7 @@ func _button(entry: Dictionary) -> Button:
 	var path := String(entry.get("icon", ""))
 	if not path.is_empty():
 		if not _textures.has(path):
-			_textures[path] = load(path) if ResourceLoader.exists(path) else null
+			_textures[path] = preload("res://src/data/mailbox_catalog.gd").texture(path)
 		art.texture = _textures[path]
 	button.add_child(art)
 	var label := Label.new()
@@ -216,6 +217,15 @@ func set_notification(tool_id: StringName, active: bool) -> void:
 			badge.visible = active
 	_update_more_notifications()
 
+func set_notification_count(tool_id: StringName, count: int) -> void:
+	_counts[tool_id] = maxi(count, 0)
+	set_notification(tool_id, count > 0)
+	for weak in _badges.get(tool_id, []):
+		var badge = weak.get_ref()
+		if is_instance_valid(badge):
+			var label := badge.get_node_or_null("Count") as Label
+			if label != null: label.text = str(count)
+
 func _install_badge(button: Button, id: StringName) -> void:
 	var badge := TextureRect.new()
 	badge.name = "NotificationDot"
@@ -228,6 +238,16 @@ func _install_badge(button: Button, id: StringName) -> void:
 	badge.texture = _textures[BADGE_PATH]
 	badge.visible = bool(_notifications.get(id, false))
 	button.add_child(badge)
+	if id == &"mailbox":
+		var count_label := Label.new()
+		count_label.name = "Count"
+		count_label.mouse_filter = Control.MOUSE_FILTER_IGNORE
+		badge.add_child(count_label)
+		count_label.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+		count_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		count_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		count_label.add_theme_font_size_override("font_size", 16)
+		count_label.text = str(_counts.get(id, 0))
 	if not _badges.has(id):
 		_badges[id] = []
 	# Remove dead weak refs when an overflow category is rebuilt.

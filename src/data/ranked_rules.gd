@@ -47,12 +47,21 @@ static func weekly_reset_mmr(mmr: int, server_rank: int = 0) -> int:
 	var rules := data()
 	var current := tier(mmr, server_rank)
 	var target := String(rules.get("weekly_reset_high_tier", "")) if current in ["hero", "demon_lord"] else current.get_slice("_", 0) + "_1"
+	var previous := int(rules.get("initial_mmr", 0))
 	for entry in rules.get("mmr_thresholds", []):
 		if String(entry.get("id", "")) == target:
-			return maxi(int(entry.get("mmr", 0)), int(rules.get("initial_mmr", 0)))
+			var start := maxi(int(entry.get("mmr", 0)), int(rules.get("initial_mmr", 0)))
+			return previous if mmr == start and target != rules.get("weekly_reset_high_tier", "") else start
+		if String(entry.get("id", "")).ends_with("_1"):
+			previous = maxi(int(entry.get("mmr", 0)), int(rules.get("initial_mmr", 0)))
 	return int(rules.get("initial_mmr", 0))
 
-static func weekly_reward(tier_id: String) -> Dictionary:
+static func weekly_reward(tier_id: String, server_rank: int = 0) -> Dictionary:
+	if tier_id == "hero":
+		for band in data().get("weekly_hero_rank_rewards", []):
+			if server_rank >= int(band.min_rank) and server_rank <= int(band.max_rank):
+				return {"demon_token": int(band.amount), "hero_token": int(band.amount)}
+		return {}
 	var rewards: Dictionary = data().get("weekly_rewards", {})
 	return rewards.get(tier_id, {}).duplicate()
 

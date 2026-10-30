@@ -6,6 +6,7 @@ const ENTRIES := [
 	{"id": &"weekly", "title": "이벤트", "side": &"left", "icon": "res://assets/art/UI/lobby_tools/weekly_mission.png", "empty_message": "아직 진행 중인 이벤트가 없습니다."},
 	{"id": &"exploration", "title": "탐색보상", "side": &"left", "icon": "res://assets/art/UI/lobby_tools/exploration_reward.png"},
 	{"id": &"friends", "title": "친구목록", "side": &"right", "icon": "res://assets/art/UI/lobby_tools/friends.png"},
+	{"id": &"mailbox", "title": "우편함", "side": &"right", "icon": "res://assets/art/UI/lobby_tools/mailbox.png"},
 ]
 
 const SIDES := [&"left", &"right"]

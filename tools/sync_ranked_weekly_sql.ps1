@@ -12,6 +12,10 @@ $rows = foreach ($entry in $data.weekly_rewards.PSObject.Properties) {
     "('$id',$reset,$($entry.Value.demon_token),$($entry.Value.hero_token))"
 }
 $seed = 'insert into private.ranked_reward_tiers(tier_id,reset_mmr,demon_token,hero_token) values' + "`n " + ($rows -join ",`n ") + ';'
+$bands = foreach ($band in $data.weekly_hero_rank_rewards) {
+    "($($band.min_rank),$($band.max_rank),$($band.amount))"
+}
+$seed += "`n" + 'insert into private.ranked_hero_reward_bands(min_rank,max_rank,amount) values' + "`n " + ($bands -join ",`n ") + ';'
 $encoding = [Text.UTF8Encoding]::new($false)
 $sql = [IO.File]::ReadAllText($sqlPath, $encoding)
 $sql = [regex]::Replace($sql, '(?s)(-- BEGIN GENERATED RANKED REWARDS\r?\n).*?(-- END GENERATED RANKED REWARDS)', ('$1' + $seed + "`n" + '$2'))
