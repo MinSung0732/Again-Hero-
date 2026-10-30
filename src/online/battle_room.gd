@@ -64,6 +64,7 @@ var hero_id := preload("res://src/data/hero_character_catalog.gd").DEFAULT_HERO
 var roster: Array = RULES.ROSTER.duplicate() # Isolated room fixtures; the server sets the verified roster before prepare().
 var skill_ids: Array = []
 var transcendence_id := ""
+var transcendent_actor: Node2D
 var map_id := "plaza"
 func set_loadouts(hero_loadout: Dictionary,demon_loadout: Dictionary) -> void:
 	hero_id = String(hero_loadout.hero_id)
@@ -108,7 +109,9 @@ func prepare() -> void:
 	battle.demon_ultimate_used.connect(func(_id: String,_name: String,_message: String):
 		if running and not finished and not connection_paused: feedback.publish("ultimate",battle.hero.position,0,Color(0.8,0.5,1.0),tick))
 	battle.transcendent_summoned.connect(func(_id: String,actor: Node2D):
-		if running and not finished and not connection_paused and is_instance_valid(actor): feedback.publish("transcend",actor.global_position,0,Color(1.0,0.75,0.35),tick))
+		if running and not finished and not connection_paused and is_instance_valid(actor):
+			transcendent_actor = actor
+			feedback.publish("transcend",actor.global_position,0,Color(1.0,0.75,0.35),tick))
 	battle.demon_augment_ready.connect(_demon_offer)
 	battle.online_hero_kill.connect(_on_hero_kill)
 	battle.online_elite_requested.connect(_queue_elite)
@@ -519,6 +522,15 @@ func _build_snapshot() -> Dictionary:
 	# Reserve field-item commands before crowd/projectile presentation can fill the cap.
 	presentation.append_field_items(visuals)
 	snapshot_revision += 1
+	# Reserve the summoned transcendent's commands before the ordinary crowd can
+	# consume the bounded snapshot budget. It still receives the normal wire ID.
+	if is_instance_valid(transcendent_actor) and not transcendent_actor.is_queued_for_deletion() and battle.active_monsters.has(transcendent_actor.get_instance_id()):
+		var instance := transcendent_actor.get_instance_id()
+		var generation: Vector3i = battle.get_battle_entity_handle(transcendent_actor)
+		if not ids.has(instance) or ids[instance].generation != generation:
+			next_id += 1; ids[instance] = {"wire":next_id,"generation":generation,"seen":snapshot_revision}
+		else: ids[instance].seen = snapshot_revision
+		presentation.append_tree(transcendent_actor,int(ids[instance].wire),visuals)
 	for raw_id in battle.active_monsters:
 		var raw = battle.active_monsters[raw_id]
 		var actor := raw as Node2D
@@ -529,7 +541,7 @@ func _build_snapshot() -> Dictionary:
 			next_id += 1; ids[instance] = {"wire":next_id,"generation":generation,"seen":snapshot_revision}
 		else: ids[instance].seen = snapshot_revision
 		actors.append([ids[instance].wire,String(actor.get("monster_type")),snappedf(actor.position.x,0.1),snappedf(actor.position.y,0.1),int(actor.get("current_hp")),int(actor.get("max_hp")),_monster_bars(actor)])
-		presentation.append_tree(actor,int(ids[instance].wire),visuals)
+		if actor != transcendent_actor: presentation.append_tree(actor,int(ids[instance].wire),visuals)
 	for id in battle.online_visual_projectiles: presentation.append_tree(battle.online_visual_projectiles[id],-1,visuals)
 	for pool_key in battle.transient_fx_pools:
 		for effect in battle.transient_fx_pools[pool_key]:

@@ -640,6 +640,6 @@ func _load_texture(path: String) -> Texture2D:
 	if FileAccess.file_exists(path):
 		var image := Image.new()
 		if image.load(path) == OK:
-			return ImageTexture.create_from_image(image)
+			return preload("res://src/ui/png_texture_source.gd").annotate(ImageTexture.create_from_image(image), path)
 
 	return null
