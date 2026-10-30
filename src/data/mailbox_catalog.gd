@@ -8,11 +8,22 @@ const CLAIM := "받기"
 const CLAIMED := "수령 완료"
 const CLAIM_ALL := "모두 받기"
 const ERROR := "우편을 불러오거나 저장하지 못했습니다. 다시 시도해 주세요."
+const UNAVAILABLE := "우편함 서비스를 준비 중입니다."
+const DELETE_ALL := "일괄 삭제"
+const DELETE := "삭제"
+const DELETE_CONFIRM := "우편 %d개를 삭제하시겠습니까?"
+const CLOSE_SYMBOL := "X"
+const DELETE_SYMBOL := "🗑"
+const CLOSE := "닫기"
+const MESSAGE_ICON := "res://assets/art/UI/lobby_tools/mailbox.png"
+const DEFAULT_SENDER := "운영팀"
+const SENDERS := {"ranked_weekly": "랭킹 정산"}
 const LOADING := "우편을 불러오는 중…"
 const GOLD := {"name":"골드", "icon_path":"res://assets/art/UI/lobby_header/coin.svg"}
 const LOCAL_MAIL := [
-	{"id":"00000000-0000-4000-8000-000000000001", "kind":"test", "title":"마왕토큰 테스트", "body":"로컬 테스트 보상입니다.", "attachments":{"demon_token":10}},
-	{"id":"00000000-0000-4000-8000-000000000002", "kind":"test", "title":"용사토큰 테스트", "body":"로컬 테스트 보상입니다.", "attachments":{"hero_token":10}},
+	{"id":"00000000-0000-4000-8000-000000000001", "kind":"test", "title":"마왕토큰 테스트", "body":"로컬 테스트 보상입니다.", "created_at":"2026-10-30", "attachments":{"demon_token":10}},
+	{"id":"00000000-0000-4000-8000-000000000002", "kind":"test", "title":"용사토큰 테스트", "body":"로컬 테스트 보상입니다.", "created_at":"2026-10-30", "attachments":{"hero_token":10}},
+	{"id":"00000000-0000-4000-8000-000000000003", "kind":"test", "title":"안내 우편", "body":"로컬 테스트 메시지입니다.", "created_at":"2026-10-30", "attachments":{}},
 ]
 
 static func currencies() -> Dictionary:

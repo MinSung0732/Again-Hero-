@@ -18,7 +18,7 @@ func run() -> void:
 	SCOPE.guest_directory = "user://mailbox_test"
 	DirAccess.make_dir_recursive_absolute(SCOPE.guest_directory)
 	var mails := STORE.local_mail()
-	assert(mails.size() == 2 and STORE.unread_count(mails) == 2)
+	assert(mails.size() == 3 and STORE.unread_count(mails) == 2)
 	assert(STORE.apply(mails[0].id, mails[0].attachments))
 	assert(PROGRESS.get_demon_token() == 10 and STORE.applied(mails[0].id))
 	assert(STORE.apply(mails[0].id, mails[0].attachments))
@@ -42,10 +42,30 @@ func run() -> void:
 	root.add_child(lobby)
 	current_scene = lobby
 	await process_frame
-	var view = lobby.settings_view.mailbox_view
+	var view = lobby.mailbox_view
 	view.refresh()
-	assert(view.mail.size() == 2 and STORE.unread_count(view.mail) == 2)
-	assert("2" in lobby.settings_view.other_menu_buttons.mailbox.text)
+	assert(view.mail.size() == 3 and STORE.unread_count(view.mail) == 2)
+	view.show()
+	assert(view.root.visible)
+	assert(view.list.get_child_count() >= 3)
+	var row = view.list.get_child(view.list.get_child_count() - 1)
+	assert("운영팀" in row.get_node("SenderTitle").text)
+	assert(not row.get_node("Body").text.is_empty())
+	assert(row.find_child("AttachmentIcon", true, false).texture != null)
+	assert(view._deletable_ids().size() == 1)
+	view._confirm_delete_all()
+	assert(view.delete_ids.size() == 1)
+	view.confirmation.hide()
+	await view._delete_selected()
+	assert(view.mail.size() == 2)
+	view.hide()
+	assert(not view.root.visible)
+	root.get_node("LocalTestMode").active = false
+	await view.refresh()
+	assert(view.status.text == preload("res://src/data/mailbox_catalog.gd").UNAVAILABLE)
+	assert(view.all_button.disabled and view.delete_button.disabled)
+	root.get_node("LocalTestMode").active = true
+	await view.refresh()
 	await view.claim_all()
 	assert(PROGRESS.get_demon_token() == 10 and PROGRESS.get_hero_token() == 10)
 	assert(STORE.unread_count(view.mail) == 0)

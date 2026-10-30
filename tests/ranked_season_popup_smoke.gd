@@ -54,7 +54,7 @@ func run() -> void:
 		assert(button.size.y >= 120 and button.get_global_rect().end.y <= root.size.y)
 	buttons[0].pressed.emit()
 	await process_frame
-	assert(lobby.current_tab == "other" and lobby.settings_view.mailbox_view.root.visible)
+	assert(lobby.mailbox_view.root.visible)
 	lobby._switch_tab("main")
 	await process_frame
 	var trays = lobby.main_tools_view
@@ -70,7 +70,7 @@ func run() -> void:
 	assert(not mailbox.get_node("NotificationDot").visible)
 	mailbox.pressed.emit()
 	await process_frame
-	assert(lobby.current_tab == "other" and lobby.settings_view.mailbox_view.root.visible)
+	assert(lobby.mailbox_view.root.visible)
 	view.shown = false
 	view.refresh()
 	await process_frame

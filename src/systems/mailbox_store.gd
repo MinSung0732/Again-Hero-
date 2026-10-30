@@ -39,17 +39,23 @@ static func forget_acknowledged(ids: Array) -> bool:
 	return SCOPE.save_configs({PROGRESS.SAVE_PATH.get_file(): config}) == OK
 
 static func pending(item: Dictionary) -> bool:
-	return item.get("claim_state") == "unclaimed" or (item.get("applied_at") == null and not applied(String(item.get("id", ""))))
+	return not item.get("attachments", {}).is_empty() and (item.get("claim_state") == "unclaimed" or (item.get("applied_at") == null and not applied(String(item.get("id", "")))))
 
 static func local_mail() -> Array:
 	var result := DATA.LOCAL_MAIL.duplicate(true)
-	for mail in result: mail["claim_state"] = "granted" if applied(mail.id) else "unclaimed"
+	var config := ConfigFile.new()
+	SCOPE.load_config(config, PROGRESS.SAVE_PATH)
+	var deleted: Array = config.get_value("mailbox", "deleted_mail_ids", [])
+	result = result.filter(func(item): return item.id not in deleted)
+	for item in result:
+		item["claim_state"] = "granted" if applied(item.id) else "unclaimed"
+		if item.claim_state == "granted": item["applied_at"] = "local"
 	return result
 
 static func recover(mail: Array) -> bool:
 	var ok := true
 	for item in mail:
-		if item is Dictionary and item.get("claim_state") == "granted" and item.get("applied_at") == null and not applied(String(item.get("id", ""))):
+		if item is Dictionary and not item.get("attachments", {}).is_empty() and item.get("claim_state") == "granted" and item.get("applied_at") == null and not applied(String(item.get("id", ""))):
 			if not item.get("attachments") is Dictionary or not apply(String(item.get("id", "")), item.attachments): ok = false
 	return ok
 
@@ -58,3 +64,16 @@ static func unread_count(mail: Array) -> int:
 	for item in mail:
 		if item is Dictionary and pending(item): count += 1
 	return count
+
+static func deletable(item: Dictionary) -> bool:
+	return item.get("attachments", {}).is_empty() or (item.get("claim_state") == "granted" and item.get("applied_at") != null)
+
+static func delete_local(ids: Array) -> bool:
+	var config := ConfigFile.new()
+	var error := SCOPE.load_config(config, PROGRESS.SAVE_PATH)
+	if error != OK and error != ERR_FILE_NOT_FOUND: return false
+	var deleted: Array = config.get_value("mailbox", "deleted_mail_ids", [])
+	for id in ids:
+		if id not in deleted: deleted.append(id)
+	config.set_value("mailbox", "deleted_mail_ids", deleted)
+	return SCOPE.save_configs({PROGRESS.SAVE_PATH.get_file(): config}) == OK

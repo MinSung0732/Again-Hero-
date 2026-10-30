@@ -4,33 +4,60 @@ const DATA := preload("res://src/data/mailbox_catalog.gd")
 const STORE := preload("res://src/systems/mailbox_store.gd")
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
 const SKIN := preload("res://src/ui/pixel_panel_skin.gd")
-const POLICY := preload("res://src/data/lobby_ui_policy_catalog.gd")
-var settings_ref: WeakRef
 var lobby: Control
-var root: VBoxContainer
-var title_plate: PanelContainer
+var root: ColorRect
 var list: VBoxContainer
 var status: Label
 var all_button: Button
-var rows: Array = []
+var delete_button: Button
+var confirmation: ConfirmationDialog
+var delete_ids: Array = []
 var mail: Array = []
 var busy := false
+var available := false
 var rpc_override: Callable
 
-func install(owner: RefCounted, parent: Control) -> void:
-	settings_ref = weakref(owner)
-	lobby = owner.lobby
-	root = VBoxContainer.new()
-	root.name = "MailboxContent"
-	root.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	parent.add_child(root)
+func install(owner: Control) -> void:
+	lobby = owner
+	root = ColorRect.new()
+	root.name = "MailboxOverlay"
+	root.color = Color(0, 0, 0, 0.75)
+	root.mouse_filter = Control.MOUSE_FILTER_STOP
+	lobby.add_child(root)
+	root.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	root.gui_input.connect(_outside_input)
+	var center := CenterContainer.new()
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(center)
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var panel := PanelContainer.new()
+	panel.name = "Frame"
+	panel.custom_minimum_size = Vector2(840, 1100)
+	var frame := lobby.panel_style.duplicate() as StyleBox
+	frame.set_content_margin_all(36)
+	panel.add_theme_stylebox_override("panel", frame)
+	center.add_child(panel)
+	SKIN.apply(panel)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 16)
+	panel.add_child(box)
+	var heading := HBoxContainer.new()
+	box.add_child(heading)
 	var title := Label.new()
 	title.text = DATA.TITLE
-	title_plate = owner._title_plate(lobby.other_tab, title)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title.add_theme_font_size_override("font_size", 40)
+	heading.add_child(title)
+	var close := Button.new()
+	close.text = DATA.CLOSE_SYMBOL
+	close.tooltip_text = DATA.CLOSE
+	SKIN.apply(close)
+	heading.add_child(close)
+	close.pressed.connect(hide)
 	var scroll := ScrollContainer.new()
 	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	root.add_child(scroll)
+	box.add_child(scroll)
 	list = VBoxContainer.new()
 	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	list.add_theme_constant_override("separation", 16)
@@ -38,24 +65,47 @@ func install(owner: RefCounted, parent: Control) -> void:
 	status = Label.new()
 	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	status.add_theme_font_size_override("font_size", 28)
-	root.add_child(status)
+	box.add_child(status)
+	var buttons := HBoxContainer.new()
+	box.add_child(buttons)
 	all_button = Button.new()
 	all_button.text = DATA.CLAIM_ALL
 	all_button.custom_minimum_size.y = 88
+	all_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	SKIN.apply(all_button)
-	root.add_child(all_button)
+	buttons.add_child(all_button)
 	all_button.pressed.connect(claim_all)
-	hide()
+	delete_button = Button.new()
+	delete_button.text = DATA.DELETE_ALL
+	delete_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	SKIN.apply(delete_button)
+	buttons.add_child(delete_button)
+	delete_button.pressed.connect(_confirm_delete_all)
+	confirmation = ConfirmationDialog.new()
+	root.add_child(confirmation)
+	confirmation.confirmed.connect(_delete_selected)
+	root.hide()
 	refresh.call_deferred()
 
 func show() -> void:
 	root.show()
-	title_plate.show()
+	root.move_to_front()
 	refresh()
 
 func hide() -> void:
 	root.hide()
-	title_plate.hide()
+
+func blocks_input(event: InputEvent) -> bool:
+	if not root.visible: return false
+	if event.is_action_pressed("ui_cancel"):
+		if confirmation.visible: confirmation.hide()
+		else: hide()
+		lobby.get_viewport().set_input_as_handled()
+	return true
+
+func _outside_input(event: InputEvent) -> void:
+	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT: hide()
+	elif event is InputEventScreenTouch and event.pressed: hide()
 
 func refresh() -> void:
 	if busy or not is_instance_valid(lobby) or not lobby.is_inside_tree(): return
@@ -63,72 +113,132 @@ func refresh() -> void:
 	status.text = DATA.LOADING
 	var local: bool = lobby.get_node("/root/LocalTestMode").active
 	var account := SCOPE.user_id
-	var result: Dictionary = {}
-	if local:
-		result = {"mail": STORE.local_mail()}
+	var result: Dictionary = {"unavailable": true}
+	if local: result = {"mail": STORE.local_mail()}
 	elif not account.is_empty() and lobby.get_node("/root/CloudStore").can_write():
-		result = await lobby.get_node("/root/CloudStore").request_optional_rpc("list_my_mail", {"p_recent_limit":DATA.LIST_LIMIT})
+		result = await lobby.get_node("/root/CloudStore").request_optional_rpc("list_my_mail", {"p_recent_limit": DATA.LIST_LIMIT})
 	if not is_instance_valid(lobby) or not lobby.is_inside_tree() or account != SCOPE.user_id: busy = false; return
-	if result.get("mail") is Array:
+	available = result.get("mail") is Array
+	if available:
 		mail = result.mail
 		var ok := STORE.recover(mail)
 		if not local and ok: ok = await _ack_pending(account)
 		if not is_instance_valid(lobby) or not lobby.is_inside_tree() or account != SCOPE.user_id: busy = false; return
 		status.text = DATA.EMPTY if mail.is_empty() else ("" if ok else DATA.ERROR)
 	else:
-		status.text = DATA.ERROR
+		mail = []
+		status.text = DATA.UNAVAILABLE if result.get("unavailable", false) else DATA.ERROR
 	busy = false
 	_render()
 
 func _render() -> void:
-	var owner: Variant = settings_ref.get_ref()
-	if owner == null: return
-	var button: Button = owner.other_menu_buttons.get("mailbox")
+	for child in list.get_children(): child.queue_free()
 	var count := STORE.unread_count(mail)
 	if is_instance_valid(lobby.main_tools_view): lobby.main_tools_view.set_notification_count(&"mailbox", count)
-	if button != null: button.text = DATA.TITLE + (" (%d)" % count if count > 0 else "") + POLICY.MENU_ARROW
-	all_button.disabled = busy or count == 0
+	all_button.disabled = busy or not available or count == 0
+	delete_button.disabled = busy or not available or _deletable_ids().is_empty()
 	var definitions := DATA.currencies()
-	for i in mail.size():
-		if i >= rows.size():
-			var row := VBoxContainer.new()
-			var label := Label.new()
-			label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-			label.add_theme_font_size_override("font_size", 28)
-			row.add_child(label)
-			var attachments := HBoxContainer.new()
-			row.add_child(attachments)
-			var claim := Button.new()
-			claim.custom_minimum_size.y = 72
-			SKIN.apply(claim)
-			row.add_child(claim)
-			list.add_child(row)
-			rows.append(row)
-		var row: VBoxContainer = rows[i]
-		var item: Dictionary = mail[i]
-		row.show()
-		(row.get_child(0) as Label).text = "%s\n%s" % [item.get("title", ""), item.get("body", "")]
-		var attachment_row := row.get_child(1)
-		for child in attachment_row.get_children(): child.queue_free()
-		for currency in item.get("attachments", {}):
+	for item in mail:
+		var row := VBoxContainer.new()
+		row.name = "MailRow"
+		list.add_child(row)
+		var sender := String(item.sender) if item.get("sender") is String else ""
+		if sender.is_empty(): sender = DATA.SENDERS.get(item.get("kind", ""), DATA.DEFAULT_SENDER)
+		var heading := Label.new()
+		heading.name = "SenderTitle"
+		heading.text = "%s ? %s" % [sender, item.get("title", "")]
+		heading.add_theme_font_size_override("font_size", 28)
+		row.add_child(heading)
+		var body := Label.new()
+		body.name = "Body"
+		body.text = String(item.get("body", ""))
+		body.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		body.max_lines_visible = 2
+		body.mouse_filter = Control.MOUSE_FILTER_STOP
+		body.gui_input.connect(func(event):
+			if (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT) or (event is InputEventScreenTouch and event.pressed): body.max_lines_visible = -1 if body.max_lines_visible == 2 else 2
+		)
+		body.add_theme_font_size_override("font_size", 26)
+		row.add_child(body)
+		var date := Label.new()
+		date.name = "Date"
+		date.text = String(item.get("created_at", "")).left(10)
+		row.add_child(date)
+		var line := HBoxContainer.new()
+		row.add_child(line)
+		var attachments: Dictionary = item.get("attachments", {})
+		if attachments.is_empty(): _icon(line, DATA.MESSAGE_ICON)
+		for currency in attachments:
 			if not definitions.has(currency): continue
-			var icon := TextureRect.new()
-			icon.custom_minimum_size = Vector2(48, 48)
-			icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-			icon.texture = DATA.texture(String(definitions[currency].icon_path))
-			attachment_row.add_child(icon)
+			_icon(line, String(definitions[currency].icon_path))
 			var amount := Label.new()
-			amount.text = str(item.attachments[currency])
+			amount.text = str(attachments[currency])
 			amount.add_theme_font_size_override("font_size", 28)
-			attachment_row.add_child(amount)
-		var claim: Button = row.get_child(2)
-		for connection in claim.pressed.get_connections(): claim.pressed.disconnect(connection.callable)
-		var pending: bool = STORE.pending(item)
-		claim.text = DATA.CLAIM if pending else DATA.CLAIMED
-		claim.disabled = busy or not pending
-		claim.pressed.connect(claim_one.bind(String(item.id)))
-	for i in range(mail.size(), rows.size()): rows[i].hide()
+			line.add_child(amount)
+		var spacer := Control.new()
+		spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		line.add_child(spacer)
+		if not attachments.is_empty():
+			var claim := Button.new()
+			claim.text = DATA.CLAIM if STORE.pending(item) else DATA.CLAIMED
+			claim.disabled = busy or not available or not STORE.pending(item)
+			SKIN.apply(claim)
+			line.add_child(claim)
+			claim.pressed.connect(claim_one.bind(String(item.id)))
+		var remove := Button.new()
+		remove.text = "??"
+		remove.tooltip_text = DATA.DELETE
+		remove.disabled = busy or not available or not STORE.deletable(item)
+		SKIN.apply(remove)
+		line.add_child(remove)
+		remove.pressed.connect(_confirm_delete.bind([item.id]))
+
+func _icon(parent: Control, path: String) -> void:
+	var icon := TextureRect.new()
+	icon.name = "AttachmentIcon"
+	icon.custom_minimum_size = Vector2(48, 48)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.texture = DATA.texture(path)
+	parent.add_child(icon)
+
+func _deletable_ids() -> Array:
+	var ids: Array = []
+	for item in mail:
+		if STORE.deletable(item): ids.append(item.id)
+	return ids
+
+func _confirm_delete_all() -> void:
+	_confirm_delete(_deletable_ids())
+
+func _confirm_delete(ids: Array) -> void:
+	if busy or not available or ids.is_empty(): return
+	delete_ids = ids
+	confirmation.dialog_text = DATA.DELETE_CONFIRM % ids.size()
+	confirmation.popup_centered()
+
+func _delete_selected() -> void:
+	if busy: return
+	var ids := delete_ids.filter(func(id): return id in _deletable_ids())
+	if ids.is_empty(): return
+	busy = true
+	_render()
+	var account := SCOPE.user_id
+	var result: Dictionary = {}
+	if lobby.get_node("/root/LocalTestMode").active:
+		if STORE.delete_local(ids): result = {"ids": ids}
+	elif not account.is_empty() and lobby.get_node("/root/CloudStore").can_write():
+		result = await lobby.get_node("/root/CloudStore").request_optional_rpc("delete_mail", {"p_ids": ids})
+	if not is_instance_valid(lobby) or not lobby.is_inside_tree() or account != SCOPE.user_id: busy = false; return
+	if result.get("ids") is Array:
+		var removed: Array = result.ids.filter(func(id): return id in ids)
+		mail = mail.filter(func(item): return item.id not in removed)
+		status.text = DATA.EMPTY if mail.is_empty() else ""
+	else:
+		status.text = DATA.UNAVAILABLE if result.get("unavailable", false) else DATA.ERROR
+		if result.get("unavailable", false): available = false
+	busy = false
+	_render()
 
 func claim_one(id: String) -> void:
 	if busy: return
@@ -146,10 +256,11 @@ func claim_one(id: String) -> void:
 	var ok: bool = result.get("id") == id and result.get("attachments") is Dictionary and STORE.apply(id, result.attachments)
 	if ok:
 		for item in mail:
-			if item.id == id: item.claim_state = "granted"
+			if item.id == id: item.claim_state = "granted"; if local: item["applied_at"] = "local"
 	if ok and not local: ok = await _ack_pending(account)
 	if not is_instance_valid(lobby) or not lobby.is_inside_tree() or account != SCOPE.user_id: busy = false; return
-	status.text = "" if ok else DATA.ERROR
+	status.text = "" if ok else (DATA.UNAVAILABLE if result.get("unavailable", false) else DATA.ERROR)
+	if result.get("unavailable", false): available = false
 	busy = false
 	_render()
 

@@ -142,8 +142,7 @@ func _icon(parent: Node, path: String, size: int = 96, node_name: String = "") -
 func _close(open_mail: bool, layer: Control) -> void:
 	layer.queue_free()
 	if open_mail:
-		lobby._switch_tab("other")
-		lobby.settings_view.show_mailbox()
+		lobby.mailbox_view.show()
 	if local:
 		var config := ConfigFile.new()
 		SCOPE.load_config(config, PROGRESS.SAVE_PATH)

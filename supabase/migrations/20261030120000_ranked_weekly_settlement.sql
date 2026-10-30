@@ -49,7 +49,7 @@ create table public.ranked_season_results (
 create table public.mailbox (
  id uuid primary key default gen_random_uuid(),
  user_id uuid not null references auth.users(id) on delete cascade,
- kind text not null, title text not null, body text not null,
+ kind text not null, sender text, title text not null, body text not null, deleted_at timestamptz,
  attachments jsonb not null default '{}'::jsonb,
  created_at timestamptz not null default now(), claim_state text not null default 'unclaimed' check (claim_state in ('unclaimed','granted')), granted_at timestamptz, applied_at timestamptz
 );
@@ -65,9 +65,14 @@ grant select on public.ranked_season_results, public.mailbox to authenticated;
 create function public.list_my_mail(p_recent_limit integer default 200) returns jsonb
 language sql stable security definer set search_path='' as $$
  select jsonb_build_object('mail', coalesce(jsonb_agg(to_jsonb(m) order by (m.claim_state='granted' and m.applied_at is null) desc, m.created_at desc, m.id desc), '[]'::jsonb))
- from (select * from public.mailbox where user_id=auth.uid() and claim_state='granted' and applied_at is null
+ from (select * from public.mailbox where user_id=auth.uid() and deleted_at is null and claim_state='granted' and applied_at is null
  union all
- select * from (select * from public.mailbox where user_id=auth.uid() and not (claim_state='granted' and applied_at is null) order by created_at desc, id desc limit greatest(1,least(coalesce(p_recent_limit,200),1000))) recent) m
+ select * from (select * from public.mailbox where user_id=auth.uid() and deleted_at is null and not (claim_state='granted' and applied_at is null) order by created_at desc, id desc limit greatest(1,least(coalesce(p_recent_limit,200),1000))) recent) m
+$$;
+create function public.delete_mail(p_ids uuid[]) returns jsonb
+language sql security definer set search_path='' as $$
+ with updated as (update public.mailbox set deleted_at=coalesce(deleted_at,now()) where user_id=auth.uid() and id=any(p_ids) and ((claim_state='granted' and applied_at is not null) or attachments='{}'::jsonb) returning id)
+ select jsonb_build_object('ids',coalesce(jsonb_agg(id),'[]'::jsonb)) from updated
 $$;
 create function public.ack_mail(p_ids uuid[]) returns jsonb
 language sql security definer set search_path='' as $$
@@ -83,7 +88,7 @@ language plpgsql security definer set search_path='' as $$
 declare item public.mailbox;
 begin
  if auth.uid() is null then raise exception 'authentication required' using errcode='42501'; end if;
- update public.mailbox set claim_state='granted', granted_at=coalesce(granted_at,now()) where id=p_id and user_id=auth.uid() returning * into item;
+ update public.mailbox set claim_state='granted', granted_at=coalesce(granted_at,now()) where id=p_id and user_id=auth.uid() and deleted_at is null returning * into item;
  if not found then return null; end if;
  return jsonb_build_object('id',item.id,'attachments',item.attachments);
 end $$;
@@ -94,8 +99,8 @@ begin
  update public.ranked_season_results set seen=true where user_id=auth.uid() and week_start=p_week_start;
  return jsonb_build_object('seen',found);
 end $$;
-revoke all on function public.list_my_mail(integer), public.ack_mail(uuid[]), public.latest_unseen_ranked_season(), public.grant_mail(uuid), public.mark_ranked_season_seen(date) from public, anon;
-grant execute on function public.list_my_mail(integer), public.ack_mail(uuid[]), public.latest_unseen_ranked_season(), public.grant_mail(uuid), public.mark_ranked_season_seen(date) to authenticated;
+revoke all on function public.list_my_mail(integer), public.delete_mail(uuid[]), public.ack_mail(uuid[]), public.latest_unseen_ranked_season(), public.grant_mail(uuid), public.mark_ranked_season_seen(date) from public, anon;
+grant execute on function public.list_my_mail(integer), public.delete_mail(uuid[]), public.ack_mail(uuid[]), public.latest_unseen_ranked_season(), public.grant_mail(uuid), public.mark_ranked_season_seen(date) to authenticated;
 
 -- Usage is stored alongside the authoritative match; retries retain the first record.
 alter table public.ranked_matches add column hero_id text, add column transcendence_id text, add column role_counts jsonb;
@@ -145,8 +150,8 @@ begin
  demon_top_transcendence_id=(select m.transcendence_id from public.ranked_matches m where m.demon_user=r.user_id and m.transcendence_id is not null and m.created_at >= (start_date::timestamp at time zone 'Asia/Seoul') and m.created_at < ((start_date+7)::timestamp at time zone 'Asia/Seoul') group by m.transcendence_id order by count(*) desc,max(m.created_at) desc,m.transcendence_id limit 1),
  demon_top_role=(select e.key from public.ranked_matches m cross join lateral jsonb_each(m.role_counts) e where m.demon_user=r.user_id and m.created_at >= (start_date::timestamp at time zone 'Asia/Seoul') and m.created_at < ((start_date+7)::timestamp at time zone 'Asia/Seoul') group by e.key order by sum((e.value #>> '{}')::numeric) desc,max(m.created_at) desc,e.key limit 1)
  where r.week_start=start_date;
- insert into public.mailbox(user_id,kind,title,body,attachments)
- select user_id,'ranked_weekly','주간 랭크 보상','지난 주 랭크 정산 보상입니다.',jsonb_build_object('demon_token',demon_token,'hero_token',hero_token)
+ insert into public.mailbox(user_id,kind,sender,title,body,attachments)
+ select user_id,'ranked_weekly','랭킹 정산','주간 랭크 보상','지난 주 랭크 정산 보상입니다.',jsonb_build_object('demon_token',demon_token,'hero_token',hero_token)
  from public.ranked_season_results where week_start=start_date;
  update public.ranked_profiles p set mmr=case when s.mmr=r.reset_mmr and s.tier not in ('hero','demon_lord') then coalesce((select max(t.reset_mmr) from private.ranked_reward_tiers t where t.reset_mmr<r.reset_mmr),r.reset_mmr) else r.reset_mmr end,wins=0,losses=0,updated_at=now()
  from ranked_week_states s join private.ranked_reward_tiers r on r.tier_id=s.tier

@@ -269,6 +269,7 @@ var _portrait_reference_image: Image
 var _portrait_reference_rect := Rect2i()
 var _presentation_ready := false
 var settings_view: RefCounted
+var mailbox_view: RefCounted
 var ranked_season_popup: RefCounted
 var exploration_rewards_view: Control
 var missions_view: Control
@@ -383,10 +384,9 @@ func _ready() -> void:
 	stamina_view.install(self)
 	main_tools_view = preload("res://src/ui/lobby_tool_trays.gd").new()
 	main_tools_view.install(main_tab, _can_open_main_tool)
-	main_tools_view.register_action(&"mailbox", func():
-		_switch_tab("other")
-		settings_view.show_mailbox()
-	)
+	mailbox_view = preload("res://src/ui/lobby_mailbox_view.gd").new()
+	mailbox_view.install(self)
+	main_tools_view.register_action(&"mailbox", mailbox_view.show)
 	exploration_rewards_view = preload("res://src/ui/lobby_exploration_rewards_view.gd").new()
 	exploration_rewards_view.install(main_tab, main_tools_view, get_node("/root/ExplorationRewards"), _refresh_header)
 	missions_view = preload("res://src/ui/lobby_missions_view.gd").new()
@@ -2175,6 +2175,9 @@ func _apply_arrow_texture(button: Button, texture: Texture2D, flip_h: bool) -> v
 
 
 func _input(event: InputEvent) -> void:
+	if mailbox_view != null and mailbox_view.blocks_input(event):
+		_stage_swipe_active = false
+		return
 	if settings_view != null and settings_view.guest_account_view != null and settings_view.guest_account_view.blocks_input(event):
 		_stage_swipe_active = false
 		return
