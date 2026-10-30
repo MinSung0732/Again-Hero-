@@ -99,6 +99,7 @@ func _refresh_combat_target() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	delta = MONSTER_RUNTIME_COMMON.BATTLE_CLOCK.scaled(self, delta)
 	if _combat_profile == null or not _combat_profile.enabled:
 		_physics_process_monster(delta)
 		return

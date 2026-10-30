@@ -1828,7 +1828,10 @@ func _attach_status_effect_visual(effect_type: String) -> void:
 	effect.setup(self, effect_type)
 
 
+const BATTLE_CLOCK := preload("res://src/systems/battle_clock.gd")
+
 func _physics_process(delta: float) -> void:
+	delta = BATTLE_CLOCK.scaled(self, delta)
 	var started: int = Time.get_ticks_usec() if _combat_profile != null and _combat_profile.enabled else 0
 	_physics_process_hero(delta)
 	if started: _combat_profile.record(_combat_profile.Scope.HERO,started)
@@ -3875,11 +3878,11 @@ func _move_and_slide_with_obstacle_escape() -> void:
 		return
 	if player_controlled and not player_input_suspended and not fighter_charge_active and not rogue_assassination_active:
 		velocity = _player_move_velocity()
-		move_and_slide()
+		BATTLE_CLOCK.move_and_slide_scaled(self)
 		return
 	var intended_velocity := velocity
 	var intended_speed := intended_velocity.length()
-	var delta := maxf(float(get_physics_process_delta_time()), 0.001)
+	var delta := maxf(BATTLE_CLOCK.scaled(self, float(get_physics_process_delta_time())), 0.001)
 
 	obstacle_escape_timer = maxf(
 		obstacle_escape_timer - delta,
@@ -3901,7 +3904,7 @@ func _move_and_slide_with_obstacle_escape() -> void:
 			velocity = blended_direction.normalized() * intended_speed
 
 	var movement_start := global_position
-	move_and_slide()
+	BATTLE_CLOCK.move_and_slide_scaled(self)
 	var moved_distance := global_position.distance_to(movement_start)
 
 	if intended_speed < OBSTACLE_MIN_INTENDED_SPEED:

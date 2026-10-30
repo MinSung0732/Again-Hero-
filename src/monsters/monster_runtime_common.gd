@@ -2,6 +2,7 @@ extends RefCounted
 class_name MonsterRuntimeCommon
 const PERFORMANCE_PROBE := preload("res://src/systems/combat_performance_probe.gd")
 const COMBAT_DELAY := preload("res://src/systems/combat_delay.gd")
+const BATTLE_CLOCK := preload("res://src/systems/battle_clock.gd")
 const BATTLE_SCOPE := preload("res://src/systems/battle_scope.gd")
 const GENERIC_SHIELDS := preload("res://src/systems/generic_shield_pool.gd")
 
@@ -25,9 +26,9 @@ static var _soft_separation_scratch: Array = []
 
 ## Preserve the engine movement operation; opt-in timing only.
 static func move_and_slide_profiled(actor: CharacterBody2D, profile: RefCounted = null) -> bool:
-	if profile == null or not profile.enabled: return actor.move_and_slide()
+	if profile == null or not profile.enabled: return BATTLE_CLOCK.move_and_slide_scaled(actor)
 	var started := Time.get_ticks_usec()
-	var collided := actor.move_and_slide()
+	var collided := BATTLE_CLOCK.move_and_slide_scaled(actor)
 	profile.record(PERFORMANCE_PROBE.Scope.MONSTER_MOVE,started)
 	return collided
 

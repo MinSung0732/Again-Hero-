@@ -242,6 +242,7 @@ var online_match_rules: Dictionary = {}
 var hero_player_stage := "stage_1"
 var hero_player_hero_id := "ranged_rookie"
 var external_pause: bool = false
+var clock_scale := 1.0
 
 var max_command: float = BASE_MAX_COMMAND
 var command_power: float = START_COMMAND
@@ -702,7 +703,16 @@ func _ready() -> void:
 	_cache_demon_ultimate_runtime_data()
 	_start_battle()
 
+func combat_delta(delta: float) -> float:
+	return 0.0 if external_pause else delta * clock_scale
+
+
+func set_clock_scale(value: float) -> void:
+	clock_scale = clampf(value, 0.05, 1.0)
+
+
 func _process(delta: float) -> void:
+	delta = combat_delta(delta)
 	if not combat_profile.enabled:
 		_process_battle(delta)
 		return
