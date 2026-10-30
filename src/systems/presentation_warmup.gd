@@ -10,7 +10,6 @@ const PROGRESS := preload("res://src/systems/stage_progress.gd")
 const DIALOGUES := preload("res://src/data/stage_intro_dialogues.gd")
 const REVEAL := preload("res://src/data/hero_reveal_catalog.gd")
 const HEROES := preload("res://src/data/hero_profiles.gd")
-const SHOP := preload("res://src/data/shop_catalog.gd")
 const MONSTERS := preload("res://src/data/monster_catalog.gd")
 const EFFECT_LAYOUTS := preload("res://src/data/hero_effect_layout_catalog.gd")
 const LOAD_BATCH_SIZE := 4
@@ -86,10 +85,8 @@ func prepare_scene(scene_path: String, entry_options: Dictionary = {}) -> bool:
 		paths.append("res://assets/art/effects/gatcha/gacha_button_texture.tres")
 		paths.append("res://assets/art/effects/gatcha/gacha_panel_frame.png")
 		paths.append("res://assets/art/effects/gatcha/gacha_reward_card.png")
-		for rarity_id in SHOP.RARITY_ORDER:
-			var rarity := SHOP.get_rarity(rarity_id)
-			if float(rarity.get("weight", 0.0)) > 0.0:
-				paths.append(String(rarity.get("door_sheet_path", "")))
+		# Door sheets (3072x2560 each) are not warmed: the reveal overlay loads only the drawn
+		# rarity's sheet on a thread during its anticipation beat and drops it on confirm.
 		for monster_id in MONSTERS.ORDER:
 			var monster := MONSTERS.get_monster(monster_id)
 			paths.append(MONSTERS.get_ui_icon_path(monster_id))
