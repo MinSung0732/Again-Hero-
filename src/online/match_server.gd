@@ -10,6 +10,8 @@ const RESULT_STORE := preload("res://src/online/ranked_result_store.gd")
 const LOADOUT := preload("res://src/online/online_loadout.gd")
 const LOADOUT_STORE := preload("res://src/online/ranked_loadout_store.gd")
 const MAPS := preload("res://src/data/ranked_map_catalog.gd")
+# Client sequences rise by one per sent input and reset per match; a larger jump would lock that seat's later inputs.
+const MAX_INPUT_SEQ_STEP := 64
 var result_store
 var loadout_store
 var metrics = preload("res://src/online/network_metrics.gd").new()
@@ -160,7 +162,7 @@ func _receive(id: int,message: Dictionary) -> void:
 		var raw_seq: Variant = message.get("seq",null)
 		if not RULES.number(raw_seq,2147483647.0) or float(raw_seq) != floorf(float(raw_seq)): return
 		var sequence := int(raw_seq)
-		if sequence <= int(peer.seq): return
+		if sequence <= int(peer.seq) or sequence > int(peer.seq)+MAX_INPUT_SEQ_STEP: return
 		peer.seq = sequence
 		if message.get("kind",null) is String:
 			var accepted: bool

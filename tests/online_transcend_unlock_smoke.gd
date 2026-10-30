@@ -25,6 +25,10 @@ func run() -> void:
 	server.test_auth = true; input.seq = 4; server._receive(1,input)
 	check(room.snapshot().transcend_ready,"test room unlock reaches snapshot")
 	check(not room.apply("demon","transcend_unlock_test",{},true),"repeat unlock rejected")
+	input.seq = 2147483647; server._receive(1,input)
+	check(int(server.peers[1].seq) == 4,"oversized sequence jump cannot lock the seat")
+	input.seq = 5; server._receive(1,input)
+	check(int(server.peers[1].seq) == 5,"next sequence still accepted")
 	root.get_node("SceneTransition")._entry_options = {"role":"demon"}
 	var scene = load("res://src/online/OnlineMatch.tscn").instantiate(); root.add_child(scene)
 	await process_frame
