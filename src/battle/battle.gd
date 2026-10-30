@@ -34,6 +34,7 @@ const SPATIAL_BUCKET_POOL := preload("res://src/systems/spatial_bucket_pool.gd")
 
 const MONSTER_LOCAL_GRID := preload("res://src/systems/monster_local_grid.gd")
 
+signal clock_scale_changed(scale: float)
 signal stats_changed(hero_hp: int, hero_max_hp: int, monsters_left: int)
 signal progression_changed(level: int, current_exp: int, exp_to_next_level: int)
 signal hero_leveled_up(new_level: int)
@@ -708,7 +709,11 @@ func combat_delta(delta: float) -> float:
 
 
 func set_clock_scale(value: float) -> void:
-	clock_scale = clampf(value, 0.05, 1.0)
+	var next_scale := clampf(value, 0.05, 1.0)
+	if is_equal_approx(clock_scale, next_scale):
+		return
+	clock_scale = next_scale
+	clock_scale_changed.emit(clock_scale)
 
 
 func _process(delta: float) -> void:

@@ -44,7 +44,20 @@ var focus_damage_bonus: float = 0.0
 var projectile_pool: Array[Node2D] = []
 
 
+var _visual_clock_scale := 1.0
+
+var _animation_base_speed := 1.0
+
+func _on_clock_scale_changed(value: float) -> void:
+	_visual_clock_scale = value
+	visual.speed_scale = _animation_base_speed * value
+
 func _ready() -> void:
+	_animation_base_speed = visual.speed_scale
+	var clock_battle := CLOCK_SUMMONER_WATCHER.battle_for(self)
+	if clock_battle != null and clock_battle.has_signal("clock_scale_changed"):
+		clock_battle.clock_scale_changed.connect(_on_clock_scale_changed)
+		_on_clock_scale_changed(clock_battle.clock_scale)
 	_setup_visual(DEFAULT_FRAME_DIR)
 	_load_audio(DEFAULT_ATTACK_AUDIO_PATH, DEFAULT_SUMMON_AUDIO_PATH)
 	deactivate(false)

@@ -41,7 +41,19 @@ var dying: bool = false
 var frame_dir: String = DEFAULT_FRAME_DIR
 
 
+var _visual_clock_scale := 1.0
+var _visual_base_speed := 1.0
+
+func _on_clock_scale_changed(value: float) -> void:
+	_visual_clock_scale = value
+	visual.speed_scale = _visual_base_speed * value
+
 func _ready() -> void:
+	_visual_base_speed = visual.speed_scale
+	var clock_battle := CLOCK_SUMMONER_SCOUT.battle_for(self)
+	if clock_battle != null and clock_battle.has_signal("clock_scale_changed"):
+		clock_battle.clock_scale_changed.connect(_on_clock_scale_changed)
+		_on_clock_scale_changed(clock_battle.clock_scale)
 	_setup_visual(DEFAULT_FRAME_DIR)
 	_load_audio(DEFAULT_ATTACK_AUDIO_PATH, DEFAULT_SUMMON_AUDIO_PATH)
 	deactivate(false)
@@ -87,7 +99,8 @@ func activate(world_position: Vector2, new_owner: Node2D, config: Dictionary) ->
 		add_to_group("hero_summons")
 	set_physics_process(true)
 	visual.visible = true
-	visual.speed_scale = 1.0
+	_visual_base_speed = 1.0
+	_on_clock_scale_changed(_visual_clock_scale)
 	visual.play(&"summon")
 	SUMMONER_SFX.play_portal(owner_hero, summon_audio)
 	queue_redraw()

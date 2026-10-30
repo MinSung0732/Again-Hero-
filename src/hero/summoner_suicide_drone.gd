@@ -34,7 +34,23 @@ var retarget_timer: float = 0.0
 var exploding: bool = false
 
 
+var _body_animation_speed := 1.0
+var _spawn_animation_speed := 1.0
+var _explosion_animation_speed := 1.0
+
+func _on_clock_scale_changed(value: float) -> void:
+	visual.speed_scale = _body_animation_speed * value
+	spawn_effect.speed_scale = _spawn_animation_speed * value
+	explosion.speed_scale = _explosion_animation_speed * value
+
 func _ready() -> void:
+	_body_animation_speed = visual.speed_scale
+	_spawn_animation_speed = spawn_effect.speed_scale
+	_explosion_animation_speed = explosion.speed_scale
+	var clock_battle := CLOCK_SUMMONER_SUICIDE_DRONE.battle_for(self)
+	if clock_battle != null and clock_battle.has_signal("clock_scale_changed"):
+		clock_battle.clock_scale_changed.connect(_on_clock_scale_changed)
+		_on_clock_scale_changed(clock_battle.clock_scale)
 	_setup_frames()
 	deactivate(false)
 

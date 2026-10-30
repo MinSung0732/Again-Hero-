@@ -726,7 +726,7 @@ func _restart_fighter_attack_animation(reverse_frames: bool) -> void:
 
 	hero.hero_sprite.stop()
 	hero.hero_sprite.animation = &"attack"
-	hero.hero_sprite.speed_scale = 1.0
+	hero._set_hero_animation_speed(1.0)
 	if reverse_frames:
 		var frame_count := hero.hero_sprite.sprite_frames.get_frame_count(&"attack")
 		hero.hero_sprite.frame = maxi(frame_count - 1, 0)

@@ -35,7 +35,20 @@ var drone_spawn_y_min: float = -220.0
 var drone_spawn_y_max: float = -70.0
 
 
+var _visual_clock_scale := 1.0
+
+var _animation_base_speed := 1.0
+
+func _on_clock_scale_changed(value: float) -> void:
+	_visual_clock_scale = value
+	visual.speed_scale = _animation_base_speed * value
+
 func _ready() -> void:
+	_animation_base_speed = visual.speed_scale
+	var clock_battle := CLOCK_SUMMONER_OPEN_GATE.battle_for(self)
+	if clock_battle != null and clock_battle.has_signal("clock_scale_changed"):
+		clock_battle.clock_scale_changed.connect(_on_clock_scale_changed)
+		_on_clock_scale_changed(clock_battle.clock_scale)
 	_setup_visual(DEFAULT_FRAME_DIR, 2.0)
 	_load_audio(DEFAULT_OPENING_AUDIO_PATH, DEFAULT_DRONE_SPAWN_AUDIO_PATH)
 	deactivate(false)

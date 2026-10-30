@@ -59,7 +59,22 @@ var soft_separation_bias: Vector2 = Vector2.ZERO
 var visual_lod_suspended: bool = false
 var self_destruct_hp_ratio: float = 1.0
 
+var _animation_clock_scale := 1.0
+var _visual_base_speed := 1.0
+var _explosion_base_speed := 1.0
+
+func _on_clock_scale_changed(value: float) -> void:
+	_animation_clock_scale = value
+	visual.speed_scale = _visual_base_speed * value
+	explosion_effect.speed_scale = _explosion_base_speed * value
+
 func _ready() -> void:
+	_visual_base_speed = visual.speed_scale
+	_explosion_base_speed = explosion_effect.speed_scale
+	var clock_battle := CLOCK_BOMB_RAT.battle_for(self)
+	if clock_battle != null and clock_battle.has_signal("clock_scale_changed"):
+		clock_battle.clock_scale_changed.connect(_on_clock_scale_changed)
+		_on_clock_scale_changed(clock_battle.clock_scale)
 	add_to_group("monsters")
 	_ensure_hit_flash_material()
 	far_ai_tick_timer = MONSTER_RUNTIME_COMMON.initial_far_navigation_delay()
@@ -559,7 +574,8 @@ func _apply_bomb_rat_sequence_visual(profile: Dictionary) -> bool:
 	var uniform_scale := target_height / source_height
 	visual.scale = Vector2(uniform_scale, uniform_scale)
 	visual.visible = true
-	visual.speed_scale = 1.0
+	_visual_base_speed = 1.0
+	visual.speed_scale = _visual_base_speed * _animation_clock_scale
 
 	if not visual.animation_finished.is_connected(_on_visual_animation_finished):
 		visual.animation_finished.connect(_on_visual_animation_finished)
@@ -632,7 +648,8 @@ func _apply_bomb_rat_explosion_visual() -> void:
 	explosion_effect.sprite_frames = frames
 	var uniform_scale := float(frames.get_meta("visual_scale", 1.0))
 	explosion_effect.scale = Vector2(uniform_scale, uniform_scale)
-	explosion_effect.speed_scale = 1.0
+	_explosion_base_speed = 1.0
+	explosion_effect.speed_scale = _explosion_base_speed * _animation_clock_scale
 
 	if not explosion_effect.animation_finished.is_connected(
 		_on_explosion_effect_finished
@@ -701,7 +718,8 @@ func _restart_visual_animation(animation_name: StringName) -> void:
 	visual.animation = animation_name
 	visual.frame = 0
 	visual.frame_progress = 0.0
-	visual.speed_scale = 1.0
+	_visual_base_speed = 1.0
+	visual.speed_scale = _visual_base_speed * _animation_clock_scale
 	visual.play(animation_name)
 
 func _on_visual_animation_finished() -> void:

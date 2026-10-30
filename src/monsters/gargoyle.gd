@@ -38,7 +38,7 @@ func apply_visual_profile(profile: Dictionary) -> void:
 	if visual.apply_visual_profile(profile):
 		status_bar_head_y = visual.position.y-float(profile.get("target_height",140.0))*0.5-12.0
 		if petrify_remaining > 0.0:
-			visual.speed_scale = 0.0
+			visual.set_base_animation_speed(0.0)
 			visual.self_modulate = petrify_restore_tint*DATA.PETRIFY_TINT
 		queue_redraw()
 
@@ -113,7 +113,7 @@ func _apply_gargoyle_damage(amount: int, receipt = null, revision: int = 0) -> v
 	DAMAGE_NUMBERS.show(self,paid)
 	queue_redraw()
 	if current_hp <= 0:
-		if is_instance_valid(visual): visual.speed_scale = 1.0
+		if is_instance_valid(visual): visual.set_base_animation_speed(1.0)
 		_begin_death_with_result(receipt,revision)
 	elif not petrify_used and special_augment_configs.has("gargoyle_stone_slumber") and float(current_hp)/maxi(max_hp,1) <= DATA.LOW_HP_START:
 		petrify_used = true
@@ -129,7 +129,7 @@ func _set_petrify_visual(active: bool) -> void:
 	if is_instance_valid(visual):
 		if active: petrify_restore_tint = visual.self_modulate
 		visual.self_modulate = petrify_restore_tint*DATA.PETRIFY_TINT if active else petrify_restore_tint
-		visual.speed_scale = 0.0 if active else 1.0
+		visual.set_base_animation_speed(0.0 if active else 1.0)
 	if active:
 		petrify_effect = COMBAT_STATUS_EFFECT_VISUAL.show_on(self,"petrify")
 	elif is_instance_valid(petrify_effect):

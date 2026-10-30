@@ -920,6 +920,8 @@ var stun_timer: float = 0.0
 var player_control_gauge := preload("res://src/hero_mode/hero_control_gauge.gd").new()
 var player_weapon_tick_done := false
 var stun_sprite_speed: float = 1.0
+var hero_animation_base_speed := 1.0
+var hero_animation_clock_scale := 1.0
 var fear_timer: float = 0.0
 var fear_immunity_timer := 0.0
 var fear_recovery_immunity := 0.0
@@ -1687,6 +1689,10 @@ func configure_battlefield(size: Vector2) -> void:
 	)
 
 func _ready() -> void:
+	var clock_battle := BATTLE_CLOCK.battle_for(self)
+	if clock_battle != null and clock_battle.has_signal("clock_scale_changed"):
+		clock_battle.clock_scale_changed.connect(_on_hero_clock_scale_changed)
+		_on_hero_clock_scale_changed(clock_battle.clock_scale)
 	_combat_profile = get_parent().get("combat_profile")
 	status_overlay = Node2D.new()
 	status_overlay.name = "CombatStatusOverlay"
@@ -2901,7 +2907,7 @@ func _apply_profile_visual() -> void:
 	_apply_normalized_hero_visual_scale()
 	for method in profile.get("after_scale_methods", HERO_PRESENTATION.EMPTY_METHODS):
 		call(method)
-	hero_sprite.speed_scale = 1.0
+	_set_hero_animation_speed(1.0)
 	hero_sprite.play("idle")
 	for method in profile.get("after_play_methods", HERO_PRESENTATION.EMPTY_METHODS):
 		call(method)
@@ -3113,6 +3119,14 @@ func _is_current_hero_animation_protected(requested_animation: StringName) -> bo
 	return false
 
 
+func _set_hero_animation_speed(value: float) -> void:
+	hero_animation_base_speed = value
+	hero_sprite.speed_scale = value * hero_animation_clock_scale
+
+func _on_hero_clock_scale_changed(value: float) -> void:
+	hero_animation_clock_scale = value
+	hero_sprite.speed_scale = hero_animation_base_speed * value
+
 func _play_stage1_animation(animation_name: String, speed_scale: float = 1.0) -> void:
 	if not hero_sprite.visible or hero_sprite.sprite_frames == null:
 		return
@@ -3123,7 +3137,7 @@ func _play_stage1_animation(animation_name: String, speed_scale: float = 1.0) ->
 	if _is_current_hero_animation_protected(requested_animation):
 		return
 
-	hero_sprite.speed_scale = speed_scale
+	_set_hero_animation_speed(speed_scale)
 	if hero_sprite.animation != requested_animation:
 		hero_sprite.play(requested_animation)
 
@@ -3148,7 +3162,7 @@ func _restart_stage1_animation(animation_name: String, speed_scale: float = 1.0)
 	):
 		# Combat logic is not blocked; only suppress duplicate visual restarts
 		# that arrive almost simultaneously and make frame 0 vibrate.
-		hero_sprite.speed_scale = speed_scale
+		_set_hero_animation_speed(speed_scale)
 		return
 
 	hero_animation_last_restart_name = requested_animation
@@ -3157,7 +3171,7 @@ func _restart_stage1_animation(animation_name: String, speed_scale: float = 1.0)
 	hero_sprite.animation = requested_animation
 	hero_sprite.frame = 0
 	hero_sprite.frame_progress = 0.0
-	hero_sprite.speed_scale = speed_scale
+	_set_hero_animation_speed(speed_scale)
 	hero_sprite.play(requested_animation)
 
 func _update_stage1_pose_visual(delta: float) -> void:
@@ -7978,8 +7992,8 @@ func _apply_stun_status(duration: float, receipt = null, receipt_revision: int =
 		if duration <= 0.0: return
 	record_status_effect_event("stun")
 	if stun_timer <= 0.0 and is_instance_valid(hero_sprite):
-		stun_sprite_speed = hero_sprite.speed_scale
-		hero_sprite.speed_scale = 0.0
+		stun_sprite_speed = hero_animation_base_speed
+		_set_hero_animation_speed(0.0)
 	stun_timer = maxf(stun_timer, maxf(duration * (1.0 - get_status_resistance("stun")), 0.05))
 	velocity = Vector2.ZERO
 	set_meta("stun_active", true)
@@ -7988,7 +8002,7 @@ func _apply_stun_status(duration: float, receipt = null, receipt_revision: int =
 
 func _clear_stun() -> void:
 	if stun_timer > 0.0 and is_instance_valid(hero_sprite):
-		hero_sprite.speed_scale = stun_sprite_speed
+		_set_hero_animation_speed(stun_sprite_speed)
 	stun_timer = 0.0
 	set_meta("stun_active", false)
 

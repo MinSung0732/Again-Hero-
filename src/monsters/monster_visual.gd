@@ -30,6 +30,8 @@ static func clear_cached_frames() -> void:
 
 
 var art_faces_left := false
+var _base_animation_speed := 1.0
+var _animation_clock_scale := 1.0
 var _visual_ready: bool = false
 var _one_shot_locked: bool = false
 var _death_playing: bool = false
@@ -47,6 +49,11 @@ var _lod_suspended: bool = false
 var _death_fade_duration := 0.0
 
 func _ready() -> void:
+	_base_animation_speed = speed_scale
+	var battle := CLOCK_MONSTER_VISUAL.battle_for(self)
+	if battle != null and battle.has_signal("clock_scale_changed"):
+		battle.clock_scale_changed.connect(_on_clock_scale_changed)
+		_on_clock_scale_changed(battle.clock_scale)
 	animation_finished.connect(_on_animation_finished)
 	_setup_sprite_frames()
 	_ensure_hit_flash_material()
@@ -55,6 +62,14 @@ func _ready() -> void:
 
 	if _visual_ready:
 		play(&"idle")
+
+func set_base_animation_speed(value: float) -> void:
+	_base_animation_speed = value
+	speed_scale = value * _animation_clock_scale
+
+func _on_clock_scale_changed(value: float) -> void:
+	_animation_clock_scale = value
+	speed_scale = _base_animation_speed * value
 
 func _process(delta: float) -> void:
 	delta = CLOCK_MONSTER_VISUAL.scaled(self, delta)
@@ -188,7 +203,7 @@ func play_death() -> void:
 		return
 
 	if _visual_ready and sprite_frames.has_animation(&"death"):
-		speed_scale = 1.0
+		set_base_animation_speed(1.0)
 		play(&"death")
 	else:
 		call_deferred("_emit_death_finished")
@@ -207,7 +222,7 @@ func play_revival_death_pose() -> void:
 	self_modulate = Color.WHITE
 
 	if _visual_ready and sprite_frames.has_animation(&"death"):
-		speed_scale = 1.0
+		set_base_animation_speed(1.0)
 		play(&"death")
 	else:
 		call_deferred("_hold_revival_death_pose")
@@ -237,7 +252,7 @@ func play_revival_reverse(duration: float = 0.0) -> void:
 			if frame_count > 0 and fps > 0.0:
 				var base_duration := float(frame_count) / fps
 				reverse_speed = maxf(base_duration / duration, 0.01)
-		speed_scale = 1.0
+		set_base_animation_speed(1.0)
 		play(&"death", -reverse_speed, true)
 	else:
 		call_deferred("_finish_revival_reverse")
@@ -306,7 +321,7 @@ func _remember_move_phase() -> void:
 
 func _resume_locomotion() -> void:
 	var fps := sprite_frames.get_animation_speed(_desired_locomotion)
-	speed_scale = minf(locomotion_max_fps / maxf(fps, 0.01), 1.0) if _desired_locomotion == &"move" else 1.0
+	set_base_animation_speed(minf(locomotion_max_fps / maxf(fps, 0.01), 1.0) if _desired_locomotion == &"move" else 1.0)
 	play(_desired_locomotion)
 	if _desired_locomotion == &"move":
 		set_frame_and_progress(mini(_saved_move_frame, sprite_frames.get_frame_count(&"move") - 1), _saved_move_progress)
@@ -319,7 +334,7 @@ func _play_one_shot(animation_name: StringName) -> void:
 		return
 
 	_remember_move_phase()
-	speed_scale = 1.0
+	set_base_animation_speed(1.0)
 	_one_shot_locked = true
 	play(animation_name)
 
@@ -403,7 +418,7 @@ func apply_visual_profile(profile: Dictionary) -> bool:
 	_pending_locomotion = &"idle"
 	_locomotion_request_seconds = 0.0
 	set_physics_process(false)
-	speed_scale = 1.0
+	set_base_animation_speed(1.0)
 
 	var mode := String(profile.get("mode", ""))
 	var animations = profile.get("animations", {})

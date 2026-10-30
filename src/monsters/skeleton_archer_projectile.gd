@@ -23,7 +23,17 @@ var elite_visual: bool = false
 @onready var projectile_sprite: AnimatedSprite2D = $ProjectileSprite
 
 
+var _animation_base_speed := 1.0
+
+func _on_clock_scale_changed(value: float) -> void:
+	projectile_sprite.speed_scale = _animation_base_speed * value
+
 func _ready() -> void:
+	_animation_base_speed = projectile_sprite.speed_scale
+	var clock_battle := CLOCK_SKELETON_ARCHER_PROJECTILE.battle_for(self)
+	if clock_battle != null and clock_battle.has_signal("clock_scale_changed"):
+		clock_battle.clock_scale_changed.connect(_on_clock_scale_changed)
+		_on_clock_scale_changed(clock_battle.clock_scale)
 	body_entered.connect(_on_body_entered)
 	projectile_sprite.animation_finished.connect(_on_animation_finished)
 	deactivate_for_pool()

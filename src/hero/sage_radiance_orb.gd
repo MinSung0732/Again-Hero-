@@ -35,7 +35,17 @@ var tracked_target: Node2D
 @onready var explosion_audio: AudioStreamPlayer2D = $ExplosionAudio
 
 
+var _animation_base_speed := 1.0
+
+func _on_clock_scale_changed(value: float) -> void:
+	visual.speed_scale = _animation_base_speed * value
+
 func _ready() -> void:
+	_animation_base_speed = visual.speed_scale
+	var clock_battle := CLOCK_SAGE_RADIANCE_ORB.battle_for(self)
+	if clock_battle != null and clock_battle.has_signal("clock_scale_changed"):
+		clock_battle.clock_scale_changed.connect(_on_clock_scale_changed)
+		_on_clock_scale_changed(clock_battle.clock_scale)
 	_build_frames()
 	visual.animation_finished.connect(_on_animation_finished)
 	deactivate_for_pool()
