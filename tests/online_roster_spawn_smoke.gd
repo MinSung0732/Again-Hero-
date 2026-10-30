@@ -1,5 +1,6 @@
 extends SceneTree
 const RULES := preload("res://src/online/match_rules.gd")
+const MONSTERS := preload("res://src/data/monster_catalog.gd")
 const ROOM := preload("res://src/online/battle_room.gd")
 var checks := 0
 func check(ok: bool,message: String) -> void:
@@ -8,6 +9,12 @@ func check(ok: bool,message: String) -> void:
 func _initialize() -> void: run.call_deferred()
 func run() -> void:
 	var room = ROOM.new(); root.add_child(room); room.prepare(); room.start()
+	var fallback: Dictionary = room.ranked_usage().role_counts
+	var expected := {}
+	for id in room.roster:
+		var role := MONSTERS.get_role(String(id))
+		expected[role] = int(expected.get(role, 0)) + 1
+	check(fallback == expected, "no summons uses roster roles")
 	var battle = room.battle
 	battle.process_mode = Node.PROCESS_MODE_DISABLED
 	# Keep this immediate factory test independent of auto-selected demon augments.
@@ -23,6 +30,7 @@ func run() -> void:
 		check(battle.active_monsters.size() == before+1,"one real actor: "+id)
 		check(is_equal_approx(battle.command_power,RULES.OPENING_MANA-cost),"catalog cost charged once: "+id)
 		check(room.last_action_message.contains("수동 배치"),"success feedback: "+id)
+	check(room.ranked_usage().role_counts == expected, "accepted summons counted by catalog role")
 	# Online control-heavy armies are governed by mana/population, not solo AI pacing.
 	for index in 3:
 		battle.command_power = RULES.OPENING_MANA
@@ -32,6 +40,8 @@ func run() -> void:
 	battle.command_power = 0.0
 	check(not room.apply("demon","summon",{"id":"spider","point":[point.x,point.y]}) and room.last_action_message.contains("지휘력"),"insufficient mana still rejected with reason")
 	check(battle.active_monsters.size() == count and battle.command_power == 0.0,"failed paid summon preserves state")
+	var spider_role := MONSTERS.get_role("spider")
+	check(int(room.ranked_usage().role_counts[spider_role]) == int(expected[spider_role]) + 3, "rejected summons do not count")
 	battle.command_power = RULES.OPENING_MANA
 	check(not room.apply("demon","summon",{"id":"spider","point":[battle.hero.position.x,battle.hero.position.y]}) and room.last_action_message.contains("가까움"),"hero proximity restriction preserved")
 	check(not room.apply("demon","summon",{"id":"spider","point":[-1,-1]}) and room.last_action_message.contains("전장"),"bounds preserved")

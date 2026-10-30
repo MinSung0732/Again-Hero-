@@ -66,6 +66,7 @@ var next_id := 0
 var snapshot_revision := 0
 var stale_wire_ids: Array[int] = []
 var last_action_message := ""
+var summon_role_counts := {}
 var hero_id := preload("res://src/data/hero_character_catalog.gd").DEFAULT_HERO
 var roster: Array = RULES.ROSTER.duplicate() # Isolated room fixtures; the server sets the verified roster before prepare().
 var skill_ids: Array = []
@@ -81,6 +82,13 @@ func set_loadouts(hero_loadout: Dictionary,demon_loadout: Dictionary) -> void:
 	transcendence_id = String(demon_loadout.transcendence_id)
 	transcend_audio_catalog = TRANSCENDENCE.audio_catalog(transcendence_id)
 	transcend_audio_ids = transcend_audio_catalog.CUES.keys() if transcend_audio_catalog != null else []
+func ranked_usage() -> Dictionary:
+	var counts := summon_role_counts.duplicate()
+	if counts.is_empty():
+		for id in roster:
+			var monster_role := MONSTERS.get_role(String(id))
+			counts[monster_role] = int(counts.get(monster_role, 0)) + 1
+	return {"hero_id":hero_id, "transcendence_id":transcendence_id, "role_counts":counts}
 func prepare() -> void:
 	var map_data: Dictionary = MAPS.get_map(map_id)
 	if map_data.is_empty(): finish("","invalid_map"); return
@@ -402,7 +410,10 @@ func apply(role: String,kind: String,argument: Variant,allow_test_unlock := fals
 		var id: String = argument.id; var point: Variant = argument.get("point",null)
 		if id not in roster or not RULES.point(point): return false
 		var accepted: bool = battle.try_summon_at_position(id,Vector2(point[0],point[1]))
-		if accepted: feedback.publish("summon",Vector2(point[0],point[1]),0,Color(0.8,0.5,1.0),tick)
+		if accepted:
+			var monster_role := MONSTERS.get_role(id)
+			summon_role_counts[monster_role] = int(summon_role_counts.get(monster_role, 0)) + 1
+			feedback.publish("summon",Vector2(point[0],point[1]),0,Color(0.8,0.5,1.0),tick)
 		return accepted
 	if role == "demon" and kind == "skill" and argument is Dictionary:
 		var id: Variant = argument.get("id",null)

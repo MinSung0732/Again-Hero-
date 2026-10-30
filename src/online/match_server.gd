@@ -325,7 +325,7 @@ func _record_result(key: String,winner: String,reason: String) -> void:
 		hp_ratio = float(room.battle.hero.current_hp) / maxf(1.0,float(room.battle.hero.max_hp))
 	var margins: Dictionary = _match_margins(room,winner,reason,elapsed,hp_ratio)
 	var result: Dictionary = await result_store.record(key,String(match_data.seats.demon.uid),
-		String(match_data.seats.hero.uid),winner,reason,margins)
+		String(match_data.seats.hero.uid),winner,reason,margins,room.ranked_usage())
 	if not rooms.has(key): return
 	rooms[key].rated_result = result
 	rooms[key].result_pending = false

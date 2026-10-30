@@ -44,11 +44,11 @@ func fetch_mmr(uid: String, role: String) -> int:
 		if attempt == 0: await get_tree().create_timer(0.3).timeout
 	return initial
 
-func record(match_id: String, demon_uid: String, hero_uid: String, winner: String, reason: String, margins: Dictionary) -> Dictionary:
+func record(match_id: String, demon_uid: String, hero_uid: String, winner: String, reason: String, margins: Dictionary, usage: Dictionary = {}) -> Dictionary:
 	mmr_cache.erase(demon_uid + ":demon"); mmr_cache.erase(hero_uid + ":hero")
 	if not configured(): return {}
 	var body := JSON.stringify({"p_match_id":match_id,"p_demon_user":demon_uid,"p_hero_user":hero_uid,
-		"p_winner":winner,"p_reason":reason,"p_margin_demon":margins.demon,"p_margin_hero":margins.hero})
+		"p_winner":winner,"p_reason":reason,"p_margin_demon":margins.demon,"p_margin_hero":margins.hero, "p_hero_id":usage.get("hero_id", ""), "p_transcendence_id":usage.get("transcendence_id", ""), "p_role_counts":usage.get("role_counts", {})})
 	for attempt in 3:
 		var request := HTTPRequest.new()
 		request.timeout = 3.0; request.body_size_limit = 16384

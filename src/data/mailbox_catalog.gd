@@ -1,7 +1,7 @@
 extends RefCounted
 
 const LIST_LIMIT := 200
-const SEASON_PREVIEW := {"week_start":"local-preview", "demon":{"final_tier":"diamond_1", "final_mmr":2300, "server_rank":0}, "hero":{"final_tier":"hero", "final_mmr":3000, "server_rank":3}, "reward_tier":"hero", "demon_token":250, "hero_token":250}
+const SEASON_PREVIEW := {"week_start":"local-preview", "demon":{"final_tier":"diamond_1", "final_mmr":2300, "server_rank":0, "wins":1}, "hero":{"final_tier":"hero", "final_mmr":3000, "server_rank":3, "wins":1}, "hero_top_hero_id":"ranged_rookie", "demon_top_transcendence_id":"zeus", "demon_top_role":"tank", "reward_tier":"hero", "demon_token":250, "hero_token":250}
 const TITLE := "우편함"
 const EMPTY := "도착한 우편이 없습니다."
 const CLAIM := "받기"

@@ -32,10 +32,22 @@ func run() -> void:
 		assert(absf(rect.get_center().y - viewport_size.y / 2.0) < 2.0)
 	var labels: Array = overlay.find_children("*", "Label", true, false)
 	var rendered := " ".join(labels.map(func(label): return label.text))
-	assert("2300" in rendered and "3000" in rendered and "3위" in rendered and "250" in rendered)
+	assert("2300" in rendered and "3000" in rendered and "3위" in rendered and "250" in rendered and "주력 역할: 탱커" in rendered)
+	assert(overlay.find_child("HeroRow", true, false).get_node("Portrait").texture != null)
+	assert(overlay.find_child("DemonRow", true, false).get_node("Portrait").texture != null)
 	var icons: Array = overlay.find_children("*", "TextureRect", true, false)
-	assert(icons.size() == 4)
+	assert(icons.size() == 6)
 	for icon in icons: assert(icon.texture != null)
+	var saved_result: Dictionary = view.result.duplicate(true)
+	view.result.hero.wins = 0
+	view.result.demon.wins = 0
+	view._build()
+	var empty_overlay = lobby.get_children().back()
+	for row_name in ["HeroRow", "DemonRow"]:
+		var row = empty_overlay.find_child(row_name, true, false)
+		assert(row.get_child_count() == 1 and row.get_node("TierFallback").texture != null)
+	empty_overlay.queue_free()
+	view.result = saved_result
 	var buttons: Array = overlay.find_children("*", "Button", true, false)
 	assert(buttons.size() == 2 and buttons[0].text == "우편함으로" and buttons[1].text == "확인")
 	for button in buttons:

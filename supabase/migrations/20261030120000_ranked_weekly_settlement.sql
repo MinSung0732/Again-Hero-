@@ -97,6 +97,22 @@ end $$;
 revoke all on function public.list_my_mail(integer), public.ack_mail(uuid[]), public.latest_unseen_ranked_season(), public.grant_mail(uuid), public.mark_ranked_season_seen(date) from public, anon;
 grant execute on function public.list_my_mail(integer), public.ack_mail(uuid[]), public.latest_unseen_ranked_season(), public.grant_mail(uuid), public.mark_ranked_season_seen(date) to authenticated;
 
+-- Usage is stored alongside the authoritative match; retries retain the first record.
+alter table public.ranked_matches add column hero_id text, add column transcendence_id text, add column role_counts jsonb;
+alter table public.ranked_season_results add column hero_top_hero_id text, add column demon_top_transcendence_id text, add column demon_top_role text;
+create index ranked_matches_hero_week on public.ranked_matches(hero_user, created_at);
+create index ranked_matches_demon_week on public.ranked_matches(demon_user, created_at);
+create function public.record_ranked_result(p_match_id text, p_demon_user uuid, p_hero_user uuid, p_winner text, p_reason text, p_margin_demon numeric, p_margin_hero numeric, p_hero_id text, p_transcendence_id text, p_role_counts jsonb) returns jsonb
+language plpgsql security definer set search_path='' as $$
+declare result jsonb;
+begin
+ if p_role_counts is null or jsonb_typeof(p_role_counts) <> 'object' or exists (select 1 from jsonb_each(p_role_counts) e where jsonb_typeof(e.value) <> 'number' or (e.value #>> '{}')::numeric < 0) then raise exception 'invalid usage' using errcode='22023'; end if;
+ result := public.record_ranked_result(p_match_id,p_demon_user,p_hero_user,p_winner,p_reason,p_margin_demon,p_margin_hero);
+ update public.ranked_matches set hero_id=nullif(p_hero_id,''), transcendence_id=nullif(p_transcendence_id,''), role_counts=p_role_counts where match_id=p_match_id and role_counts is null;
+ return result;
+end $$;
+revoke all on function public.record_ranked_result(text,uuid,uuid,text,text,numeric,numeric,text,text,jsonb) from public, anon, authenticated;
+grant execute on function public.record_ranked_result(text,uuid,uuid,text,text,numeric,numeric,text,text,jsonb) to service_role;
 create function private.settle_ranked_week() returns void
 language plpgsql security definer set search_path='' as $$
 declare start_date date := (date_trunc('week', (now() at time zone 'Asia/Seoul') - interval '3 days') + interval '3 days' - interval '7 days')::date;
@@ -124,6 +140,11 @@ begin
  join private.ranked_reward_tiers r on r.tier_id=best.tier
  left join private.ranked_hero_reward_bands b on best.tier='hero' and best.server_rank between b.min_rank and b.max_rank
  where exists (select 1 from ranked_week_states played where played.user_id=u.user_id and played.wins+played.losses>=1);
+ update public.ranked_season_results r set
+ hero_top_hero_id=(select m.hero_id from public.ranked_matches m where m.hero_user=r.user_id and m.hero_id is not null and m.created_at >= (start_date::timestamp at time zone 'Asia/Seoul') and m.created_at < ((start_date+7)::timestamp at time zone 'Asia/Seoul') group by m.hero_id order by count(*) desc,max(m.created_at) desc,m.hero_id limit 1),
+ demon_top_transcendence_id=(select m.transcendence_id from public.ranked_matches m where m.demon_user=r.user_id and m.transcendence_id is not null and m.created_at >= (start_date::timestamp at time zone 'Asia/Seoul') and m.created_at < ((start_date+7)::timestamp at time zone 'Asia/Seoul') group by m.transcendence_id order by count(*) desc,max(m.created_at) desc,m.transcendence_id limit 1),
+ demon_top_role=(select e.key from public.ranked_matches m cross join lateral jsonb_each(m.role_counts) e where m.demon_user=r.user_id and m.created_at >= (start_date::timestamp at time zone 'Asia/Seoul') and m.created_at < ((start_date+7)::timestamp at time zone 'Asia/Seoul') group by e.key order by sum((e.value #>> '{}')::numeric) desc,max(m.created_at) desc,e.key limit 1)
+ where r.week_start=start_date;
  insert into public.mailbox(user_id,kind,title,body,attachments)
  select user_id,'ranked_weekly','주간 랭크 보상','지난 주 랭크 정산 보상입니다.',jsonb_build_object('demon_token',demon_token,'hero_token',hero_token)
  from public.ranked_season_results where week_start=start_date;
