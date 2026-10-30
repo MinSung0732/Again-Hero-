@@ -205,12 +205,11 @@ func _show_offer() -> void:
 		var options: Array = offer.candidates
 		if role == "demon":
 			DEMON_VIEW.populate(popup,options,int(offer.get("level",1)),rerolls_left,reroll_limit)
-			title_label.text += " · 보관 %d번" % opened_number
 			selected_index = -1; confirm_button.disabled = true
 			for index in cards.size():
 				cards[index].disabled = not controls_enabled or index >= options.size() or bool(options[index].get("unavailable",false))
 		else:
-			title_label.text = "레벨업 · 증강을 선택하세요 · 보관 %d번" % opened_number
+			title_label.text = "레벨업 · 증강을 선택하세요"
 			for index in cards.size():
 				cards[index].visible = index < options.size()
 				if index >= options.size(): continue

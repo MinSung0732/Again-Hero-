@@ -88,7 +88,7 @@ func run() -> void:
 		check(scene.hold_popup.dot_glows[2].modulate.a <= 0.01 and scene.hold_popup.dot_glows[2].mouse_filter == Control.MOUSE_FILTER_IGNORE,"glow fades out and never blocks taps")
 		scene.hold_popup.dots[1].pressed.emit(); await process_frame
 		check(scene.hold_popup.popup.visible and scene.hold_popup.opened_number == 2 and scene.hold_popup.card_names[0].text == "생존력","dot opens its own candidate popup")
-		check(scene.hold_popup.title_label.text.contains("보관 2번"),"opened offer displays its held number")
+		check(not scene.hold_popup.title_label.text.contains("보관"),"opened offer hides the held-number label")
 		if role == "hero":
 			check(scene.hold_popup.cards[0].get_node_or_null("MarginContainer/VBoxContainer/AugmentIcon") != null and scene.hold_popup.cards[0].get_node_or_null("MarginContainer/VBoxContainer/Name") != null,"hero offer uses shared card structure")
 			var hero_card: Button = scene.hold_popup.cards[0]
