@@ -50,7 +50,11 @@ static func append(output: Array,kind: String,origin: Vector2,angle: float,radiu
 	output.append([kind,origin.x,origin.y,angle,radius,clampf(color.r,0,1),clampf(color.g,0,1),clampf(color.b,0,1),clampf(color.a,0,1),width,wire,id])
 static func line(output: Array,a: Vector2,b: Vector2,color: Color,width: float) -> void:
 	append(output,"line",Vector2.ZERO,0,0,color,width,PackedVector2Array([a,b]))
-static func area(output: Array,origin: Vector2,radius: float,color: Color) -> void:
+# Mirrors the solo rule: authored art is the area, so only a faint guide ring is sent.
+static func area(output: Array,origin: Vector2,radius: float,color: Color,has_art: bool = false) -> void:
+	if has_art:
+		append(output,"ring",origin,0,radius,Color(color,color.a*GEO.ART_GUIDE_ALPHA),GEO.ART_GUIDE_WIDTH)
+		return
 	append(output,"circle",origin,0,radius,Color(color,color.a*GEO.AREA_FILL_ALPHA))
 	append(output,"ring",origin,0,radius,color,GEO.OUTLINE_WIDTH)
 static func capture(weapons) -> Array:
@@ -59,7 +63,7 @@ static func capture(weapons) -> Array:
 	# decorative fills/trails so the bounded wire never hides an active warning.
 	if weapons.delivery != null: weapons.delivery.visit_visuals(_delivery_warning.bind(output))
 	for field in weapons.fields:
-		if field.left>0: area(output,field.origin,field.radius,field.get("color",Color.WHITE))
+		if field.left>0: area(output,field.origin,field.radius,field.get("color",Color.WHITE),not field.get("frames",DATA.EMPTY).is_empty())
 	for effect in weapons.effects:
 		if effect.left<=0 or output.size()>=DATA.MAX_PRIMITIVES: continue
 		var ratio: float = effect.left/effect.duration
@@ -69,8 +73,10 @@ static func capture(weapons) -> Array:
 		var frames: Array = effect.get("frames",DATA.EMPTY)
 		match String(effect.pattern):
 			"beam","slash","capsule":
-				append(output,"polygon",a,(b-a).angle(),0,Color(color,ratio*GEO.SHAPE_FILL_ALPHA),0,effect.shape)
-				append(output,"polyline",a,(b-a).angle(),0,color,GEO.OUTLINE_WIDTH,effect.shape)
+				if frames.is_empty():
+					append(output,"polygon",a,(b-a).angle(),0,Color(color,ratio*GEO.SHAPE_FILL_ALPHA),0,effect.shape)
+					append(output,"polyline",a,(b-a).angle(),0,color,GEO.OUTLINE_WIDTH,effect.shape)
+				else: append(output,"polyline",a,(b-a).angle(),0,Color(color,ratio*GEO.ART_GUIDE_ALPHA),GEO.ART_GUIDE_WIDTH,effect.shape)
 			"combo":
 				if frames.is_empty(): line(output,a,b,color,GEO.OUTLINE_WIDTH)
 			"chain":
@@ -82,19 +88,19 @@ static func capture(weapons) -> Array:
 			"orbit":
 				var inner := GEO.orbit_inner(effect.radius,effect.orbit_ratio,effect.get("area_scale",1.0))
 				var outer := GEO.orbit_outer(effect.radius,effect.orbit_ratio,effect.get("area_scale",1.0))
-				append(output,"ring",a,0,(inner+outer)*0.5,Color(color,ratio*GEO.ORBIT_FILL_ALPHA),outer-inner)
-				append(output,"ring",a,0,inner,color,GEO.OUTLINE_WIDTH); append(output,"ring",a,0,outer,color,GEO.OUTLINE_WIDTH)
 				if frames.is_empty():
+					append(output,"ring",a,0,(inner+outer)*0.5,Color(color,ratio*GEO.ORBIT_FILL_ALPHA),outer-inner)
+					append(output,"ring",a,0,inner,color,GEO.OUTLINE_WIDTH); append(output,"ring",a,0,outer,color,GEO.OUTLINE_WIDTH)
 					for index in mini(int(effect.orbit_count),DATA.MAX_PRIMITIVES-output.size()):
 						var angle: float = weapons.visual_clock*effect.orbit_speed+index*TAU/effect.orbit_count
 						append(output,"circle",a+Vector2.from_angle(angle)*(inner+outer)*0.5,0,GEO.orbit_texture_extent(inner,outer),color,0,PackedVector2Array(),int(effect.orbit_gens[index]) if index < effect.orbit_gens.size() else 0)
-			_: area(output,a,effect.radius,Color(color,ratio))
+			_: area(output,a,effect.radius,Color(color,ratio),not frames.is_empty())
 	if weapons.delivery != null: weapons.delivery.visit_visuals(_delivery_visual.bind(output))
 	if weapons.evolution != null: weapons.evolution.visit_visuals(_evolution_visual.bind(output))
 	return output
 
 static func _delivery_warning(_slot: Dictionary,point: Vector2,radius: float,color: Color,warning: bool,output: Array) -> void:
-	if warning: append(output,"ring",point,0,radius,color,2.0)
+	if warning: append(output,"ring",point,0,radius,Color(GEO.WARNING_COLOR,color.a),GEO.WARNING_WIDTH)
 
 static func _delivery_visual(slot: Dictionary,point: Vector2,radius: float,color: Color,warning: bool,output: Array) -> void:
 	if warning: return
@@ -102,7 +108,7 @@ static func _delivery_visual(slot: Dictionary,point: Vector2,radius: float,color
 		var index := int(slot.visual_index) * 2
 		append(output,"circle",point,0,radius,Color(color,color.a*GEO.AREA_FILL_ALPHA),0,PackedVector2Array(),int(slot.visual_ids[index]))
 		append(output,"ring",point,0,radius,color,GEO.OUTLINE_WIDTH,PackedVector2Array(),int(slot.visual_ids[index+1]))
-	else: area(output,point,radius,color)
+	else: area(output,point,radius,color,not slot.get("frames",DATA.EMPTY).is_empty())
 
 static func _evolution_visual(kind: String,point: Vector2,edge: Vector2,radius: float,color: Color,_frames: Array,progress: float,output: Array) -> void:
 	match kind:

@@ -12,6 +12,17 @@ const CHAIN_DRAW_WIDTH := 32.0
 const AREA_TEXTURE_ALPHA := 0.75
 const BEAM_TEXTURE_ALPHA := 0.85
 const ORBIT_TEXTURE_MAX_EXTENT := 18.0
+## Weapons with authored art show the art as the hit area: no fill, only a faint edge guide.
+## Effect frames use about this share of their square, so the art is scaled until its
+## visible content matches the real hit circle instead of the old inscribed sqrt(2) square.
+const AREA_ART_COVERAGE := 0.68
+const ART_GUIDE_ALPHA := 0.22
+const ART_GUIDE_WIDTH := 1.5
+## Telegraphs (lob landing, delayed bursts) share one danger colour across all weapons.
+const WARNING_COLOR := Color("ffd27a")
+const WARNING_WIDTH := 2.0
+static func area_texture_extent(radius: float) -> float:
+	return radius*2.0/AREA_ART_COVERAGE
 static func effect_texture_rect(pattern: String,length: float,radius: float) -> Rect2:
 	if pattern == "slash": return Rect2(Vector2(length*0.2,-length*0.3),Vector2.ONE*length*0.6)
 	return Rect2(Vector2(0,-radius),Vector2(sqrt(maxf(0,length*length-radius*radius)),radius*2))

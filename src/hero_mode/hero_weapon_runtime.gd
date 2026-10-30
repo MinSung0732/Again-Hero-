@@ -790,9 +790,11 @@ func draw() -> void:
 		match String(effect.pattern):
 			"beam","slash","capsule":
 				hero.draw_set_transform(a,(b-a).angle())
-				hero.draw_colored_polygon(effect.shape,Color(color,ratio*GEOMETRY.SHAPE_FILL_ALPHA))
-				hero.draw_polyline(effect.shape,color,GEOMETRY.OUTLINE_WIDTH)
-				if not frames.is_empty():
+				if frames.is_empty():
+					hero.draw_colored_polygon(effect.shape,Color(color,ratio*GEOMETRY.SHAPE_FILL_ALPHA))
+					hero.draw_polyline(effect.shape,color,GEOMETRY.OUTLINE_WIDTH)
+				else:
+					hero.draw_polyline(effect.shape,Color(color,ratio*GEOMETRY.ART_GUIDE_ALPHA),GEOMETRY.ART_GUIDE_WIDTH)
 					var texture: Texture2D = frames[mini(int((1-ratio)*frames.size()),frames.size()-1)]
 					var length := a.distance_to(b)
 					var rect := GEOMETRY.effect_texture_rect(String(effect.pattern),length,radius)
@@ -817,8 +819,9 @@ func draw() -> void:
 			"orbit":
 				var inner := GEOMETRY.orbit_inner(radius,float(effect.orbit_ratio),float(effect.get("area_scale",1.0)))
 				var outer := GEOMETRY.orbit_outer(radius,float(effect.orbit_ratio),float(effect.get("area_scale",1.0)))
-				hero.draw_arc(a,(inner+outer)*0.5,0,TAU,48,Color(color,ratio*GEOMETRY.ORBIT_FILL_ALPHA),outer-inner)
-				hero.draw_arc(a,inner,0,TAU,48,color,GEOMETRY.OUTLINE_WIDTH); hero.draw_arc(a,outer,0,TAU,48,color,GEOMETRY.OUTLINE_WIDTH)
+				if frames.is_empty():
+					hero.draw_arc(a,(inner+outer)*0.5,0,TAU,48,Color(color,ratio*GEOMETRY.ORBIT_FILL_ALPHA),outer-inner)
+					hero.draw_arc(a,inner,0,TAU,48,color,GEOMETRY.OUTLINE_WIDTH); hero.draw_arc(a,outer,0,TAU,48,color,GEOMETRY.OUTLINE_WIDTH)
 				for index in int(effect.orbit_count):
 					var angle := visual_clock*float(effect.orbit_speed)+index*TAU/float(effect.orbit_count)
 					var position := a+Vector2.from_angle(angle)*(inner+outer)*0.5
@@ -849,8 +852,10 @@ func _frame(frames: Array, progress: float) -> Texture2D:
 func _draw_area(center: Vector2, radius: float, color: Color, frames: Array, progress: float) -> void:
 	if not frames.is_empty():
 		var texture: Texture2D = frames[mini(int(progress*frames.size()),frames.size()-1)]
-		var diameter := radius*sqrt(2.0)
+		var diameter := GEOMETRY.area_texture_extent(radius)
 		hero.draw_texture_rect(texture,Rect2(center-Vector2.ONE*diameter*0.5,Vector2.ONE*diameter),false,Color(1,1,1,color.a*GEOMETRY.AREA_TEXTURE_ALPHA))
+		hero.draw_arc(center,radius,0.0,TAU,48,Color(color,color.a*GEOMETRY.ART_GUIDE_ALPHA),GEOMETRY.ART_GUIDE_WIDTH)
+		return
 	hero.draw_circle(center,radius,Color(color,color.a*GEOMETRY.AREA_FILL_ALPHA))
 	hero.draw_arc(center,radius,0.0,TAU,48,color,GEOMETRY.OUTLINE_WIDTH)
 

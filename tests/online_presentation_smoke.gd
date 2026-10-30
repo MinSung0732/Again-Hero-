@@ -90,7 +90,8 @@ func run() -> void:
 	effect.left = 0.5; effect.duration = 1.0; effect.a = point; effect.b = point+Vector2(200,0); effect.frames = frames; effect.pattern = "chain"
 	sampler.append_weapon_areas(weapons,areas)
 	check(areas.size()==2,"persistent area and chain PNG adapters")
-	check(is_equal_approx(areas[0][14],float(field.radius)*sqrt(2.0)) and is_equal_approx(areas[0][19],0.75),"original area texture geometry/alpha")
+	# Since 10-31 the art is sized so its visible content matches the hit circle (shared with solo).
+	check(is_equal_approx(areas[0][14],preload("res://src/hero_mode/hero_weapon_geometry.gd").area_texture_extent(float(field.radius))) and is_equal_approx(areas[0][19],0.75),"area texture geometry/alpha matches solo")
 	check(is_equal_approx(areas[1][14],200.0) and is_equal_approx(areas[1][15],preload("res://src/hero_mode/hero_weapon_geometry.gd").CHAIN_DRAW_WIDTH) and is_equal_approx(areas[1][19],0.5),"shared chain texture geometry/alpha")
 	field.left = 0.0; effect.left = 0.0
 	var native = weapons.native_skills.actors_by_pattern["piercer"][0]
