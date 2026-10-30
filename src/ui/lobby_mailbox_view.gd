@@ -15,6 +15,7 @@ var all_button: Button
 var rows: Array = []
 var mail: Array = []
 var busy := false
+var rpc_override: Callable
 
 func install(owner: RefCounted, parent: Control) -> void:
 	settings_ref = weakref(owner)
@@ -66,11 +67,13 @@ func refresh() -> void:
 	if local:
 		result = {"mail": STORE.local_mail()}
 	elif not account.is_empty() and lobby.get_node("/root/CloudStore").can_write():
-		result = await lobby.get_node("/root/CloudStore").request_rpc("list_my_mail", {})
+		result = await lobby.get_node("/root/CloudStore").request_optional_rpc("list_my_mail", {"p_recent_limit":DATA.LIST_LIMIT})
 	if not is_instance_valid(lobby) or not lobby.is_inside_tree() or account != SCOPE.user_id: busy = false; return
 	if result.get("mail") is Array:
 		mail = result.mail
 		var ok := STORE.recover(mail)
+		if not local and ok: ok = await _ack_pending(account)
+		if not is_instance_valid(lobby) or not lobby.is_inside_tree() or account != SCOPE.user_id: busy = false; return
 		status.text = DATA.EMPTY if mail.is_empty() else ("" if ok else DATA.ERROR)
 	else:
 		status.text = DATA.ERROR
@@ -112,7 +115,7 @@ func _render() -> void:
 			icon.custom_minimum_size = Vector2(48, 48)
 			icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 			icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-			icon.texture = load(String(definitions[currency].icon_path))
+			icon.texture = DATA.texture(String(definitions[currency].icon_path))
 			attachment_row.add_child(icon)
 			var amount := Label.new()
 			amount.text = str(item.attachments[currency])
@@ -120,7 +123,7 @@ func _render() -> void:
 			attachment_row.add_child(amount)
 		var claim: Button = row.get_child(2)
 		for connection in claim.pressed.get_connections(): claim.pressed.disconnect(connection.callable)
-		var pending: bool = item.get("claim_state") == "unclaimed" or not STORE.applied(String(item.id))
+		var pending: bool = STORE.pending(item)
 		claim.text = DATA.CLAIM if pending else DATA.CLAIMED
 		claim.disabled = busy or not pending
 		claim.pressed.connect(claim_one.bind(String(item.id)))
@@ -137,18 +140,36 @@ func claim_one(id: String) -> void:
 		for item in mail:
 			if item.id == id: result = {"id":id, "attachments":item.attachments}; break
 	elif not account.is_empty() and lobby.get_node("/root/CloudStore").can_write():
-		result = await lobby.get_node("/root/CloudStore").request_rpc("grant_mail", {"p_id":id})
+		result = await lobby.get_node("/root/CloudStore").request_optional_rpc("grant_mail", {"p_id":id})
 	if not is_instance_valid(lobby) or not lobby.is_inside_tree() or account != SCOPE.user_id: busy = false; return
 	var ok: bool = result.get("id") == id and result.get("attachments") is Dictionary and STORE.apply(id, result.attachments)
 	if ok:
 		for item in mail:
 			if item.id == id: item.claim_state = "granted"
+	if ok and not local: ok = await _ack_pending(account)
+	if not is_instance_valid(lobby) or not lobby.is_inside_tree() or account != SCOPE.user_id: busy = false; return
 	status.text = "" if ok else DATA.ERROR
 	busy = false
 	_render()
 
 func claim_all() -> void:
 	for item in mail:
-		if item.get("claim_state") == "unclaimed" or not STORE.applied(String(item.id)):
+		if STORE.pending(item):
 			await claim_one(String(item.id))
-			if not STORE.applied(String(item.id)): return
+			if STORE.pending(item): return
+
+func _ack_pending(account: String) -> bool:
+	var ids: Array = STORE.pending_ids()
+	if ids.is_empty(): return true
+	var result: Dictionary = await _request_ack(ids)
+	if not is_instance_valid(lobby) or not lobby.is_inside_tree() or account != SCOPE.user_id: return false
+	if not result.get("ids") is Array: return false
+	var confirmed: Array = result.ids.filter(func(id): return id in ids)
+	if not STORE.forget_acknowledged(confirmed): return false
+	for item in mail:
+		if item.get("id") in confirmed: item["applied_at"] = "acknowledged"
+	return confirmed.size() == ids.size()
+
+func _request_ack(ids: Array) -> Dictionary:
+	if rpc_override.is_valid(): return await rpc_override.call(ids)
+	return await lobby.get_node("/root/CloudStore").request_optional_rpc("ack_mail", {"p_ids":ids})

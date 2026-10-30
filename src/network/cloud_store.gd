@@ -155,6 +155,22 @@ func _check_connection() -> void:
 	else:
 		_retry_later()
 
+# Feature RPCs (mailbox, season results, leaderboards) may not be deployed yet.
+# A rejected request returns {"unavailable": true} instead of ending the cloud session.
+func request_optional_rpc(method: String, data: Dictionary) -> Dictionary:
+	var gateway := get_node("/root/LoginGateway")
+	if gateway.access_token.is_empty() or not _account_context_matches(): return {}
+	var generation := _generation
+	var result := await _request_with_token(method, data, gateway.access_token)
+	if generation != _generation: return {}
+	if _last_http_status == CONTRACT.AUTH_REFRESH_STATUS and gateway.has_method("refresh_session"):
+		if await gateway.refresh_session() and generation == _generation:
+			result = await _request_with_token(method, data, gateway.access_token)
+	if generation != _generation: return {}
+	if result.get("request_rejected") == true: return {"unavailable": true}
+	if _handle_terminal(result): return {}
+	return result
+
 func request_rpc(method: String, data: Dictionary) -> Dictionary:
 	var gateway := get_node("/root/LoginGateway")
 	if gateway.access_token.is_empty() or not _account_context_matches(): return {}

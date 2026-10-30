@@ -1,8 +1,6 @@
 -- Weekly ranking settlement. Thresholds and reward values mirror ranked_badges.json;
 -- update both from that file using tools/sync_ranked_weekly_sql.ps1 before deployment.
 begin;
--- Keep blocked until bounded listing and durable recovery are reconciled.
-do $$ begin raise exception 'mailbox recovery requires a safe pagination and retention design'; end $$;
 create table private.ranked_reward_tiers (
  tier_id text primary key, reset_mmr integer not null, demon_token integer not null, hero_token integer not null
 );
@@ -46,7 +44,7 @@ create table public.mailbox (
  user_id uuid not null references auth.users(id) on delete cascade,
  kind text not null, title text not null, body text not null,
  attachments jsonb not null default '{}'::jsonb,
- created_at timestamptz not null default now(), claim_state text not null default 'unclaimed' check (claim_state in ('unclaimed','granted')), granted_at timestamptz
+ created_at timestamptz not null default now(), claim_state text not null default 'unclaimed' check (claim_state in ('unclaimed','granted')), granted_at timestamptz, applied_at timestamptz
 );
 create index mailbox_user_created on public.mailbox(user_id, created_at desc);
 create table private.ranked_settlement_runs (week_start date primary key, settled_at timestamptz not null default now());
@@ -57,10 +55,21 @@ create policy mailbox_select on public.mailbox for select to authenticated using
 revoke all on public.ranked_season_results, public.mailbox from public, anon, authenticated;
 grant select on public.ranked_season_results, public.mailbox to authenticated;
 
-create function public.list_my_mail() returns jsonb
+create function public.list_my_mail(p_recent_limit integer default 200) returns jsonb
 language sql stable security definer set search_path='' as $$
- select jsonb_build_object('mail', coalesce(jsonb_agg(to_jsonb(m) order by m.created_at desc, m.id desc), '[]'::jsonb))
- from (select * from public.mailbox where user_id=auth.uid() order by created_at desc, id desc limit 200) m
+ select jsonb_build_object('mail', coalesce(jsonb_agg(to_jsonb(m) order by (m.claim_state='granted' and m.applied_at is null) desc, m.created_at desc, m.id desc), '[]'::jsonb))
+ from (select * from public.mailbox where user_id=auth.uid() and claim_state='granted' and applied_at is null
+ union all
+ select * from (select * from public.mailbox where user_id=auth.uid() and not (claim_state='granted' and applied_at is null) order by created_at desc, id desc limit greatest(1,least(coalesce(p_recent_limit,200),1000))) recent) m
+$$;
+create function public.ack_mail(p_ids uuid[]) returns jsonb
+language sql security definer set search_path='' as $$
+ with updated as (update public.mailbox set applied_at=coalesce(applied_at,now()) where user_id=auth.uid() and claim_state='granted' and id=any(p_ids) returning id)
+ select jsonb_build_object('ids',coalesce(jsonb_agg(id),'[]'::jsonb)) from updated
+$$;
+create function public.latest_unseen_ranked_season() returns jsonb
+language sql stable security definer set search_path='' as $$
+ select jsonb_build_object('result', (select to_jsonb(r) from public.ranked_season_results r where r.user_id=auth.uid() and not r.seen order by r.week_start desc limit 1))
 $$;
 create function public.grant_mail(p_id uuid) returns jsonb
 language plpgsql security definer set search_path='' as $$
@@ -71,15 +80,15 @@ begin
  if not found then return null; end if;
  return jsonb_build_object('id',item.id,'attachments',item.attachments);
 end $$;
-create function public.mark_ranked_season_seen(p_week_start date) returns boolean
+create function public.mark_ranked_season_seen(p_week_start date) returns jsonb
 language plpgsql security definer set search_path='' as $$
 begin
  if auth.uid() is null then raise exception 'authentication required' using errcode='42501'; end if;
  update public.ranked_season_results set seen=true where user_id=auth.uid() and week_start=p_week_start;
- return found;
+ return jsonb_build_object('seen',found);
 end $$;
-revoke all on function public.list_my_mail(), public.grant_mail(uuid), public.mark_ranked_season_seen(date) from public, anon;
-grant execute on function public.list_my_mail(), public.grant_mail(uuid), public.mark_ranked_season_seen(date) to authenticated;
+revoke all on function public.list_my_mail(integer), public.ack_mail(uuid[]), public.latest_unseen_ranked_season(), public.grant_mail(uuid), public.mark_ranked_season_seen(date) from public, anon;
+grant execute on function public.list_my_mail(integer), public.ack_mail(uuid[]), public.latest_unseen_ranked_season(), public.grant_mail(uuid), public.mark_ranked_season_seen(date) to authenticated;
 
 create function private.settle_ranked_week() returns void
 language plpgsql security definer set search_path='' as $$

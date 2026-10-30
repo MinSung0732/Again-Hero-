@@ -1,6 +1,7 @@
 extends RefCounted
 
 const LIST_LIMIT := 200
+const SEASON_PREVIEW := {"week_start":"local-preview", "demon":{"final_tier":"diamond_1", "final_mmr":2300, "server_rank":0}, "hero":{"final_tier":"hero", "final_mmr":3000, "server_rank":3}, "reward_tier":"hero", "demon_token":18, "hero_token":18}
 const TITLE := "우편함"
 const EMPTY := "도착한 우편이 없습니다."
 const CLAIM := "받기"
@@ -19,3 +20,10 @@ static func currencies() -> Dictionary:
 	if not value is Dictionary: return {}
 	value["gold"] = GOLD
 	return value
+
+static func texture(path: String) -> Texture2D:
+	if ResourceLoader.exists(path): return load(path) as Texture2D
+	if path.ends_with(".png"):
+		var image := Image.new()
+		if image.load(path) == OK: return ImageTexture.create_from_image(image)
+	return null

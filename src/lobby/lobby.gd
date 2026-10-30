@@ -269,6 +269,7 @@ var _portrait_reference_image: Image
 var _portrait_reference_rect := Rect2i()
 var _presentation_ready := false
 var settings_view: RefCounted
+var ranked_season_popup: RefCounted
 var exploration_rewards_view: Control
 var missions_view: Control
 var main_tools_view: Control
@@ -398,6 +399,8 @@ func _ready() -> void:
 	_install_hero_lobby_view()
 	_refresh_stage_card()
 	TutorialFlow.call_deferred("install_lobby", self)
+	ranked_season_popup = load("res://src/ui/ranked_season_popup.gd").new()
+	ranked_season_popup.install(self)
 	call_deferred("_consume_campaign_team_return")
 	call_deferred("_consume_ranked_requeue")
 

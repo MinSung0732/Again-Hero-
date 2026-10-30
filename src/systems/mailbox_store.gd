@@ -25,6 +25,22 @@ static func apply(id: String, attachments: Dictionary) -> bool:
 	config.set_value("mailbox", "applied_mail_ids", ids)
 	return SCOPE.save_configs({PROGRESS.SAVE_PATH.get_file(): config}) == OK
 
+static func pending_ids() -> Array:
+	var config := ConfigFile.new()
+	if SCOPE.load_config(config, PROGRESS.SAVE_PATH) != OK: return []
+	return Array(config.get_value("mailbox", "applied_mail_ids", [])).duplicate()
+
+static func forget_acknowledged(ids: Array) -> bool:
+	var config := ConfigFile.new()
+	if SCOPE.load_config(config, PROGRESS.SAVE_PATH) != OK: return false
+	var pending_ids: Array = Array(config.get_value("mailbox", "applied_mail_ids", [])).duplicate()
+	for id in ids: pending_ids.erase(id)
+	config.set_value("mailbox", "applied_mail_ids", pending_ids)
+	return SCOPE.save_configs({PROGRESS.SAVE_PATH.get_file(): config}) == OK
+
+static func pending(item: Dictionary) -> bool:
+	return item.get("claim_state") == "unclaimed" or (item.get("applied_at") == null and not applied(String(item.get("id", ""))))
+
 static func local_mail() -> Array:
 	var result := DATA.LOCAL_MAIL.duplicate(true)
 	for mail in result: mail["claim_state"] = "granted" if applied(mail.id) else "unclaimed"
@@ -33,12 +49,12 @@ static func local_mail() -> Array:
 static func recover(mail: Array) -> bool:
 	var ok := true
 	for item in mail:
-		if item is Dictionary and item.get("claim_state") == "granted" and not applied(String(item.get("id", ""))):
+		if item is Dictionary and item.get("claim_state") == "granted" and item.get("applied_at") == null and not applied(String(item.get("id", ""))):
 			if not item.get("attachments") is Dictionary or not apply(String(item.get("id", "")), item.attachments): ok = false
 	return ok
 
 static func unread_count(mail: Array) -> int:
 	var count := 0
 	for item in mail:
-		if item is Dictionary and (item.get("claim_state") == "unclaimed" or not applied(String(item.get("id", "")))): count += 1
+		if item is Dictionary and pending(item): count += 1
 	return count
