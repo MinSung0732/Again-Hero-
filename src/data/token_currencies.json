@@ -1,0 +1,4 @@
+{
+  "demon_token": {"name": "마왕토큰", "description": "마왕을 위한 랭크 보상 토큰", "icon_path": "res://assets/art/UI/currency/demon_token.png"},
+  "hero_token": {"name": "용사토큰", "description": "용사를 위한 랭크 보상 토큰", "icon_path": "res://assets/art/UI/currency/hero_token.png"}
+}

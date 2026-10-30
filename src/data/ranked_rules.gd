@@ -42,6 +42,20 @@ static func weekly_reward_tier(demon_mmr: int, hero_mmr: int, demon_rank: int = 
 	if demon_tier == "hero" or hero_tier == "hero": return "hero"
 	return demon_tier if tier_index(demon_mmr) >= tier_index(hero_mmr) else hero_tier
 
+# Group starts come from threshold data. The initial score is the floor for bronze.
+static func weekly_reset_mmr(mmr: int, server_rank: int = 0) -> int:
+	var rules := data()
+	var current := tier(mmr, server_rank)
+	var target := String(rules.get("weekly_reset_high_tier", "")) if current in ["hero", "demon_lord"] else current.get_slice("_", 0) + "_1"
+	for entry in rules.get("mmr_thresholds", []):
+		if String(entry.get("id", "")) == target:
+			return maxi(int(entry.get("mmr", 0)), int(rules.get("initial_mmr", 0)))
+	return int(rules.get("initial_mmr", 0))
+
+static func weekly_reward(tier_id: String) -> Dictionary:
+	var rewards: Dictionary = data().get("weekly_rewards", {})
+	return rewards.get(tier_id, {}).duplicate()
+
 static func icon_path(tier_id: String) -> String:
 	for asset in data().get("assets", []):
 		if String(asset.get("id", "")) == tier_id: return String(asset.get("icon_path", ""))
