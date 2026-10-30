@@ -3,6 +3,13 @@ extends RefCounted
 const PAGE_SIZE := 10
 const LOCAL_COUNT := 35
 const ROW_HEIGHT := 92
+const ROW_GAP := 12
+const RANK_WIDTH := 120
+const TAB_HEIGHT := 80
+const TAB_FONT_SIZE := 26
+const ROW_COLORS := [Color("261b35"), Color("1d152a" )]
+const PODIUM_COLORS := [Color("ffe07a"), Color("d6dce7"), Color("d99a68")]
+const OUTSIDE_RANK := "순위 밖"
 const POOL_SIZE := 24
 const PULL_DISTANCE := 85.0
 const ROLES := [["hero", "용사"], ["demon", "마왕"]]

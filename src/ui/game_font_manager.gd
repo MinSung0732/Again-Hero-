@@ -2,6 +2,8 @@ extends Node
 
 const GAME_FONT_PATH := "res://assets/fonts/Galmuri11.ttf"
 const GAME_THEME_PATH := "res://src/ui/game_theme.tres"
+# ICU phrase line breaking keeps Korean words whole (keep-all); empty language would split syllables.
+const TEXT_LANGUAGE := "ko-u-lw-phrase"
 
 var game_font: Font
 var game_theme: Theme
@@ -87,3 +89,6 @@ func _apply_font_to_control(control: Control) -> void:
 
 	if game_font != null:
 		control.add_theme_font_override("font", game_font)
+
+	if (control is Label or control is Button or control is RichTextLabel) and control.language.is_empty():
+		control.language = TEXT_LANGUAGE

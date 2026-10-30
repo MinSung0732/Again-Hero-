@@ -20,6 +20,8 @@ const DROP_AREA := preload("res://src/ui/transcendence_drop_area.gd")
 const COSMETICS := preload("res://src/data/profile_cosmetic_catalog.gd")
 const BANNER_SHADER := preload("res://src/ui/transcendence_banner.gdshader")
 const EMERALD := Color("61e887")
+const GUIDE_INSET := 24
+const POLICY := preload("res://src/data/lobby_ui_policy_catalog.gd")
 
 func panel(parent: Control, gold: bool = false, rarity: String = "", draggable: bool = false) -> VBoxContainer:
 	var frame: PanelContainer = DRAG_CARD.new() if draggable else PanelContainer.new()
@@ -40,7 +42,7 @@ func panel(parent: Control, gold: bool = false, rarity: String = "", draggable: 
 	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	margin.z_index = 2
 	for side in ["left","right","top","bottom"]:
-		margin.add_theme_constant_override("margin_"+side,24 if rarity == "transcendent" else 16)
+		margin.add_theme_constant_override("margin_"+side, GUIDE_INSET)
 	frame.add_child(margin)
 	var box := VBoxContainer.new()
 	box.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -179,6 +181,7 @@ func refresh(showing: bool) -> void:
 		child.get_parent().remove_child(child)
 		child.queue_free()
 	var selected := STORE.load_id()
+	lobby.team_summary_label.text = POLICY.FORMATION_SUMMARY.transcendence % [0 if selected.is_empty() else 1, 1]
 	heading.text = "◇  등록된 초월 몬스터  %d / 1  ◇" % (0 if selected.is_empty() else 1)
 	if selected.is_empty():
 		label(registered,"등록된 초월몬스터가 없습니다",28).horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

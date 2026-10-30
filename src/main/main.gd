@@ -3099,9 +3099,9 @@ func _on_battle_finished(message: String, player_won: bool) -> void:
 		next_stage_button.visible = false
 
 	var copy := preload("res://src/ui/battle_result_copy.gd").format_message(message)
-	result_message.text = copy.headline
+	result_message.text = preload("res://src/ui/battle_result_copy.gd").format_subtitle(copy.headline, player_won)
 	result_reward.text = copy.reward
-	result_reward.visible = not result_reward.text.is_empty()
+	result_reward.hide()
 	_result_reward_details = copy.details
 	result_analysis.text = "전투 분석 불러오는 중..."
 	$HUD/ResultBackdrop.show()
@@ -3137,7 +3137,7 @@ func _populate_run_result_analysis() -> void:
 		var summary = battle.call("get_run_analysis_summary")
 		if summary != null:
 			result_analysis.text = preload("res://src/ui/battle_result_copy.gd").format_analysis(String(summary), _result_reward_details)+"\n\n"+_insight.result_note(_result_won)
-			result_presenter.set_analysis(result_analysis.text)
+			result_presenter.set_analysis(preload("res://src/ui/battle_result_copy.gd").format_analysis(String(summary), _result_reward_details), _insight.result_note(_result_won))
 			return
 
 	result_analysis.text = "Run 분석을 불러오지 못했습니다."

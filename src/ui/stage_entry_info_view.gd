@@ -1,4 +1,7 @@
 extends RefCounted
+const CARD_INSET := 12
+const INFO_HEIGHT := 128
+const CELL_FONT_SIZE := 18
 ## One-line summary, three information cells, and fixed action rows.
 static func install(host: Control, description: Label, reward: Label, status: Label, repeat: Label, entry: Button) -> PanelContainer:
 	var margin := MarginContainer.new()
@@ -20,7 +23,7 @@ static func install(host: Control, description: Label, reward: Label, status: La
 	grid.name = "StageInfoGrid"
 	grid.add_theme_constant_override("separation",8)
 	grid.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	grid.custom_minimum_size.y = 128
+	grid.custom_minimum_size.y = INFO_HEIGHT
 	layout.add_child(grid)
 	for item in [[status,"EntryState",1.0],[reward,"FirstReward",1.6],[repeat,"RepeatReward",1.0]]:
 		var panel := card(grid)
@@ -51,10 +54,7 @@ static func card(parent: Container) -> VBoxContainer:
 	style.border_color = Color("785b83")
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(8)
-	style.content_margin_left = 8
-	style.content_margin_right = 8
-	style.content_margin_top = 8
-	style.content_margin_bottom = 8
+	style.set_content_margin_all(CARD_INSET)
 	panel.add_theme_stylebox_override("panel",style)
 	parent.add_child(panel)
 	var rows := VBoxContainer.new()
@@ -78,4 +78,4 @@ static func move_label(label: Label, parent: Container) -> void:
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	label.add_theme_font_size_override("font_size",22)
+	label.add_theme_font_size_override("font_size",CELL_FONT_SIZE)

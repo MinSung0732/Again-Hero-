@@ -1,5 +1,8 @@
 extends Control
 
+const ROW_SKIN := preload("res://src/ui/mission_row_skin.gd")
+const CLOSE_SIZE := Vector2(112, 64)
+const CLOSE_TEXT := "닫기"
 const FEEDBACK := preload("res://src/ui/exploration_claim_feedback.gd")
 const SFX := preload("res://src/audio/event_sfx_bank.gd")
 const RULES := preload("res://src/data/exploration_reward_catalog.gd")
@@ -103,9 +106,9 @@ func _build() -> void:
 	stack.add_child(header)
 	_label(header, "탐색보상", 38)
 	var close_button := Button.new()
-	close_button.text = "닫기"
-	close_button.custom_minimum_size = Vector2(90, 64)
-	close_button.add_theme_font_size_override("font_size", 24)
+	close_button.text = CLOSE_TEXT
+	ROW_SKIN.apply_button(close_button)
+	close_button.custom_minimum_size = CLOSE_SIZE
 	close_button.pressed.connect(close)
 	header.add_child(close_button)
 	var body := HBoxContainer.new()

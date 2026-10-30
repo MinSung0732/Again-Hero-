@@ -12,7 +12,7 @@ static func style(fill: String, edge: String, padding: int = 20) -> StyleBoxFlat
 
 static func apply_button(button: Button) -> void:
 	button.custom_minimum_size.y = 64
-	button.add_theme_font_size_override("font_size", 26)
+	button.add_theme_font_size_override("font_size", preload("res://src/data/lobby_ui_policy_catalog.gd").POPUP_BUTTON_FONT_SIZE)
 	button.add_theme_stylebox_override("normal", style("32233e", "776184", 12))
 	button.add_theme_stylebox_override("hover", style("493550", "eac14d", 12))
 	button.add_theme_stylebox_override("pressed", style("604724", "f7d579", 12))

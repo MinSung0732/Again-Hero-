@@ -69,6 +69,8 @@ const ORDER := [
 static func get_skill(skill_id: String) -> Dictionary:
 	var data: Dictionary = SKILLS.get(skill_id, {})
 	var result := data.duplicate(true)
+	if result.has("description") and not result.has("short_description"):
+		result["short_description"] = result["description"]
 	if result.has("max_monster_cost"):
 		result["description"] = String(result.get("description", "")) + " · %s코스트 이하 몬스터만 소환" % format_cost(float(result.max_monster_cost))
 	return result

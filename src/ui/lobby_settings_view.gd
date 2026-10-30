@@ -84,7 +84,7 @@ func install(target: Control) -> void:
 	_build_notice()
 	_build_account()
 	_header(pages.misc, "기타", "◇")
-	_info(pages.misc, "추가 설정을 위한 공간입니다.\n새 기능은 이곳에 순차적으로 추가됩니다.")
+	_info(pages.misc, POLICY.MISC_VERSION % str(ProjectSettings.get_setting("application/config/version", "")) + "\n" + POLICY.MISC_CREDITS)
 	lobby.get_node("/root/CloudStore").status_changed.connect(_on_cloud_status)
 	lobby.get_node("/root/LoginGateway").login_unavailable.connect(_on_cloud_status)
 	lobby.tree_exiting.connect(_disconnect_cloud_status, CONNECT_ONE_SHOT)
@@ -169,7 +169,7 @@ func _title_plate(parent: Control, title: Label) -> PanelContainer:
 		title.reparent(plate)
 	else:
 		plate.add_child(title)
-	title.add_theme_font_size_override("font_size", 40)
+	title.add_theme_font_size_override("font_size", POLICY.TITLE_FONT_SIZE)
 	title.add_theme_color_override("font_color", Color("ffe7a3"))
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
@@ -357,7 +357,11 @@ func _info(parent: Node, text: String) -> void:
 	var panel := PanelContainer.new()
 	panel.add_theme_stylebox_override("panel", _style(Color(0.05, 0.03, 0.10, 0.80), Color("705885")))
 	parent.add_child(panel)
-	_label(panel, text, 25, Color("c9b9dd"))
+	var margin := MarginContainer.new()
+	for side in ["left", "right", "top", "bottom"]:
+		margin.add_theme_constant_override("margin_" + side, POLICY.CONTENT_INSET)
+	panel.add_child(margin)
+	_label(margin, text, 25, Color("c9b9dd"))
 
 func _toggle(parent: Node, title: String, description: String, check: CheckBox = null) -> CheckBox:
 	var row := HBoxContainer.new()

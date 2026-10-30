@@ -2,6 +2,7 @@ extends Control
 const CHARACTERS := preload("res://src/data/hero_character_catalog.gd")
 const WEAPONS := preload("res://src/data/hero_weapon_catalog.gd")
 const ICONS := preload("res://src/ui/hero_augment_icons.gd")
+const ROW_SKIN := preload("res://src/ui/mission_row_skin.gd")
 const SKIN := preload("res://src/ui/pixel_panel_skin.gd")
 var owner_id := ""
 var selected_tab := "weapon"
@@ -23,7 +24,7 @@ func open(id: String, kind: String = "augment") -> void:
 	var header := HBoxContainer.new(); rows.add_child(header)
 	var title := label(header,String(CHARACTERS.get_character(id).name)+" · "+("증강" if kind == "augment" else "기술" if kind == "skills" else "상세 정보"),30)
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var close := Button.new(); close.name = "CloseModal"; close.text = "닫기"; close.custom_minimum_size = Vector2(100,70); close.add_theme_font_size_override("font_size",26); header.add_child(close); close.pressed.connect(queue_free); focus_buttons.append(close)
+	var close := Button.new(); close.name = "CloseModal"; close.text = "닫기"; close.custom_minimum_size = Vector2(100,70); close.add_theme_font_size_override("font_size",26); ROW_SKIN.apply_button(close); header.add_child(close); close.pressed.connect(queue_free); focus_buttons.append(close)
 	if kind == "augment":
 		label(rows,"전투 중 최대 무기 6개 · 보조 6개 / 아래 효과는 처음 획득할 때 기준",21)
 		var tabs := HBoxContainer.new(); rows.add_child(tabs)
@@ -40,7 +41,7 @@ func open(id: String, kind: String = "augment") -> void:
 func label(parent: Node, value: String, font: int) -> Label:
 	var result := Label.new(); result.text = value; result.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART; result.add_theme_font_size_override("font_size",font); parent.add_child(result); return result
 func tab(parent: Node, value: String, action: Callable) -> Button:
-	var button := Button.new(); button.text = value; button.toggle_mode = true; button.size_flags_horizontal = Control.SIZE_EXPAND_FILL; button.custom_minimum_size.y = 64; button.add_theme_font_size_override("font_size",25); parent.add_child(button); button.pressed.connect(action); focus_buttons.append(button); return button
+	var button := Button.new(); button.text = value; button.toggle_mode = true; button.size_flags_horizontal = Control.SIZE_EXPAND_FILL; button.custom_minimum_size.y = 64; button.add_theme_font_size_override("font_size",25); ROW_SKIN.apply_button(button); parent.add_child(button); button.pressed.connect(action); focus_buttons.append(button); return button
 func _clear() -> void:
 	for child in content.get_children(): content.remove_child(child); child.queue_free()
 	scroll.scroll_vertical = 0

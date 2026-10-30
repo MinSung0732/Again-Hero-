@@ -58,11 +58,10 @@ func install(owner: Control) -> void:
 	title.add_theme_font_size_override("font_size", 40)
 	heading.add_child(title)
 	var close := Button.new()
-	close.icon = DATA.texture(DATA.CLOSE_ICON)
-	close.expand_icon = true
+	close.text = DATA.CLOSE
 	close.tooltip_text = DATA.CLOSE
-	close.custom_minimum_size = DATA.BUTTON_SIZE
-	SKIN.apply(close)
+	ROW_SKIN.apply_button(close)
+	close.custom_minimum_size = DATA.CLOSE_SIZE
 	heading.add_child(close)
 	close.pressed.connect(hide)
 	var scroll := ScrollContainer.new()
@@ -81,16 +80,16 @@ func install(owner: Control) -> void:
 	box.add_child(buttons)
 	all_button = Button.new()
 	all_button.text = DATA.CLAIM_ALL
+	ROW_SKIN.apply_button(all_button)
 	all_button.custom_minimum_size = DATA.BUTTON_SIZE
 	all_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	SKIN.apply(all_button)
 	buttons.add_child(all_button)
 	all_button.pressed.connect(claim_all)
 	delete_button = Button.new()
 	delete_button.text = DATA.DELETE_ALL
+	ROW_SKIN.apply_button(delete_button)
 	delete_button.custom_minimum_size = DATA.BUTTON_SIZE
 	delete_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	SKIN.apply(delete_button)
 	buttons.add_child(delete_button)
 	delete_button.pressed.connect(_confirm_delete_all)
 	confirmation = ConfirmationDialog.new()
@@ -206,6 +205,7 @@ func _render() -> void:
 		content.add_child(body)
 		var date := Label.new()
 		date.name = "Date"
+		date.add_theme_font_size_override("font_size", DATA.DATE_FONT_SIZE)
 		date.text = String(item.get("created_at", "")).left(10)
 		content.add_child(date)
 		var actions := VBoxContainer.new()

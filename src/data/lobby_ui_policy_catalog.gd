@@ -11,7 +11,7 @@ const OTHER_ACTIONS := {
 	"demon_book": {"method": "show_demon_codex"},
 	"hero_book": {"method": "show_hero_codex"},
 	"rank_history": {"method": "show_rank_history"},
-	"practice": {"method": "_enter_practice_battle", "target": "lobby", "visible_if": "is_practice_allowed", "text": "연습전투  ›\n무한 체력 도망 더미 · 등록한 초월 기술 확인"},
+	"practice": {"method": "_enter_practice_battle", "target": "lobby", "visible_if": "is_practice_allowed"},
 	"settings": {"method": "_open_settings"},
 }
 const TABS := [["game", "게임"], ["sound", "소리"], ["notice", "알림"], ["account", "계정"], ["misc", "기타"]]
@@ -28,6 +28,17 @@ const OTHER_VIEWS := {
 const DEFAULT_BACK_HEIGHT := 88.0
 const TAB_BUTTON_HEIGHT := 102.0
 const MENU_BUTTON_HEIGHT := 132.0
+const POPUP_BUTTON_FONT_SIZE := 32
+const SKILL_DESCRIPTION_MAX_LINES := 3
+const SKILL_CARD_SPACING := 8
+const TITLE_FONT_SIZE := 30
+const TITLE_HEIGHT := 66.0
+const TITLE_TOP := 18.0
+const CONTENT_INSET := 16
+const MISC_VERSION := "게임 버전 %s"
+const MISC_CREDITS := "몬스터 효과음: Pixabay 제작자 제공"
+const FORMATION_SUMMARY := {"team": "몬스터 %d / %d", "skill": "스킬 %d / %d", "transcendence": "등록 %d / %d"}
+const REWARD_UNLOCK := "%s 해금"
 const GAME_OPTIONS := [
 	{"key": "camera_view_locked", "title": "화면 고정", "description": "켜면 용사를 따라갑니다. 끄면 드래그로 화면을 이동합니다.", "default": true, "force_in_hero": true},
 	{"key": "battle_frame_enabled", "title": "배틀 프레임", "description": "전장 주변의 마왕성 장식 프레임을 표시합니다.", "default": true},

@@ -1,5 +1,6 @@
 extends RefCounted
 
+const ROW_SKIN := preload("res://src/ui/mission_row_skin.gd")
 const DATA := preload("res://src/data/mailbox_catalog.gd")
 const HEROES := preload("res://src/data/hero_character_catalog.gd")
 const STAGES := preload("res://src/data/stage_catalog.gd")
@@ -86,25 +87,30 @@ func _build() -> void:
 		var state: Variant = result.get(role)
 		if not state is Dictionary: continue
 		var tier := String(state.get("final_tier", ""))
+		var card := PanelContainer.new()
+		card.add_theme_stylebox_override("panel", ROW_SKIN.style(DATA.SEASON_ROW_FILL, DATA.SEASON_ROW_EDGE, DATA.ROW_PADDING))
+		box.add_child(card)
 		var line := HBoxContainer.new()
 		line.name = role.capitalize() + "Row"
-		box.add_child(line)
+		line.add_theme_constant_override("separation", DATA.ROW_GAP)
+		card.add_child(line)
 		var played := int(state.get("wins", 0)) + int(state.get("losses", 0)) > 0
 		var usage_id := String(result.get("hero_top_hero_id" if role == "hero" else "demon_top_transcendence_id", ""))
 		var path := ""
 		if played and not usage_id.is_empty():
 			if role == "hero": path = String(STAGES.get_stage(HEROES.stage_for_hero(usage_id)).get("portrait_path", ""))
 			else: path = MONSTERS.get_ui_icon_path(usage_id)
-		if not path.is_empty() and DATA.texture(path) != null: _icon(line, path, 128, "Portrait")
-		else: _icon(line, RULES.icon_path(tier), 96, "TierFallback")
+		if not path.is_empty() and DATA.texture(path) != null: _icon(line, path, DATA.SEASON_PORTRAIT_SIZE, "Portrait", role == "demon")
+		else: _icon(line, RULES.icon_path(tier), DATA.SEASON_PORTRAIT_SIZE, "TierFallback")
 		if not played: continue
 		var detail := VBoxContainer.new()
 		line.add_child(detail)
 		var tier_line := HBoxContainer.new()
 		detail.add_child(tier_line)
-		_icon(tier_line, RULES.icon_path(tier), 48, "TierIcon")
-		var text := ("마왕" if role == "demon" else "용사") + " · " + RULES.display_name(tier)
-		if tier == "hero" and int(state.get("server_rank", 0)) > 0: text += " %d위" % int(state.server_rank)
+		_icon(tier_line, RULES.icon_path(tier), DATA.SEASON_TIER_SIZE, "TierIcon")
+		var text := DATA.SEASON_ROLE_FORMAT % ("마왕" if role == "demon" else "용사")
+		if tier != "hero": text += " · " + RULES.display_name(tier)
+		if tier == "hero" and int(state.get("server_rank", 0)) > 0: text += " · %d위" % int(state.server_rank)
 		text += " · MMR %d" % int(state.get("final_mmr", 0))
 		_label(tier_line, text, 28)
 		var top_role := String(result.get("demon_top_role", ""))
@@ -113,7 +119,7 @@ func _build() -> void:
 	var hero: Dictionary = result.get("hero", {})
 	var demon: Dictionary = result.get("demon", {})
 	var reward_role := "용사" if int(hero.get("final_mmr", -1)) > int(demon.get("final_mmr", -1)) else "마왕"
-	_label(box, "보상 기준: " + reward_role + " ? " + RULES.display_name(reward_tier), 28)
+	_label(box, DATA.SEASON_REWARD_FORMAT % [reward_role, RULES.display_name(reward_tier)], 28)
 	var currencies := DATA.currencies()
 	for key in ["demon_token", "hero_token"]:
 		var line := HBoxContainer.new()
@@ -125,8 +131,8 @@ func _build() -> void:
 	for spec in [["우편함으로", true], ["확인", false]]:
 		var button := Button.new()
 		button.text = spec[0]
+		ROW_SKIN.apply_button(button)
 		button.custom_minimum_size = DATA.SEASON_BUTTON_SIZE
-		SKIN.apply(button)
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		buttons.add_child(button)
 		button.pressed.connect(_close.bind(spec[1], layer))
@@ -137,13 +143,21 @@ func _label(parent: Node, text: String, size: int) -> void:
 	label.add_theme_font_size_override("font_size", size)
 	parent.add_child(label)
 
-func _icon(parent: Node, path: String, size: int = 96, node_name: String = "") -> void:
+func _icon(parent: Node, path: String, size: int = 96, node_name: String = "", crop: bool = false) -> void:
 	var icon := TextureRect.new()
 	icon.name = node_name if not node_name.is_empty() else "Icon"
 	icon.custom_minimum_size = Vector2(size, size)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	if not path.is_empty(): icon.texture = DATA.texture(path)
+	if not path.is_empty():
+		icon.texture = DATA.texture(path)
+		if crop and icon.texture != null:
+			var image := icon.texture.get_image()
+			if image != null and image.get_used_rect().has_area():
+				var atlas := AtlasTexture.new()
+				atlas.atlas = icon.texture
+				atlas.region = image.get_used_rect()
+				icon.texture = atlas
 	parent.add_child(icon)
 
 func _close(open_mail: bool, layer: Control) -> void:

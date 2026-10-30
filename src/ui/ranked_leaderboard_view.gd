@@ -1,5 +1,6 @@
 extends RefCounted
 
+const ROW_SKIN := preload("res://src/ui/mission_row_skin.gd")
 const DATA := preload("res://src/data/ranked_leaderboard_catalog.gd")
 const RULES := preload("res://src/data/ranked_rules.gd")
 var lobby: Control
@@ -33,7 +34,8 @@ func install(settings: RefCounted, parent: Control) -> void:
 	for entry in DATA.ROLES:
 		var button := Button.new()
 		button.text = entry[1]
-		button.custom_minimum_size.y = 80
+		ROW_SKIN.apply_button(button)
+		button.custom_minimum_size.y = DATA.TAB_HEIGHT
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		tab_row.add_child(button)
 		button.pressed.connect(select_role.bind(String(entry[0])))
@@ -70,12 +72,18 @@ func _new_cache() -> Dictionary:
 func _make_line(parent: Control) -> HBoxContainer:
 	var line := HBoxContainer.new()
 	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	line.add_theme_constant_override("separation", DATA.ROW_GAP)
+	line.set_meta("row_color", DATA.ROW_COLORS[0])
+	line.draw.connect(func(): line.draw_rect(Rect2(Vector2.ZERO, line.size), line.get_meta("row_color")))
 	line.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	parent.add_child(line)
 	var rank := Label.new()
 	rank.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	rank.name = "Rank"
-	rank.custom_minimum_size.x = 105
+	var rank_padding := StyleBoxEmpty.new()
+	rank_padding.content_margin_left = DATA.ROW_GAP
+	rank.add_theme_stylebox_override("normal", rank_padding)
+	rank.custom_minimum_size.x = DATA.RANK_WIDTH
 	rank.add_theme_font_size_override("font_size", 27)
 	line.add_child(rank)
 	var icon := TextureRect.new()
@@ -95,6 +103,9 @@ func _make_line(parent: Control) -> HBoxContainer:
 	var score := Label.new()
 	score.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	score.name = "MMR"
+	var score_padding := StyleBoxEmpty.new()
+	score_padding.content_margin_right = DATA.ROW_GAP
+	score.add_theme_stylebox_override("normal", score_padding)
 	score.add_theme_font_size_override("font_size", 25)
 	line.add_child(score)
 	return line
@@ -123,7 +134,11 @@ func select_role(next: String) -> void:
 	if not caches.has(next): return
 	if caches.has(role): caches[role].scroll = scroll.scroll_vertical
 	role = next
-	for key in tabs: tabs[key].disabled = key == role
+	for key in tabs:
+		var button: Button = tabs[key]
+		button.disabled = key == role
+		button.add_theme_stylebox_override("disabled", button.get_theme_stylebox("pressed"))
+		button.add_theme_color_override("font_disabled_color", Color.WHITE)
 	scroll.scroll_vertical = int(caches[role].scroll)
 	_render()
 	_render_my()
@@ -204,6 +219,8 @@ func _render() -> void:
 			line.position = Vector2(0, index * DATA.ROW_HEIGHT)
 			line.size = Vector2(maxf(canvas.size.x, scroll.size.x), DATA.ROW_HEIGHT)
 			_set_line(line, rows[index])
+			line.set_meta("row_color", DATA.ROW_COLORS[index % DATA.ROW_COLORS.size()])
+			line.queue_redraw()
 	status.position = Vector2(0, rows.size() * DATA.ROW_HEIGHT)
 	status.size = Vector2(maxf(canvas.size.x, scroll.size.x), DATA.ROW_HEIGHT)
 	status.text = DATA.LOADING if cache.busy else (cache.error if not cache.error.is_empty() else (DATA.END if cache.end else ""))
@@ -223,8 +240,8 @@ func _set_line(line: HBoxContainer, data: Dictionary) -> void:
 	var rank: int = int(data.get("rank", 0))
 	var tier := String(data.get("tier", ""))
 	var label: Label = line.get_node("Rank")
-	label.text = ("%d위" % rank) if rank > 0 else ""
-	label.add_theme_color_override("font_color", Color("ffe07a") if tier == "hero" else Color.WHITE)
+	label.text = ("%d위" % rank) if rank > 0 else (DATA.OUTSIDE_RANK if line == my_line else "")
+	label.add_theme_color_override("font_color", DATA.PODIUM_COLORS[rank - 1] if rank > 0 and rank <= DATA.PODIUM_COLORS.size() else Color.WHITE)
 	var path := RULES.icon_path(tier)
 	if not path.is_empty() and not textures.has(path): textures[path] = load(path)
 	(line.get_node("Tier") as TextureRect).texture = textures.get(path)

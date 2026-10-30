@@ -1,4 +1,5 @@
 extends RefCounted
+const CONTENT_INSET := 18
 ## A retained wallet display beside the existing upgrade action.
 static func install(balance: Label, cost: Label) -> void:
 	var action := cost.get_parent() as HBoxContainer
@@ -10,13 +11,17 @@ static func install(balance: Label, cost: Label) -> void:
 	style.border_color = Color("caa253")
 	style.set_border_width_all(2)
 	style.set_corner_radius_all(8)
-	style.set_content_margin_all(12)
+	style.set_content_margin_all(CONTENT_INSET)
 	panel.add_theme_stylebox_override("panel",style)
 	action.add_child(panel)
 	action.move_child(panel,0)
+	var inset := MarginContainer.new()
+	for side in ["left", "right", "top", "bottom"]:
+		inset.add_theme_constant_override("margin_" + side, CONTENT_INSET)
+	panel.add_child(inset)
 	var rows := VBoxContainer.new()
 	rows.add_theme_constant_override("separation",4)
-	panel.add_child(rows)
+	inset.add_child(rows)
 	var caption := Label.new()
 	caption.text = "보유 연구 포인트"
 	caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER

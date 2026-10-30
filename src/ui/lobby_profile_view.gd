@@ -11,6 +11,8 @@ const UID := preload("res://src/data/public_uid_catalog.gd")
 const RANKED := preload("res://src/data/ranked_rules.gd")
 const RANK_ICON_SIZE := 96
 const RANK_ERROR := "랭크 정보를 불러올 수 없음"
+const CONTENT_INSET := 16
+const UID_FONT_SIZE := 24
 
 var settings_ref: WeakRef
 var settings: RefCounted:
@@ -166,12 +168,13 @@ func _build_card(parent: Control) -> void:
 	nickname.clip_text = true
 	nickname.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_rect(nickname, Vector2(0, 174), Vector2(306, 64))
-	uid_label = _label(info, "", 20, Color("e4c5ff"))
+	uid_label = _label(info, "", UID_FONT_SIZE, Color("e4c5ff"))
 	uid_label.name = "PublicUid"
 	_rect(uid_label, Vector2(0, 238), Vector2(215, 40))
 	uid_copy = Button.new()
 	uid_copy.name = "CopyPublicUid"
 	uid_copy.text = UID.COPY
+	uid_copy.add_theme_font_size_override("font_size", UID_FONT_SIZE)
 	info.add_child(uid_copy)
 	_rect(uid_copy, Vector2(215, 238), Vector2(90, 40))
 	uid_copy.pressed.connect(_copy_uid)
@@ -180,6 +183,7 @@ func _build_card(parent: Control) -> void:
 	lobby.tree_exiting.connect(func():
 		if gateway.public_uid_changed.is_connected(_refresh_uid): gateway.public_uid_changed.disconnect(_refresh_uid), CONNECT_ONE_SHOT)
 	var title := _label(info, "칭호 · 준비 중", 28, Color("f1d798"))
+	title.hide()
 	title.autowrap_mode = TextServer.AUTOWRAP_OFF
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_rect(title, Vector2(0, 278), Vector2(306, 48))
@@ -205,8 +209,12 @@ func _build_rank_section(parent: Control) -> void:
 		panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		panel.add_theme_stylebox_override("panel", FRAMES.style("shop_featured_frame", 10))
 		row.add_child(panel)
+		var margin := MarginContainer.new()
+		for side in ["left", "right", "top", "bottom"]:
+			margin.add_theme_constant_override("margin_" + side, CONTENT_INSET)
+		panel.add_child(margin)
 		var content := VBoxContainer.new()
-		panel.add_child(content)
+		margin.add_child(content)
 		var title := _label(content, "용사 모드" if role == "hero" else "마왕 모드", 24)
 		title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		var icon := _image(content)

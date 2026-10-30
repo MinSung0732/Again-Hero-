@@ -1978,7 +1978,7 @@ func _apply_lobby_visual_polish() -> void:
 
 	_set_lobby_label_style(
 		^"SafeArea/Layout/Content/TeamTab/TeamLayout/Title",
-		40,
+		preload("res://src/data/lobby_ui_policy_catalog.gd").TITLE_FONT_SIZE,
 		Color("ffe7a3")
 	)
 	var team_title_plate := (
@@ -1987,7 +1987,9 @@ func _apply_lobby_visual_polish() -> void:
 	var title_frames = preload("res://src/ui/commerce_frame_skin.gd")
 	team_title_plate.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	team_title_plate.add_theme_stylebox_override("panel", title_frames.style("shop_featured_frame", 8))
-	$SafeArea/Layout/Content/TeamTab/TeamLayout.offset_top = 27.0
+	$SafeArea/Layout/Content/TeamTab/TeamLayout.offset_top = preload("res://src/data/lobby_ui_policy_catalog.gd").TITLE_TOP
+	$SafeArea/Layout/Content/TeamTab/TeamLayout/Title.custom_minimum_size.y = preload("res://src/data/lobby_ui_policy_catalog.gd").TITLE_HEIGHT
+	$SafeArea/Layout/Content/TeamTab/TeamLayout/Title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 
 	_set_lobby_label_style(
 		^"SafeArea/Layout/Content/TeamTab/TeamLayout/Guide",
@@ -2005,13 +2007,14 @@ func _apply_lobby_visual_polish() -> void:
 		_apply_lobby_button_skin(slot_button, false, 20)
 	_apply_lobby_button_skin(team_mode_button, true, 23)
 	_apply_lobby_button_skin(skill_mode_button, false, 23)
+	_refresh_formation_unlock_filters(true)
 	_refresh_formation_cost_sort_buttons()
 	_team_formation_view.apply(self)
 	transcendence_view.install(self)
 
 	_set_lobby_label_style(
 		^"SafeArea/Layout/Content/ResearchTab/ResearchLayout/Title",
-		40,
+		preload("res://src/data/lobby_ui_policy_catalog.gd").TITLE_FONT_SIZE,
 		Color("ffe7a3")
 	)
 	var research_title_plate := (
@@ -2019,7 +2022,9 @@ func _apply_lobby_visual_polish() -> void:
 	)
 	research_title_plate.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	research_title_plate.add_theme_stylebox_override("panel", title_frames.style("shop_featured_frame", 8))
-	$SafeArea/Layout/Content/ResearchTab/ResearchLayout.offset_top = 27.0
+	$SafeArea/Layout/Content/ResearchTab/ResearchLayout.offset_top = preload("res://src/data/lobby_ui_policy_catalog.gd").TITLE_TOP
+	$SafeArea/Layout/Content/ResearchTab/ResearchLayout/Title.custom_minimum_size.y = preload("res://src/data/lobby_ui_policy_catalog.gd").TITLE_HEIGHT
+	$SafeArea/Layout/Content/ResearchTab/ResearchLayout/Title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 
 	research_points_label.add_theme_font_size_override("font_size", 28)
 	research_points_label.add_theme_color_override("font_color", Color("f3cf72"))
@@ -3361,12 +3366,7 @@ func _refresh_team_preview() -> void:
 	_refresh_team_slot(team_slot_2_button, 1)
 	_refresh_team_slot(team_slot_3_button, 2)
 
-	var skill_names := PackedStringArray()
-	for skill_id in demon_skill_selected_ids:
-		skill_names.append(String(DEMON_ULTIMATES.get_skill(String(skill_id)).get("name", skill_id)))
-	team_summary_label.text = "스킬 %d / %d · %s" % [
-		demon_skill_selected_ids.size(), TEAM_MAX_SLOTS, " / ".join(skill_names)
-	]
+	team_summary_label.text = preload("res://src/data/lobby_ui_policy_catalog.gd").FORMATION_SUMMARY.team % [team_selected_ids.size(), TEAM_MAX_SLOTS]
 	_team_formation_view.heading(
 		self, "◇  편성된 몬스터  %d / %d  ◇" % [team_selected_ids.size(), TEAM_MAX_SLOTS]
 	)
@@ -3734,15 +3734,7 @@ func _refresh_demon_skill_preview() -> void:
 	_refresh_demon_skill_slot(team_slot_2_button, 1)
 	_refresh_demon_skill_slot(team_slot_3_button, 2)
 
-	var selected_names: Array[String] = []
-	for raw_id in demon_skill_selected_ids:
-		var skill := DEMON_ULTIMATES.get_skill(String(raw_id))
-		selected_names.append(String(skill.get("name", raw_id)))
-	team_summary_label.text = "스킬 %d / %d · %s" % [
-		demon_skill_selected_ids.size(),
-		TEAM_MAX_SLOTS,
-		" / ".join(selected_names),
-	]
+	team_summary_label.text = preload("res://src/data/lobby_ui_policy_catalog.gd").FORMATION_SUMMARY.skill % [demon_skill_selected_ids.size(), TEAM_MAX_SLOTS]
 
 	_clear_team_monster_cards()
 	for raw_id in _sorted_formation_ids(demon_skill_catalog_ids):
@@ -3794,7 +3786,7 @@ func _create_demon_skill_card(skill_id: String) -> Control:
 
 	var vbox := VBoxContainer.new()
 	vbox.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	vbox.add_theme_constant_override("separation", 6)
+	vbox.add_theme_constant_override("separation", preload("res://src/data/lobby_ui_policy_catalog.gd").SKILL_CARD_SPACING)
 	margin.add_child(vbox)
 
 	var symbol := TextureRect.new()
@@ -3823,11 +3815,13 @@ func _create_demon_skill_card(skill_id: String) -> Control:
 	info.text = "코스트 %d · 쿨 %.0f초\n%s" % [
 		int(round(float(skill.get("mana_cost", 0.0)))),
 		float(skill.get("cooldown", 0.0)),
-		String(skill.get("description", "")),
+		String(skill.get("short_description", skill.get("description", ""))),
 	]
 	info.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	info.add_theme_font_size_override("font_size", 17)
 	info.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	info.max_lines_visible = preload("res://src/data/lobby_ui_policy_catalog.gd").SKILL_DESCRIPTION_MAX_LINES
+	info.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	info.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	vbox.add_child(info)
 
@@ -4857,7 +4851,7 @@ func _refresh_stage_card() -> void:
 		stage_reward_label.text = "최초 보상\n-"
 
 	if not experience.is_empty() and not STAGE_PROGRESS.is_campaign_reward_claimed(stage_id):
-		stage_reward_label.text += "\n"+MONSTER_CATALOG.get_monster_name(String(experience.reward_monster))
+		stage_reward_label.text += "\n" + (preload("res://src/data/lobby_ui_policy_catalog.gd").REWARD_UNLOCK % MONSTER_CATALOG.get_monster_name(String(experience.reward_monster)))
 
 	var repeat_label := stage_repeat_reward_label
 	if repeat_label != null:

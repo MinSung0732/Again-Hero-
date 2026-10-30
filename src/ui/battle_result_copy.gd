@@ -1,5 +1,20 @@
 extends RefCounted
 
+const CATALOG = preload("res://src/data/battle_result_catalog.gd")
+
+static func format_subtitle(headline: String, won: bool) -> String:
+	var lines := headline.split("\n", false)
+	if lines.is_empty():
+		return ""
+	var result := lines[0].trim_suffix("!").trim_suffix(".")
+	if won and lines.size() > 1:
+		var detail := lines[1].get_slice(CATALOG.SUBTITLE_SEPARATOR, lines[1].get_slice_count(CATALOG.SUBTITLE_SEPARATOR) - 1).trim_suffix(".").trim_suffix(" 성공")
+		result += CATALOG.SUBTITLE_SEPARATOR + detail
+	for line in lines.slice(1 if not won else 2):
+		if line.contains("저장 실패"):
+			result += "\n" + line
+	return result
+
 # Presentation only: use the already granted reward message, never recompute/pay.
 static func format_message(message: String) -> Dictionary:
 	var headline: PackedStringArray = []
@@ -34,5 +49,5 @@ static func format_analysis(summary: String, _reward_details: String) -> String:
 	for line in summary.split("\n", false):
 		if line.begins_with("Run ") or line.begins_with("Hero 최저 HP:") or line.begins_with("Hero 누적 HP 피해:") or line.begins_with("마왕 EXP 기여:") or line.begins_with("직접 소환:") or line.begins_with("전략 전환:") or line.begins_with("Hero 증강"):
 			line = line.left(180)
-			lines.append(line.replace("Hero", "용사").replace("Run ", "전투 시간 "))
+			lines.append(line.replace("Hero", "용사").replace("Run ", "전투 시간: "))
 	return "\n".join(lines)
