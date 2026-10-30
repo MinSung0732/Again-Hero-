@@ -245,7 +245,7 @@ func _send_matched(id: int,key: String,resumed: bool) -> void:
 	_send(id,_matched_payload(key,role,resumed))
 func _matched_payload(key: String,role: String,resumed: bool) -> Dictionary:
 	var room = rooms[key].node
-	return {"op":"matched","match":key,"role":role,"rules":RULES.ID,"hero":room.hero_id,"roster":room.roster if role=="demon" else [],"skill_ids":room.skill_ids if role=="demon" else [],"transcendence_id":room.transcendence_id if role=="demon" else "","duration":room.battle.run_time_limit_seconds,"map":room.map_id,"resume_token":rooms[key].seats[role].resume_token,"resumed":resumed,"feedback_cursor":room.feedback.sequence,"battlefield":room.battlefield_info}
+	return {"op":"matched","match":key,"role":role,"rules":RULES.ID,"hero":room.hero_id,"roster":room.roster if role=="demon" else [],"skill_ids":room.skill_ids if role=="demon" else [],"transcendence_id":room.transcendence_id,"duration":room.battle.run_time_limit_seconds,"map":room.map_id,"resume_token":rooms[key].seats[role].resume_token,"resumed":resumed,"feedback_cursor":room.feedback.sequence,"battlefield":room.battlefield_info}
 func _resume(id: int,message: Dictionary) -> void:
 	if message.get("version",null) != RULES.VERSION or message.get("rules","") != RULES.ID: _reject(id,"version_mismatch"); return
 	var token_value: Variant = message.get("resume_token",null)

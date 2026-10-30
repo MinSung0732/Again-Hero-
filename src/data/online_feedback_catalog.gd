@@ -1,4 +1,5 @@
 extends RefCounted
+const CINEMATIC := preload("res://src/data/battle_summon_cinematic_catalog.gd")
 const MONSTER_SFX := preload("res://src/data/monster_sfx_catalog.gd")
 const GAME := preload("res://src/data/game_audio_catalog.gd")
 const CONTEXT := preload("res://src/data/contextual_audio_catalog.gd")
@@ -30,6 +31,11 @@ const CAST_PROFILES := {
 }
 const KINDS := ["hero_hit","monster_hit","heal","cast","summon","transcend","level_up","ultimate","monster_sfx"]
 const EMPTY := []
+static func transcend_index(id: String) -> int:
+	return CINEMATIC.ENTRIES.keys().find(id) + 1
+static func transcend_id(index: int) -> String:
+	var ids := CINEMATIC.ENTRIES.keys()
+	return String(ids[index - 1]) if index > 0 and index <= ids.size() else ""
 static func valid_cursor(value: Variant) -> bool:
 	return (value is int or value is float) and is_finite(float(value)) and value >= 0 and value <= 2147483647 and value == floorf(value)
 static func valid_events(events: Variant,cursor: Variant,tick: Variant) -> bool:
@@ -42,6 +48,7 @@ static func valid_events(events: Variant,cursor: Variant,tick: Variant) -> bool:
 		for index in [3,4,5,6,7,8,9]:
 			if not (row[index] is int or row[index] is float) or not is_finite(float(row[index])) or absf(float(row[index]))>1000000: return false
 		if row[5]<0 or row[5]!=floorf(row[5]): return false
+		if row[2] == "transcend" and transcend_id(int(row[5])).is_empty(): return false
 		if row[2] == "monster_sfx" and MONSTER_SFX.cue_from_index(int(row[5])).is_empty(): return false
 		for index in [6,7,8,9]:
 			if row[index]<0 or row[index]>1: return false

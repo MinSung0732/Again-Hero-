@@ -108,10 +108,10 @@ func prepare() -> void:
 		if running and not finished and not connection_paused: feedback.publish(cue,point,0,Color.WHITE,tick))
 	battle.demon_ultimate_used.connect(func(_id: String,_name: String,_message: String):
 		if running and not finished and not connection_paused: feedback.publish("ultimate",battle.hero.position,0,Color(0.8,0.5,1.0),tick))
-	battle.transcendent_summoned.connect(func(_id: String,actor: Node2D):
+	battle.transcendent_summoned.connect(func(id: String,actor: Node2D):
 		if running and not finished and not connection_paused and is_instance_valid(actor):
 			transcendent_actor = actor
-			feedback.publish("transcend",actor.global_position,0,Color(1.0,0.75,0.35),tick))
+			feedback.publish("transcend",actor.global_position,preload("res://src/data/online_feedback_catalog.gd").transcend_index(id),Color(1.0,0.75,0.35),tick))
 	battle.demon_augment_ready.connect(_demon_offer)
 	battle.online_hero_kill.connect(_on_hero_kill)
 	battle.online_elite_requested.connect(_queue_elite)

@@ -1279,6 +1279,7 @@ func _event(event: Dictionary) -> void:
 		"result":
 			if event.get("match","") != client.match_id or ended: return
 			if event.has("feedback"): view.feedback.consume(event.feedback,event.get("feedback_cursor",null),event.get("tick",null))
+			if is_instance_valid(view.cinematic): view.cinematic.free(); view.cinematic = null
 			load_revision += 1; local_preparing = false; waiting_for_start = false; loading.finish()
 			ended = true; result_pending = true; movement = Vector2.ZERO; connection_waiting = false; queue_button.disabled = false
 			_set_controls(false)
@@ -1291,6 +1292,7 @@ func _event(event: Dictionary) -> void:
 				if event.message == "용사와 너무 가까움": view.show_manual_spawn_restricted_area()
 		"error":
 			view.feedback.pause_feedback(); view.pause_motion()
+			if is_instance_valid(view.cinematic): view.cinematic.free(); view.cinematic = null
 			load_revision += 1; local_preparing = false; waiting_for_start = false; loading.finish()
 			ended = true
 			_set_controls(false)

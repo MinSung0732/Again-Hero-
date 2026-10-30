@@ -1,6 +1,6 @@
 extends RefCounted
 ## Experience orb snapshots require matching protocol 28 peers.
-const VERSION := 37
+const VERSION := 38
 const MATCH_TIER_EXPAND_SECONDS := 20.0
 const MATCH_TIER_EXPAND_RANGE := 1
 const ELITE_CARD_LIMIT := 3

@@ -34,6 +34,7 @@ func clear() -> void:
 	if is_instance_valid(level_sprite): level_sprite.stop(); level_sprite.hide()
 func pause_feedback() -> void:
 	suspended = true; clear()
+	if is_instance_valid(get_parent().cinematic): get_parent().cinematic.cancel()
 func consume(events: Variant,sequence: Variant,tick: Variant) -> bool:
 	if not DATA.valid_events(events,sequence,tick): return false
 	if sequence<baseline: return false
@@ -42,10 +43,18 @@ func consume(events: Variant,sequence: Variant,tick: Variant) -> bool:
 		for row in events:
 			if row[0]<=baseline: continue
 			received += 1
-			if tick-row[1]>DATA.MAX_AGE_SECONDS*Engine.physics_ticks_per_second:
+			var age_limit: float = DATA.MAX_AGE_SECONDS
+			if row[2] == "transcend":
+				var id := DATA.transcend_id(int(row[5]))
+				age_limit = float(DATA.CINEMATIC.ENTRIES[id].duration)
+			if (row[2] == "transcend" and tick-row[1]>=age_limit*Engine.physics_ticks_per_second) or (row[2] != "transcend" and tick-row[1]>age_limit*Engine.physics_ticks_per_second):
 				stale += 1
 				continue
 			accepted += 1
+			if row[2] == "transcend":
+				var cinematic = get_parent().cinematic
+				if is_instance_valid(cinematic): cinematic.play_online(DATA.transcend_id(int(row[5])), Vector2(row[3],row[4]))
+				continue
 			var cue: String = row[2]
 			if cue == "monster_sfx":
 				cue = DATA.MONSTER_SFX.cue_from_index(int(row[5]))

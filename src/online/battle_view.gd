@@ -45,6 +45,10 @@ var hero_texture: Texture2D
 var scale_ratio := 1.0
 var map_scale := Vector2.ONE
 var map_offset := Vector2.ZERO
+var cinematic_focus := Vector2.ZERO
+var cinematic_blend := 0.0
+var cinematic_zoom := 1.0
+var cinematic: Control
 var bounds := Vector2(3600,3600)
 var hero_role := true
 var camera_view_locked := true
@@ -58,8 +62,11 @@ func set_match_roster(roster: Array,transcendence_id: String = "") -> void:
 	allowed_actor_ids = roster.duplicate()
 	if not transcendence_id.is_empty(): allowed_actor_ids.append(transcendence_id)
 	# The hero never receives the demon roster; monsters are admitted as they appear on the field.
-	reveal_on_sight = allowed_actor_ids.is_empty()
+	reveal_on_sight = roster.is_empty()
 	for id in allowed_actor_ids: _load_actor_texture(String(id))
+	if is_instance_valid(cinematic): cinematic.free()
+	cinematic = preload("res://src/ui/battle_summon_cinematic.gd").new()
+	cinematic.install_online(self, transcendence_id)
 func _load_actor_texture(id: String) -> void:
 	if actor_texture_paths.has(id): return
 	var path := String(MONSTERS.get_monster(id).get("card_icon_path",""))
@@ -236,6 +243,7 @@ func _resolve_owners() -> void:
 		var texture: Texture2D = art_textures.get(command[1])
 		if texture != null and command[2]+command[4] <= texture.get_width() and command[3]+command[5] <= texture.get_height(): painted_owners[int(command[0])] = true
 func clear_state() -> void:
+	if is_instance_valid(cinematic): cinematic.free(); cinematic = null
 	exp_orbs.clear()
 	manual_spawn_warning_timer = 0.0
 	state = {}; painted_owners.clear(); render_visuals.clear()
@@ -276,6 +284,9 @@ func _layout_map() -> void:
 	hero_point.x = clampf(hero_point.x,half_view.x,bounds.x-half_view.x) if bounds.x >= solo_size.x else bounds.x*0.5
 	hero_point.y = clampf(hero_point.y,half_view.y,bounds.y-half_view.y) if bounds.y >= solo_size.y else bounds.y*0.5
 	if not hero_role and not camera_view_locked: manual_center = hero_point
+	hero_point = hero_point.lerp(cinematic_focus, cinematic_blend)
+	map_scale *= cinematic_zoom
+	scale_ratio = map_scale.x
 	map_offset = size*0.5-hero_point*map_scale
 	if status_bars != null:
 		if status_bars.position != map_offset: status_bars.position = map_offset
@@ -284,9 +295,14 @@ func _layout_map() -> void:
 		battlefield.position = map_offset; battlefield.scale = map_scale
 
 func set_camera_view_locked(locked: bool) -> void:
+	var saved_blend := cinematic_blend
+	var saved_zoom := cinematic_zoom
+	cinematic_blend = 0.0; cinematic_zoom = 1.0
 	_layout_map()
 	camera_view_locked = locked or hero_role
 	manual_center = (size*0.5-map_offset)/map_scale
+	cinematic_blend = saved_blend; cinematic_zoom = saved_zoom
+	_layout_map()
 	queue_redraw()
 
 func pan_camera_by_screen_delta(screen_delta: Vector2) -> void:
@@ -327,6 +343,7 @@ func _actor(point: Vector2,texture: Texture2D,color: Color,is_hero: bool,draw_bo
 		if texture != null: draw_texture_rect(texture,Rect2(screen-extent*0.5,extent),false)
 		else: draw_circle(screen,12,color)
 func _gui_input(event: InputEvent) -> void:
+	if is_instance_valid(cinematic) and cinematic.active: return
 	var point: Vector2
 	var pointer := -2
 	if event is InputEventScreenTouch: pointer = event.index

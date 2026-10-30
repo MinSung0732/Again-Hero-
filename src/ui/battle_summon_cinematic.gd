@@ -34,6 +34,74 @@ var last_tick_usec := 0
 var death_mode := false
 var focus_position := Vector2.ZERO
 var return_start := 4.0
+var online_view: Control
+var online_focus := Vector2.ZERO
+var online_return_zoom := 1.0
+
+func install_online(battle_view: Control, monster_id: String) -> void:
+	online_view = battle_view
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	mouse_filter = Control.MOUSE_FILTER_IGNORE
+	clip_contents = true
+	z_index = 70
+	battle_view.add_child(self)
+	spotlight = ColorRect.new()
+	spotlight.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	shade = ShaderMaterial.new()
+	shade.shader = preload("res://src/ui/battle_summon_spotlight.gdshader")
+	spotlight.material = shade
+	add_child(spotlight)
+	hide(); set_process(false)
+	if CATALOG.ENTRIES.has(monster_id):
+		var entry: Dictionary = CATALOG.ENTRIES[monster_id]
+		_cached_view(String(entry.view)); _cached_sound_bank(monster_id)
+		var path := String(entry.get("world_effect", ""))
+		if not path.is_empty(): _cached_world_effect(path)
+
+func play_online(monster_id: String, point: Vector2) -> void:
+	cancel()
+	if not CATALOG.ENTRIES.has(monster_id) or not views.has(String(CATALOG.ENTRIES[monster_id].view)): return
+	var entry: Dictionary = CATALOG.ENTRIES[monster_id]
+	view = _cached_view(String(entry.view)); sound_bank = _cached_sound_bank(monster_id)
+	audio_timeline = entry.get("audio_timeline", [])
+	slow_profile = entry.get("slow_motion", {})
+	duration = float(entry.duration); zoom_factor = float(entry.zoom)
+	return_start = float(entry.get("return_start", 4.0))
+	online_focus = point; elapsed = 0.0; returning = false; active = true
+	var path := String(entry.get("world_effect", ""))
+	world_effect = _cached_world_effect(path) if not path.is_empty() else null
+	if is_instance_valid(world_effect): world_effect.set_time(0.0); world_effect.show()
+	next_audio_cue = 0; _advance_audio()
+	last_tick_usec = Time.get_ticks_usec()
+	_layout(); view.show(); view.set_time(0.0); show(); set_process(true)
+
+func _advance_online() -> void:
+	if not is_instance_valid(online_view) or not online_view.is_visible_in_tree() or get_tree().paused:
+		cancel(); return
+	_layout()
+	var approach := 1.0 - pow(1.0 - clampf(elapsed / float(slow_profile.get("approach_end", 0.95)), 0.0, 1.0), 3.0)
+	var zoom_in := smoothstep(0.75, 2.1, elapsed)
+	var zoom_out := smoothstep(3.1, return_start, elapsed)
+	var factor := 1.0 + (zoom_factor - 1.0) * zoom_in * (1.0 - zoom_out * 0.45)
+	if elapsed < return_start:
+		online_view.cinematic_focus = online_focus
+		online_view.cinematic_blend = approach
+		online_view.cinematic_zoom = factor
+	else:
+		if not returning:
+			returning = true; online_return_zoom = online_view.cinematic_zoom
+		var back := smoothstep(return_start, duration, elapsed)
+		online_view.cinematic_blend = 1.0 - back
+		online_view.cinematic_zoom = lerpf(online_return_zoom, 1.0, back)
+	online_view._layout_map(); online_view.queue_redraw()
+	var projected: Vector2 = online_view.map_offset + online_focus * online_view.map_scale
+	if is_instance_valid(world_effect):
+		world_effect.position = projected; world_effect.scale = online_view.map_scale
+		world_effect.set_time(elapsed)
+	shade.set_shader_parameter("focus", projected / size)
+	shade.set_shader_parameter("strength", smoothstep(0.1, 0.85, elapsed) * (1.0 - smoothstep(return_start - 0.2, duration, elapsed)))
+	view.set_time(elapsed); view.modulate.a = 1.0 - smoothstep(4.3, duration, elapsed)
+	if elapsed >= duration: cancel()
 
 func install(main: Control, preview_ids: Array[String] = []) -> void:
 	host = main
@@ -160,7 +228,7 @@ func _begin_focus(summoned: Node2D, entry: Dictionary) -> void:
 	set_process(true)
 
 func _layout() -> void:
-	var panel: Rect2 = host.battle_viewport_container.get_global_rect()
+	var panel: Rect2 = online_view.get_global_rect() if is_instance_valid(online_view) else host.battle_viewport_container.get_global_rect()
 	global_position = panel.position
 	size = panel.size
 	spotlight.size = size
@@ -178,6 +246,10 @@ func _process(_delta: float) -> void:
 
 func advance(real_delta: float) -> void:
 	if not active:
+		return
+	if is_instance_valid(online_view):
+		elapsed = minf(elapsed + maxf(real_delta, 0.0), duration)
+		_advance_audio(); _advance_online()
 		return
 	if (host.battle.battle_over and not hero_defeat_focus) or not host.battle_viewport_container.is_visible_in_tree():
 		cancel()
@@ -240,6 +312,9 @@ func advance(real_delta: float) -> void:
 
 func cancel() -> void:
 	var was_active := active
+	if is_instance_valid(online_view):
+		online_view.cinematic_blend = 0.0; online_view.cinematic_zoom = 1.0
+		online_view._layout_map(); online_view.queue_redraw()
 	if is_instance_valid(sound_bank):
 		sound_bank.stop_all()
 	sound_bank = null
