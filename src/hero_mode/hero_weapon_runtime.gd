@@ -40,6 +40,8 @@ var effects: Array[Dictionary] = []
 var fields: Array[Dictionary] = []
 var field_cursor := 0
 var effect_cursor := 0
+var visual_generation := 0
+const VISUAL_ORBIT_CAPACITY := 10
 var power := 1.0
 var haste := 1.0
 var projectile_speed := 1.0
@@ -108,7 +110,7 @@ func install(host, research_bonus: int = 0, starting_research: Dictionary = {}) 
 	base_max_hp = int(hero.max_hp); base_move_speed = float(hero.move_speed)
 	base_pickup_radius = float(hero.exp_pickup_radius); base_exp_multiplier = float(hero.exp_gain_multiplier)
 	for index in range(PROJECTILE_LIMIT):
-		projectiles.append({"active":false,"handle":Vector3i.ZERO,"position":Vector2.ZERO,"damage":0,"rank":1,"color":Color.WHITE,"age":0.0,"delay":0.0,"data":{},"melee":false,"reach":0.0,"traveled":0.0,"frames":EMPTY_ART,"direction":Vector2.RIGHT,"flight":"homing","phase":0,"victims":{},"start":Vector2.ZERO,"strikes":0,"pierces":1,"bounces":0,"serial":0})
+		projectiles.append({"active":false,"handle":Vector3i.ZERO,"position":Vector2.ZERO,"damage":0,"rank":1,"color":Color.WHITE,"age":0.0,"delay":0.0,"data":{},"melee":false,"reach":0.0,"traveled":0.0,"frames":EMPTY_ART,"direction":Vector2.RIGHT,"flight":"homing","phase":0,"victims":{},"start":Vector2.ZERO,"strikes":0,"pierces":1,"bounces":0,"serial":0,"gen":0})
 	available_weapons = DATA.weapon_pool(String(hero.hero_id))
 	var effect_directories := {}
 	for id in available_weapons:
@@ -122,7 +124,9 @@ func install(host, research_bonus: int = 0, starting_research: Dictionary = {}) 
 		# Native actors own their cached textures; do not duplicate their bitmaps.
 		art[id] = EMPTY_ART if native_skills != null and NATIVE.SCENES.has(pattern) else ART.sequence(String(DATA.WEAPONS[id].get("effect_dir","")))
 	for index in range(EFFECT_LIMIT):
-		effects.append({"left":0.0,"duration":0.0,"a":Vector2.ZERO,"b":Vector2.ZERO,"radius":0.0,"pattern":"","color":Color.WHITE,"orbit_count":4,"orbit_speed":3.0,"orbit_ratio":0.7})
+		var orbit_gens: Array[int] = []
+		orbit_gens.resize(VISUAL_ORBIT_CAPACITY)
+		effects.append({"left":0.0,"duration":0.0,"a":Vector2.ZERO,"b":Vector2.ZERO,"radius":0.0,"pattern":"","color":Color.WHITE,"orbit_count":4,"orbit_speed":3.0,"orbit_ratio":0.7,"gen":0,"orbit_gens":orbit_gens})
 	for index in range(8): fields.append({"left":0.0,"tick":0.0,"origin":Vector2.ZERO,"radius":0.0,"damage":0,"interval":0.5,"follow":false,"data":{},"rank":1})
 	for index in 24: pulses.append({"active":false,"left":0.0,"origin":Vector2.ZERO,"direction":Vector2.RIGHT,"radius":0.0,"damage":0,"rank":1,"data":{}})
 	add(String(DATA.STARTERS.get(hero.hero_id,"ranged_rookie_arcane_bolt")))
@@ -642,6 +646,7 @@ func _launch_projectile(actor: Node2D, origin: Vector2, damage: int, rank: int, 
 		var shot: Dictionary = projectiles[index]
 		if bool(shot.active): continue
 		projectile_cursor = (index+1)%PROJECTILE_LIMIT
+		_activate_visual(shot)
 		shot.active = true; shot.handle = handle; shot.position = origin
 		shot.damage = damage; shot.rank = rank; shot.color = color; shot.age = 0.0
 		shot.data = data; shot.delay = delay; shot.melee = melee; shot.reach = reach if reach > 0 else float(data.get("range",900.0)); shot.traveled = 0.0
@@ -731,9 +736,18 @@ func _hit(actor: Node2D, damage: int, pattern: String, rank: int, data: Dictiona
 		AFFLICTIONS.apply_slow(actor,float(data.get("slow_multiplier",maxf(0.35,0.85-rank*0.04))),float(data.get("slow_duration",2.0)))
 	# Poison uses frequent damage pulses; it does not reuse hero-target poison APIs.
 
+func _activate_visual(slot: Dictionary) -> void:
+	visual_generation += 1
+	slot.gen = visual_generation
+
 func _effect(a: Vector2,b: Vector2,radius: float,pattern: String,color: Color,data: Dictionary = {}) -> void:
 	var effect: Dictionary = effects[effect_cursor]
 	effect_cursor = (effect_cursor+1)%EFFECT_LIMIT
+	_activate_visual(effect)
+	if pattern == "orbit":
+		for index in VISUAL_ORBIT_CAPACITY:
+			visual_generation += 1
+			effect.orbit_gens[index] = visual_generation
 	effect.a = a; effect.b = b; effect.radius = radius; effect.pattern = pattern; effect.color = color
 	effect["frames"] = ART.cache.get(String(data.get("effect_dir","")),EMPTY_ART)
 	effect["follow"] = bool(data.get("field_follow",false))

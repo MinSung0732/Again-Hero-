@@ -16,6 +16,7 @@ const FIELD_ITEM_SCRIPTS := [
 const MOTION_SECONDS := preload("res://src/online/match_rules.gd").SNAPSHOT_INTERVAL
 const MOTION_RESET_SECONDS := MOTION_SECONDS * 3.0
 const MOTION_SNAP_DISTANCE := 256.0
+const FX_SNAP_DISTANCE := 256.0
 const MAX_TEXTURES := 512
 # Spread completed cold loads across frames instead of one combat-frame burst.
 const TEXTURE_FINALIZE_PER_FRAME := 1

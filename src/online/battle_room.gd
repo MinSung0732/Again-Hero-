@@ -541,7 +541,7 @@ func _build_snapshot() -> Dictionary:
 			if not shot.active or shot.melee or shot.delay > 0.0: continue
 			if shot.frames.is_empty():
 				var shot_color: Color = shot.color
-				shots.append([snappedf(shot.position.x,0.1),snappedf(shot.position.y,0.1),float(shot.get("visual_radius",28.0)),shot_color.r,shot_color.g,shot_color.b,shot_color.a]); continue
+				shots.append([snappedf(shot.position.x,0.1),snappedf(shot.position.y,0.1),float(shot.get("visual_radius",28.0)),shot_color.r,shot_color.g,shot_color.b,shot_color.a,shot.gen]); continue
 			var radius: float = shot.visual_radius
 			presentation.append_texture(weapons._loop_frame(shot.frames,float(shot.age)),-1,Transform2D(Vector2(shot.direction).angle(),shot.position),Rect2(Vector2.ONE*-radius,Vector2.ONE*radius*2),Color.WHITE,visuals,battle.hero.z_index)
 		presentation.append_weapon_areas(weapons,visuals)

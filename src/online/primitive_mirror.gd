@@ -4,10 +4,12 @@ const DATA := preload("res://src/data/online_feedback_catalog.gd")
 const GEO := preload("res://src/hero_mode/hero_weapon_geometry.gd")
 const KINDS := ["circle","ring","line","polyline","polygon"]
 var parsed: Array = []
+var motion = preload("res://src/online/fx_motion.gd").new()
 static func valid(commands: Variant) -> bool:
 	if not commands is Array or commands.size()>DATA.MAX_PRIMITIVES: return false
 	for row in commands:
-		if not row is Array or row.size()!=11 or row[0] not in KINDS or not row[10] is Array or row[10].size()>DATA.MAX_POINTS or row[10].size()%2!=0: return false
+		if not row is Array or row.size()!=12 or row[0] not in KINDS or not row[10] is Array or row[10].size()>DATA.MAX_POINTS or row[10].size()%2!=0: return false
+		if not (row[11] is int or row[11] is float) or not is_finite(float(row[11])) or row[11] < 0 or float(row[11]) != floorf(float(row[11])): return false
 		for index in range(1,10):
 			if not (row[index] is float or row[index] is int) or not is_finite(float(row[index])) or absf(float(row[index]))>1000000: return false
 		for index in range(5,9):
@@ -20,27 +22,32 @@ static func valid(commands: Variant) -> bool:
 	return true
 func replace(commands: Array) -> void:
 	parsed.clear()
+	motion.begin()
 	for row in commands:
 		var points := PackedVector2Array()
 		for index in range(0,row[10].size(),2): points.append(Vector2(row[10][index],row[10][index+1]))
-		parsed.append({"kind":row[0],"pose":Transform2D(row[3],Vector2(row[1],row[2])),"radius":row[4],"color":Color(row[5],row[6],row[7],row[8]),"width":row[9],"points":points})
+		motion.put(int(row[11]),Vector2(row[1],row[2]))
+		parsed.append({"id":int(row[11]),"kind":row[0],"pose":Transform2D(row[3],Vector2(row[1],row[2])),"radius":row[4],"color":Color(row[5],row[6],row[7],row[8]),"width":row[9],"points":points})
+	motion.finish()
 func draw(view: Control) -> void:
 	var map := Transform2D(Vector2(view.map_scale.x,0),Vector2(0,view.map_scale.y),view.map_offset)
 	for cmd in parsed:
-		view.draw_set_transform_matrix(map*cmd.pose)
+		var pose: Transform2D = cmd.pose
+		pose.origin = motion.position(cmd.id,pose.origin)
+		view.draw_set_transform_matrix(map*pose)
 		match cmd.kind:
 			"circle": view.draw_circle(Vector2.ZERO,cmd.radius,cmd.color)
 			"ring": view.draw_arc(Vector2.ZERO,cmd.radius,0,TAU,48,cmd.color,maxf(0.1,cmd.width))
 			"line","polyline": view.draw_polyline(cmd.points,cmd.color,maxf(0.1,cmd.width))
 			"polygon": view.draw_colored_polygon(cmd.points,cmd.color)
 	view.draw_set_transform_matrix(Transform2D.IDENTITY)
-static func append(output: Array,kind: String,origin: Vector2,angle: float,radius: float,color: Color,width: float = 0,points: PackedVector2Array = PackedVector2Array()) -> void:
+static func append(output: Array,kind: String,origin: Vector2,angle: float,radius: float,color: Color,width: float = 0,points: PackedVector2Array = PackedVector2Array(),id: int = 0) -> void:
 	if output.size()>=DATA.MAX_PRIMITIVES: return
 	var wire: Array = []
 	for point in points:
 		if wire.size()+2>DATA.MAX_POINTS: break
 		wire.append(point.x); wire.append(point.y)
-	output.append([kind,origin.x,origin.y,angle,radius,clampf(color.r,0,1),clampf(color.g,0,1),clampf(color.b,0,1),clampf(color.a,0,1),width,wire])
+	output.append([kind,origin.x,origin.y,angle,radius,clampf(color.r,0,1),clampf(color.g,0,1),clampf(color.b,0,1),clampf(color.a,0,1),width,wire,id])
 static func line(output: Array,a: Vector2,b: Vector2,color: Color,width: float) -> void:
 	append(output,"line",Vector2.ZERO,0,0,color,width,PackedVector2Array([a,b]))
 static func area(output: Array,origin: Vector2,radius: float,color: Color) -> void:
@@ -71,7 +78,7 @@ static func capture(weapons) -> Array:
 				if frames.is_empty(): line(output,a,b,color,GEO.CHAIN_FALLBACK_WIDTH)
 			"bolt":
 				line(output,a,b,Color(color,ratio*GEO.BOLT_LINE_ALPHA),GEO.OUTLINE_WIDTH)
-				append(output,"circle",a.lerp(b,1.0-ratio),0,GEO.BOLT_RADIUS,color)
+				append(output,"circle",a.lerp(b,1.0-ratio),0,GEO.BOLT_RADIUS,color,0,PackedVector2Array(),int(effect.gen))
 			"orbit":
 				var inner := GEO.orbit_inner(effect.radius,effect.orbit_ratio,effect.get("area_scale",1.0))
 				var outer := GEO.orbit_outer(effect.radius,effect.orbit_ratio,effect.get("area_scale",1.0))
@@ -80,7 +87,7 @@ static func capture(weapons) -> Array:
 				if frames.is_empty():
 					for index in mini(int(effect.orbit_count),DATA.MAX_PRIMITIVES-output.size()):
 						var angle: float = weapons.visual_clock*effect.orbit_speed+index*TAU/effect.orbit_count
-						append(output,"circle",a+Vector2.from_angle(angle)*(inner+outer)*0.5,0,GEO.orbit_texture_extent(inner,outer),color)
+						append(output,"circle",a+Vector2.from_angle(angle)*(inner+outer)*0.5,0,GEO.orbit_texture_extent(inner,outer),color,0,PackedVector2Array(),int(effect.orbit_gens[index]) if index < effect.orbit_gens.size() else 0)
 			_: area(output,a,effect.radius,Color(color,ratio))
 	if weapons.delivery != null: weapons.delivery.visit_visuals(_delivery_visual.bind(output))
 	if weapons.evolution != null: weapons.evolution.visit_visuals(_evolution_visual.bind(output))
@@ -89,8 +96,13 @@ static func capture(weapons) -> Array:
 static func _delivery_warning(_slot: Dictionary,point: Vector2,radius: float,color: Color,warning: bool,output: Array) -> void:
 	if warning: append(output,"ring",point,0,radius,color,2.0)
 
-static func _delivery_visual(_slot: Dictionary,point: Vector2,radius: float,color: Color,warning: bool,output: Array) -> void:
-	if not warning: area(output,point,radius,color)
+static func _delivery_visual(slot: Dictionary,point: Vector2,radius: float,color: Color,warning: bool,output: Array) -> void:
+	if warning: return
+	if slot.mode == "orbit" or (slot.mode in ["lob","lob_burst"] and slot.warning > 0.0):
+		var index := int(slot.visual_index) * 2
+		append(output,"circle",point,0,radius,Color(color,color.a*GEO.AREA_FILL_ALPHA),0,PackedVector2Array(),int(slot.visual_ids[index]))
+		append(output,"ring",point,0,radius,color,GEO.OUTLINE_WIDTH,PackedVector2Array(),int(slot.visual_ids[index+1]))
+	else: area(output,point,radius,color)
 
 static func _evolution_visual(kind: String,point: Vector2,edge: Vector2,radius: float,color: Color,_frames: Array,progress: float,output: Array) -> void:
 	match kind:

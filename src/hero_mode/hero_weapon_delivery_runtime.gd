@@ -3,6 +3,7 @@ extends RefCounted
 const RULES := preload("res://src/data/hero_weapon_delivery_catalog.gd")
 const TARGETS := preload("res://src/systems/hero_target_policy.gd")
 const LIMIT := 24
+const VISUAL_COUNT := 10
 const WARNING := 0.6
 var _runtime: WeakRef
 var host:
@@ -13,7 +14,9 @@ var clock := 0.0
 func install(runtime) -> void:
 	_runtime = weakref(runtime)
 	for index in LIMIT:
-		slots.append({"left":0.0,"mode":"","id":"","origin":Vector2.ZERO,"radius":0.0,"orbit_radius":0.0,"count":1,"tick":0.0,"interval":0.5,"damage":0,"rank":1,"data":{},"frames":[],"color":Color.WHITE,"warning":0.0,"age":0.0,"duration":1.0,"phase":0.0,"detonated":false,"evolution_damage":0,"relay_phase":0,"max_kind":"","orbit_shape":""})
+		var visual_ids: Array[int] = []
+		visual_ids.resize(VISUAL_COUNT * 2)
+		slots.append({"left":0.0,"mode":"","id":"","origin":Vector2.ZERO,"radius":0.0,"orbit_radius":0.0,"count":1,"tick":0.0,"interval":0.5,"damage":0,"rank":1,"data":{},"frames":[],"color":Color.WHITE,"warning":0.0,"age":0.0,"duration":1.0,"phase":0.0,"detonated":false,"evolution_damage":0,"relay_phase":0,"max_kind":"","orbit_shape":"","gen":0,"visual_ids":visual_ids,"visual_index":0})
 func cast(id: String,data: Dictionary,origin: Vector2,damage: int,reach: float,rank: int,target: Node2D = null) -> bool:
 	var rule := RULES.spec(id,data)
 	if rule.is_empty(): return false
@@ -37,6 +40,11 @@ func cast(id: String,data: Dictionary,origin: Vector2,damage: int,reach: float,r
 	for index in count:
 		var slot := _free()
 		if slot.is_empty(): break
+		host._activate_visual(slot)
+		slot.visual_index = 0
+		for visual_index in VISUAL_COUNT * 2:
+			host.visual_generation += 1
+			slot.visual_ids[visual_index] = host.visual_generation
 		slot.id = id; slot.mode = mode; slot.data = data; slot.rank = rank
 		slot.left = duration; slot.duration = duration; slot.age = 0.0; slot.tick = 0.0
 		slot.interval = interval; slot.warning = float(rule.get("duration",1.0)) if mode == "bombard" else WARNING+index*0.18 if mode == "fault" else WARNING if mode in ["random","sigil"] else index*0.4 if mode == "trail" else 0.0
@@ -180,7 +188,9 @@ func visit_visuals(visitor: Callable) -> void:
 			visitor.call(slot,Vector2(slot.origin),float(slot.radius),Color(color,.5),true)
 			continue
 		if slot.mode == "orbit":
-			for index in int(slot.count): visitor.call(slot,orbit_point(slot,index),float(slot.radius),color,false)
+			for index in int(slot.count):
+				slot.visual_index = index
+				visitor.call(slot,orbit_point(slot,index),float(slot.radius),color,false)
 		elif slot.mode == "sentry": visitor.call(slot,Vector2(slot.origin),32.0,color,false)
 		else: visitor.call(slot,Vector2(slot.origin),float(slot.radius),color,false)
 func _draw_visual(slot: Dictionary,point: Vector2,radius: float,color: Color,warning: bool) -> void:

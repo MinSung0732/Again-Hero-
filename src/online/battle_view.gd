@@ -17,6 +17,7 @@ var battle_constants
 var exp_orbs = preload("res://src/online/exp_orb_view.gd").new()
 var status_bars
 var motion = preload("res://src/online/actor_motion.gd").new()
+var shot_motion = preload("res://src/online/fx_motion.gd").new()
 var visual_order: Array[int] = []
 var visual_slots := PackedInt32Array()
 var visual_depths := PackedFloat64Array()
@@ -111,7 +112,8 @@ func update_state(value: Dictionary) -> bool:
 	var commands: Variant = value.get("visuals",ART.EMPTY)
 	if not value.get("shots",ART.EMPTY) is Array: return false
 	for shot in value.get("shots",ART.EMPTY):
-		if not shot is Array or shot.size()!=7 or not RULES.number(shot[0]) or not RULES.number(shot[1]) or not RULES.number(shot[2]) or shot[2]<=0 or shot[2]>256: return false
+		if not shot is Array or shot.size()!=8 or not RULES.number(shot[0]) or not RULES.number(shot[1]) or not RULES.number(shot[2]) or shot[2]<=0 or shot[2]>256: return false
+		if not RULES.number(shot[7]) or shot[7]<=0 or float(shot[7]) != floorf(float(shot[7])): return false
 		for channel in range(3,7):
 			if not RULES.number(shot[channel]) or shot[channel]<0 or shot[channel]>1: return false
 	if not commands is Array or commands.size() > ART.MAX_COMMANDS: return false
@@ -120,14 +122,19 @@ func update_state(value: Dictionary) -> bool:
 	if value.has("battlefield") and not ART.battlefield_valid(value.battlefield): return false
 	if value.has("battlefield") and value.battlefield.bounds != value.bounds: return false
 	if value.has("battlefield") and not prepare_battlefield(value.battlefield): return false
+	var now := Time.get_ticks_usec()
+	if not motion_paused and motion_received_us > 0 and now-motion_received_us >= int(ART.MOTION_RESET_SECONDS*1000000.0):
+		motion.clear(); shot_motion.clear(); primitives.motion.clear()
+	if not motion_paused:
+		shot_motion.begin()
+		for shot in value.get("shots",ART.EMPTY): shot_motion.put(int(shot[7]),Vector2(shot[0],shot[1]))
+		shot_motion.finish()
 	primitives.replace(value.get("primitives",ART.EMPTY))
 	exp_orbs.replace(value.get("exp_orbs",EXP_ORBS.EMPTY),self)
 	if not motion_paused and exp_orbs.needs_process(): set_process(true)
 	if not motion_paused:
-		var now := Time.get_ticks_usec()
-		if motion_received_us > 0 and now-motion_received_us >= int(ART.MOTION_RESET_SECONDS*1000000.0): motion.clear()
 		motion.replace(value.hero,value.actors); motion_received_us = now
-		if motion.active: set_process(true)
+		if motion.active or shot_motion.active or primitives.motion.active: set_process(true)
 	if state.is_empty() and not hero_role and not camera_view_locked:
 		manual_center = Vector2(value.hero[0],value.hero[1])
 	state = value; bounds = Vector2(value.bounds[0],value.bounds[1])
@@ -176,7 +183,7 @@ func pause_motion() -> void:
 	set_process(manual_spawn_warning_timer > 0.0 or not pending_textures.is_empty())
 	# Freeze the displayed point; the first resumed state establishes a new baseline.
 func resume_motion() -> void:
-	motion.clear(); motion_paused = false; motion_received_us = 0
+	motion.clear(); shot_motion.clear(); primitives.motion.clear(); motion_paused = false; motion_received_us = 0
 	visual_slots.fill(-1)
 func _request_texture(path: String) -> void:
 	if art_textures.has(path) or art_textures.size() >= ART.MAX_TEXTURES: return
@@ -193,6 +200,10 @@ func _process(delta: float) -> void:
 		manual_spawn_warning_timer = maxf(0.0,manual_spawn_warning_timer-delta)
 		queue_redraw()
 	advance_motion(delta)
+	if not motion_paused:
+		var shot_changed := shot_motion.advance(delta*presentation_speed)
+		var primitive_changed: bool = primitives.motion.advance(delta*presentation_speed)
+		if shot_changed or primitive_changed: queue_redraw()
 	if not motion_paused and exp_orbs.advance(delta*presentation_speed): queue_redraw()
 	var changed := false
 	var finalized := 0
@@ -207,7 +218,7 @@ func _process(delta: float) -> void:
 		pending_textures[index] = pending_textures[-1]; pending_textures.pop_back(); changed = true; finalized += 1
 	if changed:
 		_refresh_fallback_textures(); _resolve_owners(); queue_redraw()
-	if manual_spawn_warning_timer <= 0.0 and pending_textures.is_empty() and (motion_paused or (not motion.active and not exp_orbs.needs_process())): set_process(false)
+	if manual_spawn_warning_timer <= 0.0 and pending_textures.is_empty() and (motion_paused or (not motion.active and not shot_motion.active and not primitives.motion.active and not exp_orbs.needs_process())): set_process(false)
 func show_manual_spawn_restricted_area() -> void:
 	manual_spawn_warning_timer = battle_constants.MANUAL_SPAWN_WARNING_DURATION
 	set_process(true); queue_redraw()
@@ -306,7 +317,7 @@ func _draw() -> void:
 		_actor(point,textures.get(actor[1]),Color("d56d67"),false,not painted_owners.has(int(actor[0])))
 		if status_bars != null: status_bars.move_actor(int(actor[0]),point)
 	for shot in state.get("shots",ART.EMPTY):
-		var center := map_offset+Vector2(shot[0],shot[1])*map_scale
+		var center := map_offset+shot_motion.position(int(shot[7]),Vector2(shot[0],shot[1]))*map_scale
 		draw_circle(center,float(shot[2])*scale_ratio,Color(shot[3],shot[4],shot[5],shot[6]))
 		draw_circle(center,7.0*scale_ratio,Color.WHITE)
 func _actor(point: Vector2,texture: Texture2D,color: Color,is_hero: bool,draw_body: bool = true) -> void:
