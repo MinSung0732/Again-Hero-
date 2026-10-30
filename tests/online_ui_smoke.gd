@@ -430,7 +430,7 @@ func run() -> void:
 			var toggle: CheckButton = scene.bottom_bar.get_node("PlacementModeToggle")
 			check(toggle.visible and not toggle.button_pressed and toggle.text == "수동 배치" and toggle.mouse_filter == Control.MOUSE_FILTER_IGNORE and toggle.focus_mode == Control.FOCUS_NONE,"manual placement toggle is visible and fixed")
 			check(scene.bottom_bar.get_node("Status").text.contains("수동 배치만"),"manual placement status")
-			check(scene.transcend_button.get_parent() == scene and scene.transcend_button.has_node("PixelAssetFrame"),"transcend button uses solo pixel frame outside bottom bar")
+			check(scene.transcendence_view.get_parent() == scene and scene.transcendence_view.button.has_node("PixelAssetFrame"),"transcend button uses solo pixel frame outside bottom bar")
 			scene._build_summon_cards(["slime","spider"])
 			var icon_y: float = scene.summon_buttons[1].get_node("Icon").position.y
 			scene._select_monster("spider")

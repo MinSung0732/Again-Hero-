@@ -134,8 +134,9 @@ var direction_buttons: Array = []
 var direction_choices: Array = []
 var ultimate_status_text := "필살기   0 / 100"
 var skill_direction := "east"
-var transcend_button: Button
-var transcend_unlock_button: Button
+var transcendence_view
+var transcend_snapshot := {}
+var transcend_controls_enabled := true
 var transcendence_id := ""
 var elite_panel: Control
 var elite_buttons: Array[Button] = []
@@ -367,27 +368,8 @@ func _ready() -> void:
 		placement_status.text = RULES.MANUAL_STATUS if RULES.SUMMON_PLACEMENT == "manual" else ""
 		placement_status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		placement_status.add_theme_font_size_override("font_size",14)
-		transcend_button = Button.new(); transcend_button.text = "초월 소환 · 위치 지정"
-		transcend_button.anchor_left = 1.0; transcend_button.anchor_right = 1.0
-		transcend_button.anchor_top = 0.63; transcend_button.anchor_bottom = 0.63
-		transcend_button.offset_left = -156; transcend_button.offset_right = -12
-		transcend_button.offset_bottom = 156; transcend_button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-		transcend_button.pressed.connect(_select_transcendence); add_child(transcend_button)
-		PIXEL_FRAME.clear_button_style(transcend_button)
-		PIXEL_FRAME.add_split_frame(transcend_button,"res://assets/art/UI/03_middle_right_panel",0.25,"res://assets/art/UI/05_right_bars/part_02.png",18)
-		transcend_button.disabled = true; transcend_button.hide()
-		transcend_unlock_button = Button.new(); transcend_unlock_button.name = "TestUnlock"
-		transcend_unlock_button.text = "즉시 해금(테스트)"; transcend_unlock_button.focus_mode = Control.FOCUS_NONE
-		transcend_unlock_button.anchor_left = 1.0; transcend_unlock_button.anchor_right = 1.0
-		transcend_unlock_button.anchor_top = 0.63; transcend_unlock_button.anchor_bottom = 0.63
-		transcend_unlock_button.offset_left = -156; transcend_unlock_button.offset_right = -12
-		transcend_unlock_button.offset_top = -66; transcend_unlock_button.offset_bottom = -10
-		transcend_unlock_button.add_theme_font_size_override("font_size",20)
-		add_child(transcend_unlock_button)
-		PIXEL_FRAME.clear_button_style(transcend_unlock_button)
-		PIXEL_FRAME.add_split_frame(transcend_unlock_button,"res://assets/art/UI/03_middle_right_panel",0.25,"res://assets/art/UI/05_right_bars/part_02.png",18)
-		transcend_unlock_button.pressed.connect(func(): client.command("transcend_unlock_test",{}))
-		transcend_unlock_button.hide()
+		transcendence_view = preload("res://src/ui/transcendence_summon_view.gd").new()
+		transcendence_view.install_adapter(self, _transcend_state, _elite_icon, _select_transcendence, _unlock_transcendence)
 		ACTION_CHOICES.ensure_buttons(demon_panel.get_node("ActionChoiceGrid"),direction_buttons,skill_row.get_child(0),_on_direction_choice,5)
 	if role == "hero":
 		pad = PAD.new(); add_child(pad); pad.set_mode(online_pad_mode)
@@ -759,6 +741,7 @@ func _refresh_summon_selection(show_selected: bool = true) -> void:
 			for child in button.get_children():
 				if child is Control: child.position.y += -RULES.SELECTED_CARD_RAISE if selected else RULES.SELECTED_CARD_RAISE
 			button.set_meta("selected_raised",selected)
+	if transcendence_view != null: transcendence_view.refresh()
 	var label := bottom_bar.get_node("Status") as Label
 	if selected_elite >= 0: label.text = RULES.ELITE_STATUS
 	elif transcend_placement: label.text = RULES.TRANSCEND_STATUS
@@ -829,12 +812,21 @@ func _update_demon_controls(event: Dictionary) -> void:
 			var cooldown_bar := button.get_node("CooldownBar") as ProgressBar
 			cooldown_bar.max_value = maxf(0.1,float(data.get("cooldown",0.0)))
 			cooldown_bar.visible = cooldown > 0.01; cooldown_bar.value = cooldown
-		transcend_button.disabled = connection_waiting or client.reconnecting or waiting_for_start or not event.transcend_ready or event.transcend_used
-		transcend_button.text = "초월 소환 완료" if event.transcend_used else "초월 소환 · 위치 지정" if event.transcend_ready else "초월 해금 대기"
-		transcend_unlock_button.visible = initial_local_test and not transcendence_id.is_empty() and not event.transcend_ready and not event.transcend_used
-		transcend_unlock_button.disabled = connection_waiting or client.reconnecting or waiting_for_start
-		if event.transcend_used and transcend_placement:
-			transcend_placement = false; _refresh_summon_selection()
+	if event.transcend_used and transcend_placement:
+		transcend_placement = false; _refresh_summon_selection()
+	transcend_snapshot = event
+	transcendence_view.refresh()
+
+func _transcend_state() -> Dictionary:
+	var ready := bool(transcend_snapshot.get("transcend_ready", false))
+	var used := bool(transcend_snapshot.get("transcend_used", false))
+	var paused: bool = ended or connection_waiting or client == null or client.reconnecting or waiting_for_start or not transcend_controls_enabled
+	return {"id":transcendence_id, "ready":ready, "used":used, "finished":ended,
+		"show_unlock":initial_local_test and not ready and not used, "paused":paused,
+		"disabled":paused, "title":"위치 지정 중" if transcend_placement else "초월 소환"}
+
+func _unlock_transcendence() -> void:
+	client.command("transcend_unlock_test", {})
 
 func _elite_icon(id: String) -> Texture2D:
 	var path := String(MONSTERS.get_monster(id).get("card_icon_path", ""))
@@ -1196,7 +1188,7 @@ func _event(event: Dictionary) -> void:
 					for connection in button.pressed.get_connections(): button.pressed.disconnect(connection.callable)
 					button.pressed.connect(_use_skill.bind(id))
 					skill_buttons[id] = button
-				transcend_button.visible = not transcendence_id.is_empty()
+				transcendence_view.refresh()
 			last_tick = -1; view.resume_motion()
 			_refresh_connection_test_controls()
 			status.text = "기존 경기로 복귀했습니다." if event.get("resumed",false) else "매칭 완료 · 전투 준비 중..."
@@ -1399,8 +1391,8 @@ func _set_controls(enabled: bool) -> void:
 	if elite_panel != null: _refresh_elite_controls()
 	if role == "demon":
 		for button in skill_row.get_children(): button.disabled = not enabled or button.disabled
-		if transcend_button != null: transcend_button.disabled = not enabled or transcend_button.disabled
-		if transcend_unlock_button != null: transcend_unlock_button.disabled = not enabled or transcend_unlock_button.disabled
+		transcend_controls_enabled = enabled
+		if transcendence_view != null: transcendence_view.refresh()
 func _refresh_connection_test_controls() -> void:
 	if disconnect_button == null: return
 	var allowed: bool = not ended and get_node("/root/LocalTestMode").is_online_match_allowed() and client.local_test_connection and not client.match_id.is_empty() and not client.resume_token.is_empty() and not client.result_received

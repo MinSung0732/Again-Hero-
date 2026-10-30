@@ -35,12 +35,12 @@ func run() -> void:
 	scene.transcendence_id = "zeus"
 	var state := {"mana":0.0,"summon_costs":{},"demon_charge":0.0,"demon_charge_max":100.0,"demon_cooldowns":{},"demon_ready":{},"transcend_ready":false,"transcend_used":false}
 	scene.initial_local_test = false; scene._update_demon_controls(state)
-	check(not scene.transcend_unlock_button.visible,"normal client hides button")
+	check(not scene.transcendence_view.unlock_button.visible,"normal client hides button")
 	scene.initial_local_test = true; scene.skill_state_signature = ""; scene._update_demon_controls(state)
-	check(scene.transcend_unlock_button.visible,"local test client shows button")
+	check(scene.transcendence_view.unlock_button.visible,"local test client shows button")
 	state.transcend_ready = true; scene._update_demon_controls(state)
-	check(not scene.transcend_unlock_button.visible,"ready state hides button")
+	check(not scene.transcendence_view.unlock_button.visible,"ready state hides button")
 	state.transcend_ready = false; state.transcend_used = true; scene._update_demon_controls(state)
-	check(not scene.transcend_unlock_button.visible,"used state hides button")
+	check(not scene.transcendence_view.unlock_button.visible,"used state hides button")
 	scene.queue_free(); server.rooms.clear(); server.peers.clear(); server.queue_free(); room.finish("","test"); room.queue_free()
 	print("ONLINE_TRANSCEND_UNLOCK_PASS checks=",checks); quit()

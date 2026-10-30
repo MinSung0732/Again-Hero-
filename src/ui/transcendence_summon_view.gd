@@ -1,5 +1,11 @@
-extends Control
+﻿extends Control
 var host: Control
+var state_provider: Callable
+var icon_provider: Callable
+var summon_callback: Callable
+var unlock_callback: Callable
+var light_paused := false
+var pause_provider: Callable
 var button: Button
 var unlock_button: Button
 var title: Label
@@ -19,9 +25,31 @@ var ready_frame := -1
 
 func install(main: Control) -> void:
 	host = main
+	state_provider = _solo_state
+	pause_provider = _solo_paused
+	icon_provider = main._load_monster_card_icon
+	summon_callback = main.battle.try_summon_transcendent
+	unlock_callback = main.battle.debug_unlock_transcendence
+	_build(main.hud_layer, main.monster_info_bookmark)
+	main.battle.transcendence_changed.connect(_changed)
+	main.battle.command_changed.connect(_command_changed)
+	main.battle.population_changed.connect(func(_count, _capacity): refresh())
+	main.battle.stats_changed.connect(_stats_changed)
+	main.battle.battle_finished.connect(_finished)
+	refresh()
+
+func install_adapter(parent: Control, provider: Callable, icon_loader: Callable, summon: Callable, unlock: Callable) -> void:
+	state_provider = provider
+	icon_provider = icon_loader
+	summon_callback = summon
+	unlock_callback = unlock
+	_build(parent)
+	refresh()
+
+func _build(parent: Node, style_source: Button = null) -> void:
 	name = "TranscendenceSummon"
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	host.hud_layer.add_child(self)
+	parent.add_child(self)
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	z_index = 80
 	button = Button.new()
@@ -35,10 +63,11 @@ func install(main: Control) -> void:
 	button.offset_right = WIDTH
 	button.offset_top = 0
 	button.offset_bottom = 156
-	for state in ["normal","hover","pressed","disabled"]:
-		button.add_theme_stylebox_override(state,host.monster_info_bookmark.get_theme_stylebox(state).duplicate())
+	if style_source != null:
+		for state in ["normal","hover","pressed","disabled"]:
+			button.add_theme_stylebox_override(state,style_source.get_theme_stylebox(state).duplicate())
 	add_child(button)
-	host._replace_button_frame(button,host.BATTLE_PIXEL_FRAME_MEDIUM_DIR,0.25,host.BATTLE_PIXEL_CENTER_DARK,18)
+	_frame(button)
 	var body := VBoxContainer.new()
 	body.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	button.add_child(body)
@@ -96,16 +125,31 @@ func install(main: Control) -> void:
 	for state in ["normal", "hover", "pressed", "disabled"]:
 		unlock_button.add_theme_stylebox_override(state, button.get_theme_stylebox(state).duplicate())
 	add_child(unlock_button)
-	host._replace_button_frame(unlock_button,host.BATTLE_PIXEL_FRAME_MEDIUM_DIR,0.25,host.BATTLE_PIXEL_CENTER_DARK,18)
-	unlock_button.pressed.connect(host.battle.debug_unlock_transcendence)
-	button.pressed.connect(host.battle.try_summon_transcendent)
-	host.battle.transcendence_changed.connect(_changed)
-	host.battle.command_changed.connect(_command_changed)
-	host.battle.population_changed.connect(func(_count, _capacity): refresh())
-	host.battle.stats_changed.connect(_stats_changed)
-	host.battle.battle_finished.connect(_finished)
+	_frame(unlock_button)
+	unlock_button.pressed.connect(unlock_callback)
+	button.pressed.connect(summon_callback)
 	hide()
-	refresh()
+
+func _frame(target: Button) -> void:
+	if host != null:
+		host._replace_button_frame(target,host.BATTLE_PIXEL_FRAME_MEDIUM_DIR,0.25,host.BATTLE_PIXEL_CENTER_DARK,18)
+	else:
+		var frame = preload("res://src/ui/battle_pixel_frame_assembler.gd")
+		frame.clear_button_style(target)
+		frame.add_split_frame(target,"res://assets/art/UI/03_middle_right_panel",0.25,"res://assets/art/UI/05_right_bars/part_02.png",18)
+
+func _solo_paused() -> bool:
+	return not is_instance_valid(host) or not is_instance_valid(host.battle) or host.battle.external_pause or host.battle.demon_augment_selection_active
+
+func _solo_state() -> Dictionary:
+	if not is_instance_valid(host) or not is_instance_valid(host.battle): return {}
+	var battle = host.battle
+	var state = battle.transcendence
+	var paused: bool = battle.external_pause or battle.demon_augment_selection_active
+	var local_test: bool = get_node("/root/LocalTestMode").active
+	return {"id":state.monster_id,"ready":state.ready,"used":state.used,"finished":battle.battle_over,
+		"show_locked":local_test,"show_unlock":local_test,"paused":paused,
+		"disabled":battle.is_population_full() or paused or battle.command_power + 0.001 < battle.get_monster_cost(state.monster_id)}
 
 func _changed(_id: String, _ready: bool, _used: bool) -> void:
 	refresh()
@@ -121,38 +165,51 @@ func _finished(_message: String, _won: bool) -> void:
 	hide()
 
 func refresh() -> void:
-	if not is_instance_valid(host) or not is_instance_valid(host.battle):
-		return
-	var state = host.battle.transcendence
-	var local_test := LocalTestMode.active
-	if state.monster_id != shown_id or (not state.ready and not state.used and visible_once and not local_test):
+	if not state_provider.is_valid(): return
+	var state: Dictionary = state_provider.call()
+	if state.is_empty(): return
+	var id := String(state.get("id", ""))
+	var ready := bool(state.get("ready", false))
+	var used := bool(state.get("used", false))
+	var show_locked := bool(state.get("show_locked", false))
+	var show_unlock := bool(state.get("show_unlock", false))
+	light_paused = bool(state.get("paused", false))
+	if id != shown_id or (not ready and not used and visible_once and not show_locked):
 		_stop_ready_light()
-		shown_id = state.monster_id
+		shown_id = id
 		visible_once = false
-		if tween != null and tween.is_valid():
-			tween.kill()
+		if tween != null and tween.is_valid(): tween.kill()
 		button.offset_left = 0
 		button.offset_right = WIDTH
-	if state.monster_id.is_empty() or (not state.ready and not local_test) or state.used or host.battle.battle_over:
+	if id.is_empty() or used or bool(state.get("finished", false)):
+		button.hide()
+		unlock_button.hide()
+		_stop_ready_light()
+		hide()
+		return
+	var show_summon := ready or show_locked
+	if not show_summon and not show_unlock:
+		button.hide()
+		unlock_button.hide()
 		_stop_ready_light()
 		hide()
 		return
 	show()
-	unlock_button.visible = local_test
-	var unlocked: bool = state.ready
-	unlock_button.text = "해제 완료" if unlocked else "잠금 해제"
-	title.text = "초월 소환" if unlocked else "잠김"
-	icon.modulate = Color.WHITE if unlocked else Color(0.45, 0.45, 0.45, 0.65)
-	unlock_button.disabled = unlocked or host.battle.external_pause or host.battle.demon_augment_selection_active
-	if not visible_once:
+	button.visible = show_summon
+	unlock_button.visible = show_unlock
+	unlock_button.text = "해제 완료" if ready else "잠금 해제"
+	title.text = String(state.get("title", "초월 소환")) if ready else "잠김"
+	icon.modulate = Color.WHITE if ready else Color(0.45, 0.45, 0.45, 0.65)
+	unlock_button.disabled = ready or light_paused
+	if show_summon and not visible_once:
 		visible_once = true
-		icon.texture = host._load_monster_card_icon(state.monster_id)
+		icon.texture = icon_provider.call(id)
 		tween = create_tween().set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 		tween.set_parallel(true)
 		tween.tween_property(button,"offset_left",-WIDTH-12,0.24)
 		tween.tween_property(button,"offset_right",-12.0,0.24)
-	button.disabled = host.battle.is_population_full() or not unlocked or host.battle.external_pause or host.battle.demon_augment_selection_active or host.battle.command_power + 0.001 < host.battle.get_monster_cost(state.monster_id)
-	if not unlocked:
+	button.disabled = not ready or bool(state.get("disabled", false))
+	if not ready:
 		_stop_ready_light()
 	else:
 		if not ready_announced:
@@ -171,12 +228,9 @@ func _stop_ready_light() -> void:
 	set_process(false)
 
 func _process(delta: float) -> void:
-	if not ready_announced or not is_visible_in_tree() or not is_instance_valid(host.battle):
+	if not ready_announced or not is_visible_in_tree():
 		return
-	if host.battle.battle_over or host.battle.transcendence.used:
-		_stop_ready_light()
-		return
-	if host.battle.external_pause or host.battle.demon_augment_selection_active:
+	if (pause_provider.call() if pause_provider.is_valid() else light_paused):
 		ready_light.hide()
 		return
 	ready_elapsed += delta
