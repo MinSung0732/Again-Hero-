@@ -37,6 +37,7 @@ var pages: Array[RichTextLabel] = []
 var cached_entries: Dictionary = {}
 var cached_textures: Dictionary = {}
 var cached_styles: Dictionary = {}
+const LIST_SCROLL_INSET := 16
 var stage_ids: Array[String] = []
 var selected_stage := ""
 var selected_tab := 0
@@ -102,7 +103,11 @@ func install(owner: RefCounted, parent: Control) -> void:
 	rows.name = "HeroList"
 	rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	rows.add_theme_constant_override("separation",16)
-	list_scroll.add_child(rows)
+	var list_inset := MarginContainer.new()
+	list_inset.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	list_inset.add_theme_constant_override("margin_right", LIST_SCROLL_INSET)
+	list_scroll.add_child(list_inset)
+	list_inset.add_child(rows)
 	stage_ids = DATA.STAGES.get_ordered_stage_ids()
 	for id in stage_ids:
 		var stage := DATA.STAGES.get_stage(id)

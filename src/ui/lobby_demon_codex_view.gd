@@ -4,6 +4,11 @@ const DATA := preload("res://src/data/demon_codex_catalog.gd")
 const FRAMES := preload("res://src/ui/commerce_frame_skin.gd")
 const BUTTON := preload("res://src/ui/drag_safe_button.gd")
 const ICON := preload("res://src/ui/codex_skill_icon.gd")
+const SKIN := preload("res://src/ui/pixel_panel_skin.gd")
+const INPUT_FONT_SIZE := 26
+const CONTENT_INSET := 16
+const CARD_NAME_FONT_SIZE := 24
+const CARD_NAME_SMALL_FONT_SIZE := 20
 const COLLECTION := preload("res://src/systems/monster_collection_store.gd")
 var _banner_lock_icon: Texture2D
 var content_parent: BoxContainer
@@ -67,7 +72,12 @@ func install(owner: RefCounted, parent: Control) -> void:
 	root.add_child(scroll)
 	stack = VBoxContainer.new()
 	stack.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(stack)
+	var inset := MarginContainer.new()
+	inset.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	inset.add_theme_constant_override("margin_left", CONTENT_INSET)
+	inset.add_theme_constant_override("margin_right", CONTENT_INSET)
+	scroll.add_child(inset)
+	inset.add_child(stack)
 	_build_detail(owner.lobby)
 	_build_preview(owner.lobby)
 	root.resized.connect(_resize)
@@ -191,6 +201,18 @@ func _build_skills(page: VBoxContainer) -> void:
 		var skill := DATA.ULTIMATES.get_skill(id)
 		_skill(_panel(page), "demon", "demon", id, skill.name, skill.description + "\n" + DATA.ultimate_stats(id))
 
+func _skin_filter(filter: OptionButton) -> void:
+	filter.clip_text = true
+	for state in ["normal", "hover", "pressed", "disabled"]:
+		filter.add_theme_stylebox_override(state, FRAMES.style("shop_button_frame", CONTENT_INSET))
+	filter.add_theme_font_size_override("font_size", INPUT_FONT_SIZE)
+	filter.get_popup().add_theme_font_size_override("font_size", INPUT_FONT_SIZE)
+
+func _fit_card_name(label: Label) -> void:
+	var font := label.get_theme_font("font")
+	var width := font.get_string_size(label.text, HORIZONTAL_ALIGNMENT_LEFT, -1, CARD_NAME_FONT_SIZE).x
+	label.add_theme_font_size_override("font_size", CARD_NAME_SMALL_FONT_SIZE if width > label.size.x else CARD_NAME_FONT_SIZE)
+
 func _build_augments(page: VBoxContainer) -> void:
 	_label(page, "마왕 전체에 적용되는 일반 증강입니다. 몬스터 전용 증강은 각 몬스터 상세에서 확인하세요.")
 	var filter := OptionButton.new()
@@ -200,7 +222,7 @@ func _build_augments(page: VBoxContainer) -> void:
 		categories.append(id)
 		filter.add_item(DATA.AUGMENT_CATEGORIES[id])
 	filter.custom_minimum_size.y = 62
-	filter.add_theme_font_size_override("font_size",26)
+	_skin_filter(filter)
 	page.add_child(filter)
 	var rows: Array[Control] = []
 	for entry in DATA.AUGMENTS.NORMAL_AUGMENTS:
@@ -220,6 +242,7 @@ func _build_monsters(page: VBoxContainer, category: String) -> void:
 	search.custom_minimum_size.y = 64
 	search.add_theme_font_size_override("font_size", 26)
 	page.add_child(search)
+	SKIN.apply(search)
 	var filters := HBoxContainer.new()
 	page.add_child(filters)
 	var grade := OptionButton.new()
@@ -227,7 +250,7 @@ func _build_monsters(page: VBoxContainer, category: String) -> void:
 	for filter in [grade, role]:
 		filter.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		filter.custom_minimum_size.y = 62
-		filter.add_theme_font_size_override("font_size",26)
+		_skin_filter(filter)
 		filters.add_child(filter)
 	grade.add_item("모든 등급")
 	role.add_item("모든 역할")
@@ -328,16 +351,17 @@ func _build_monsters(page: VBoxContainer, category: String) -> void:
 		clip_fixed(card)
 		button.add_child(card)
 		card.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-		card.offset_left = 8
-		card.offset_right = -8
+		card.offset_left = 12
+		card.offset_right = -12
 		var dot := _image(card,0)
 		dot.anchor_left = 0.5
 		dot.anchor_right = 0.5
-		dot.offset_left = -38
-		dot.offset_right = 38
-		dot.offset_top = 8
-		dot.offset_bottom = 86
-		var card_name := _fixed_label(card,"",24)
+		dot.offset_left = -48
+		dot.offset_right = 48
+		dot.offset_top = 12
+		dot.offset_bottom = 88
+		var card_name := _fixed_label(card,"",CARD_NAME_FONT_SIZE)
+		card_name.resized.connect(_fit_card_name.bind(card_name))
 		_place_card_label(card_name,92,32)
 		var card_role := _fixed_label(card,"",20)
 		_place_card_label(card_role,128,26)
@@ -379,7 +403,8 @@ func set_page(category: String, index: int) -> void:
 		slot.id = id
 		slot.name.text = DATA.MONSTERS.get_monster_name(id)
 		slot.role.text = DATA.MONSTERS.get_role_label(DATA.MONSTERS.get_role(id))
-		slot.dot.texture = _texture(DATA.MONSTERS.get_ui_icon_path(id))
+		slot.dot.texture = _art_texture(DATA.MONSTERS.get_ui_icon_path(id), true)
+		_fit_card_name(slot.name)
 		slot.button.tooltip_text = slot.name.text+"\n"+page.search_entries[id].grade+" · "+slot.role.text
 		slot.button.modulate = Color.WHITE if id == page.selected else Color("b9aac5")
 		page.cards[id] = slot.button

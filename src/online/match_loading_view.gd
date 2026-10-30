@@ -3,10 +3,13 @@ extends Control
 signal cancelled
 signal rules_requested
 const DATA := preload("res://src/data/online_loading_catalog.gd")
+const ROW_SKIN := preload("res://src/ui/mission_row_skin.gd")
 var role_theme := {}
 var clock := 0.0
 var title: Label
 var subtitle: Label
+var elapsed: Label
+var last_second := -1
 var hint: Label
 var meter: ProgressBar
 var cancel: Button
@@ -25,16 +28,23 @@ func _ready() -> void:
 	var shade := ColorRect.new(); add_child(shade); shade.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	shade.color = Color(0.01,0.01,0.04,0.32); shade.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var margin := MarginContainer.new(); add_child(margin); margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for side in ["left","right"]: margin.add_theme_constant_override("margin_"+side,48)
-	for side in ["top","bottom"]: margin.add_theme_constant_override("margin_"+side,64)
-	var rows := VBoxContainer.new(); margin.add_child(rows); rows.add_theme_constant_override("separation",18)
-	title = label(rows,46); subtitle = label(rows,25)
+	for side in ["left","right"]: margin.add_theme_constant_override("margin_"+side,DATA.MARGIN_X)
+	for side in ["top","bottom"]: margin.add_theme_constant_override("margin_"+side,DATA.MARGIN_Y)
+	var rows := VBoxContainer.new(); margin.add_child(rows); rows.add_theme_constant_override("separation",DATA.ROW_GAP)
+	title = label(rows,46); elapsed = label(rows,30); subtitle = label(rows,25)
 	var space := Control.new(); space.size_flags_vertical = Control.SIZE_EXPAND_FILL; rows.add_child(space)
 	meter = ProgressBar.new(); meter.custom_minimum_size.y = 12; meter.show_percentage = false; rows.add_child(meter)
-	hint = label(rows,23)
-	var rules := Button.new(); rules.text = "규칙 보기"; rules.custom_minimum_size.y = 68; rows.add_child(rules)
+	var tip_box := PanelContainer.new(); rows.add_child(tip_box)
+	var tip_style := StyleBoxFlat.new(); tip_style.bg_color = DATA.TIP_BACKGROUND
+	tip_style.set_content_margin_all(DATA.TIP_PADDING); tip_box.add_theme_stylebox_override("panel",tip_style)
+	hint = label(tip_box,23)
+	var rules := Button.new(); rules.text = DATA.RULES_TEXT; rows.add_child(rules)
+	ROW_SKIN.apply_button(rules); rules.custom_minimum_size.y = DATA.BUTTON_HEIGHT
+	rules.add_theme_font_size_override("font_size",DATA.BUTTON_FONT)
 	rules.pressed.connect(func(): rules_requested.emit())
-	cancel = Button.new(); cancel.text = "매칭 취소 · 로비로"; cancel.custom_minimum_size.y = 76; rows.add_child(cancel)
+	cancel = Button.new(); cancel.text = DATA.CANCEL_TEXT; rows.add_child(cancel)
+	ROW_SKIN.apply_button(cancel); cancel.custom_minimum_size.y = DATA.BUTTON_HEIGHT
+	cancel.add_theme_font_size_override("font_size",DATA.BUTTON_FONT)
 	cancel.pressed.connect(func(): cancelled.emit())
 	visible = false; set_process(false)
 func label(parent: Node,font: int) -> Label:
@@ -47,9 +57,10 @@ func begin(role: String) -> void:
 	map_summary = ""
 	role_theme = DATA.theme(role); backdrop.texture = load(role_theme.art) as Texture2D
 	title.modulate = role_theme.accent; meter.modulate = role_theme.accent
-	clock = 0; show_phase("queue"); visible = true; set_process(true)
+	clock = 0; last_second = -1; show_phase("queue"); visible = true; set_process(true)
 func show_phase(value: String,progress: float = 0.0) -> void:
 	phase = value
+	_update_elapsed()
 	title.text = role_theme.name+" · "+("상대를 찾는 중" if value == "queue" else "전투 준비")
 	subtitle.text = role_theme.tag if value == "queue" else map_summary + "\n" + ("전장과 군단을 준비하는 중…" if value == "loading" else "준비 완료 · 상대방을 기다리는 중…")
 	hint.text = role_theme.hint
@@ -60,7 +71,13 @@ func set_map(map_data: Dictionary) -> void:
 func finish() -> void:
 	visible = false; set_process(false); backdrop.texture = null
 func _process(delta: float) -> void:
-	clock += delta; queue_redraw()
+	clock += delta
+	if int(clock) != last_second: _update_elapsed()
+	queue_redraw()
+func _update_elapsed() -> void:
+	last_second = int(clock)
+	elapsed.visible = phase == "queue"
+	if elapsed.visible: elapsed.text = DATA.QUEUE_TIME % [last_second / 60,last_second % 60]
 func _draw() -> void:
 	if role_theme.is_empty(): return
 	var accent: Color = role_theme.accent

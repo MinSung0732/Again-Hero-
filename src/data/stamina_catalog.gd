@@ -9,3 +9,5 @@ const RECOVERY_SECONDS := 360
 const INITIAL_AMOUNT := MAX_NATURAL
 const ICON_PATH := "res://assets/art/UI/lobby_header/stamina.svg"
 const SHOP_PACKAGE_ID := "stamina_supply"
+
+const SHOP_PREVIEW_MESSAGE := "선물·구매 스테미너는 최대 30을 넘겨 충전됩니다.\n스테미너 충전 상품 준비 중"

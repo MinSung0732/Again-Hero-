@@ -84,7 +84,7 @@
       "division": 1,
       "display_name": "브론즈 1",
       "sort_order": 1,
-      "icon_path": "res://assets/art/ui/ranked_badges/bronze_1.png",
+      "icon_path": "res://assets/art/UI/ranked_badges/bronze_1.png",
       "size_px": [
         1254,
         1254
@@ -98,7 +98,7 @@
       "division": 2,
       "display_name": "브론즈 2",
       "sort_order": 2,
-      "icon_path": "res://assets/art/ui/ranked_badges/bronze_2.png",
+      "icon_path": "res://assets/art/UI/ranked_badges/bronze_2.png",
       "size_px": [
         1254,
         1254
@@ -112,7 +112,7 @@
       "division": 3,
       "display_name": "브론즈 3",
       "sort_order": 3,
-      "icon_path": "res://assets/art/ui/ranked_badges/bronze_3.png",
+      "icon_path": "res://assets/art/UI/ranked_badges/bronze_3.png",
       "size_px": [
         1254,
         1254
@@ -126,7 +126,7 @@
       "division": 4,
       "display_name": "브론즈 4",
       "sort_order": 4,
-      "icon_path": "res://assets/art/ui/ranked_badges/bronze_4.png",
+      "icon_path": "res://assets/art/UI/ranked_badges/bronze_4.png",
       "size_px": [
         1254,
         1254
@@ -140,7 +140,7 @@
       "division": 1,
       "display_name": "실버 1",
       "sort_order": 5,
-      "icon_path": "res://assets/art/ui/ranked_badges/silver_1.png",
+      "icon_path": "res://assets/art/UI/ranked_badges/silver_1.png",
       "size_px": [
         1254,
         1254
@@ -154,7 +154,7 @@
       "division": 2,
       "display_name": "실버 2",
       "sort_order": 6,
-      "icon_path": "res://assets/art/ui/ranked_badges/silver_2.png",
+      "icon_path": "res://assets/art/UI/ranked_badges/silver_2.png",
       "size_px": [
         1254,
         1254
@@ -168,7 +168,7 @@
       "division": 3,
       "display_name": "실버 3",
       "sort_order": 7,
-      "icon_path": "res://assets/art/ui/ranked_badges/silver_3.png",
+      "icon_path": "res://assets/art/UI/ranked_badges/silver_3.png",
       "size_px": [
         1254,
         1254
@@ -182,7 +182,7 @@
       "division": 4,
       "display_name": "실버 4",
       "sort_order": 8,
-      "icon_path": "res://assets/art/ui/ranked_badges/silver_4.png",
+      "icon_path": "res://assets/art/UI/ranked_badges/silver_4.png",
       "size_px": [
         1254,
         1254
@@ -196,7 +196,7 @@
       "division": 1,
       "display_name": "골드 1",
       "sort_order": 9,
-      "icon_path": "res://assets/art/ui/ranked_badges/gold_1.png",
+      "icon_path": "res://assets/art/UI/ranked_badges/gold_1.png",
       "size_px": [
         1254,
         1254
@@ -210,7 +210,7 @@
       "division": 2,
       "display_name": "골드 2",
       "sort_order": 10,
-      "icon_path": "res://assets/art/ui/ranked_badges/gold_2.png",
+      "icon_path": "res://assets/art/UI/ranked_badges/gold_2.png",
       "size_px": [
         1254,
         1254
@@ -224,7 +224,7 @@
       "division": 3,
       "display_name": "골드 3",
       "sort_order": 11,
-      "icon_path": "res://assets/art/ui/ranked_badges/gold_3.png",
+      "icon_path": "res://assets/art/UI/ranked_badges/gold_3.png",
       "size_px": [
         1254,
         1254
@@ -238,7 +238,7 @@
       "division": 4,
       "display_name": "골드 4",
       "sort_order": 12,
-      "icon_path": "res://assets/art/ui/ranked_badges/gold_4.png",
+      "icon_path": "res://assets/art/UI/ranked_badges/gold_4.png",
       "size_px": [
         1254,
         1254
@@ -252,7 +252,7 @@
       "division": 1,
       "display_name": "다이아몬드 1",
       "sort_order": 13,
-      "icon_path": "res://assets/art/ui/ranked_badges/diamond_1.png",
+      "icon_path": "res://assets/art/UI/ranked_badges/diamond_1.png",
       "size_px": [
         1254,
         1254
@@ -266,7 +266,7 @@
       "division": 2,
       "display_name": "다이아몬드 2",
       "sort_order": 14,
-      "icon_path": "res://assets/art/ui/ranked_badges/diamond_2.png",
+      "icon_path": "res://assets/art/UI/ranked_badges/diamond_2.png",
       "size_px": [
         1254,
         1254
@@ -280,7 +280,7 @@
       "division": 3,
       "display_name": "다이아몬드 3",
       "sort_order": 15,
-      "icon_path": "res://assets/art/ui/ranked_badges/diamond_3.png",
+      "icon_path": "res://assets/art/UI/ranked_badges/diamond_3.png",
       "size_px": [
         1254,
         1254
@@ -294,7 +294,7 @@
       "division": 4,
       "display_name": "다이아몬드 4",
       "sort_order": 16,
-      "icon_path": "res://assets/art/ui/ranked_badges/diamond_4.png",
+      "icon_path": "res://assets/art/UI/ranked_badges/diamond_4.png",
       "size_px": [
         1254,
         1254
@@ -308,7 +308,7 @@
       "division": null,
       "display_name": "마왕",
       "sort_order": 17,
-      "icon_path": "res://assets/art/ui/ranked_badges/demon_lord.png",
+      "icon_path": "res://assets/art/UI/ranked_badges/demon_lord.png",
       "size_px": [
         1254,
         1254
@@ -322,7 +322,7 @@
       "division": null,
       "display_name": "용사",
       "sort_order": 18,
-      "icon_path": "res://assets/art/ui/ranked_badges/hero.png",
+      "icon_path": "res://assets/art/UI/ranked_badges/hero.png",
       "size_px": [
         1254,
         1254

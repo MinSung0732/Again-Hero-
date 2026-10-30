@@ -2,6 +2,7 @@ extends RefCounted
 
 # Presentation only: reward rolls, persistence and account history stay in Lobby.
 const FRAMES := preload("res://src/ui/shop_frame_skin.gd")
+const RELIC_BUTTON_HEIGHT := 100.0
 const CONTENT := "SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopScroll/ShopContent/"
 const DRAG_SAFE_BUTTON := preload("res://src/ui/drag_safe_button.gd")
 var _textures: Dictionary = {}
@@ -143,18 +144,18 @@ func apply(lobby: Control) -> void:
 	var relic_row := relic_vbox.get_node("BuyRow") as HBoxContainer
 	relic_row.reparent(relic_stage, false)
 	relic_row.set_anchors_and_offsets_preset(Control.PRESET_BOTTOM_WIDE)
-	relic_row.offset_top = -90.0
+	relic_row.offset_top = -RELIC_BUTTON_HEIGHT - 8.0
 	relic_row.offset_bottom = -8.0
 	relic_row.offset_left = 12.0
 	relic_row.offset_right = -12.0
 	(relic_vbox.get_node("Notice") as Label).text = "유물 소환은 준비 중입니다."
-	(lobby.get("shop_relic_single_button") as Button).custom_minimum_size.y = 82.0
-	(lobby.get("shop_relic_multi_button") as Button).custom_minimum_size.y = 82.0
-	relic_row.custom_minimum_size.y = 82.0
+	(lobby.get("shop_relic_single_button") as Button).custom_minimum_size.y = RELIC_BUTTON_HEIGHT
+	(lobby.get("shop_relic_multi_button") as Button).custom_minimum_size.y = RELIC_BUTTON_HEIGHT
+	relic_row.custom_minimum_size.y = RELIC_BUTTON_HEIGHT
 	for key in ["shop_history_button", "shop_rates_button", "shop_relic_single_button", "shop_relic_multi_button"]:
 		var button := lobby.get(key) as Button
 		_frame(button)
-		button.custom_minimum_size.y = 76.0
+		button.custom_minimum_size.y = RELIC_BUTTON_HEIGHT if key.begins_with("shop_relic_") else 76.0
 		button.add_theme_font_size_override("font_size", 25)
 	for path in ["ShopResultOverlay/Panel", "ShopRatesOverlay/Panel"]:
 		var panel := lobby.get_node(path) as Control

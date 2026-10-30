@@ -5,6 +5,10 @@ class_name RelicCatalog
 # 항목 필드: id, name, category, icon_path, effect_text,
 # required_fragments(기본 30). Lobby는 이를 읽어 4열 카드와 상세 패널을
 # 자동 구성하고, 실제 level/fragments는 별도 진행 저장 상태에서 받는다.
+const EMPTY_MESSAGE := "유물은 곧 상점 유물 소환으로 얻을 수 있습니다."
+const STATUS_MESSAGE := "유물 소환 준비 중"
+const FILTER_FONT_SIZE := 24
+const STATUS_INSET := 48
 const RELICS := {}
 const ORDER: Array[String] = []
 

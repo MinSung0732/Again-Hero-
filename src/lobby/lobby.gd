@@ -2029,6 +2029,13 @@ func _apply_lobby_visual_polish() -> void:
 	research_points_label.add_theme_font_size_override("font_size", 28)
 	research_points_label.add_theme_color_override("font_color", Color("f3cf72"))
 	research_status_label.add_theme_color_override("font_color", Color("918799"))
+	var status_parent := research_status_label.get_parent()
+	var status_index := research_status_label.get_index()
+	var status_inset := MarginContainer.new()
+	status_inset.add_theme_constant_override("margin_bottom", RELIC_CATALOG.STATUS_INSET)
+	status_parent.add_child(status_inset)
+	status_parent.move_child(status_inset, status_index)
+	research_status_label.reparent(status_inset)
 	var research_detail_style := _make_hud_panel_style(
 		Color(0.055, 0.040, 0.075, 0.97),
 		Color("c99136"),
@@ -2063,7 +2070,7 @@ func _apply_lobby_visual_polish() -> void:
 
 	_apply_lobby_button_skin(relic_upgrade_button, true, 21)
 	for filter_button in relic_filter_buttons:
-		_apply_lobby_button_skin(filter_button, false, 18)
+		_apply_lobby_button_skin(filter_button, false, RELIC_CATALOG.FILTER_FONT_SIZE)
 
 	_set_lobby_label_style(
 		^"SafeArea/Layout/Content/OtherTab/OtherMargin/VBox/Title",
@@ -5250,7 +5257,7 @@ func _show_research_mode(mode: String) -> void:
 		research_status_label.text = "연구를 선택하고 상단에서 강화합니다."
 		_refresh_research_detail()
 	else:
-		research_status_label.text = "유물 데이터·소환·강화 시스템 추가 대기 중"
+		research_status_label.text = RELIC_CATALOG.STATUS_MESSAGE
 		_rebuild_relic_grid()
 
 
@@ -5381,10 +5388,11 @@ func _rebuild_relic_grid() -> void:
 		_apply_lobby_button_skin(
 			relic_filter_buttons[index],
 			category_id == selected_relic_category,
-			18
+			RELIC_CATALOG.FILTER_FONT_SIZE
 		)
 
 	var relic_ids := RELIC_CATALOG.get_ordered_ids(selected_relic_category)
+	relic_empty_label.text = RELIC_CATALOG.EMPTY_MESSAGE
 	relic_empty_label.visible = relic_ids.is_empty()
 	for relic_id in relic_ids:
 		var data := RELIC_CATALOG.get_relic(relic_id)

@@ -40,6 +40,8 @@ const DETAIL := preload("res://src/ui/hero_inventory_detail.gd")
 const MUTATION_PANEL := preload("res://src/ui/mutation_panel.tscn")
 const MUTATION_VIEW := preload("res://src/ui/mutation_panel_view.gd")
 const PRESENTATION := preload("res://src/data/online_presentation_catalog.gd")
+const RESULT_DATA := preload("res://src/data/battle_result_catalog.gd")
+const RESULT_PNG := preload("res://src/ui/png_texture_source.gd")
 const PAD_SETTINGS := preload("res://src/ui/hero_pad_settings.gd")
 var loading
 var local_preparing := false
@@ -1347,28 +1349,69 @@ func _show_result_after_presentation(event: Dictionary) -> void:
 			ranking_row.show()
 	if not ranking_row.visible: status.text += "\n점수 변동 없음"
 	if pad != null: pad.enabled = false; pad.reset()
-	_show_result_overlay()
+	_show_result_overlay(winner, int(ranking.get("delta", 0)) if ranking is Dictionary else 0)
 
-func _show_result_overlay() -> void:
+func _show_result_overlay(winner: String = "", delta: int = 0) -> void:
 	_close_match_menu()
 	if is_instance_valid(metrics_panel): metrics_panel.hide()
+	if is_instance_valid(result_overlay): return
 	result_overlay = Control.new(); result_overlay.name = "ResultOverlay"; result_overlay.z_index = 500
 	add_child(result_overlay); result_overlay.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var dim := ColorRect.new(); dim.color = Color(0,0,0,0.8); result_overlay.add_child(dim)
+	var dim := ColorRect.new(); dim.color = PRESENTATION.RESULT_DIM; result_overlay.add_child(dim)
 	dim.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	var panel := PanelContainer.new(); result_overlay.add_child(panel)
-	panel.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	panel.offset_left = -400; panel.offset_right = 400; panel.offset_top = -220; panel.offset_bottom = 220
-	panel.add_theme_stylebox_override("panel",DETAIL.style(Color("171226"),Color("e3bc69"),24))
-	var content := VBoxContainer.new(); content.add_theme_constant_override("separation",24); panel.add_child(content)
-	var title := _label(content,status.text,36); title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var center := CenterContainer.new(); result_overlay.add_child(center)
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	var panel := PanelContainer.new(); center.add_child(panel)
+	panel.custom_minimum_size.x = PRESENTATION.RESULT_WIDTH
+	panel.add_theme_stylebox_override("panel",PIXEL_SKIN.skin_style(DETAIL.style(RESULT_DATA.CARD_COLOR,RESULT_DATA.BORDER_COLOR,PRESENTATION.RESULT_MARGIN)))
+	var margin := MarginContainer.new(); panel.add_child(margin)
+	for side in ["left","right","top","bottom"]: margin.add_theme_constant_override("margin_"+side,PRESENTATION.RESULT_MARGIN)
+	var content := VBoxContainer.new(); content.add_theme_constant_override("separation",PRESENTATION.RESULT_GAP); margin.add_child(content)
+	var banner := TextureRect.new(); content.add_child(banner)
+	banner.custom_minimum_size.y = RESULT_DATA.BANNER_HEIGHT
+	banner.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; banner.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	var banner_path: String = RESULT_DATA.VICTORY if not winner.is_empty() and winner == role else RESULT_DATA.DEFEAT
+	if ResourceLoader.exists(banner_path):
+		banner.texture = load(banner_path)
+	else:
+		var image := Image.new()
+		if image.load(banner_path) == OK: banner.texture = RESULT_PNG.annotate(ImageTexture.create_from_image(image),banner_path)
+	var title := Label.new(); banner.add_child(title); title.set_anchors_and_offsets_preset(Control.PRESET_CENTER)
+	title.offset_left = RESULT_DATA.BANNER_TEXT_RECT.position.x; title.offset_top = RESULT_DATA.BANNER_TEXT_RECT.position.y
+	title.offset_right = RESULT_DATA.BANNER_TEXT_RECT.end.x; title.offset_bottom = RESULT_DATA.BANNER_TEXT_RECT.end.y
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title.text = PRESENTATION.RESULT_INVALID if winner.is_empty() else (RESULT_DATA.VICTORY_TITLE if winner == role else RESULT_DATA.DEFEAT_TITLE)
+	if winner.is_empty():
+		title.offset_left = -PRESENTATION.RESULT_INVALID_TEXT_WIDTH / 2
+		title.offset_right = PRESENTATION.RESULT_INVALID_TEXT_WIDTH / 2
+	title.add_theme_font_size_override("font_size",PRESENTATION.RESULT_INVALID_FONT if winner.is_empty() else RESULT_DATA.BANNER_FONT_SIZE)
+	title.add_theme_constant_override("outline_size",RESULT_DATA.BANNER_OUTLINE_SIZE)
+	title.add_theme_color_override("font_outline_color",Color.BLACK); title.add_theme_color_override("font_color",RESULT_DATA.TEXT_COLOR)
+	var rank_row := HBoxContainer.new(); content.add_child(rank_row); rank_row.alignment = BoxContainer.ALIGNMENT_CENTER
 	if ranking_row.visible:
-		var rank := _label(content,ranking_label.text,26); rank.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	var actions := HBoxContainer.new(); actions.add_theme_constant_override("separation",18); content.add_child(actions)
-	var leave_button := _button(actions,"로비로 가기",_leave); leave_button.name = "ResultLobbyButton"
-	var requeue_button := _button(actions,"새로 매칭",_requeue); requeue_button.name = "ResultRequeueButton"
+		var icon := TextureRect.new(); rank_row.add_child(icon); icon.texture = ranking_icon.texture
+		icon.custom_minimum_size = Vector2.ONE * PRESENTATION.RESULT_RANK_ICON
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	var rank := _label(rank_row,ranking_label.text if ranking_row.visible else PRESENTATION.RESULT_NO_CHANGE,PRESENTATION.RESULT_RANK_FONT)
+	rank.autowrap_mode = TextServer.AUTOWRAP_OFF
+	rank.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	if ranking_row.visible and delta != 0: rank.add_theme_color_override("font_color",PRESENTATION.RESULT_UP if delta > 0 else PRESENTATION.RESULT_DOWN)
+	if ranking_row.visible and delta == 0:
+		var notice := _label(content,PRESENTATION.RESULT_NO_CHANGE,PRESENTATION.RESULT_RANK_FONT)
+		notice.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var actions := HBoxContainer.new(); actions.add_theme_constant_override("separation",PRESENTATION.RESULT_GAP); content.add_child(actions)
+	var leave_button := _button(actions,PRESENTATION.RESULT_LOBBY,_leave); leave_button.name = "ResultLobbyButton"
+	var requeue_button := _button(actions,PRESENTATION.RESULT_REQUEUE,_requeue); requeue_button.name = "ResultRequeueButton"
 	for button in [leave_button,requeue_button]:
-		button.custom_minimum_size.y = 96; button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.custom_minimum_size.y = PRESENTATION.RESULT_BUTTON_HEIGHT; button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.add_theme_font_size_override("font_size",PRESENTATION.RESULT_BUTTON_FONT)
+		for state in ["normal","hover","pressed"]:
+			var style := StyleBoxFlat.new()
+			style.bg_color = PRESENTATION.RESULT_PRIMARY if button == requeue_button else PRESENTATION.RESULT_SECONDARY
+			if state != "normal": style.bg_color = style.bg_color.lightened(0.15)
+			style.border_color = PRESENTATION.RESULT_PRIMARY_EDGE if button == requeue_button else PRESENTATION.RESULT_SECONDARY_EDGE
+			style.set_border_width_all(2); style.set_content_margin_all(RESULT_DATA.INNER_MARGIN)
+			button.add_theme_stylebox_override(state,PIXEL_SKIN.button_style(style))
 
 ## The lobby consumes this meta once and presses its ranked entry for the same role.
 func _requeue() -> void:

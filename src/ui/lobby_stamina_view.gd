@@ -296,7 +296,7 @@ func _build_product() -> void:
 	title.add_theme_font_size_override("font_size", 32)
 	box.add_child(title)
 	var copy := Label.new()
-	copy.text = "선물·구매 스테미너는 최대 30을 넘겨 충전됩니다.\n충전 상품의 가격과 결제 연결을 준비하고 있습니다."
+	copy.text = RULES.SHOP_PREVIEW_MESSAGE
 	copy.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	copy.add_theme_font_size_override("font_size", 25)
 	box.add_child(copy)

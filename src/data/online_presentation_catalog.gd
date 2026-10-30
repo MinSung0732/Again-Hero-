@@ -1,4 +1,24 @@
 extends RefCounted
+const RESULT_WIDTH := 800.0
+const RESULT_MARGIN := 32
+const RESULT_GAP := 20
+const RESULT_BUTTON_HEIGHT := 100
+const RESULT_BUTTON_FONT := 28
+const RESULT_RANK_ICON := 56
+const RESULT_RANK_FONT := 26
+const RESULT_INVALID_FONT := 42
+const RESULT_INVALID_TEXT_WIDTH := 340.0
+const RESULT_NO_CHANGE := "점수 변동 없음"
+const RESULT_INVALID := "무효 경기"
+const RESULT_LOBBY := "로비로 가기"
+const RESULT_REQUEUE := "새로 매칭"
+const RESULT_UP := Color("86e1a2")
+const RESULT_DOWN := Color("ff8f8f")
+const RESULT_DIM := Color(0, 0, 0, 0.8)
+const RESULT_PRIMARY := Color("50246e")
+const RESULT_SECONDARY := Color("21182f")
+const RESULT_PRIMARY_EDGE := Color("e9be62")
+const RESULT_SECONDARY_EDGE := Color("89739e")
 const NOTICE_PANEL_GAP := 12.0
 const NOTICE_HEIGHT := 65.0
 const ELITE_CARD_FRAME := "res://assets/art/UI/battle_hud_v2/elite_card_frame.png"
