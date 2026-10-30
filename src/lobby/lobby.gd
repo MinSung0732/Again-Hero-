@@ -5093,6 +5093,9 @@ func _refund_failed_stamina_entry() -> void:
 		stamina_view.refresh()
 
 func _enter_selected_stage(allow_unregistered: bool = false) -> void:
+	if main_modes_view != null and main_modes_view.ranked and main_modes_view.guest_rank_blocked():
+		main_modes_view.show_guest_rank_notice()
+		return
 	if _battle_entry_pending or _scene_load_pending or SceneTransition.is_transitioning():
 		return
 	if stamina_view != null:

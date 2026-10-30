@@ -14,8 +14,11 @@ signal login_requested(provider: String)
 signal login_unavailable(message: String)
 signal local_guest_started
 signal authenticated
+signal public_uid_changed
 signal account_deactivated
 
+var public_uid_unavailable := false
+var _public_uids: Dictionary = {}
 var local_guest_active := false
 var user_id := ""
 var account_provider := ""
@@ -69,6 +72,7 @@ func _on_validated(session: Dictionary, user: Dictionary) -> void:
 		return
 	_session_generation += 1
 	user_id = id
+	public_uid_unavailable = false
 	_set_account_display(user)
 	_set_session(session)
 	local_guest_active = false
@@ -97,6 +101,26 @@ func retry_cloud(choice: String = "") -> void:
 		return
 	if await _cloud.initialize(choice) and generation == _session_generation:
 		authenticated.emit()
+		# The public UID is display-only; never let its RPC delay or block login.
+		ensure_public_uid()
+
+func ensure_public_uid() -> void:
+	var owner := user_id
+	if owner.is_empty() or SCOPE.user_id != owner: return
+	var generation := _session_generation
+	var result: Dictionary = await _cloud.request_optional_rpc("ensure_public_uid", {})
+	if generation != _session_generation or owner != user_id or SCOPE.user_id != owner: return
+	public_uid_unavailable = result.get("unavailable") == true
+	if result.get("ok") == true:
+		var raw: Variant = result.get("public_uid", 0)
+		var value := str(int(raw)) if raw is int or raw is float else str(raw)
+		if value.length() == 8 and value.is_valid_int(): _public_uids[owner] = value
+	public_uid_changed.emit()
+
+# Display-only and kept in memory: writing it into the account scope would change the synced save.
+func cached_public_uid() -> String:
+	if user_id.is_empty() or SCOPE.user_id != user_id: return ""
+	return String(_public_uids.get(user_id, ""))
 
 func try_auto_login() -> void:
 	if get_node("/root/LocalTestMode").active or get_node("/root/LocalTestMode").tutorial_preview:
@@ -348,6 +372,7 @@ func _link_validated_guest(session: Dictionary, user: Dictionary) -> void:
 	_session_generation += 1
 	generation = _session_generation
 	user_id = id
+	public_uid_unavailable = false
 	_set_account_display(user)
 	_set_session(session)
 	local_guest_active = false

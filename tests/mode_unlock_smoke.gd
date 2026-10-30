@@ -117,6 +117,9 @@ func run() -> void:
 	await process_frame
 	await process_frame
 	await view.choose_perspective("hero")
+	var rank_gateway = root.get_node("LoginGateway")
+	rank_gateway.user_id = "00000000-0000-0000-0000-000000000001"
+	rank_gateway.local_guest_active = false
 	view.toggle_ranked()
 	check(view.ranked and view.perspective == "hero", "unlocked navigation works")
 	# Ranked entry now starts the online match scene (covered by the online tests); check the request only.

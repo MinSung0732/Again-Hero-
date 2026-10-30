@@ -69,6 +69,9 @@ func run() -> void:
 	check(lobby.team_tab.visible, "character selection routes to the formation tab")
 	lobby._switch_tab("main")
 	await process_frame
+	var rank_gateway = root.get_node("LoginGateway")
+	rank_gateway.user_id = "00000000-0000-0000-0000-000000000001"
+	rank_gateway.local_guest_active = false
 	view.toggle_ranked()
 	check(view.ranked_button.button_pressed and lobby.enter_stage_button.text == view.RANKED_ENTRY_TEXT, "ranked pressed and entry relabeled")
 	check(view.ranked_button.get_theme_stylebox("normal").bg_color == Color("523068"), "ranked skin follows toggle")

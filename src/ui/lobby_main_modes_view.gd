@@ -9,6 +9,7 @@ const UNLOCK_DATA := preload("res://src/data/mode_unlock_catalog.gd")
 const UNLOCK_FEEDBACK := preload("res://src/ui/mode_unlock_feedback.gd")
 const HERO_STORE := preload("res://src/systems/hero_mode_store.gd")
 const CHARACTERS := preload("res://src/data/hero_character_catalog.gd")
+const UID := preload("res://src/data/public_uid_catalog.gd")
 const RANKED := preload("res://src/data/ranked_rules.gd")
 const SUPABASE := preload("res://src/network/supabase_client.gd")
 const ART := "res://assets/art/UI/main_modes/"
@@ -214,6 +215,9 @@ func _prepare_perspective(value: String, owner: String) -> bool:
 
 func toggle_ranked() -> void:
 	if switching_perspective: return
+	if not ranked and guest_rank_blocked():
+		show_guest_rank_notice()
+		return
 	if not UNLOCKS.unlocked("rank", current_stage()):
 		refresh()
 		return
@@ -228,6 +232,20 @@ func toggle_ranked() -> void:
 
 # Autoload looked up by path: the bare identifier fails when this script is
 # compiled outside the running game (tests, previews).
+func guest_rank_blocked() -> bool:
+	return not bool(lobby.get_node("/root/LocalTestMode").active) and (_gateway().local_guest_active or _gateway().user_id.is_empty())
+
+func show_guest_rank_notice() -> void:
+	var notice = lobby.get_node_or_null("GuestRankNoticeLayer/GuestRankNotice")
+	if notice == null:
+		notice = preload("res://src/ui/dungeon_entry_notice.gd").new()
+		notice.install(lobby)
+		notice.name = "GuestRankNotice"
+		notice.get_parent().name = "GuestRankNoticeLayer"
+	notice.open_confirmation(UID.RANK_NOTICE, UID.LINK, func():
+		lobby._switch_tab("other")
+		lobby._show_other_account(), UID.LINK, UID.CLOSE)
+
 func _gateway() -> Node:
 	return lobby.get_node("/root/LoginGateway")
 
@@ -280,6 +298,12 @@ static func parse_ranked_profile(payload: Variant) -> Dictionary:
 func _show_ranked_profile() -> void:
 	if not ranked: return
 	ranked_profile_card.show()
+	if guest_rank_blocked():
+		ranked_profile_icon.texture = null
+		ranked_profile_label.text = UID.RANK_GUEST
+		ranked_profile_score.hide()
+		ranked_profile_small.hide()
+		return
 	if ranked_profile_data.is_empty():
 		ranked_profile_icon.texture = null
 		ranked_profile_label.text = RANK_ERROR
@@ -328,6 +352,9 @@ func request_data() -> Dictionary:
 		"hero_id": HERO_STORE.selected_hero()}
 
 func blocks_entry() -> bool:
+	if ranked and guest_rank_blocked():
+		show_guest_rank_notice()
+		return true
 	if not ranked and not UNLOCK_DATA.difficulty_available(difficulty):
 		notice.title = "준비 중"
 		notice.dialog_text = UNLOCK_DATA.HARD_NOTICE

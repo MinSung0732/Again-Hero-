@@ -103,11 +103,12 @@ func close() -> void:
 		previous.grab_focus()
 	_previous_focus = null
 
-func open_confirmation(message: String, title: String, action: Callable) -> void:
+func open_confirmation(message: String, title: String, action: Callable, confirm_text: String = "초기화", cancel_text: String = "취소") -> void:
 	open(message, title)
 	_action = action
 	_cancel.show()
-	_confirm.text = "초기화"
+	_confirm.text = confirm_text
+	_cancel.text = cancel_text
 	_cancel.grab_focus()
 
 func _on_confirm() -> void:

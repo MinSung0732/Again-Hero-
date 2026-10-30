@@ -12,6 +12,8 @@ class Cloud extends "res://src/network/cloud_store.gd":
 	func initialize(choice: String = "") -> bool:
 		choices.append(choice)
 		return await super.initialize(choice)
+	func request_optional_rpc(_method: String, _data: Dictionary) -> Dictionary:
+		return {"unavailable": true}
 	func request_rpc(method: String, data: Dictionary) -> Dictionary:
 		var id := SCOPE.user_id
 		calls.append(method)

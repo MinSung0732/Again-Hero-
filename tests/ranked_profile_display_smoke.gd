@@ -11,6 +11,11 @@ func _initialize() -> void:
 	run.call_deferred()
 
 func run() -> void:
+	var gateway = root.get_node("LoginGateway")
+	var old_user: String = gateway.user_id
+	var old_guest: bool = gateway.local_guest_active
+	gateway.user_id = "00000000-0000-0000-0000-000000000001"
+	gateway.local_guest_active = false
 	var host := Host.new()
 	root.add_child(host)
 	var modes := MODES.new()
@@ -62,6 +67,8 @@ func run() -> void:
 	assert(modes.ranked_profile_score.text == "MMR 1000" and modes.ranked_profile_small.text.contains(RANKED.LOCAL_PREVIEW_NOTE))
 	profile._refresh_rank()
 	assert(profile.rank_labels.demon.text.contains("MMR 1000") and profile.rank_weekly.text.contains(RANKED.LOCAL_PREVIEW_NOTE))
+	gateway.user_id = old_user
+	gateway.local_guest_active = old_guest
 	host.queue_free()
 	print("RANKED_PROFILE_DISPLAY_SMOKE PASS")
 	quit()

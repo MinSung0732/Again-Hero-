@@ -7,6 +7,7 @@ const APPEARANCE := preload("res://src/systems/demon_appearance_store.gd")
 const APPEARANCES := preload("res://src/data/demon_appearance_catalog.gd")
 const FRAMES := preload("res://src/ui/commerce_frame_skin.gd")
 const DRAG_BUTTON := preload("res://src/ui/drag_safe_button.gd")
+const UID := preload("res://src/data/public_uid_catalog.gd")
 const RANKED := preload("res://src/data/ranked_rules.gd")
 const RANK_ICON_SIZE := 96
 const RANK_ERROR := "랭크 정보를 불러올 수 없음"
@@ -23,6 +24,8 @@ var card: Control
 var banner: TextureRect
 var portrait: TextureRect
 var nickname: Label
+var uid_label: Label
+var uid_copy: Button
 var rename_button: Button
 var gender_button: Button
 var gender_dialog: Control
@@ -163,10 +166,23 @@ func _build_card(parent: Control) -> void:
 	nickname.clip_text = true
 	nickname.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_rect(nickname, Vector2(0, 174), Vector2(306, 64))
+	uid_label = _label(info, "", 20, Color("e4c5ff"))
+	uid_label.name = "PublicUid"
+	_rect(uid_label, Vector2(0, 238), Vector2(215, 40))
+	uid_copy = Button.new()
+	uid_copy.name = "CopyPublicUid"
+	uid_copy.text = UID.COPY
+	info.add_child(uid_copy)
+	_rect(uid_copy, Vector2(215, 238), Vector2(90, 40))
+	uid_copy.pressed.connect(_copy_uid)
+	var gateway := lobby.get_node("/root/LoginGateway")
+	if not gateway.public_uid_changed.is_connected(_refresh_uid): gateway.public_uid_changed.connect(_refresh_uid)
+	lobby.tree_exiting.connect(func():
+		if gateway.public_uid_changed.is_connected(_refresh_uid): gateway.public_uid_changed.disconnect(_refresh_uid), CONNECT_ONE_SHOT)
 	var title := _label(info, "칭호 · 준비 중", 28, Color("f1d798"))
 	title.autowrap_mode = TextServer.AUTOWRAP_OFF
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_rect(title, Vector2(0, 258), Vector2(306, 60))
+	_rect(title, Vector2(0, 278), Vector2(306, 48))
 	var line := ColorRect.new()
 	line.color = Color("99713d")
 	line.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -210,9 +226,29 @@ func _build_rank_section(parent: Control) -> void:
 	rank_weekly = _label(section, RANK_ERROR, 22)
 	rank_weekly.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 
+func _refresh_uid() -> void:
+	var gateway := lobby.get_node("/root/LoginGateway")
+	var local: bool = lobby.get_node("/root/LocalTestMode").active
+	var value: String = UID.LOCAL_UID if local else ("" if gateway.public_uid_unavailable else gateway.cached_public_uid())
+	var formatted: String = UID.format_uid(value)
+	uid_label.text = formatted if not formatted.is_empty() else (UID.GUEST if gateway.user_id.is_empty() else UID.UNAVAILABLE)
+	uid_copy.visible = not formatted.is_empty()
+	uid_copy.text = UID.COPY
+
+func _copy_uid() -> void:
+	DisplayServer.clipboard_set(uid_label.text)
+	uid_copy.text = UID.COPIED
+
 func _refresh_rank() -> void:
 	if lobby.main_modes_view == null: return
 	var modes = lobby.main_modes_view
+	if modes.guest_rank_blocked():
+		for role in ["hero", "demon"]:
+			rank_icons[role].texture = null
+			rank_labels[role].text = UID.RANK_GUEST
+			rank_smalls[role].visible = false
+		rank_weekly.text = UID.RANK_GUEST
+		return
 	var data: Dictionary = modes.ranked_profile_data if modes.ranked_profile_owner == lobby.get_node("/root/LoginGateway").user_id else {}
 	for role in ["hero", "demon"]:
 		var state: Dictionary = data.get(role, {})
@@ -360,6 +396,7 @@ func _blocked() -> bool:
 	return cloud.busy or cloud.conflict
 
 func refresh() -> void:
+	_refresh_uid()
 	gender_button.visible = PROFILE.can_change_gender()
 	gender_button.disabled = _blocked() or is_instance_valid(gender_dialog)
 	rename_button.visible = PROFILE.can_rename()
