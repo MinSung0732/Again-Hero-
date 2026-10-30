@@ -117,6 +117,8 @@ func apply(lobby: Control) -> void:
 	title.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	title.add_theme_font_size_override("font_size", 46)
 	title.add_theme_stylebox_override("normal", FRAMES.style("shop_title_frame", 12))
+	var token_chip := preload("res://src/ui/shop_token_chip.gd").build(title.get_parent(), "demon_token")
+	title.get_parent().move_child(token_chip, title.get_index() + 1)
 	(shop_margin.get_node("ShopLayout/Guide") as Label).text = "소환 · 유물 · 성장 재화를 한 곳에서 만나세요."
 	var content := lobby.get_node(CONTENT.trim_suffix("/")) as VBoxContainer
 	content.custom_minimum_size.y = 0.0

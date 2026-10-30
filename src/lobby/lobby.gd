@@ -430,6 +430,7 @@ func _setup_cloud_account() -> void:
 	guide.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	guide.text = "게스트 저장은 이 기기에만 보관됩니다." if LoginGateway.user_id.is_empty() else "계정 저장 · 변경 후 자동 동기화됩니다."
 	CloudStore.status_changed.connect(_on_cloud_account_notice)
+	CloudStore.canonical_reloaded.connect(_refresh_header)
 	LoginGateway.login_unavailable.connect(_on_cloud_account_notice)
 	var sync := other_account_panel.get_node("KakaoLogin") as Button
 	sync.text = "클라우드 저장 동기화"
@@ -4449,6 +4450,11 @@ func _team_monster_cost(monster_id: String) -> float:
 	return float(data.get("base_cost", 0.0))
 
 func _refresh_header() -> void:
+	var chip := get_node_or_null("SafeArea/Layout/Content/ShopTab/ShopMargin/ShopLayout/ShopTokenChip") as Control
+	if chip != null: preload("res://src/ui/shop_token_chip.gd").refresh(chip)
+	if hero_lobby_view != null and hero_lobby_view.bodies.has("shop"):
+		var hero_chip := hero_lobby_view.bodies.shop.get_node_or_null("ShopTokenChip") as Control
+		if hero_chip != null: preload("res://src/ui/shop_token_chip.gd").refresh(hero_chip)
 	if _is_hero_lobby_mode(): team_button.disabled = false
 	_refresh_shop_summon_buttons()
 	if stamina_view != null:

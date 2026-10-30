@@ -22,6 +22,7 @@ static func coming_button(parent: Node,value: String) -> Button:
 	button.add_theme_stylebox_override("disabled",ART.panel_style(true)); parent.add_child(button); return button
 static func build(body: VBoxContainer,_view) -> void:
 	text(body,"◆  용사 상점  ◆",40,Color("f0d18e"))
+	preload("res://src/ui/shop_token_chip.gd").build(body, "hero_token")
 	text(body,"새로운 용사와의 만남을 준비하고 있습니다.",23,Color("b9abc5"))
 	var banner := panel(body,"HeroShopBanner")
 	text(banner,"COMING SOON",22,Color("c6a96a"))
