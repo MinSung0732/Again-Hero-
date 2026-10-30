@@ -1,6 +1,7 @@
 extends RefCounted
 
 const DATA := preload("res://src/data/mailbox_catalog.gd")
+const ROW_SKIN := preload("res://src/ui/mission_row_skin.gd")
 const STORE := preload("res://src/systems/mailbox_store.gd")
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
 const SKIN := preload("res://src/ui/pixel_panel_skin.gd")
@@ -40,14 +41,14 @@ func install(owner: Control) -> void:
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var panel := PanelContainer.new()
 	panel.name = "Frame"
-	panel.custom_minimum_size = Vector2(840, 1100)
+	panel.custom_minimum_size = DATA.FRAME_SIZE
 	var frame := lobby.panel_style.duplicate() as StyleBox
-	frame.set_content_margin_all(36)
+	frame.set_content_margin_all(DATA.FRAME_MARGIN)
 	panel.add_theme_stylebox_override("panel", frame)
 	center.add_child(panel)
 	SKIN.apply(panel)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 16)
+	box.add_theme_constant_override("separation", DATA.GAP)
 	panel.add_child(box)
 	var heading := HBoxContainer.new()
 	box.add_child(heading)
@@ -57,7 +58,8 @@ func install(owner: Control) -> void:
 	title.add_theme_font_size_override("font_size", 40)
 	heading.add_child(title)
 	var close := Button.new()
-	close.text = DATA.CLOSE_SYMBOL
+	close.icon = DATA.texture(DATA.CLOSE_ICON)
+	close.expand_icon = true
 	close.tooltip_text = DATA.CLOSE
 	close.custom_minimum_size = DATA.BUTTON_SIZE
 	SKIN.apply(close)
@@ -69,7 +71,7 @@ func install(owner: Control) -> void:
 	box.add_child(scroll)
 	list = VBoxContainer.new()
 	list.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	list.add_theme_constant_override("separation", 16)
+	list.add_theme_constant_override("separation", DATA.GAP)
 	scroll.add_child(list)
 	status = Label.new()
 	status.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -148,27 +150,49 @@ func _render() -> void:
 	if is_instance_valid(lobby.main_tools_view): lobby.main_tools_view.set_notification_count(&"mailbox", count)
 	all_button.disabled = busy or not available or count == 0
 	delete_button.disabled = busy or not available or _deletable_ids().is_empty()
+	if available and mail.is_empty():
+		var empty := TextureRect.new()
+		empty.name = "EmptyIllustration"
+		empty.custom_minimum_size = DATA.EMPTY_SIZE
+		empty.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		empty.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		empty.texture = DATA.texture(DATA.EMPTY_ICON)
+		list.add_child(empty)
 	var definitions := DATA.currencies()
 	for item in mail:
 		var card := PanelContainer.new()
 		card.name = "MailRow"
 		card.custom_minimum_size.y = DATA.ROW_HEIGHT
-		var style := StyleBoxFlat.new()
-		style.bg_color = DATA.ROW_COLOR
-		style.border_color = DATA.ROW_BORDER
-		style.set_border_width_all(2)
-		style.set_content_margin_all(12)
-		card.add_theme_stylebox_override("panel", style)
+		card.add_theme_stylebox_override("panel", ROW_SKIN.style("32233e", "776184", DATA.ROW_PADDING))
 		list.add_child(card)
-		var row := VBoxContainer.new()
+		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", DATA.ROW_GAP)
 		card.add_child(row)
+		var attachments: Dictionary = item.get("attachments", {})
+		var reward := VBoxContainer.new()
+		reward.custom_minimum_size.x = DATA.ATTACHMENT_WIDTH
+		row.add_child(reward)
+		if attachments.is_empty(): _icon(reward, DATA.MESSAGE_ICON)
+		for currency in attachments:
+			if not definitions.has(currency): continue
+			_icon(reward, String(definitions[currency].icon_path))
+			var amount := Label.new()
+			amount.text = str(attachments[currency])
+			amount.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+			amount.add_theme_font_size_override("font_size", 28)
+			reward.add_child(amount)
+		var content := VBoxContainer.new()
+		content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		row.add_child(content)
 		var sender := String(item.sender) if item.get("sender") is String else ""
 		if sender.is_empty(): sender = DATA.SENDERS.get(item.get("kind", ""), DATA.DEFAULT_SENDER)
 		var heading := Label.new()
 		heading.name = "SenderTitle"
 		heading.text = DATA.HEADER_FORMAT % [sender, item.get("title", "")]
+		heading.add_theme_color_override("font_color", DATA.SENDER_COLOR)
 		heading.add_theme_font_size_override("font_size", 28)
-		row.add_child(heading)
+		heading.clip_text = true
+		content.add_child(heading)
 		var body := Label.new()
 		body.name = "Body"
 		body.text = String(item.get("body", ""))
@@ -179,40 +203,46 @@ func _render() -> void:
 			if (event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT) or (event is InputEventScreenTouch and event.pressed): body.max_lines_visible = -1 if body.max_lines_visible == 2 else 2
 		)
 		body.add_theme_font_size_override("font_size", 26)
-		row.add_child(body)
+		content.add_child(body)
 		var date := Label.new()
 		date.name = "Date"
 		date.text = String(item.get("created_at", "")).left(10)
-		row.add_child(date)
-		var line := HBoxContainer.new()
-		row.add_child(line)
-		var attachments: Dictionary = item.get("attachments", {})
-		if attachments.is_empty(): _icon(line, DATA.MESSAGE_ICON)
-		for currency in attachments:
-			if not definitions.has(currency): continue
-			_icon(line, String(definitions[currency].icon_path))
-			var amount := Label.new()
-			amount.text = str(attachments[currency])
-			amount.add_theme_font_size_override("font_size", 28)
-			line.add_child(amount)
-		var spacer := Control.new()
-		spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		line.add_child(spacer)
+		content.add_child(date)
+		var actions := VBoxContainer.new()
+		row.add_child(actions)
 		if not attachments.is_empty():
-			var claim := Button.new()
-			claim.text = DATA.CLAIM if STORE.pending(item) else DATA.CLAIMED
-			claim.custom_minimum_size = DATA.BUTTON_SIZE
-			claim.disabled = busy or not available or not STORE.pending(item)
-			SKIN.apply(claim)
-			line.add_child(claim)
-			claim.pressed.connect(claim_one.bind(String(item.id)))
+			if STORE.pending(item):
+				var claim := Button.new()
+				claim.name = "Claim"
+				claim.text = DATA.CLAIM
+				ROW_SKIN.apply_button(claim)
+				claim.custom_minimum_size = DATA.ACTION_SIZE
+				claim.disabled = busy or not available
+				actions.add_child(claim)
+				claim.pressed.connect(claim_one.bind(String(item.id)))
+			else:
+				var stamp := TextureRect.new()
+				stamp.name = "ClaimedStamp"
+				stamp.custom_minimum_size = DATA.ACTION_SIZE
+				stamp.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+				stamp.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+				stamp.texture = DATA.texture(DATA.CLAIMED_ICON)
+				stamp.tooltip_text = DATA.CLAIMED
+				actions.add_child(stamp)
+				var claimed_label := Label.new()
+				claimed_label.text = DATA.CLAIMED
+				claimed_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+				claimed_label.add_theme_font_size_override("font_size", 20)
+				actions.add_child(claimed_label)
 		var remove := Button.new()
-		remove.text = DATA.DELETE
-		remove.custom_minimum_size = DATA.BUTTON_SIZE
+		remove.name = "Delete"
+		remove.icon = DATA.texture(DATA.TRASH_ICON)
+		remove.expand_icon = true
+		remove.custom_minimum_size = DATA.ACTION_SIZE
 		remove.tooltip_text = DATA.DELETE
 		remove.disabled = busy or not available or not STORE.deletable(item)
 		SKIN.apply(remove)
-		line.add_child(remove)
+		actions.add_child(remove)
 		remove.pressed.connect(_confirm_delete.bind([item.id]))
 
 func _icon(parent: Control, path: String) -> void:

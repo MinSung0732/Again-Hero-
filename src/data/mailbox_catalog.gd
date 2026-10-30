@@ -1,8 +1,23 @@
 extends RefCounted
 
 const LIST_LIMIT := 200
+const FRAME_SIZE := Vector2(840, 1100)
+const FRAME_MARGIN := 36
+const GAP := 16
+const ROW_PADDING := 12
+const ROW_GAP := 12
+const ACTION_SIZE := Vector2(100, 64)
+const ATTACHMENT_WIDTH := 110
+const EMPTY_SIZE := Vector2(180, 180)
+const ICON_DIR := "res://assets/art/UI/mailbox/"
+const TRASH_ICON := ICON_DIR + "trash.png"
+const CLOSE_ICON := ICON_DIR + "close.png"
+const CLAIMED_ICON := ICON_DIR + "claimed.png"
+const EMPTY_ICON := ICON_DIR + "empty.png"
+const SENDER_COLOR := Color("eac14d")
 const HEADER_FORMAT := "%s · %s"
 const TITLE_FORMAT := "%s · %d"
+const SEASON_BUTTON_SIZE := Vector2(220, 120)
 const BUTTON_SIZE := Vector2(120, 120)
 const ICON_SIZE := Vector2(88, 88)
 const ROW_HEIGHT := 220.0

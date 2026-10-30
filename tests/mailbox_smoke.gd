@@ -3,6 +3,7 @@ extends SceneTree
 const STORE := preload("res://src/systems/mailbox_store.gd")
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
 const PROGRESS := preload("res://src/systems/stage_progress.gd")
+const DATA := preload("res://src/data/mailbox_catalog.gd")
 const VIEW := preload("res://src/ui/lobby_mailbox_view.gd")
 
 var ack_succeeds := false
@@ -47,6 +48,14 @@ func run() -> void:
 	assert(view.mail.size() == 3 and STORE.unread_count(view.mail) == 2)
 	view.show()
 	assert(view.root.visible)
+	for path in [DATA.TRASH_ICON, DATA.CLOSE_ICON, DATA.CLAIMED_ICON, DATA.EMPTY_ICON]:
+		assert(DATA.texture(path) != null)
+	for viewport_size in [Vector2i(1080, 1920), Vector2i(1080, 2400)]:
+		root.size = viewport_size
+		await process_frame
+		await process_frame
+		var rect: Rect2 = view.root.find_child("Frame", true, false).get_global_rect()
+		assert(rect.position.x >= 0 and rect.position.y >= 0 and rect.end.x <= viewport_size.x and rect.end.y <= viewport_size.y)
 	assert(view.list.get_child_count() >= 3)
 	var row = view.list.get_child(view.list.get_child_count() - 1)
 	assert("운영팀" in row.find_child("SenderTitle", true, false).text)
@@ -72,6 +81,13 @@ func run() -> void:
 	await view.claim_all()
 	assert(PROGRESS.get_demon_token() == 10 and PROGRESS.get_hero_token() == 10)
 	assert(STORE.unread_count(view.mail) == 0)
+	await process_frame
+	var stamp = view.list.find_child("ClaimedStamp", true, false)
+	assert(stamp != null and stamp.texture != null)
+	view.mail = []
+	view._render()
+	await process_frame
+	assert(view.list.find_child("EmptyIllustration", true, false).texture != null)
 	var old_mail := {"id":"old-granted", "claim_state":"granted", "attachments":{"hero_token":7}}
 	var server_mail: Array = [old_mail]
 	for i in 200: server_mail.append({"id":str(i), "claim_state":"granted", "applied_at":"done"})

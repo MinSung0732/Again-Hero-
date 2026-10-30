@@ -72,14 +72,14 @@ func _build() -> void:
 	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	panel = PanelContainer.new()
 	panel.name = "Frame"
-	panel.custom_minimum_size = Vector2(840, 0)
+	panel.custom_minimum_size = Vector2(DATA.FRAME_SIZE.x, 0)
 	var frame := lobby.panel_style.duplicate() as StyleBox
-	frame.set_content_margin_all(36)
+	frame.set_content_margin_all(DATA.FRAME_MARGIN)
 	panel.add_theme_stylebox_override("panel", frame)
 	center.add_child(panel)
 	SKIN.apply(panel)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 18)
+	box.add_theme_constant_override("separation", DATA.GAP)
 	panel.add_child(box)
 	_label(box, "주간 랭킹 정산", 40)
 	for role in ["hero", "demon"]:
@@ -125,7 +125,7 @@ func _build() -> void:
 	for spec in [["우편함으로", true], ["확인", false]]:
 		var button := Button.new()
 		button.text = spec[0]
-		button.custom_minimum_size = Vector2(220, 120)
+		button.custom_minimum_size = DATA.SEASON_BUTTON_SIZE
 		SKIN.apply(button)
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		buttons.add_child(button)

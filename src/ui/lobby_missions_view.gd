@@ -1,5 +1,6 @@
 extends Control
 
+const ROW_SKIN := preload("res://src/ui/mission_row_skin.gd")
 const RULES := preload("res://src/data/mission_catalog.gd")
 const ICON_SHADER := preload("res://src/ui/mission_icon.gdshader")
 const DESIGN_SIZE := Vector2(920, 1160)
@@ -34,13 +35,7 @@ func install(parent: Control, tray: Control, mission_service: Node, wallet_refre
 	refresh()
 
 func _style(fill: String, edge: String, padding: int = 20) -> StyleBoxFlat:
-	var box := StyleBoxFlat.new()
-	box.bg_color = Color(fill)
-	box.border_color = Color(edge)
-	box.set_border_width_all(2)
-	box.set_corner_radius_all(8)
-	box.set_content_margin_all(padding)
-	return box
+	return ROW_SKIN.style(fill, edge, padding)
 
 func _label(parent: Node, text: String, size_px: int) -> Label:
 	var node := Label.new()
@@ -57,12 +52,7 @@ func _label(parent: Node, text: String, size_px: int) -> Label:
 func _button(parent: Node, text: String, action: Callable) -> Button:
 	var button := Button.new()
 	button.text = text
-	button.custom_minimum_size.y = 64
-	button.add_theme_font_size_override("font_size", 26)
-	button.add_theme_stylebox_override("normal", _style("32233e", "776184", 12))
-	button.add_theme_stylebox_override("hover", _style("493550", "eac14d", 12))
-	button.add_theme_stylebox_override("pressed", _style("604724", "f7d579", 12))
-	button.add_theme_stylebox_override("disabled", _style("29262e", "524c59", 12))
+	ROW_SKIN.apply_button(button)
 	button.pressed.connect(action)
 	parent.add_child(button)
 	return button
