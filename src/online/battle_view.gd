@@ -18,6 +18,7 @@ var exp_orbs = preload("res://src/online/exp_orb_view.gd").new()
 var status_bars
 var motion = preload("res://src/online/actor_motion.gd").new()
 var shot_motion = preload("res://src/online/fx_motion.gd").new()
+var visual_motion = preload("res://src/online/fx_motion.gd").new()
 var visual_order: Array[int] = []
 var visual_slots := PackedInt32Array()
 var visual_depths := PackedFloat64Array()
@@ -132,17 +133,23 @@ func update_state(value: Dictionary) -> bool:
 	if value.has("battlefield") and not prepare_battlefield(value.battlefield): return false
 	var now := Time.get_ticks_usec()
 	if not motion_paused and motion_received_us > 0 and now-motion_received_us >= int(ART.MOTION_RESET_SECONDS*1000000.0):
-		motion.clear(); shot_motion.clear(); primitives.motion.clear()
+		motion.clear(); shot_motion.clear(); visual_motion.clear(); primitives.motion.clear()
 	if not motion_paused:
 		shot_motion.begin()
 		for shot in value.get("shots",ART.EMPTY): shot_motion.put(int(shot[7]),Vector2(shot[0],shot[1]))
 		shot_motion.finish()
+		visual_motion.begin()
+		for command in commands:
+			var owner := int(command[0])
+			if owner > 0 and not actor_ids.has(owner) and not visual_motion.current.has(owner):
+				visual_motion.put(owner,Vector2(command[10],command[11]))
+		visual_motion.finish()
 	primitives.replace(value.get("primitives",ART.EMPTY))
 	exp_orbs.replace(value.get("exp_orbs",EXP_ORBS.EMPTY),self)
 	if not motion_paused and exp_orbs.needs_process(): set_process(true)
 	if not motion_paused:
 		motion.replace(value.hero,value.actors); motion_received_us = now
-		if motion.active or shot_motion.active or primitives.motion.active: set_process(true)
+		if motion.active or shot_motion.active or visual_motion.active or primitives.motion.active: set_process(true)
 	if state.is_empty() and not hero_role and not camera_view_locked:
 		manual_center = Vector2(value.hero[0],value.hero[1])
 	state = value; bounds = Vector2(value.bounds[0],value.bounds[1])
@@ -178,9 +185,15 @@ func _sort_display_depth(force_sort: bool = false) -> void:
 	var changed := force_sort
 	for index in render_visuals.size():
 		var slot := visual_slots[index]
-		var depth: float = float(render_visuals[index][21])+(motion.offsets[slot].y if slot >= 0 else 0.0)
+		var depth: float = float(render_visuals[index][21])+_visual_offset(index,slot).y
 		if visual_depths[index] != depth: changed = true; visual_depths[index] = depth
 	if changed: visual_order.sort_custom(display_sort)
+func _visual_offset(index: int,slot: int) -> Vector2:
+	if slot >= 0: return motion.offsets[slot]
+	var owner := int(render_visuals[index][0])
+	if not visual_motion.current.has(owner): return Vector2.ZERO
+	var pair: Array = visual_motion.current[owner]
+	return visual_motion.position(owner,pair[1])-pair[1]
 func _display_before(a: int,b: int) -> bool:
 	var az: float = render_visuals[a][20]; var bz: float = render_visuals[b][20]
 	if az != bz: return az < bz
@@ -191,7 +204,7 @@ func pause_motion() -> void:
 	set_process(manual_spawn_warning_timer > 0.0 or not pending_textures.is_empty())
 	# Freeze the displayed point; the first resumed state establishes a new baseline.
 func resume_motion() -> void:
-	motion.clear(); shot_motion.clear(); primitives.motion.clear(); motion_paused = false; motion_received_us = 0
+	motion.clear(); shot_motion.clear(); visual_motion.clear(); primitives.motion.clear(); motion_paused = false; motion_received_us = 0
 	visual_slots.fill(-1)
 func _request_texture(path: String) -> void:
 	if art_textures.has(path) or art_textures.size() >= ART.MAX_TEXTURES: return
@@ -211,6 +224,8 @@ func _process(delta: float) -> void:
 	if not motion_paused:
 		var shot_changed := shot_motion.advance(delta*presentation_speed)
 		var primitive_changed: bool = primitives.motion.advance(delta*presentation_speed)
+		var visual_changed := visual_motion.advance(delta*presentation_speed)
+		if visual_changed: _sort_display_depth(); queue_redraw()
 		if shot_changed or primitive_changed: queue_redraw()
 	if not motion_paused and exp_orbs.advance(delta*presentation_speed): queue_redraw()
 	var changed := false
@@ -226,7 +241,7 @@ func _process(delta: float) -> void:
 		pending_textures[index] = pending_textures[-1]; pending_textures.pop_back(); changed = true; finalized += 1
 	if changed:
 		_refresh_fallback_textures(); _resolve_owners(); queue_redraw()
-	if manual_spawn_warning_timer <= 0.0 and pending_textures.is_empty() and (motion_paused or (not motion.active and not shot_motion.active and not primitives.motion.active and not exp_orbs.needs_process())): set_process(false)
+	if manual_spawn_warning_timer <= 0.0 and pending_textures.is_empty() and (motion_paused or (not motion.active and not shot_motion.active and not visual_motion.active and not primitives.motion.active and not exp_orbs.needs_process())): set_process(false)
 func show_manual_spawn_restricted_area() -> void:
 	manual_spawn_warning_timer = battle_constants.MANUAL_SPAWN_WARNING_DURATION
 	set_process(true); queue_redraw()
@@ -266,7 +281,7 @@ func _draw_visuals() -> void:
 		if source.end.x > texture.get_width() or source.end.y > texture.get_height(): continue
 		var pose := Transform2D(Vector2(command[6],command[7]),Vector2(command[8],command[9]),Vector2(command[10],command[11]))
 		var slot := visual_slots[index]
-		if slot >= 0: pose.origin += motion.offsets[slot]
+		pose.origin += _visual_offset(index,slot)
 		draw_set_transform_matrix(map_transform*pose)
 		draw_texture_rect_region(texture,Rect2(command[12],command[13],command[14],command[15]),source,Color(command[16],command[17],command[18],command[19]))
 	draw_set_transform_matrix(Transform2D.IDENTITY)

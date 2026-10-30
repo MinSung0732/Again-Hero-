@@ -102,7 +102,9 @@ func run() -> void:
 	var raw_image := Image.new()
 	check(raw_image.load_png_from_buffer(FileAccess.get_file_as_bytes(native_commands[0][1])) == OK and raw_image.get_data() == native_texture.get_image().get_data(),"raw PNG source identity preserves all native RGBA bytes")
 	native.deactivate_for_pool()
+	var fixture_generation := 0
 	for shot in weapons.projectiles:
+		fixture_generation += 1; shot.gen = fixture_generation
 		shot.active = true; shot.melee = false; shot.delay = 0.0; shot.frames = frames
 		shot.visual_radius = 28.0
 		shot.position = point; shot.direction = Vector2.RIGHT; shot.age = 0.1
@@ -114,7 +116,7 @@ func run() -> void:
 	var weapon_art := false
 	for command in snapshot.visuals:
 		owners[int(command[0])] = true
-		if int(command[0]) == -1: weapon_art = true
+		if room.ids.has(-1) and int(command[0]) == int(room.ids[-1].wire): weapon_art = true
 	for actor in snapshot.actors: check(owners.has(int(actor[0])),"body art priority under FX saturation")
 	check(weapon_art and view.update_state(snapshot),"actual generic projectile PNG reaches client")
 	for shot in weapons.projectiles: shot.active = false

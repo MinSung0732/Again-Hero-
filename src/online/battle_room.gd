@@ -551,6 +551,21 @@ func _feedback(target: Node2D,amount: int,color: Color,healing: bool,critical: b
 	if not running or finished or connection_paused: return
 	var kind := "heal" if healing else "hero_hit" if target == battle.hero else "monster_hit"
 	feedback.publish(kind,target.global_position,amount,color,tick,target.get_instance_id(),critical)
+func _visual_wire_id(node: Node) -> int:
+	var instance := node.get_instance_id()
+	var generation: Vector3i = battle.get_battle_entity_handle(node)
+	if not ids.has(instance) or ids[instance].generation != generation:
+		next_id += 1; ids[instance] = {"wire":next_id,"generation":generation,"seen":snapshot_revision}
+	else: ids[instance].seen = snapshot_revision
+	return int(ids[instance].wire)
+
+func _shot_wire_id(generation: int) -> int:
+	var key := -generation
+	if not ids.has(key):
+		next_id += 1; ids[key] = {"wire":next_id,"generation":generation,"seen":snapshot_revision}
+	else: ids[key].seen = snapshot_revision
+	return int(ids[key].wire)
+
 func _build_snapshot() -> Dictionary:
 	var actors: Array = []; var shots: Array = []
 	var visuals: Array = []
@@ -582,11 +597,13 @@ func _build_snapshot() -> Dictionary:
 		else: ids[instance].seen = snapshot_revision
 		actors.append([ids[instance].wire,String(actor.get("monster_type")),snappedf(actor.position.x,0.1),snappedf(actor.position.y,0.1),int(actor.get("current_hp")),int(actor.get("max_hp")),_monster_bars(actor)])
 		if actor != transcendent_actor: presentation.append_tree(actor,int(ids[instance].wire),visuals)
-	for id in battle.online_visual_projectiles: presentation.append_tree(battle.online_visual_projectiles[id],-1,visuals)
+	for id in battle.online_visual_projectiles:
+		var visual = battle.online_visual_projectiles[id]
+		if is_instance_valid(visual): presentation.append_tree(visual,_visual_wire_id(visual),visuals)
 	for pool_key in battle.transient_fx_pools:
 		for effect in battle.transient_fx_pools[pool_key]:
 			if effect is Node2D and is_instance_valid(effect) and effect.visible:
-				presentation.append_tree(effect,-1,visuals)
+				presentation.append_tree(effect,_visual_wire_id(effect),visuals)
 	if is_instance_valid(battle.hero) and battle.hero.player_weapons != null:
 		var weapons = battle.hero.player_weapons
 		for shot in weapons.projectiles:
@@ -595,20 +612,21 @@ func _build_snapshot() -> Dictionary:
 				var shot_color: Color = shot.color
 				shots.append([snappedf(shot.position.x,0.1),snappedf(shot.position.y,0.1),float(shot.get("visual_radius",28.0)),shot_color.r,shot_color.g,shot_color.b,shot_color.a,shot.gen]); continue
 			var radius: float = shot.visual_radius
-			presentation.append_texture(weapons._loop_frame(shot.frames,float(shot.age)),-1,Transform2D(Vector2(shot.direction).angle(),shot.position),Rect2(Vector2.ONE*-radius,Vector2.ONE*radius*2),Color.WHITE,visuals,battle.hero.z_index)
+			presentation.append_texture(weapons._loop_frame(shot.frames,float(shot.age)),_shot_wire_id(int(shot.gen)),Transform2D(Vector2(shot.direction).angle(),shot.position),Rect2(Vector2.ONE*-radius,Vector2.ONE*radius*2),Color.WHITE,visuals,battle.hero.z_index)
 		presentation.append_weapon_areas(weapons,visuals)
 		primitives = PRIMITIVES.capture(weapons)
 		if weapons.native_skills != null:
 			for pattern in weapons.native_skills.actors_by_pattern:
 				for actor in weapons.native_skills.actors_by_pattern[pattern]:
-					if is_instance_valid(actor) and not battle.online_visual_projectiles.has(actor.get_instance_id()): presentation.append_tree(actor,-1,visuals)
+					if is_instance_valid(actor) and not battle.online_visual_projectiles.has(actor.get_instance_id()): presentation.append_tree(actor,_visual_wire_id(actor),visuals)
 	presentation.append_field_item_bars(primitives)
 	visuals.sort_custom(_visual_order)
 	stale_wire_ids.clear()
 	for instance in ids:
 		if int(ids[instance].seen) != snapshot_revision: stale_wire_ids.append(instance)
 	for instance in stale_wire_ids:
-		ids.erase(instance); presentation.forget_node(instance)
+		ids.erase(instance)
+		if instance > 0: presentation.forget_node(instance)
 	var demon_ready := {}
 	var summon_costs := {}
 	for id in roster: summon_costs[id] = battle.get_monster_cost(String(id))

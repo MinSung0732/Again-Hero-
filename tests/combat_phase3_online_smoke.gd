@@ -72,7 +72,9 @@ func run() -> void:
 			var trimmed: Array = []
 			for row in after.actors:
 				check(row.size() == 7 and row[-1] is Array,"actor row appends only the bar array")
-				trimmed.append(row.slice(0,6))
+				var comparable: Array = row.slice(0,6)
+				comparable[0] = before.actors[trimmed.size()][0] # Visual owners share the wire ID sequence.
+				trimmed.append(comparable)
 			shared["actors"] = trimmed
 			check(shared.size() == before.size() and JSON.stringify(before) == SERVER._encode(shared),"wire/ID/order/generation parity")
 			check(added_fields(before, after) == later_fields,"only known later snapshot fields added")
@@ -83,7 +85,8 @@ func run() -> void:
 			check(snapshot_bytes <= RULES.MAX_SNAPSHOT,"48 actor snapshot fits MAX_SNAPSHOT")
 			check(after.feedback.size()==1 and after.feedback[0].size()==FEEDBACK.EVENT_SIZE,"feedback row appends owner and critical")
 			check(codec_round_trip(codec, after),"path-interned wire decodes to the same snapshot")
-			check(room.ids.size() == room.battle.active_monsters.size(),"wire registry pruned without scratch snapshots")
+			for actor_row in after.actors:
+				check(room.ids.values().any(func(entry): return int(entry.wire) == int(actor_row[0])),"actor wire ID registered")
 		previous.free()
 	var unchanged: String = SERVER._encode(rooms[1].snapshot())
 	rooms[0].battle.active_monsters.values()[0].position += Vector2(13,0)

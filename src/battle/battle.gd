@@ -3650,6 +3650,9 @@ func acquire_transient_fx(pool_key: String, fx_type: String) -> Node:
 				return null
 		add_child(fx)
 
+	if online_match_mode:
+		_activate_battle_entity(fx)
+		online_visual_projectiles[fx.get_instance_id()] = fx
 	if fx is CanvasItem:
 		(fx as CanvasItem).visible = true
 	fx.process_mode = Node.PROCESS_MODE_INHERIT
@@ -3664,6 +3667,9 @@ func recycle_transient_fx(fx: Node, pool_key: String) -> void:
 	):
 		return
 
+	if online_match_mode:
+		online_visual_projectiles.erase(fx.get_instance_id())
+		battle_entity_registry.retire_instance(fx.get_instance_id())
 	if fx.has_method("deactivate_for_pool"):
 		fx.call("deactivate_for_pool")
 	else:
