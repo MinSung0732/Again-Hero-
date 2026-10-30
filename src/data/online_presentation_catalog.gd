@@ -1,4 +1,6 @@
 extends RefCounted
+const NOTICE_PANEL_GAP := 12.0
+const NOTICE_HEIGHT := 65.0
 const ELITE_CARD_FRAME := "res://assets/art/UI/battle_hud_v2/elite_card_frame.png"
 ## Wire-only presentation policy; combat sizes/anchors come from live visuals.
 const MAX_COMMANDS := 128

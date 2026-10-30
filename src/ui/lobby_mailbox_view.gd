@@ -8,6 +8,7 @@ const MODAL_LAYER := 130 # Same tier as DungeonEntryNotice.
 var lobby: Control
 var root: ColorRect
 var list: VBoxContainer
+var title: Label
 var status: Label
 var all_button: Button
 var delete_button: Button
@@ -50,7 +51,7 @@ func install(owner: Control) -> void:
 	panel.add_child(box)
 	var heading := HBoxContainer.new()
 	box.add_child(heading)
-	var title := Label.new()
+	title = Label.new()
 	title.text = DATA.TITLE
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title.add_theme_font_size_override("font_size", 40)
@@ -58,6 +59,7 @@ func install(owner: Control) -> void:
 	var close := Button.new()
 	close.text = DATA.CLOSE_SYMBOL
 	close.tooltip_text = DATA.CLOSE
+	close.custom_minimum_size = DATA.BUTTON_SIZE
 	SKIN.apply(close)
 	heading.add_child(close)
 	close.pressed.connect(hide)
@@ -77,13 +79,14 @@ func install(owner: Control) -> void:
 	box.add_child(buttons)
 	all_button = Button.new()
 	all_button.text = DATA.CLAIM_ALL
-	all_button.custom_minimum_size.y = 88
+	all_button.custom_minimum_size = DATA.BUTTON_SIZE
 	all_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	SKIN.apply(all_button)
 	buttons.add_child(all_button)
 	all_button.pressed.connect(claim_all)
 	delete_button = Button.new()
 	delete_button.text = DATA.DELETE_ALL
+	delete_button.custom_minimum_size = DATA.BUTTON_SIZE
 	delete_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	SKIN.apply(delete_button)
 	buttons.add_child(delete_button)
@@ -141,19 +144,29 @@ func refresh() -> void:
 func _render() -> void:
 	for child in list.get_children(): child.queue_free()
 	var count := STORE.unread_count(mail)
+	title.text = DATA.TITLE_FORMAT % [DATA.TITLE, count]
 	if is_instance_valid(lobby.main_tools_view): lobby.main_tools_view.set_notification_count(&"mailbox", count)
 	all_button.disabled = busy or not available or count == 0
 	delete_button.disabled = busy or not available or _deletable_ids().is_empty()
 	var definitions := DATA.currencies()
 	for item in mail:
+		var card := PanelContainer.new()
+		card.name = "MailRow"
+		card.custom_minimum_size.y = DATA.ROW_HEIGHT
+		var style := StyleBoxFlat.new()
+		style.bg_color = DATA.ROW_COLOR
+		style.border_color = DATA.ROW_BORDER
+		style.set_border_width_all(2)
+		style.set_content_margin_all(12)
+		card.add_theme_stylebox_override("panel", style)
+		list.add_child(card)
 		var row := VBoxContainer.new()
-		row.name = "MailRow"
-		list.add_child(row)
+		card.add_child(row)
 		var sender := String(item.sender) if item.get("sender") is String else ""
 		if sender.is_empty(): sender = DATA.SENDERS.get(item.get("kind", ""), DATA.DEFAULT_SENDER)
 		var heading := Label.new()
 		heading.name = "SenderTitle"
-		heading.text = "%s ? %s" % [sender, item.get("title", "")]
+		heading.text = DATA.HEADER_FORMAT % [sender, item.get("title", "")]
 		heading.add_theme_font_size_override("font_size", 28)
 		row.add_child(heading)
 		var body := Label.new()
@@ -188,12 +201,14 @@ func _render() -> void:
 		if not attachments.is_empty():
 			var claim := Button.new()
 			claim.text = DATA.CLAIM if STORE.pending(item) else DATA.CLAIMED
+			claim.custom_minimum_size = DATA.BUTTON_SIZE
 			claim.disabled = busy or not available or not STORE.pending(item)
 			SKIN.apply(claim)
 			line.add_child(claim)
 			claim.pressed.connect(claim_one.bind(String(item.id)))
 		var remove := Button.new()
-		remove.text = "??"
+		remove.text = DATA.DELETE
+		remove.custom_minimum_size = DATA.BUTTON_SIZE
 		remove.tooltip_text = DATA.DELETE
 		remove.disabled = busy or not available or not STORE.deletable(item)
 		SKIN.apply(remove)
@@ -203,7 +218,7 @@ func _render() -> void:
 func _icon(parent: Control, path: String) -> void:
 	var icon := TextureRect.new()
 	icon.name = "AttachmentIcon"
-	icon.custom_minimum_size = Vector2(48, 48)
+	icon.custom_minimum_size = DATA.ICON_SIZE
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	icon.texture = DATA.texture(path)

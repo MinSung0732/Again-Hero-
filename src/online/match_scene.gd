@@ -427,7 +427,7 @@ func _ready() -> void:
 	cancel_button.hide(); action_notice.hide()
 	battle_toast = _label(self,"",30); battle_toast.name = "BattleToast"
 	battle_toast.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
-	battle_toast.offset_top = 365; battle_toast.offset_bottom = 430
+	battle_toast.offset_bottom = preload("res://src/data/online_presentation_catalog.gd").NOTICE_HEIGHT
 	battle_toast.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	battle_toast.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	battle_toast.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -435,6 +435,10 @@ func _ready() -> void:
 	battle_toast.add_theme_color_override("font_outline_color",Color("090714"))
 	battle_toast.add_theme_constant_override("outline_size",7)
 	battle_toast.z_index = 190; battle_toast.hide()
+	var opponent_panel: Control = demon_info_panel if role == "hero" else top_bar.get_node("HeroStatusFrame")
+	opponent_panel.item_rect_changed.connect(_position_battle_toast)
+	resized.connect(_position_battle_toast)
+	_position_battle_toast.call_deferred()
 	loading = LOADING.new(); add_child(loading); loading.cancelled.connect(_leave); loading.rules_requested.connect(_show_rules)
 	_build_rules_popup()
 	client = CLIENT.new(); add_child(client); client.event_received.connect(_event)
@@ -498,6 +502,15 @@ func _layout_top_bar() -> void:
 			hero_build_frame.position = Vector2(width * 0.05,270)
 			hero_build_frame.size = Vector2(width * 0.9,minf(1380.0,get_viewport_rect().size.y - 540.0))
 			hero_build_panel.custom_minimum_size.x = hero_build_frame.size.x - 84.0
+	_position_battle_toast()
+
+func _position_battle_toast() -> void:
+	if battle_toast == null or top_bar == null: return
+	var opponent: Control = demon_info_panel if role == "hero" else top_bar.get_node("HeroStatusFrame")
+	if opponent == null: return
+	var bottom := opponent.get_global_rect().end.y - get_global_rect().position.y
+	battle_toast.offset_top = bottom + preload("res://src/data/online_presentation_catalog.gd").NOTICE_PANEL_GAP
+	battle_toast.offset_bottom = battle_toast.offset_top + preload("res://src/data/online_presentation_catalog.gd").NOTICE_HEIGHT
 
 func _show_match_layout() -> void:
 	for control in setup_controls: control.hide()

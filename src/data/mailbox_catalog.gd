@@ -1,6 +1,13 @@
 extends RefCounted
 
 const LIST_LIMIT := 200
+const HEADER_FORMAT := "%s · %s"
+const TITLE_FORMAT := "%s · %d"
+const BUTTON_SIZE := Vector2(120, 120)
+const ICON_SIZE := Vector2(88, 88)
+const ROW_HEIGHT := 220.0
+const ROW_COLOR := Color("21192f")
+const ROW_BORDER := Color("8f6c3e")
 const SEASON_PREVIEW := {"week_start":"local-preview", "demon":{"final_tier":"diamond_1", "final_mmr":2300, "server_rank":0, "wins":1}, "hero":{"final_tier":"hero", "final_mmr":3000, "server_rank":3, "wins":1}, "hero_top_hero_id":"ranged_rookie", "demon_top_transcendence_id":"zeus", "demon_top_role":"tank", "reward_tier":"hero", "demon_token":250, "hero_token":250}
 const TITLE := "우편함"
 const EMPTY := "도착한 우편이 없습니다."

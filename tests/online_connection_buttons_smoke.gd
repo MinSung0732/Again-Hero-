@@ -34,6 +34,13 @@ func run() -> void:
 	for role in ["hero","demon"]:
 		root.get_node("SceneTransition")._entry_options = {"role":role}
 		var scene = load("res://src/online/OnlineMatch.tscn").instantiate(); root.add_child(scene); screens.append(scene)
+		await process_frame
+		var opponent: Control = scene.demon_info_panel if role == "hero" else scene.top_bar.get_node("HeroStatusFrame")
+		scene._position_battle_toast()
+		check(scene.battle_toast.get_global_rect().position.y >= opponent.get_global_rect().end.y, "toast below opponent panel")
+		opponent.size.y += 40
+		await process_frame
+		check(scene.battle_toast.get_global_rect().position.y >= opponent.get_global_rect().end.y, "toast follows resized opponent panel")
 		check(scene.disconnect_button.disabled and scene.reconnect_button.disabled,"no socket test before match")
 		check(not scene.client.set_local_test_disconnected(true),"unmatched API rejected")
 		scene.endpoint.text = "ws://127.0.0.1:24847"; scene.test_code.text = ticket
