@@ -3872,27 +3872,27 @@ func _execute_demon_ultimate(
 	)
 	return true
 
+func _demon_skill_pool(skill: Dictionary) -> Array[String]:
+	var pool: Array[String] = []
+	var limit := float(skill.get("max_monster_cost", INF))
+	var source: Array = allowed_monster_ids if not allowed_monster_ids.is_empty() else MONSTER_CATALOG.ORDER
+	for raw_id in source:
+		var id := String(raw_id)
+		if MONSTER_CATALOG.MONSTERS.has(id) and MONSTER_CATALOG.get_base_cost(id) <= limit:
+			pool.append(id)
+			if allowed_monster_ids.is_empty() and pool.size() >= 3:
+				break
+	return pool
+
 func _use_demon_encirclement(skill: Dictionary) -> bool:
 	if not is_instance_valid(hero):
 		return false
 	if not demon_ultimate_spawn_queue.is_empty():
 		return false
 
-	var pool: Array[String] = []
-	for raw_id in allowed_monster_ids:
-		var monster_id := String(raw_id)
-		if MONSTER_CATALOG.MONSTERS.has(monster_id):
-			pool.append(monster_id)
-
+	var pool := _demon_skill_pool(skill)
 	if pool.is_empty():
-		for raw_id in MONSTER_CATALOG.ORDER:
-			var fallback_id := String(raw_id)
-			if MONSTER_CATALOG.MONSTERS.has(fallback_id):
-				pool.append(fallback_id)
-			if pool.size() >= 3:
-				break
-
-	if pool.is_empty():
+		summon_result.emit("", false, "%s코스트 이하 몬스터가 편성되어 있어야 합니다." % DEMON_ULTIMATES.format_cost(float(skill.get("max_monster_cost", 0.0))))
 		return false
 
 	var spawn_count := maxi(int(skill.get("spawn_count", 12)), 1)
@@ -3943,21 +3943,9 @@ func _use_demon_line_assault(
 	if direction not in ["east", "west", "north", "south"]:
 		return false
 
-	var pool: Array[String] = []
-	for raw_id in allowed_monster_ids:
-		var monster_id := String(raw_id)
-		if MONSTER_CATALOG.MONSTERS.has(monster_id):
-			pool.append(monster_id)
-
+	var pool := _demon_skill_pool(skill)
 	if pool.is_empty():
-		for raw_id in MONSTER_CATALOG.ORDER:
-			var fallback_id := String(raw_id)
-			if MONSTER_CATALOG.MONSTERS.has(fallback_id):
-				pool.append(fallback_id)
-			if pool.size() >= 3:
-				break
-
-	if pool.is_empty():
+		summon_result.emit("", false, "%s코스트 이하 몬스터가 편성되어 있어야 합니다." % DEMON_ULTIMATES.format_cost(float(skill.get("max_monster_cost", 0.0))))
 		return false
 
 	var spawn_count := maxi(int(skill.get("spawn_count", 10)), 1)
@@ -4020,21 +4008,9 @@ func _use_demon_square_siege(skill: Dictionary) -> bool:
 	if not demon_ultimate_spawn_queue.is_empty():
 		return false
 
-	var pool: Array[String] = []
-	for raw_id in allowed_monster_ids:
-		var monster_id := String(raw_id)
-		if MONSTER_CATALOG.MONSTERS.has(monster_id):
-			pool.append(monster_id)
-
+	var pool := _demon_skill_pool(skill)
 	if pool.is_empty():
-		for raw_id in MONSTER_CATALOG.ORDER:
-			var fallback_id := String(raw_id)
-			if MONSTER_CATALOG.MONSTERS.has(fallback_id):
-				pool.append(fallback_id)
-			if pool.size() >= 3:
-				break
-
-	if pool.is_empty():
+		summon_result.emit("", false, "%s코스트 이하 몬스터가 편성되어 있어야 합니다." % DEMON_ULTIMATES.format_cost(float(skill.get("max_monster_cost", 0.0))))
 		return false
 
 	var spawn_count := maxi(int(skill.get("spawn_count", 16)), 4)

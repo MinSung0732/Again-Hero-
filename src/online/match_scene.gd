@@ -1184,6 +1184,7 @@ func _event(event: Dictionary) -> void:
 					button.visible = index < demon_skills.size()
 					if not button.visible: continue
 					var id := String(demon_skills[index])
+					button.tooltip_text = String(SKILLS.get_skill(id).get("description", ""))
 					preload("res://src/ui/demon_skill_button_content.gd").attach(button,index,id,String(SKILLS.get_skill(id).get("name",id)))
 					for connection in button.pressed.get_connections(): button.pressed.disconnect(connection.callable)
 					button.pressed.connect(_use_skill.bind(id))

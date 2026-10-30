@@ -288,6 +288,9 @@ var team_selected_ids: Array = []
 var demon_skill_catalog_ids: Array = []
 var demon_skill_selected_ids: Array = []
 var formation_mode: String = "team"
+var demon_skill_category := "all"
+var demon_category_row: HBoxContainer
+var demon_category_empty: Label
 var formation_cost_descending := false
 var formation_sort_criterion := "cost"
 var formation_unlock_filter := "all"
@@ -2387,6 +2390,7 @@ func _connect_navigation() -> void:
 	var criteria := $SafeArea/Layout/Content/TeamTab/TeamLayout/ListHeader/SortCriteria
 	criteria.get_node("CostButton").pressed.connect(_on_formation_sort_criterion_selected.bind("cost"))
 	criteria.get_node("RarityButton").pressed.connect(_on_formation_sort_criterion_selected.bind("rarity"))
+	_setup_demon_category_tabs()
 	var unlock_filters := $SafeArea/Layout/Content/TeamTab/TeamLayout/UnlockFilters
 	for pair in [["AllButton", "all"], ["UnlockedButton", "unlocked"], ["LockedButton", "locked"]]:
 		unlock_filters.get_node(pair[0]).pressed.connect(_on_formation_unlock_filter_selected.bind(pair[1]))
@@ -3309,6 +3313,9 @@ func _sorted_formation_ids(source_ids: Array) -> Array:
 
 func _refresh_formation_mode() -> void:
 	var showing_team := formation_mode == "team"
+	if is_instance_valid(demon_category_row):
+		demon_category_row.visible = formation_mode == "skill"
+		demon_category_empty.visible = false
 	var showing_transcendence := formation_mode == "transcendence"
 	_refresh_formation_cost_sort_buttons()
 	_refresh_formation_unlock_filters(showing_team)
@@ -3671,6 +3678,44 @@ func _toggle_team_monster(monster_id: String) -> void:
 		_add_team_monster(monster_id)
 
 
+func _setup_demon_category_tabs() -> void:
+	var layout := $SafeArea/Layout/Content/TeamTab/TeamLayout
+	demon_category_row = HBoxContainer.new()
+	demon_category_row.name = "DemonCategories"
+	layout.add_child(demon_category_row)
+	layout.move_child(demon_category_row, layout.get_node("ListHeader").get_index())
+	for category in DEMON_ULTIMATES.CATEGORIES:
+		var button := Button.new()
+		button.text = String(category.name)
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.pressed.connect(_select_demon_category.bind(String(category.id)))
+		demon_category_row.add_child(button)
+	demon_category_empty = Label.new()
+	demon_category_empty.text = "아직 이 분류의 기술이 없습니다."
+	demon_category_empty.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	layout.add_child(demon_category_empty)
+	layout.move_child(demon_category_empty, layout.get_node("MonsterScroll").get_index())
+	demon_category_row.hide()
+	demon_category_empty.hide()
+
+func _select_demon_category(category: String) -> void:
+	demon_skill_category = category
+	_apply_demon_category()
+
+func _apply_demon_category() -> void:
+	if not is_instance_valid(demon_category_row):
+		return
+	var ids := DEMON_ULTIMATES.ids_in_category(demon_skill_category)
+	var count := 0
+	for card in team_monster_grid.get_children():
+		if card.has_meta("skill_id"):
+			card.visible = String(card.get_meta("skill_id")) in ids
+			if card.visible:
+				count += 1
+	for index in DEMON_ULTIMATES.CATEGORIES.size():
+		_apply_lobby_button_skin(demon_category_row.get_child(index), String(DEMON_ULTIMATES.CATEGORIES[index].id) == demon_skill_category, 23)
+	demon_category_empty.visible = formation_mode == "skill" and count == 0
+
 func _refresh_demon_skill_preview() -> void:
 	if formation_mode != "skill":
 		return
@@ -3690,9 +3735,10 @@ func _refresh_demon_skill_preview() -> void:
 
 	_clear_team_monster_cards()
 	for raw_id in _sorted_formation_ids(demon_skill_catalog_ids):
-		team_monster_grid.add_child(
-			_create_demon_skill_card(String(raw_id))
-		)
+		var card := _create_demon_skill_card(String(raw_id))
+		card.set_meta("skill_id", String(raw_id))
+		team_monster_grid.add_child(card)
+	_apply_demon_category()
 
 
 func _refresh_demon_skill_slot(button: Button, slot_index: int) -> void:

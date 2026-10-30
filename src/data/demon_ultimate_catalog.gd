@@ -6,11 +6,21 @@ const PASSIVE_CHARGE_PER_SECOND := 1.0
 const SUMMON_COST_CHARGE_MULTIPLIER := 1.2
 const HERO_DAMAGE_CHARGE_MULTIPLIER := 0.25
 
+const CATEGORIES := [
+	{"id": "all", "name": "전체"},
+	{"id": "attack", "name": "공격"},
+	{"id": "defense", "name": "방어"},
+	{"id": "summon", "name": "소환"},
+	{"id": "disrupt", "name": "방해"},
+]
+
 const SKILLS = {
 	"encirclement": {
 		"id": "encirclement",
 		"name": "원형 포위",
 		"description": "용사 외곽 원주에 편성 몬스터를 둘러 소환",
+		"category": "summon",
+		"max_monster_cost": 6.0,
 		"implemented": true,
 		"mana_cost": 70.0,
 		"spawn_count": 12,
@@ -23,6 +33,8 @@ const SKILLS = {
 		"id": "line_assault",
 		"name": "직선 포위",
 		"description": "동/서/남/북 한 면에서 일직선 소환",
+		"category": "summon",
+		"max_monster_cost": 6.0,
 		"implemented": true,
 		"mana_cost": 40.0,
 		"spawn_count": 10,
@@ -36,6 +48,8 @@ const SKILLS = {
 		"id": "square_siege",
 		"name": "사각 포위",
 		"description": "용사 외곽 최대 범위를 사각형으로 둘러 소환",
+		"category": "summon",
+		"max_monster_cost": 6.0,
 		"implemented": true,
 		"mana_cost": 100.0,
 		"spawn_count": 20,
@@ -54,10 +68,23 @@ const ORDER := [
 
 static func get_skill(skill_id: String) -> Dictionary:
 	var data: Dictionary = SKILLS.get(skill_id, {})
-	return data.duplicate(true)
+	var result := data.duplicate(true)
+	if result.has("max_monster_cost"):
+		result["description"] = String(result.get("description", "")) + " · %s코스트 이하 몬스터만 소환" % format_cost(float(result.max_monster_cost))
+	return result
 
 static func get_ordered_ids() -> Array[String]:
 	var result: Array[String] = []
 	for skill_id in ORDER:
 		result.append(String(skill_id))
+	return result
+
+static func format_cost(cost: float) -> String:
+	return str(int(cost)) if is_equal_approx(cost, roundf(cost)) else str(cost)
+
+static func ids_in_category(category: String) -> Array[String]:
+	var result: Array[String] = []
+	for id in ORDER:
+		if category == "all" or String(SKILLS[id].get("category", "")) == category:
+			result.append(String(id))
 	return result

@@ -2783,7 +2783,7 @@ func _refresh_demon_ultimate_buttons() -> void:
 		button.disabled = not ready
 		var status := "쿨 %.1f초" % remaining if remaining > 0.001 else "비용 %d · %s" % [roundi(mana_cost),("방향 선택" if skill_id == "line_assault" else "사용 가능") if ready else "부족"]
 		content.update_state(status,ready)
-		button.tooltip_text = "%s\n%s" % [String(skill.get("name","마력 기술")),status]
+		button.tooltip_text = "%s\n%s\n%s" % [String(skill.get("name","마력 기술")), String(skill.get("description", "")), status]
 
 func _on_demon_ultimate_pressed(skill_id: String) -> void:
 	for index in demon_ultimate_ui_skills.size():
@@ -2827,6 +2827,9 @@ func _on_demon_ultimate_pressed(skill_id: String) -> void:
 
 	var skill := DEMON_ULTIMATES.get_skill(skill_id)
 	if skill.is_empty():
+		return
+	if skill.has("max_monster_cost") and battle._demon_skill_pool(skill).is_empty():
+		status_label.text = "%s코스트 이하 몬스터가 편성되어 있어야 합니다." % DEMON_ULTIMATES.format_cost(float(skill.max_monster_cost))
 		return
 	if not bool(skill.get("implemented", false)):
 		status_label.text = "%s은(는) 다음 단계에서 구현합니다." % String(
@@ -2882,7 +2885,11 @@ func _on_demon_line_direction_pressed(direction: String) -> void:
 		_close_demon_direction_select()
 		return
 
-	_show_battle_toast("일직선 공세를 발동할 수 없습니다.", 1.2)
+	var skill := DEMON_ULTIMATES.get_skill("line_assault")
+	var failure := "일직선 공세를 발동할 수 없습니다."
+	if skill.has("max_monster_cost") and battle._demon_skill_pool(skill).is_empty():
+		failure = "%s코스트 이하 몬스터가 편성되어 있어야 합니다." % DEMON_ULTIMATES.format_cost(float(skill.max_monster_cost))
+	_show_battle_toast(failure, 1.2)
 	_set_default_battle_status()
 	_close_demon_direction_select()
 
