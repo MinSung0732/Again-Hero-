@@ -99,7 +99,8 @@ func _physics_process(delta: float) -> void:
 
 	retarget_timer = maxf(retarget_timer - delta, 0.0)
 	if (
-		not HERO_TARGET_POLICY.is_detectable(target)
+		not is_instance_valid(target)
+		or not HERO_TARGET_POLICY.is_detectable(target)
 		or retarget_timer <= 0.0
 	):
 		target = _find_nearest_target()

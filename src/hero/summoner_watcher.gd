@@ -124,7 +124,8 @@ func _physics_process(delta: float) -> void:
 		target = priority_target
 		retarget_timer = 0.10
 	elif (
-		not HERO_TARGET_POLICY.is_detectable(target)
+		not is_instance_valid(target)
+		or not HERO_TARGET_POLICY.is_detectable(target)
 		or retarget_timer <= 0.0
 	):
 		target = _find_nearest_target()
@@ -146,12 +147,12 @@ func _get_owner_priority_target() -> Node2D:
 	if not is_instance_valid(owner_hero):
 		return null
 	var raw_target = owner_hero.get("target")
-	if not raw_target is Node2D:
+	if not is_instance_valid(raw_target) or not raw_target is Node2D:
 		return null
 	var priority_target := raw_target as Node2D
 	if (
-		not is_instance_valid(priority_target)
-		or priority_target.is_queued_for_deletion()
+		not HERO_TARGET_POLICY.is_detectable(priority_target)
+		or (priority_target.get("current_hp") != null and int(priority_target.get("current_hp")) <= 0)
 		or global_position.distance_squared_to(priority_target.global_position)
 		> attack_range * attack_range
 	):

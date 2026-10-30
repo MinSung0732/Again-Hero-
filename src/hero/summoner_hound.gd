@@ -1,5 +1,7 @@
 extends CharacterBody2D
 var area_attack = preload("res://src/hero/summon_area_attack.gd").new()
+const MOVEMENT_WATCHDOG := preload("res://src/hero/summoner_movement_watchdog.gd")
+var movement_watchdog = MOVEMENT_WATCHDOG.new()
 const RECEIVED_STATUS := preload("res://src/data/status_effect_catalog.gd")
 
 const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
@@ -103,6 +105,7 @@ func activate(world_position: Vector2, new_owner: Node2D, config: Dictionary) ->
 	active = true
 	visible = true
 	velocity = Vector2.ZERO
+	movement_watchdog.reset(global_position)
 	collision_shape.set_deferred("disabled", false)
 	if not is_in_group("hero_summons"):
 		add_to_group("hero_summons")
@@ -141,13 +144,15 @@ func _physics_process(delta: float) -> void:
 		return
 
 	if (
-		not HERO_TARGET_POLICY.is_detectable(target)
+		not is_instance_valid(target)
+		or not HERO_TARGET_POLICY.is_detectable(target)
 		or retarget_timer <= 0.0
 	):
 		target = _find_nearest_target()
 		retarget_timer = 0.10
 
 	if not is_instance_valid(target):
+		movement_watchdog.reset(global_position)
 		velocity = Vector2.ZERO
 		if visual.animation != &"idle":
 			visual.play(&"idle")
@@ -172,11 +177,17 @@ func _physics_process(delta: float) -> void:
 			elif owner_hero.has_method("get_summoner_runtime_speed_multipliers"):
 				var support: Dictionary = owner_hero.call("get_summoner_runtime_speed_multipliers")
 				move_multiplier *= maxf(float(support.get("move_speed", 1.0)), 0.1)
-		velocity = global_position.direction_to(target.global_position) * move_speed * move_multiplier * float(get_meta("yuki_slow_multiplier",1.0))*RECEIVED_STATUS.movement_multiplier(self)
+		var speed := move_speed * move_multiplier * float(get_meta("yuki_slow_multiplier",1.0)) * RECEIVED_STATUS.movement_multiplier(self)
+		var direction := movement_watchdog.direction(global_position, global_position.direction_to(target.global_position), speed, delta)
+		if movement_watchdog.recovered:
+			target = null
+			retarget_timer = 0.0
+		velocity = direction * speed
 		move_and_slide()
 		if visual.animation != &"move":
 			visual.play(&"move")
 	else:
+		movement_watchdog.reset(global_position)
 		velocity = Vector2.ZERO
 		if attack_timer <= 0.0:
 			_start_attack(target)
@@ -192,7 +203,7 @@ func _update_pending_hits(delta: float) -> void:
 	if hit_timer > 0.0:
 		return
 
-	if HERO_TARGET_POLICY.is_detectable(attack_target):
+	if is_instance_valid(attack_target) and HERO_TARGET_POLICY.is_detectable(attack_target):
 		if attack_target.has_method("take_damage"):
 			var dealt_damage := float(attack_damage)
 			var raw_hp = attack_target.get("current_hp")

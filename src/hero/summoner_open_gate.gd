@@ -26,6 +26,7 @@ var frame_dir: String = DEFAULT_FRAME_DIR
 var visual_scale: float = 0.70
 var visual_offset_y: float = -133.0
 var phase: StringName = &"inactive"
+var opening_watchdog_remaining := 0.0
 var drone_pool: Array[Node2D] = []
 var drone_spawn_index: int = 0
 var drone_spawn_half_width: float = 90.0
@@ -113,6 +114,7 @@ func activate(world_position: Vector2, new_owner: Node2D, config: Dictionary) ->
 	active = true
 	visible = true
 	phase = &"opening"
+	opening_watchdog_remaining = float(visual.sprite_frames.get_frame_count(&"opening")) * opening_frame_seconds + 1.0
 	if not is_in_group("hero_summons"):
 		add_to_group("hero_summons")
 	set_physics_process(true)
@@ -126,7 +128,11 @@ func _physics_process(delta: float) -> void:
 	if not active:
 		return
 
-	if phase == &"open":
+	if phase == &"opening":
+		opening_watchdog_remaining -= delta
+		if opening_watchdog_remaining <= 0.0:
+			_enter_open_phase()
+	elif phase == &"open":
 		open_duration_remaining = maxf(open_duration_remaining - delta, 0.0)
 		drone_spawn_timer = maxf(drone_spawn_timer - delta, 0.0)
 		while drone_spawn_timer <= 0.0 and open_duration_remaining > 0.0:
@@ -214,13 +220,17 @@ func take_damage(_amount: int, _source: Node = null) -> bool:
 func _on_visual_animation_finished() -> void:
 	if not active:
 		return
-	if visual.animation == &"opening":
-		phase = &"open"
-		open_duration_remaining = open_duration
-		drone_spawn_timer = drone_spawn_interval
-		visual.play(&"open_loop")
+	if visual.animation == &"opening" and phase == &"opening":
+		_enter_open_phase()
 	elif visual.animation == &"closing":
 		deactivate()
+
+
+func _enter_open_phase() -> void:
+	phase = &"open"
+	open_duration_remaining = open_duration
+	drone_spawn_timer = drone_spawn_interval
+	visual.play(&"open_loop")
 
 
 func _setup_visual(requested_frame_dir: String, opening_frame_seconds: float) -> void:
