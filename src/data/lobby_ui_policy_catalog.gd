@@ -10,6 +10,7 @@ const OTHER_ACTIONS := {
 	"profile": {"method": "show_profile"},
 	"demon_book": {"method": "show_demon_codex"},
 	"hero_book": {"method": "show_hero_codex"},
+	"rank_history": {"method": "show_rank_history"},
 	"practice": {"method": "_enter_practice_battle", "target": "lobby", "visible_if": "is_practice_allowed", "text": "연습전투  ›\n무한 체력 도망 더미 · 등록한 초월 기술 확인"},
 	"settings": {"method": "_open_settings"},
 }
@@ -20,6 +21,7 @@ const TAB_HOSTS := {
 }
 const OTHER_VIEWS := {
 	"profile": {"property": "profile_view", "back_height": 88.0},
+	"rank_history": {"property": "rank_history_view", "back_height": 88.0},
 	"hero_book": {"property": "hero_codex_view", "back_height": 88.0},
 	"demon_book": {"property": "demon_codex_view", "back_height": 56.0},
 }

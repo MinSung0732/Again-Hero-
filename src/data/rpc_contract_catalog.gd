@@ -4,6 +4,7 @@ const CONNECTION := preload("res://src/data/cloud_connection_catalog.gd")
 
 # Transport argument types, separate from snapshot/gameplay values.
 const INTEGER_ARGUMENTS := {
+	"get_ranked_leaderboard": ["page_offset", "page_size"],
 	"cloud_sync": ["expected_revision"],
 	"account_tutorial": ["expected_revision"],
 	"save_game_snapshot": ["expected_revision"],

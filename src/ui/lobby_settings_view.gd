@@ -16,6 +16,7 @@ const GAME_OPTIONS := POLICY.GAME_OPTIONS
 var other_menu: VBoxContainer
 var other_menu_buttons := {}
 var settings_root: VBoxContainer
+var rank_history_view: RefCounted
 var profile_view: RefCounted
 var hero_codex_view: RefCounted
 var demon_codex_view: RefCounted
@@ -91,6 +92,8 @@ func install(target: Control) -> void:
 	_build_other_menu(box)
 	profile_view = preload("res://src/ui/lobby_profile_view.gd").new()
 	profile_view.install(self, box)
+	rank_history_view = preload("res://src/ui/ranked_leaderboard_view.gd").new()
+	rank_history_view.install(self, box)
 	hero_codex_view = preload("res://src/ui/lobby_hero_codex_view.gd").new()
 	hero_codex_view.install(self,box)
 	demon_codex_view = preload("res://src/ui/lobby_demon_codex_view.gd").new()
@@ -283,6 +286,9 @@ func show_hero_codex() -> void:
 
 func show_demon_codex() -> void:
 	_show_other_view("demon_book")
+
+func show_rank_history() -> void:
+	_show_other_view("rank_history")
 
 func show_profile() -> void:
 	_show_other_view("profile")

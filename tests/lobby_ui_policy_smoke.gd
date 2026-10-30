@@ -74,15 +74,15 @@ func run() -> void:
 	for index in expected_menu.size():
 		var id: String=expected_menu[index]; var button: Button=view.other_menu_buttons[id]
 		check(rows.get_child(index)==button and button.custom_minimum_size.y==132,"menu order/touch size: "+id)
-		check(button.disabled==(id=="rank_history"),"menu availability: "+id)
-	check(view.other_menu_buttons.rank_history.text=="랭킹기록\n준비 중","pending ranking category remains disabled")
+		check(not button.disabled,"menu availability: "+id)
+	check(view.other_menu_buttons.rank_history.text=="랭킹기록  ›","ranking category available")
 	check(not view.other_menu_buttons.practice.visible,"practice hidden outside allowed mode")
-	var mode:=root.get_node("LocalTestMode"); mode.practice_allowed=true
+	var mode:=root.get_node("LocalTestMode"); mode.active=true
 	view.show_menu()
 	check(view.other_menu_buttons.practice.visible and view.other_menu_buttons.practice.text=="연습전투  ›\n무한 체력 도망 더미 · 등록한 초월 기술 확인","practice gate re-evaluates on menu return")
 	view.other_menu_buttons.practice.pressed.emit()
 	check(host.practice_calls==1,"practice action reaches lobby exactly once")
-	mode.practice_allowed=false
+	mode.active=false
 	for id in ["profile","hero_book","demon_book"]:
 		view.other_menu_buttons[id].pressed.emit()
 		var target: RefCounted=view.get(DATA.OTHER_VIEWS[id].property)

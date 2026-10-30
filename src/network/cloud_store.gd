@@ -254,6 +254,7 @@ func _request_with_token(method: String, data: Dictionary, token: String) -> Dic
 	var parser := JSON.new()
 	if parser.parse((response[3] as PackedByteArray).get_string_from_utf8()) != OK:
 		return {} # Malformed server bodies follow the existing retry path.
+	if method == "get_ranked_leaderboard" and parser.data is Array: return {"rows": parser.data}
 	return parser.data if parser.data is Dictionary else {}
 
 func _rpc_endpoint(method: String) -> String:
