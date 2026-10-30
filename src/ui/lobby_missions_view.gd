@@ -205,7 +205,7 @@ func refresh() -> void:
 		for cached in _row_cache.values():
 			cached.button.disabled = true
 		return
-	_reset.text = RULES.tab(_tab).reset
+	_reset.text = preload("res://src/data/server_clock_catalog.gd").WAITING_MESSAGE if snapshot.get("clock_pending", false) else RULES.tab(_tab).reset
 	for id in _tabs:
 		_tabs[id].modulate = Color("f6d681") if id == _tab else Color.WHITE
 	var ready := 0
@@ -223,14 +223,14 @@ func refresh() -> void:
 		var text_color := Color("aaaab0") if row.claimed else Color("fff0c9")
 		for label_key in ["title", "reward", "state"]:
 			cached[label_key].add_theme_color_override("font_color", text_color)
-		cached.button.disabled = row.claimed or not row.complete
+		cached.button.disabled = row.claimed or not row.complete or snapshot.get("clock_pending", false)
 		cached.button.add_theme_stylebox_override("normal", _ready_style if row.complete and not row.claimed else _normal_style)
 		_rows.move_child(cached.button, position)
 		position += 1
 		if row.complete and not row.claimed:
 			ready += 1
 	_all.text = "모두 받기 (%d)" % ready
-	_all.disabled = ready == 0
+	_all.disabled = ready == 0 or snapshot.get("clock_pending", false)
 
 func _claim(id: String) -> void:
 	_all.disabled = true

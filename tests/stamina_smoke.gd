@@ -1,5 +1,7 @@
 extends SceneTree
 
+const CLOCK_FIXTURE := preload("res://src/systems/server_clock.gd")
+
 const COUPONS := preload("res://src/data/coupon_catalog.gd")
 const STORE := preload("res://src/systems/stamina_store.gd")
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
@@ -56,6 +58,10 @@ func capture(name: String) -> void:
 		root.get_texture().get_image().save_png("/tmp/commerce-" + name + ".png")
 
 func run() -> void:
+	# These existing scenarios exercise the online, synchronized path.
+	CLOCK_FIXTURE.synced_unix = int(Time.get_unix_time_from_system())
+	CLOCK_FIXTURE.synced_ticks = Time.get_ticks_msec()
+	CLOCK_FIXTURE._synced = true
 	root.get_node("CloudStore").stop()
 	root.get_node("LoginGateway").remember_session_enabled = false
 	var mode := root.get_node("LocalTestMode")

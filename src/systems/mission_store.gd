@@ -1,5 +1,7 @@
 extends RefCounted
 
+const CLOCK := preload("res://src/systems/server_clock.gd")
+
 const RULES := preload("res://src/data/mission_catalog.gd")
 const LEDGER := preload("res://src/systems/mission_ledger.gd")
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
@@ -10,7 +12,7 @@ static func owner() -> String:
 	return SCOPE.user_id if not SCOPE.user_id.is_empty() else "guest:" + SCOPE.guest_directory
 
 static func now() -> int:
-	return int(Time.get_unix_time_from_system())
+	return CLOCK.now()
 
 static func _check_owner() -> void:
 	if pending_owner != owner():
@@ -19,14 +21,14 @@ static func _check_owner() -> void:
 
 static func record(event: String, amount: float, at: int = -1) -> void:
 	_check_owner()
-	LEDGER.record(pending, event, amount, now() if at < 0 else at)
+	LEDGER.record(pending, event, amount, now() if at < 0 else at, at >= 0 or CLOCK.allowed())
 
 static func _load(config: ConfigFile) -> bool:
 	return SCOPE.load_config(config, RULES.SAVE_PATH) in [OK, ERR_FILE_NOT_FOUND]
 
-static func _state(config: ConfigFile, at: int) -> Dictionary:
+static func _state(config: ConfigFile, at: int, advance: bool = true) -> Dictionary:
 	var value: Variant = config.get_value("missions", "state", {})
-	return LEDGER.normalize(value.duplicate(true) if value is Dictionary else {}, at)
+	return LEDGER.normalize(value.duplicate(true) if value is Dictionary else {}, at, advance)
 
 static func flush(at: int = -1) -> bool:
 	_check_owner()
@@ -36,8 +38,8 @@ static func flush(at: int = -1) -> bool:
 	if not _load(config):
 		return false
 	var timestamp := now() if at < 0 else at
-	var state := _state(config, timestamp)
-	LEDGER.merge(state, pending, timestamp)
+	var state := _state(config, timestamp, at >= 0 or CLOCK.allowed())
+	LEDGER.merge(state, pending, timestamp, at >= 0 or CLOCK.allowed())
 	config.set_value("missions", "state", state)
 	if SCOPE.save_configs({"stage_progress.cfg": config}, true) != OK:
 		return false # Retain pending counts for a later retry.
@@ -50,8 +52,8 @@ static func snapshot(at: int = -1) -> Dictionary:
 	if not _load(config):
 		return {"success": false, "tabs": {}, "claimable": 0}
 	var timestamp := now() if at < 0 else at
-	var state := _state(config, timestamp)
-	LEDGER.merge(state, pending, timestamp)
+	var state := _state(config, timestamp, at >= 0 or CLOCK.allowed())
+	LEDGER.merge(state, pending, timestamp, at >= 0 or CLOCK.allowed())
 	var tabs := {}
 	var claimable := 0
 	for tab in RULES.TABS:
@@ -67,9 +69,11 @@ static func snapshot(at: int = -1) -> Dictionary:
 			rows.append({"id": id, "index": index, "count": count, "target": tab.targets[index], "claimed": claimed, "complete": complete, "rank": rank, "gold": tab.gold[index], "research": tab.research[index], "title": RULES.TITLES[index] % tab.targets[index]})
 		rows.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a.rank < b.rank or (a.rank == b.rank and a.index < b.index))
 		tabs[tab.id] = rows
-	return {"success": true, "tabs": tabs, "claimable": claimable}
+	return {"success": true, "tabs": tabs, "claimable": claimable if at >= 0 or CLOCK.allowed() else 0, "clock_pending": at < 0 and not CLOCK.allowed()}
 
 static func claim(tab_id: String, mission_id: String = "", at: int = -1) -> Dictionary:
+	if at < 0 and not CLOCK.allowed():
+		return {"success": false, "reason": "clock_pending"}
 	var tab := RULES.tab(tab_id)
 	if tab.is_empty() or (not mission_id.is_empty() and mission_id not in RULES.EVENTS):
 		return {"success": false, "reason": "invalid"}
@@ -79,7 +83,7 @@ static func claim(tab_id: String, mission_id: String = "", at: int = -1) -> Dict
 	var config := ConfigFile.new()
 	if not _load(config):
 		return {"success": false, "reason": "save_failed"}
-	var state := _state(config, timestamp)
+	var state := _state(config, timestamp, at >= 0 or CLOCK.allowed())
 	var gold := 0
 	var research := 0
 	var count := 0

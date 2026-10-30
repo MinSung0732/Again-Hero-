@@ -253,7 +253,7 @@ func refresh() -> void:
 		elif int(state.amount) >= RULES.MAX_NATURAL:
 			copy += "\n회복 완료 · 자연회복이 멈춰 있습니다."
 		else:
-			copy += "\n다음 +1까지  %s\n최대 충전까지  %s" % [format_duration(int(state.next_seconds)), format_duration(int(state.full_seconds))]
+			copy += "\n" + preload("res://src/data/server_clock_catalog.gd").WAITING_MESSAGE if not preload("res://src/systems/server_clock.gd").allowed() else "\n다음 +1까지  %s\n최대 충전까지  %s" % [format_duration(int(state.next_seconds)), format_duration(int(state.full_seconds))]
 		copy += "\n\n선물·구매분은 %d을 넘겨 보유할 수 있어요.\n충전 상품은 재화 칸의 +에서 확인하세요." % RULES.MAX_NATURAL
 		details.text = (_notice + "\n\n" if not _notice.is_empty() else "") + copy
 

@@ -1,5 +1,7 @@
 extends RefCounted
 
+const CLOCK := preload("res://src/systems/server_clock.gd")
+
 const RULES := preload("res://src/data/stamina_catalog.gd")
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
 const SAVE_PATH := "user://stage_progress.cfg"
@@ -15,7 +17,7 @@ static func _owner() -> String:
 	return SCOPE.user_id if not SCOPE.user_id.is_empty() else "guest:" + SCOPE.guest_directory
 
 static func _now(value: int) -> int:
-	return maxi(value if value >= 0 else int(Time.get_unix_time_from_system()), 0)
+	return maxi(value if value >= 0 else CLOCK.now(), 0)
 
 static func invalidate() -> void:
 	_cache_valid = false
@@ -39,9 +41,11 @@ static func _load(config: ConfigFile) -> Error:
 	var error := SCOPE.load_config(config, SAVE_PATH)
 	return OK if error == ERR_FILE_NOT_FOUND else error
 
-static func _from_config(config: ConfigFile, now: int) -> Dictionary:
+static func _from_config(config: ConfigFile, now: int, settle: bool = true, clamp_future: bool = false) -> Dictionary:
+	if not settle:
+		return {"amount": maxi(int(config.get_value(SECTION, "amount", RULES.INITIAL_AMOUNT)), 0), "recovery_at": int(config.get_value(SECTION, "recovery_at", now)), "next_seconds": 0, "full_seconds": 0}
 	return resolve(int(config.get_value(SECTION, "amount", RULES.INITIAL_AMOUNT)),
-		int(config.get_value(SECTION, "recovery_at", now)), now)
+		mini(int(config.get_value(SECTION, "recovery_at", now)), now) if clamp_future else int(config.get_value(SECTION, "recovery_at", now)), now)
 
 static func read_state(at: int = -1) -> Dictionary:
 	var now := _now(at)
@@ -56,7 +60,8 @@ static func read_state(at: int = -1) -> Dictionary:
 		_cache_serial = SCOPE.serial
 		_cache_revision = SCOPE.revision
 		_cache_valid = true
-	var state := resolve(_amount, _anchor, now)
+	if at < 0 and CLOCK.allowed(): _anchor = mini(_anchor, now)
+	var state := resolve(_amount, _anchor, now if at >= 0 or CLOCK.allowed() else _anchor)
 	state["success"] = true
 	return state
 
@@ -77,10 +82,11 @@ static func try_enter(stage_id: String, exempt: bool = false, at: int = -1, upda
 	if _load(config) != OK:
 		return {"success": false, "reason": "save_failed"}
 	var now := _now(at)
-	var state := _from_config(config, now)
+	var state := _from_config(config, now, at >= 0 or CLOCK.allowed(), at < 0 and CLOCK.allowed())
 	var cost: int = 0 if exempt else RULES.ENTRY_COST
 	if int(state.amount) < cost:
 		return {"success": false, "reason": "insufficient", "amount": state.amount}
+	if int(state.amount) >= RULES.MAX_NATURAL: state.recovery_at = now
 	var old_stage := String(config.get_value("progress", "current_stage_id", "stage_1"))
 	state.amount -= cost
 	var entry_id := int(config.get_value(SECTION, "entry_serial", 0)) + 1
@@ -106,7 +112,7 @@ static func grant(amount: int, grant_id: String, at: int = -1) -> Dictionary:
 	if config.has_section_key("stamina_grants", grant_id):
 		return {"success": true, "reason": "already_granted", "granted": 0}
 	var now := _now(at)
-	var state := _from_config(config, now)
+	var state := _from_config(config, now, at >= 0 or CLOCK.allowed(), at < 0 and CLOCK.allowed())
 	state.amount += amount
 	if int(state.amount) >= RULES.MAX_NATURAL:
 		state.recovery_at = now
@@ -124,7 +130,7 @@ static func grant_repeatable(amount: int, source_id: String, at: int = -1) -> Di
 	if _load(config) != OK:
 		return {"success":false,"reason":"save_failed"}
 	var now := _now(at)
-	var state := _from_config(config,now)
+	var state := _from_config(config,now, at >= 0 or CLOCK.allowed(), at < 0 and CLOCK.allowed())
 	state.amount += amount
 	if int(state.amount) >= RULES.MAX_NATURAL: state.recovery_at = now
 	var uses := int(config.get_value("stamina_repeatable_grants",source_id,0))+1
@@ -146,7 +152,7 @@ static func refund_failed_entry(entry: Dictionary, at: int = -1) -> bool:
 	if config.has_section_key("stamina_grants", key):
 		return true
 	var now := _now(at)
-	var state := _from_config(config, now)
+	var state := _from_config(config, now, at >= 0 or CLOCK.allowed(), at < 0 and CLOCK.allowed())
 	state.amount += cost
 	if int(state.amount) >= RULES.MAX_NATURAL:
 		state.recovery_at = now
@@ -183,7 +189,7 @@ static func refund_early_exit(entry: Dictionary, elapsed_ms: int, at: int = -1) 
 	if config.has_section_key("stamina_grants", key):
 		return {"success": true, "refunded": 0}
 	var now := _now(at)
-	var state := _from_config(config, now)
+	var state := _from_config(config, now, at >= 0 or CLOCK.allowed(), at < 0 and CLOCK.allowed())
 	state.amount += RULES.EARLY_EXIT_REFUND
 	if int(state.amount) >= RULES.MAX_NATURAL:
 		state.recovery_at = now

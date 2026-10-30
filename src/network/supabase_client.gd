@@ -91,7 +91,7 @@ func request_json(
 func _on_http_request_completed(
 	result: int,
 	response_code: int,
-	_headers: PackedStringArray,
+	headers: PackedStringArray,
 	body: PackedByteArray,
 	request: HTTPRequest,
 	tag: String,
@@ -104,6 +104,7 @@ func _on_http_request_completed(
 	if result != HTTPRequest.RESULT_SUCCESS:
 		request_completed.emit(tag, 0, null)
 		return
+	get_node("/root/ServerClock").observe(headers)
 	var body_text := body.get_string_from_utf8()
 	var payload: Variant = body_text
 

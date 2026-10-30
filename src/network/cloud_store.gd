@@ -223,6 +223,8 @@ func _request_with_token(method: String, data: Dictionary, token: String) -> Dic
 		request.queue_free()
 		return {}
 	var response: Array = await request.request_completed
+	if response[0] == HTTPRequest.RESULT_SUCCESS:
+		get_node("/root/ServerClock").observe(response[2])
 	request.queue_free()
 	_last_http_status = int(response[1]) if response[0] == HTTPRequest.RESULT_SUCCESS else 0
 	if RPC_CODEC.is_permanent_http_error(_last_http_status):

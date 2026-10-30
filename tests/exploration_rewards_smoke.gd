@@ -1,5 +1,7 @@
 extends SceneTree
 
+const CLOCK_FIXTURE := preload("res://src/systems/server_clock.gd")
+
 const STORE := preload("res://src/systems/exploration_reward_store.gd")
 const RULES := preload("res://src/data/exploration_reward_catalog.gd")
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
@@ -34,6 +36,10 @@ func config() -> ConfigFile:
 	return result
 
 func run() -> void:
+	# These existing scenarios exercise the online, synchronized path.
+	CLOCK_FIXTURE.synced_unix = int(Time.get_unix_time_from_system())
+	CLOCK_FIXTURE.synced_ticks = Time.get_ticks_msec()
+	CLOCK_FIXTURE._synced = true
 	root.size = Vector2i(1080, 1920)
 	folder = "user://exploration_test_" + Crypto.new().generate_random_bytes(8).hex_encode()
 	DirAccess.make_dir_recursive_absolute(folder)

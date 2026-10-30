@@ -210,7 +210,7 @@ func refresh() -> void:
 	tools.set_notification(&"exploration", valid and bool(state.get("full", false)))
 	if not is_instance_valid(_overlay):
 		return
-	_claim.disabled = not valid or not bool(state.get("can_claim", false))
+	_claim.disabled = not valid or not bool(state.get("can_claim", false)) or not preload("res://src/systems/server_clock.gd").allowed()
 	if not valid:
 		_status.text = "저장 상태를 확인하지 못했습니다.\n잠시 후 다시 시도해 주세요."
 		return
@@ -222,6 +222,8 @@ func refresh() -> void:
 	_gold.text = "+%d" % int(state.gold)
 	_research.text = "+%d" % int(state.research)
 	_status.text = "가득 찼습니다.\n보상을 획득해 주세요." if state.full else ("보상을 획득할 수 있습니다." if state.can_claim else "51%부터 보상을\n획득할 수 있습니다.")
+
+	if not preload("res://src/systems/server_clock.gd").allowed(): _status.text = preload("res://src/data/server_clock_catalog.gd").WAITING_MESSAGE
 
 func _claim_reward() -> void:
 	_claim.disabled = true

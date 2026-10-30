@@ -25,6 +25,15 @@ func _ready() -> void:
 	var cloud := get_node_or_null("/root/CloudStore")
 	if cloud != null:
 		cloud.status_changed.connect(_on_account_status)
+	get_node("/root/ServerClock").synchronized.connect(_on_clock_synchronized)
+
+func _on_clock_synchronized() -> void:
+	_resume_clock.call_deferred()
+
+func _resume_clock() -> void:
+	_sync_session()
+	_set_idle(not _focused or _paused)
+	changed.emit()
 
 func _on_account_status(_message: String) -> void:
 	# Cloud saves also emit status; only changed account/revision needs a read.

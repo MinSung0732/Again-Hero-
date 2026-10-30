@@ -1,5 +1,7 @@
 extends RefCounted
 
+const CLOCK := preload("res://src/systems/server_clock.gd")
+
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
 const RULES := preload("res://src/data/exploration_reward_catalog.gd")
 const SAVE_PATH := "user://stage_progress.cfg"
@@ -10,7 +12,7 @@ static func _load(config: ConfigFile) -> Error:
 	return OK if error == ERR_FILE_NOT_FOUND else error
 
 static func _now(value: int) -> int:
-	return maxi(value if value >= 0 else int(Time.get_unix_time_from_system()), 0)
+	return maxi(value if value >= 0 else CLOCK.now(), 0)
 
 static func _seconds(config: ConfigFile) -> int:
 	return clampi(int(config.get_value(SECTION, "seconds", 0)), 0, RULES.MAX_SECONDS)
@@ -32,21 +34,25 @@ static func snapshot() -> Dictionary:
 # accrue=true only on app launch/resume. Foreground checkpoints never add time.
 # Preserve all wallet/progress/stamina sections by updating one loaded config.
 static func checkpoint(accrue: bool, now: int = -1) -> Error:
+	if now < 0 and not CLOCK.allowed(): return ERR_BUSY
 	var config := ConfigFile.new()
 	var error := _load(config)
 	if error != OK:
 		return error
+	var explicit_time := now >= 0
 	now = _now(now)
 	var anchor := maxi(int(config.get_value(SECTION, "anchor", now)), 0)
+	if not explicit_time: anchor = mini(anchor, now)
 	var seconds := _seconds(config)
 	if accrue:
 		seconds = mini(seconds + maxi(now - anchor, 0), RULES.MAX_SECONDS)
 	config.set_value(SECTION, "seconds", seconds)
 	# A backwards clock must not create another earnable interval.
-	config.set_value(SECTION, "anchor", maxi(anchor, now))
+	config.set_value(SECTION, "anchor", maxi(anchor, now) if explicit_time else now)
 	return SCOPE.save_config(config, SAVE_PATH)
 
 static func claim(now: int = -1) -> Dictionary:
+	if now < 0 and not CLOCK.allowed(): return {"success": false, "reason": "clock_pending"}
 	var config := ConfigFile.new()
 	var error := _load(config)
 	if error != OK:
@@ -59,7 +65,7 @@ static func claim(now: int = -1) -> Dictionary:
 	config.set_value("meta", "gold", gold + int(reward.gold))
 	config.set_value("meta", "research_points", research + int(reward.research))
 	config.set_value(SECTION, "seconds", 0)
-	config.set_value(SECTION, "anchor", maxi(_now(now), int(config.get_value(SECTION, "anchor", 0))))
+	config.set_value(SECTION, "anchor", _now(now))
 	# Currency and consumed time commit together. No separate grant/reset writes.
 	error = SCOPE.save_config(config, SAVE_PATH)
 	return {"success": true, "gold": reward.gold, "research": reward.research} if error == OK else {"success": false, "reason": "save_failed", "error": error}

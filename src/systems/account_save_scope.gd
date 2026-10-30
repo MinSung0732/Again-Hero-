@@ -1,5 +1,7 @@
 extends RefCounted
 
+const CLOCK := preload("res://src/systems/server_clock.gd")
+
 const MISSION_LEDGER := preload("res://src/systems/mission_ledger.gd")
 
 # Select namespace before progression reads; never migrate guest data silently.
@@ -136,7 +138,7 @@ static func save_configs(configs: Dictionary, write_missions: bool = false) -> E
 			previous_data = files.get("stage_progress.cfg", {})
 		# Work on serialized copies. Failed saves must not mutate the caller's
 		# ConfigFile or count its acquisition again when it retries.
-		MISSION_LEDGER.capture(data["stage_progress.cfg"], previous_data, int(Time.get_unix_time_from_system()), write_missions)
+		MISSION_LEDGER.capture(data["stage_progress.cfg"], previous_data, CLOCK.now(), write_missions, CLOCK.allowed())
 		if not valid_payload(data):
 			return ERR_INVALID_DATA
 	if user_id.is_empty():

@@ -1,5 +1,7 @@
 extends SceneTree
 
+const CLOCK_FIXTURE := preload("res://src/systems/server_clock.gd")
+
 const RULES := preload("res://src/data/mission_catalog.gd")
 const LEDGER := preload("res://src/systems/mission_ledger.gd")
 const STORE := preload("res://src/systems/mission_store.gd")
@@ -20,6 +22,10 @@ func _initialize() -> void:
 	_run.call_deferred()
 
 func _run() -> void:
+	# These existing scenarios exercise the online, synchronized path.
+	CLOCK_FIXTURE.synced_unix = int(Time.get_unix_time_from_system())
+	CLOCK_FIXTURE.synced_ticks = Time.get_ticks_msec()
+	CLOCK_FIXTURE._synced = true
 	var thursday := int(Time.get_unix_time_from_datetime_string("2026-10-07T15:00:00"))
 	check(LEDGER.period("daily", thursday - 1) + 1 == LEDGER.period("daily", thursday), "KST daily midnight")
 	check(LEDGER.period("weekly", thursday - 1) + 1 == LEDGER.period("weekly", thursday), "KST Thursday midnight")
