@@ -39,8 +39,8 @@ static func next_tier_text(mmr: int) -> String:
 static func weekly_reward_tier(demon_mmr: int, hero_mmr: int, demon_rank: int = 0, hero_rank: int = 0) -> String:
 	var demon_tier := tier(demon_mmr, demon_rank)
 	var hero_tier := tier(hero_mmr, hero_rank)
-	if demon_tier == "hero" or hero_tier == "hero": return "hero"
-	return demon_tier if tier_index(demon_mmr) >= tier_index(hero_mmr) else hero_tier
+	# Match settlement's MMR ordering; ties select demon alphabetically.
+	return demon_tier if demon_mmr >= hero_mmr else hero_tier
 
 # Group starts come from threshold data. The initial score is the floor for bronze.
 static func weekly_reset_mmr(mmr: int, server_rank: int = 0) -> int:

@@ -27,6 +27,14 @@ insert into private.ranked_reward_tiers(tier_id,reset_mmr,demon_token,hero_token
  ('demon_lord',2900,17,17),
  ('hero',2900,18,18);
 -- END GENERATED RANKED REWARDS
+-- Keep the live profile's preview consistent with settlement, including ties.
+create or replace function private.ranked_weekly_best(p_user uuid) returns jsonb
+language sql security definer set search_path='' as $$
+ select state from (select r.role, private.ranked_state(p_user, r.role) as state
+ from (values ('demon'),('hero')) as r(role)) s
+ where state <> '{}'::jsonb
+ order by (state->>'mmr')::integer desc, role limit 1
+$$;
 create table public.ranked_season_results (
  user_id uuid not null references auth.users(id) on delete cascade,
  week_start date not null, demon jsonb, hero jsonb, reward_tier text not null,
