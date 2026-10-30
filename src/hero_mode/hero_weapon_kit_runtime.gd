@@ -10,7 +10,7 @@ var casts := 0
 var records: Dictionary = {}
 var order: Array[Vector3i] = []
 var cursor := 0
-var summons_cursor := 0
+var last_summon: Node2D = null
 func install(runtime) -> void:
 	host = weakref(runtime)
 	previous = runtime.hero.global_position
@@ -27,21 +27,36 @@ func cast_factor(data: Dictionary) -> float:
 		movement = 0.0
 		return 1.8 if bool(data.get("growth_evolved",false)) else 1.45
 	return 1.0
+## Summoner weapons fire from the owned summon closest to an enemy in this weapon's range,
+## skipping the summon used last when another one also has a target. Bounded by the
+## registry size (summon slots) with grid queries only, called once per cast.
 func origin(data: Dictionary,fallback: Vector2) -> Vector2:
 	var runtime = host.get_ref()
 	if String(data.owner) != "summoner_hero" or String(data.pattern) == "summon" or not is_instance_valid(runtime.authority): return fallback
 	var registry = runtime.authority.get("active_hero_summons")
 	if not registry is Dictionary: return fallback
-	var count := 0
-	var result := fallback
+	var reach := float(data.get("range",300.0))
+	var best: Node2D = null
+	var best_distance := INF
+	var repeat: Node2D = null
 	for key in registry:
 		var actor = registry[key]
 		if not is_instance_valid(actor) or actor.get("owner_hero") != runtime.hero: continue
-		if count == summons_cursor%3: result = actor.global_position
-		count += 1
-		if count >= 3: break
-	if count > 0: summons_cursor = (summons_cursor+1)%count
-	return result
+		var point: Vector2 = actor.global_position
+		runtime.hero._fill_monster_nodes_near(point,reach,runtime.scratch)
+		var nearest := INF
+		for raw in runtime.scratch:
+			var enemy := raw as Node2D
+			if TARGETS.is_detectable(enemy): nearest = minf(nearest,point.distance_squared_to(enemy.global_position))
+		if nearest > reach*reach: continue
+		if actor == last_summon:
+			repeat = actor
+		elif nearest < best_distance:
+			best = actor; best_distance = nearest
+	if best == null and repeat != null: best = repeat
+	if best == null: return fallback
+	last_summon = best
+	return best.global_position
 func _key(actor: Node2D) -> Vector3i:
 	var runtime = host.get_ref()
 	if not is_instance_valid(runtime.authority) or not runtime.authority.has_method("get_battle_entity_handle"): return Vector3i.ZERO
