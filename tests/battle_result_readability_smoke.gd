@@ -62,7 +62,7 @@ func run() -> void:
 		# Direct summons, strategy switches and hero augment counts are shown since 10-13 (first-minute strategy).
 		for hidden in ["마왕 최종", "일반증강", "특수증강"]:
 			check(not main.result_analysis.text.contains(hidden), "hidden result metric " + hidden)
-		check(main.result_analysis.get_global_rect().end.y <= main.next_stage_button.get_global_rect().position.y if won else main.result_analysis.get_global_rect().end.y <= main.restart_button.get_global_rect().position.y, "record fits above buttons without scroll")
+		check(main.result_presenter.tip.get_global_rect().end.y <= main.next_stage_button.get_global_rect().position.y if won else main.result_presenter.tip.get_global_rect().end.y <= main.restart_button.get_global_rect().position.y, "record fits above buttons without scroll")
 		check(main.result_panel.get_global_rect().end.y <= 1920 and main.restart_button.get_global_rect().end.y <= main.result_panel.get_global_rect().end.y, "panel/actions stay in screen")
 		check(main.restart_button.pressed.is_connected(main._on_restart_pressed) and main.stage_select_result_button.pressed.is_connected(main._on_result_formation_pressed), "existing actions connected")
 		check(won or not main.next_stage_button.visible, "no next-stage action on defeat")

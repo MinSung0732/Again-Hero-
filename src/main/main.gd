@@ -255,8 +255,10 @@ var current_stage_hero_name: String = "용사"
 var _battle_toast_timer: float = 0.0
 
 var hero_voice = preload("res://src/audio/hero_voice_player.gd").new()
+var result_presenter = preload("res://src/ui/battle_result_presenter.gd").new()
 
 func _ready() -> void:
+	result_presenter.install(self)
 	battle_viewport.size = Vector2i(CAMERA_VIEW.DEMON_SIZE)
 	add_child(hero_voice)
 	hero_voice.install(battle)
@@ -3106,6 +3108,7 @@ func _on_battle_finished(message: String, player_won: bool) -> void:
 	stage_select_result_button.text = "로비로 가기"
 	if next_stage_button.visible: next_stage_button.text = "다음 용사 도전 · Stage %d" % (int(battle.current_stage_data.get("number",1))+1)
 	_style_result_actions()
+	result_presenter.show_result(player_won, result_title.text, copy.headline, copy.reward, "")
 	result_panel.show()
 	result_panel.move_to_front()
 
@@ -3134,9 +3137,11 @@ func _populate_run_result_analysis() -> void:
 		var summary = battle.call("get_run_analysis_summary")
 		if summary != null:
 			result_analysis.text = preload("res://src/ui/battle_result_copy.gd").format_analysis(String(summary), _result_reward_details)+"\n\n"+_insight.result_note(_result_won)
+			result_presenter.set_analysis(result_analysis.text)
 			return
 
 	result_analysis.text = "Run 분석을 불러오지 못했습니다."
+	result_presenter.set_analysis(result_analysis.text)
 
 func _on_next_stage_pressed() -> void:
 	if battle.can_go_to_next_stage():
