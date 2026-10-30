@@ -1,6 +1,7 @@
 extends RefCounted
 const DETAIL := preload("res://src/ui/hero_inventory_detail.gd")
 const ICONS := preload("res://src/ui/hero_augment_icons.gd")
+const RESULT_SECTION_MARGIN := 24
 static func build(parent: VBoxContainer, model: Dictionary, actions: Dictionary) -> void:
 	parent.add_theme_constant_override("separation",16)
 	var accent := Color("f8cf7c") if bool(model.won) else Color("ee929b")
@@ -15,6 +16,7 @@ static func build(parent: VBoxContainer, model: Dictionary, actions: Dictionary)
 	body.minimum_size_changed.connect(fit.bind(parent),CONNECT_DEFERRED)
 	fit.call_deferred(parent)
 	var stats := DETAIL.section(body,"전투 기록",accent)
+	stats.get_parent().add_theme_stylebox_override("panel",DETAIL.style(Color("141624"),accent,RESULT_SECTION_MARGIN))
 	var seconds := maxi(0,floori(float(model.seconds)))
 	for pair in [["생존 시간","%02d분 %02d초" % [seconds/60,seconds%60]],["처치 수",str(model.kills)],["용사 Lv.","Lv.%d" % int(model.level)]]:
 		var row := HBoxContainer.new(); row.custom_minimum_size.y = 48; stats.add_child(row)
@@ -23,13 +25,14 @@ static func build(parent: VBoxContainer, model: Dictionary, actions: Dictionary)
 	DETAIL.label(stats,"장착한 핵심 무기",25,Color("a8c7df"))
 	var gear := HFlowContainer.new(); gear.name = "ResultWeapons"; gear.add_theme_constant_override("h_separation",10); gear.add_theme_constant_override("v_separation",10); stats.add_child(gear)
 	for weapon in model.weapons:
-		var frame := PanelContainer.new(); frame.add_theme_stylebox_override("panel",DETAIL.style(Color("111322"),Color("cba763"),8)); gear.add_child(frame)
+		var frame := PanelContainer.new(); frame.add_theme_stylebox_override("panel",DETAIL.style(Color("111322"),Color("cba763"),RESULT_SECTION_MARGIN)); gear.add_child(frame)
 		var slot := VBoxContainer.new(); frame.add_child(slot)
 		var icon := TextureRect.new(); icon.texture = ICONS.texture(String(weapon.id)); icon.custom_minimum_size = Vector2(72,72)
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE; icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED; icon.texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST; icon.mouse_filter = Control.MOUSE_FILTER_IGNORE; slot.add_child(icon)
 		var rank := DETAIL.label(slot,String(weapon.rank),22,Color("ffda86")); rank.autowrap_mode = TextServer.AUTOWRAP_OFF; rank.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	if model.weapons.is_empty(): DETAIL.label(stats,"장착 무기 없음",23)
 	var rewards := DETAIL.section(body,"획득 보상",Color("dfb7ef")); rewards.name = "ResultRewards"
+	rewards.get_parent().add_theme_stylebox_override("panel",DETAIL.style(Color("141624"),Color("dfb7ef"),RESULT_SECTION_MARGIN))
 	if not bool(model.settled):
 		DETAIL.label(rewards,"보상 저장에 실패했습니다. 재시도 후 이동하세요.",24,Color("ee929b"))
 		var retry := DETAIL.button(parent,"보상 저장 재시도",actions.settle); retry.name = "ResultSettle"; retry.grab_focus(); return

@@ -1,6 +1,8 @@
-[gd_scene load_steps=6 format=3]
+[gd_scene load_steps=7 format=3]
 
 [ext_resource type="Texture2D" path="res://assets/art/UI/battle_hud_v2/modal_panel.svg" id="19_modal_panel"]
+
+[ext_resource type="StyleBox" path="res://assets/art/UI/clean_frames/button_frame.tres" id="clean_button"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_modal_panel"]
 texture = ExtResource("19_modal_panel")
@@ -64,9 +66,9 @@ anchor_top = 0.5
 anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -470.0
-offset_top = -330.0
+offset_top = -290.0
 offset_right = 470.0
-offset_bottom = 330.0
+offset_bottom = 290.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -145,7 +147,23 @@ horizontal_alignment = 1
 vertical_alignment = 1
 clip_text = true
 
-[node name="Select" type="Label" parent="./Margin/VBox/Choices/Choice0"]
+[node name="RoleCost" type="Label" parent="./Margin/VBox/Choices/Choice0"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 16.0
+offset_top = 208.0
+offset_right = -16.0
+offset_bottom = 240.0
+mouse_filter = 2
+theme_override_font_sizes/font_size = 19
+text = "역할 · 비용 0"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+text_overrun_behavior = 3
+
+[node name="Select" type="Button" parent="./Margin/VBox/Choices/Choice0"]
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
@@ -206,7 +224,23 @@ horizontal_alignment = 1
 vertical_alignment = 1
 clip_text = true
 
-[node name="Select" type="Label" parent="./Margin/VBox/Choices/Choice1"]
+[node name="RoleCost" type="Label" parent="./Margin/VBox/Choices/Choice1"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 16.0
+offset_top = 208.0
+offset_right = -16.0
+offset_bottom = 240.0
+mouse_filter = 2
+theme_override_font_sizes/font_size = 19
+text = "역할 · 비용 0"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+text_overrun_behavior = 3
+
+[node name="Select" type="Button" parent="./Margin/VBox/Choices/Choice1"]
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0
@@ -267,7 +301,23 @@ horizontal_alignment = 1
 vertical_alignment = 1
 clip_text = true
 
-[node name="Select" type="Label" parent="./Margin/VBox/Choices/Choice2"]
+[node name="RoleCost" type="Label" parent="./Margin/VBox/Choices/Choice2"]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_left = 16.0
+offset_top = 208.0
+offset_right = -16.0
+offset_bottom = 240.0
+mouse_filter = 2
+theme_override_font_sizes/font_size = 19
+text = "역할 · 비용 0"
+horizontal_alignment = 1
+vertical_alignment = 1
+clip_text = true
+text_overrun_behavior = 3
+
+[node name="Select" type="Button" parent="./Margin/VBox/Choices/Choice2"]
 layout_mode = 1
 anchors_preset = 10
 anchor_right = 1.0

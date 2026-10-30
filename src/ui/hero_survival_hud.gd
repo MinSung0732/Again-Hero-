@@ -3,6 +3,10 @@ extends RefCounted
 const BATTLE_TOP := 470.0
 const BACKGROUND_COLOR := Color("101e2c")
 const FRAME_WIDTH := 90.0
+const HEADER_MARGIN := 20
+const MENU_SIZE := Vector2(108,72)
+const SLOT_RANK_INSET := 12
+const SLOT_RANK_FONT := 20
 const ART := preload("res://src/ui/hero_hud_art.gd")
 const MONSTER_ICON := preload("res://assets/art/monsters/slime/frames/idle_01.png")
 const CHARACTERS := preload("res://src/data/hero_character_catalog.gd")
@@ -58,7 +62,8 @@ static func inventory_row(parent: Control, title: String, count: int) -> Array[B
 		icon.mouse_filter = Control.MOUSE_FILTER_IGNORE; button.add_child(icon)
 		var rank := Label.new(); rank.name = "Rank"; rank.text = "+"; rank.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 		rank.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT; rank.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
-		rank.offset_right = -5; rank.offset_bottom = -2; rank.add_theme_font_size_override("font_size",24)
+		rank.offset_left = SLOT_RANK_INSET; rank.offset_right = -SLOT_RANK_INSET
+		rank.offset_top = SLOT_RANK_INSET; rank.offset_bottom = -SLOT_RANK_INSET; rank.add_theme_font_size_override("font_size",SLOT_RANK_FONT)
 		rank.add_theme_color_override("font_outline_color",Color("0d0a18")); rank.add_theme_constant_override("outline_size",5)
 		rank.mouse_filter = Control.MOUSE_FILTER_IGNORE; button.add_child(rank); buttons.append(button)
 	return buttons

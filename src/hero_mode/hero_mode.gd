@@ -197,7 +197,7 @@ func _build_ui() -> void:
 	var header := PanelContainer.new(); header.name = "HeroHUD"; add_child(header)
 	header.set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
 	header.offset_left = 20; header.offset_right = -20; header.offset_top = 16; header.offset_bottom = HUD.BATTLE_TOP-20
-	var frame := StyleBoxFlat.new(); frame.bg_color = Color("171b29"); frame.border_color = Color("c9a45e"); frame.set_border_width_all(3); frame.set_content_margin_all(12)
+	var frame := StyleBoxFlat.new(); frame.bg_color = Color("171b29"); frame.border_color = Color("c9a45e"); frame.set_border_width_all(3); frame.set_content_margin_all(HUD.HEADER_MARGIN)
 	header.add_theme_stylebox_override("panel",SKIN.skin_style(frame))
 	var top := VBoxContainer.new(); top.add_theme_constant_override("separation",6); header.add_child(top)
 	var summary := HBoxContainer.new(); summary.name = "HeroSummary"; summary.add_theme_constant_override("separation",14); top.add_child(summary)
@@ -210,7 +210,7 @@ func _build_ui() -> void:
 	timer = _label(title_row,"남은 시간\n15:00",26); timer.custom_minimum_size.x = 160
 	timer.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER; timer.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	timer.add_theme_color_override("font_color",Color("add5ff"))
-	var menu := Button.new(); menu.text = "설정"; menu.custom_minimum_size = Vector2(90,72); title_row.add_child(menu)
+	var menu := Button.new(); menu.text = "설정"; menu.custom_minimum_size = HUD.MENU_SIZE; title_row.add_child(menu)
 	menu.add_theme_font_size_override("font_size",26); _skin_action_button(menu); menu.pressed.connect(_pause)
 	hp = HUD.bar(vitals,"HP",Color("29cf79"),40)
 	xp = HUD.bar(vitals,"EXP",Color("6b9aef"),32)

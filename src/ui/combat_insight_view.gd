@@ -1,5 +1,7 @@
 extends PanelContainer
 const PIXEL := preload("res://src/ui/pixel_panel_skin.gd")
+const RIGHT_INSET := 178.0
+const VERTICAL_PADDING := 8.0
 var title := Label.new()
 var advice := Label.new()
 var detail_button: Button
@@ -10,11 +12,11 @@ func install(hud: Node,open_details: Callable) -> void:
 	# Keep this background shortcut behind the existing detail panels and modals.
 	hud.move_child(self,0)
 	set_anchors_and_offsets_preset(Control.PRESET_TOP_WIDE)
-	offset_left = 18; offset_right = -18; offset_top = 343; offset_bottom = 414
+	offset_left = 18; offset_right = -RIGHT_INSET; offset_top = 340; offset_bottom = 414
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	var style := StyleBoxFlat.new()
 	style.bg_color = Color("21182f"); style.border_color = Color("89739e"); style.set_border_width_all(1)
-	style.content_margin_left = 12; style.content_margin_right = 12; style.content_margin_top = 4; style.content_margin_bottom = 4
+	style.content_margin_left = 12; style.content_margin_right = 12; style.content_margin_top = VERTICAL_PADDING; style.content_margin_bottom = VERTICAL_PADDING
 	add_theme_stylebox_override("panel",PIXEL.skin_style(style))
 	var rows := VBoxContainer.new(); rows.add_theme_constant_override("separation",0); add_child(rows)
 	for label in [title,advice]:

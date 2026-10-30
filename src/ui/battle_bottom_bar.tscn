@@ -69,7 +69,7 @@ visible = false
 [node name="Status" type="Label" parent="."]
 offset_left = 52.0
 offset_top = 17.0
-offset_right = 328.0
+offset_right = 320.0
 offset_bottom = 67.0
 theme_override_colors/font_color = Color(1, 0.84, 0.5, 1)
 theme_override_colors/font_outline_color = Color(0.02, 0.01, 0.05, 1)
@@ -78,6 +78,7 @@ theme_override_font_sizes/font_size = 18
 text = "자동 배치 · 용사 주변 반경 소환"
 vertical_alignment = 1
 clip_text = true
+text_overrun_behavior = 3
 
 [node name="PlacementModeToggle" type="CheckButton" parent="."]
 metadata/audio_cue = "click"

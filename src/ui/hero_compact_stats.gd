@@ -1,6 +1,8 @@
 extends PanelContainer
 ## Grouped overview. Fixed controls; no combat scans or nodes created on refresh.
 const ART := preload("res://src/ui/hero_hud_art.gd")
+const SKIN := preload("res://src/ui/pixel_panel_skin.gd")
+const BUTTON_MARGIN := 12
 const GROUPS := [{"title":"공격","indices":[0,3,6],"color":Color("f4d18d")},{"title":"생존","indices":[4,1,5],"color":Color("8cddba")},{"title":"이동 · 성장","indices":[2,7],"color":Color("a4c6ff")}]
 const KEYS := ["damage","armor","speed","haste","hp","siphon","area","xp"]
 const TITLES := ["공격력","피해 감소","이동속도","공격속도","최대 체력","피해 흡수","공격 범위","획득 경험치"]
@@ -14,7 +16,12 @@ func _ready() -> void:
 	style.set_border_width_all(2); style.set_content_margin_all(12); add_theme_stylebox_override("panel",style)
 	var box := VBoxContainer.new(); box.add_theme_constant_override("separation",8); add_child(box)
 	toggle = Button.new(); toggle.name = "Toggle"; toggle.custom_minimum_size.y = 64
-	toggle.add_theme_font_size_override("font_size",26); toggle.pressed.connect(_toggle); box.add_child(toggle)
+	toggle.add_theme_font_size_override("font_size",26)
+	var button_style := StyleBoxFlat.new(); button_style.bg_color = Color("223d50"); button_style.border_color = Color("c9a45e")
+	button_style.set_border_width_all(2); button_style.set_content_margin_all(BUTTON_MARGIN)
+	for state in ["normal","hover","pressed","disabled"]: toggle.add_theme_stylebox_override(state,SKIN.skin_style(button_style))
+	toggle.add_theme_stylebox_override("focus",StyleBoxEmpty.new()); toggle.add_theme_color_override("font_color",Color("efe5c9"))
+	toggle.pressed.connect(_toggle); box.add_child(toggle)
 	rows = VBoxContainer.new(); rows.name = "Rows"; rows.add_theme_constant_override("separation",6); box.add_child(rows)
 	values.resize(KEYS.size())
 	for group in GROUPS:
@@ -35,7 +42,7 @@ func _toggle() -> void:
 	expanded = not expanded; _apply()
 func _apply() -> void:
 	rows.visible = expanded; toggle.text = "내 능력치  ‹" if expanded else "능력치  ›"
-	custom_minimum_size.x = 370 if expanded else 152
+	custom_minimum_size.x = 370 if expanded else 180
 	size = Vector2(custom_minimum_size.x,0)
 func refresh(hero, runtime) -> void:
 	if not expanded or runtime == null: return
