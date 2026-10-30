@@ -295,10 +295,7 @@ func advance(real_delta: float) -> void:
 	var approach_time := float(slow_profile.get("approach_end", 0.95))
 	var approach := 1.0 - pow(1.0 - clampf(elapsed / approach_time, 0.0, 1.0), 3.0)
 	if owns_time_scale:
-		var approach_slow := smoothstep(0.0, 1.0, approach)
-		var recover := smoothstep(float(slow_profile.recover_start), float(slow_profile.recover_end), elapsed)
-		var slowing := lerpf(float(slow_profile.get("initial", 1.0)), float(slow_profile.minimum), approach_slow)
-		Engine.time_scale = previous_time_scale * lerpf(slowing, 1.0, recover)
+		Engine.time_scale = previous_time_scale * CATALOG.slow_motion_scale(slow_profile, elapsed)
 	_layout()
 	if elapsed < return_start:
 		camera.global_position = start_center.lerp(focus_position, approach)

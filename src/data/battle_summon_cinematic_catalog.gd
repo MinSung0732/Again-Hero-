@@ -46,3 +46,10 @@ const DEATH_DEFAULT := {
 	"slow_motion": {"initial": 0.45, "minimum": 0.12, "approach_end": 0.35,
 		"recover_start": 1.6, "recover_end": 2.15},
 }
+
+
+static func slow_motion_scale(profile: Dictionary, elapsed: float) -> float:
+	if profile.is_empty(): return 1.0
+	var approach := 1.0 - pow(1.0 - clampf(elapsed / float(profile.get("approach_end", 0.95)), 0.0, 1.0), 3.0)
+	var slowing := lerpf(float(profile.get("initial", 1.0)), float(profile.minimum), smoothstep(0.0, 1.0, approach))
+	return lerpf(slowing, 1.0, smoothstep(float(profile.recover_start), float(profile.recover_end), elapsed))
