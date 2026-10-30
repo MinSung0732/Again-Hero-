@@ -177,7 +177,7 @@ func _add_theme_prop(item: Dictionary, position: Vector2, flip: bool) -> void:
 	if item.has("effect") and THEMES.EFFECTS.has(item.effect):
 		effect_areas.append({"id":item.effect, "position":position, "radius":float(item.radius)})
 	match item.kind:
-		"solid": _add_solid_depth_prop(item.key, position, item.scale, item.collision, flip)
+		"solid": _add_solid_depth_prop(item.key, position, item.scale, item.collision, flip, true)
 		"depth": _add_depth_prop_visual(item.key, position, item.scale, flip)
 		"ground": _add_background_visual(item.key, position, item.scale, flip, -1)
 
@@ -539,12 +539,15 @@ func _add_collision(
 	collision_layer_root.add_child(body)
 
 
+const MIN_CONTACT_SIZE := Vector2(1.0, 1.0)
+
 func _add_solid_depth_prop(
 	key: String,
 	ground_position: Vector2,
 	scale_factor: float,
 	collision_size: Vector2,
-	flip_h: bool = false
+	flip_h: bool = false,
+	use_contact: bool = false
 ) -> void:
 	_add_depth_prop_visual(
 		key,
@@ -553,7 +556,14 @@ func _add_solid_depth_prop(
 		flip_h
 	)
 	var footprint := _prop_footprint(key)
-	if not footprint.is_empty():
+	if use_contact and footprint.has("contact"):
+		var base: Rect2 = footprint.base
+		var contact: Rect2 = footprint.contact
+		var offset_x: float = (contact.get_center().x - base.get_center().x) * scale_factor
+		if flip_h: offset_x = -offset_x
+		collision_size = (contact.size * scale_factor).max(MIN_CONTACT_SIZE)
+		ground_position += Vector2(offset_x, (contact.end.y - base.end.y) * scale_factor)
+	elif not use_contact and not footprint.is_empty():
 		var base: Rect2 = footprint.base
 		collision_size = Vector2(minf(collision_size.x, base.size.x * scale_factor * 0.7), clampf(collision_size.y, 28.0, 40.0))
 	_add_collision(ground_position, collision_size)

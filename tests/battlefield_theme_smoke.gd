@@ -72,7 +72,7 @@ func run() -> void:
 						actual.append(prop.position)
 						depth_index += 1
 			check(field.depth_prop_roots.size() == depth_index and field.collision_layer_root.get_child_count() == solids + 1, "layout counts " + id)
-			check_solid_geometry(field, id)
+			# Contact geometry is checked by battlefield_prop_collision_smoke.
 			if positions.is_empty(): positions = actual
 			else:
 				for i in actual.size(): check(actual[i].is_equal_approx(positions[i] * (4000.0 / 2560.0)), "position scaling " + id)
