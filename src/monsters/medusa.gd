@@ -1,4 +1,5 @@
 extends "res://src/monsters/orc.gd"
+const CLOCK_MEDUSA = preload("res://src/systems/battle_clock.gd")
 const STATUS_SCOPE := preload("res://src/systems/status_action_scope.gd")
 const BEHAVIOR := preload("res://src/data/medusa_behavior_catalog.gd")
 var pursuit_multiplier := 1.0
@@ -37,6 +38,7 @@ func configure_elite_passive(skill: Dictionary) -> void:
 	queue_redraw()
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_MEDUSA.scaled(self, delta)
 	if current_hp <= 0 or dying:
 		return
 	poison_aura_remaining = maxf(poison_aura_remaining - delta,0.0)
@@ -58,7 +60,7 @@ func _physics_process(delta: float) -> void:
 		pursuit_multiplier = minf(pursuit_multiplier + delta * float(BEHAVIOR.PURSUIT.growth_per_second), float(BEHAVIOR.PURSUIT.max_multiplier))
 		velocity = offset.normalized() * get_actual_move_speed()
 		_update_visual_motion(offset.x,true)
-		move_and_slide()
+		CLOCK_MEDUSA.move_and_slide_scaled(self)
 	else:
 		velocity = Vector2.ZERO
 		_update_visual_motion(offset.x,false)

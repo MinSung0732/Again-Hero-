@@ -1,4 +1,5 @@
 extends Area2D
+const CLOCK_ULTIMATE_PIERCING_PROJECTILE = preload("res://src/systems/battle_clock.gd")
 const PNG_SOURCE := preload("res://src/ui/png_texture_source.gd")
 
 const EFFECT_FRAME_COUNT := 6
@@ -50,6 +51,7 @@ func setup(
 	queue_redraw()
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_ULTIMATE_PIERCING_PROJECTILE.scaled(self, delta)
 	if not active:
 		return
 	var step := direction * (minf(speed*delta,maxf(0.0,max_range-traveled_distance)) if bool(get_meta("survival_geometry",false)) else speed*delta)

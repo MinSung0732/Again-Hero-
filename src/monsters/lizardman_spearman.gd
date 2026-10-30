@@ -1,4 +1,5 @@
 extends "res://src/monsters/lizardman_fighter.gd"
+const CLOCK_LIZARDMAN_SPEARMAN = preload("res://src/systems/battle_clock.gd")
 const SPEAR := preload("res://src/data/lizardman_spearman_behavior_catalog.gd")
 const PROJECTILE := preload("res://src/monsters/LizardSpearProjectile.tscn")
 var projectile_speed := SPEAR.PROJECTILE_SPEED
@@ -114,12 +115,14 @@ func _begin_reposition(target: Node2D) -> void:
 			return
 
 func _physics_process(delta: float) -> void:
+	var clock_raw_delta := delta
+	delta = CLOCK_LIZARDMAN_SPEARMAN.scaled(self, delta)
 	if dying or current_hp <= 0: return
 	if escape_remaining > 0.0:
 		charging = false
 		charge_bonus_pending = false
 		reposition_remaining = 0.0
-		super._physics_process(delta)
+		super._physics_process(clock_raw_delta)
 		return
 	charge_timer = maxf(charge_timer-delta,0.0)
 	if not _can_act():
@@ -149,7 +152,7 @@ func _physics_process(delta: float) -> void:
 		MONSTER_RUNTIME_COMMON.notify_forced_position_change(self)
 		if collision != null or offset.length() <= step+0.1: reposition_remaining = 0.0
 		return
-	super._physics_process(delta)
+	super._physics_process(clock_raw_delta)
 
 func _tick_charge(delta: float) -> void:
 	if not is_instance_valid(hero) or int(hero.get("current_hp")) <= 0:

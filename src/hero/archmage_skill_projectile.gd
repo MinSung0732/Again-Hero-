@@ -1,4 +1,5 @@
 extends Area2D
+const CLOCK_ARCHMAGE_SKILL_PROJECTILE = preload("res://src/systems/battle_clock.gd")
 
 const COMBAT_DELAY := preload("res://src/systems/combat_delay.gd")
 
@@ -102,6 +103,7 @@ func setup(
 	_apply_visual()
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_ARCHMAGE_SKILL_PROJECTILE.scaled(self, delta)
 	if not active:
 		return
 	var life_revision := _chain_life_revision

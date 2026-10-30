@@ -1,4 +1,5 @@
 extends "res://src/monsters/orc.gd"
+const CLOCK_LIZARDMAN_FIGHTER = preload("res://src/systems/battle_clock.gd")
 const DATA := preload("res://src/data/lizardman_fighter_behavior_catalog.gd")
 var status_bar_head_y := -77.0
 var tail_used := false
@@ -102,6 +103,8 @@ func _begin_tail_escape() -> void:
 	_visual_call(&"play_locomotion",[true])
 
 func _physics_process(delta: float) -> void:
+	var clock_raw_delta := delta
+	delta = CLOCK_LIZARDMAN_FIGHTER.scaled(self, delta)
 	if dying or current_hp <= 0: return
 	if escape_remaining > 0.0:
 		if MONSTER_RUNTIME_COMMON.is_forced_movement_locked(self) or bool(get_meta("stun_active",false)):
@@ -115,7 +118,7 @@ func _physics_process(delta: float) -> void:
 		MONSTER_RUNTIME_COMMON.notify_forced_position_change(self)
 		if collision != null or escape_left <= 0.01 or escape_remaining <= 0.0: _finish_tail_escape()
 		return
-	super._physics_process(delta)
+	super._physics_process(clock_raw_delta)
 
 func _finish_tail_escape() -> void:
 	escape_remaining = 0.0

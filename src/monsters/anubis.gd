@@ -1,4 +1,5 @@
 extends "res://src/monsters/orc.gd"
+const CLOCK_ANUBIS = preload("res://src/systems/battle_clock.gd")
 const DATA := preload("res://src/data/anubis_behavior_catalog.gd")
 var mummy_count := 0
 var anubis_count := 1
@@ -124,11 +125,13 @@ func try_cast_elite_skill(skill: Dictionary) -> bool:
 	return false
 
 func _physics_process(delta: float) -> void:
+	var clock_raw_delta := delta
+	delta = CLOCK_ANUBIS.scaled(self, delta)
 	if dying or current_hp <= 0: return
 	if rage_remaining > 0.0:
 		rage_remaining = maxf(rage_remaining-delta,0.0)
 		if rage_remaining <= 0.0: _refresh_synergy(); _apply_size()
-	super._physics_process(delta)
+	super._physics_process(clock_raw_delta)
 
 func _draw() -> void:
 	if not dying: MONSTER_RUNTIME_COMMON.draw_status_bars(self,self,status_bar_head_y)

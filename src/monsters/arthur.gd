@@ -1,4 +1,5 @@
 extends "res://src/monsters/orc.gd"
+const CLOCK_ARTHUR = preload("res://src/systems/battle_clock.gd")
 const DATA := preload("res://src/data/arthur_behavior_catalog.gd")
 const TRAIL := preload("res://src/ui/arthur_dash_trail.gd")
 const FX := preload("res://src/ui/arthur_combat_effects.gd")
@@ -75,6 +76,8 @@ func _ready() -> void:
 func get_gauge_regen() -> float:
 	return minf(maxf(float(combat_authority.command_regen_per_second),0),15) if is_instance_valid(combat_authority) else 0.0
 func _physics_process(delta: float) -> void:
+	var clock_raw_delta := delta
+	delta = CLOCK_ARTHUR.scaled(self, delta)
 	if dying or current_hp <= 0: return
 	if not is_instance_valid(combat_authority) or combat_authority.battle_over or combat_authority.external_pause or combat_authority.demon_augment_selection_active: return
 	dash_trail.tick(delta)
@@ -112,10 +115,10 @@ func _physics_process(delta: float) -> void:
 					if global_position.distance_squared_to(hero.global_position)<=DATA.DASH_DISTANCE*DATA.DASH_DISTANCE: _start_dash_channel()
 					else:
 						velocity = global_position.direction_to(hero.global_position)*move_speed*MONSTER_RUNTIME_COMMON.get_external_movement_multiplier(self)
-						move_and_slide()
+						CLOCK_ARTHUR.move_and_slide_scaled(self)
 						visual.flip_h = velocity.x < 0
 						visual.play_locomotion(true)
-				elif excalibur_remaining <= 0 or bool(get_meta("silence_active",false)): super._physics_process(delta)
+				elif excalibur_remaining <= 0 or bool(get_meta("silence_active",false)): super._physics_process(clock_raw_delta)
 				else: attack_timer = maxf(attack_timer-delta,0)
 	else: velocity = Vector2.ZERO
 	queue_redraw()

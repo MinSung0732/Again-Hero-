@@ -1,4 +1,5 @@
 extends Area2D
+const CLOCK_ARCHMAGE_PROJECTILE = preload("res://src/systems/battle_clock.gd")
 const LOCAL_GRID_MOVEMENT := preload("res://src/monsters/monster_runtime_common.gd")
 
 static var _orb_frames_cache: SpriteFrames
@@ -83,6 +84,7 @@ func setup(
 	call_deferred("_sync_monitoring")
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_ARCHMAGE_PROJECTILE.scaled(self, delta)
 	if not active:
 		return
 	var previous_position := global_position

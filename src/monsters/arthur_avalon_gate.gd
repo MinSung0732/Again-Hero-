@@ -1,4 +1,5 @@
 extends Node2D
+const CLOCK_ARTHUR_AVALON_GATE = preload("res://src/systems/battle_clock.gd")
 # No collision body or registry entry: invulnerable, untargetable support structure.
 const DATA := preload("res://src/data/arthur_behavior_catalog.gd")
 const FX := preload("res://src/ui/arthur_combat_effects.gd")
@@ -21,6 +22,7 @@ func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_NEAREST
 	FX.prepare(1)
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_ARTHUR_AVALON_GATE.scaled(self, delta)
 	if not is_instance_valid(authority) or authority.battle_over:
 		_clear_buffs()
 		queue_free()

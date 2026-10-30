@@ -1,4 +1,5 @@
 extends "res://src/monsters/orc.gd"
+const CLOCK_DARK_ELF_ROGUE = preload("res://src/systems/battle_clock.gd")
 const DATA := preload("res://src/data/dark_elf_rogue_behavior_catalog.gd")
 const TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
 const STATUS_SCOPE := preload("res://src/systems/status_action_scope.gd")
@@ -143,6 +144,8 @@ func _begin_reposition(target: Node2D) -> void:
 	reposition_active = best.distance_squared_to(global_position)>16.0
 
 func _physics_process(delta: float) -> void:
+	var clock_raw_delta := delta
+	delta = CLOCK_DARK_ELF_ROGUE.scaled(self, delta)
 	if dying or current_hp <= 0: return
 	quiet_time += delta
 	if dark_remaining > 0.0:
@@ -165,7 +168,7 @@ func _physics_process(delta: float) -> void:
 		MONSTER_RUNTIME_COMMON.notify_forced_position_change(self)
 		if collision != null or offset.length() <= step+0.01: reposition_active = false
 		return
-	super._physics_process(delta)
+	super._physics_process(clock_raw_delta)
 
 func _begin_death() -> void:
 	followup_target = null; _clear_dark()

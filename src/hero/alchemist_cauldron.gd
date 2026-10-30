@@ -1,4 +1,5 @@
 extends Node2D
+const CLOCK_ALCHEMIST_CAULDRON = preload("res://src/systems/battle_clock.gd")
 
 signal mix_completed(cauldron: Node2D, world_position: Vector2)
 
@@ -66,6 +67,7 @@ func deactivate() -> void:
 
 
 func _process(delta: float) -> void:
+	delta = CLOCK_ALCHEMIST_CAULDRON.scaled(self, delta)
 	if not active:
 		return
 

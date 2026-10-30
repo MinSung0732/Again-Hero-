@@ -1,4 +1,5 @@
 extends Node2D
+const CLOCK_SUMMONER_OPEN_GATE = preload("res://src/systems/battle_clock.gd")
 
 const SUMMONER_SFX := preload("res://src/audio/summoner_audio.gd")
 
@@ -125,6 +126,7 @@ func activate(world_position: Vector2, new_owner: Node2D, config: Dictionary) ->
 
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_SUMMONER_OPEN_GATE.scaled(self, delta)
 	if not active:
 		return
 

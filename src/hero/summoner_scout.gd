@@ -1,4 +1,5 @@
 extends CharacterBody2D
+const CLOCK_SUMMONER_SCOUT = preload("res://src/systems/battle_clock.gd")
 var area_attack = preload("res://src/hero/summon_area_attack.gd").new()
 const MOVEMENT_WATCHDOG := preload("res://src/hero/summoner_movement_watchdog.gd")
 var movement_watchdog = MOVEMENT_WATCHDOG.new()
@@ -93,6 +94,7 @@ func activate(world_position: Vector2, new_owner: Node2D, config: Dictionary) ->
 
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_SUMMONER_SCOUT.scaled(self, delta)
 	if not active:
 		return
 	area_attack.tick(delta)
@@ -159,7 +161,7 @@ func _physics_process(delta: float) -> void:
 			target = null
 			retarget_timer = 0.0
 		velocity = direction * speed
-		move_and_slide()
+		CLOCK_SUMMONER_SCOUT.move_and_slide_scaled(self)
 		if visual.animation != &"move":
 			visual.play(&"move")
 	else:

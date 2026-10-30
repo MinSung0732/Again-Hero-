@@ -1,4 +1,5 @@
 extends Node2D
+const CLOCK_PURIFIER_GUNGNIR = preload("res://src/systems/battle_clock.gd")
 const COMBAT_DELAY := preload("res://src/systems/combat_delay.gd")
 
 signal launched
@@ -268,6 +269,7 @@ func setup(
 
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_PURIFIER_GUNGNIR.scaled(self, delta)
 	_update_trails(delta)
 	match state:
 		State.CASTING:

@@ -1,4 +1,5 @@
 extends "res://src/monsters/orc.gd"
+const CLOCK_DULLAHAN = preload("res://src/systems/battle_clock.gd")
 const STATUS_SCOPE := preload("res://src/systems/status_action_scope.gd")
 
 const BEHAVIOR := preload("res://src/data/dullahan_behavior_catalog.gd")
@@ -71,6 +72,7 @@ func configure_special_augments(configs: Dictionary) -> void:
 	queue_redraw()
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_DULLAHAN.scaled(self, delta)
 	_sync_wall_capacity()
 	if reviving:
 		_tick_revival()
@@ -125,7 +127,7 @@ func _physics_process(delta: float) -> void:
 		if offset.length_squared() > FAR_NAV_DISTANCE * FAR_NAV_DISTANCE:
 			global_position += velocity * delta
 		else:
-			move_and_slide()
+			CLOCK_DULLAHAN.move_and_slide_scaled(self)
 	else:
 		velocity = Vector2.ZERO
 		_update_visual_motion(offset.x, false)
@@ -296,7 +298,7 @@ func _tick_danger(delta: float, can_move: bool = true) -> void:
 		var speed := move_speed * float(DANGER.speed_multiplier) * MONSTER_RUNTIME_COMMON.get_external_movement_multiplier(self)
 		velocity = direction * minf(speed, global_position.distance_to(escape_target) / maxf(delta, 0.001))
 		_update_visual_motion(direction.x, true)
-		move_and_slide()
+		CLOCK_DULLAHAN.move_and_slide_scaled(self)
 	else:
 		velocity = Vector2.ZERO
 		rest_heal_elapsed = minf(rest_heal_elapsed + delta, float(DANGER.rest_duration))

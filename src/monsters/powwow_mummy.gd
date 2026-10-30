@@ -1,4 +1,5 @@
 extends "res://src/monsters/goblin_thrower.gd"
+const CLOCK_POWWOW_MUMMY = preload("res://src/systems/battle_clock.gd")
 const BEHAVIOR := preload("res://src/data/powwow_mummy_behavior_catalog.gd")
 const SHAMAN_PROJECTILE := preload("res://src/monsters/PowwowMummyProjectile.tscn")
 var buff_timer := float(BEHAVIOR.BUFF.interval)
@@ -40,6 +41,8 @@ func configure_elite_passive(skill: Dictionary) -> void:
 	hit_cooldown_reduction = float(skill.get("hit_cooldown_reduction",1.0))
 
 func _physics_process(delta: float) -> void:
+	var clock_raw_delta := delta
+	delta = CLOCK_POWWOW_MUMMY.scaled(self, delta)
 	if dying or current_hp <= 0:
 		return
 	buff_timer = maxf(buff_timer - delta,0.0)
@@ -54,7 +57,7 @@ func _physics_process(delta: float) -> void:
 			velocity = Vector2.ZERO
 			visual.play_skill()
 			return
-	super._physics_process(delta)
+	super._physics_process(clock_raw_delta)
 
 func _cast_buffs() -> bool:
 	if not is_instance_valid(combat_authority):

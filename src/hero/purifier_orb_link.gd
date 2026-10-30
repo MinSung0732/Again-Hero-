@@ -1,4 +1,5 @@
 extends Node2D
+const CLOCK_PURIFIER_ORB_LINK = preload("res://src/systems/battle_clock.gd")
 
 static var _frames_cache: SpriteFrames = null
 
@@ -78,6 +79,7 @@ func configure_damage(
 
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_PURIFIER_ORB_LINK.scaled(self, delta)
 	if damage_ratio <= 0.0 or not is_instance_valid(source_hero):
 		set_physics_process(false)
 		return

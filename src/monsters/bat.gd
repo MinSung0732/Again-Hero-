@@ -1,4 +1,5 @@
 extends CharacterBody2D
+const CLOCK_BAT = preload("res://src/systems/battle_clock.gd")
 var attack_status_action: RefCounted
 const STATUS_SCOPE := preload("res://src/systems/status_action_scope.gd")
 
@@ -116,6 +117,7 @@ func _refresh_combat_target() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_BAT.scaled(self, delta)
 	hero_target_refresh_timer = MONSTER_RUNTIME_COMMON.tick_countdown(
 		hero_target_refresh_timer,
 		delta
@@ -220,7 +222,7 @@ func _move_charging(
 	if distance_sq > far_nav_sq:
 		global_position += velocity * delta
 	else:
-		move_and_slide()
+		CLOCK_BAT.move_and_slide_scaled(self)
 
 
 func _move_wandering(effective_speed: float) -> void:
@@ -240,7 +242,7 @@ func _move_wandering(effective_speed: float) -> void:
 	)
 	velocity = move_direction * effective_speed
 	_update_visual_motion(move_direction.x, true)
-	move_and_slide()
+	CLOCK_BAT.move_and_slide_scaled(self)
 
 
 func _pick_new_wander_target() -> void:
@@ -272,7 +274,7 @@ func _attack_target(offset_to_hero: Vector2) -> void:
 		move_speed
 	)
 	if velocity.length_squared() > 0.01:
-		move_and_slide()
+		CLOCK_BAT.move_and_slide_scaled(self)
 	_update_visual_motion(direction_to_hero.x, false)
 	if attack_timer > 0.0:
 		return

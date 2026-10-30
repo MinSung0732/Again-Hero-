@@ -1,4 +1,5 @@
 extends Area2D
+const CLOCK_SAGE_ICE_PILLAR = preload("res://src/systems/battle_clock.gd")
 const COMBAT_DELAY := preload("res://src/systems/combat_delay.gd")
 
 const EFFECT_DIR := "res://assets/art/heroes/stage10_sage/frames/effect1"
@@ -87,6 +88,7 @@ func setup(
 
 
 func _process(delta: float) -> void:
+	delta = CLOCK_SAGE_ICE_PILLAR.scaled(self, delta)
 	if not active or not pillar_active:
 		return
 

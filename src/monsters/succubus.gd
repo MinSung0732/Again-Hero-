@@ -1,4 +1,5 @@
 extends "res://src/monsters/orc.gd"
+const CLOCK_SUCCUBUS = preload("res://src/systems/battle_clock.gd")
 const STATUS_SCOPE := preload("res://src/systems/status_action_scope.gd")
 
 const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
@@ -64,6 +65,8 @@ func is_forced_movement_immune() -> bool:
 	return infiltration_timer > 0.0
 
 func _physics_process(delta: float) -> void:
+	var clock_raw_delta := delta
+	delta = CLOCK_SUCCUBUS.scaled(self, delta)
 	if dying or current_hp <= 0:
 		return
 	if infiltration_timer > 0.0:
@@ -76,7 +79,7 @@ func _physics_process(delta: float) -> void:
 	if waltz_active:
 		_tick_waltz(delta)
 		return
-	super._physics_process(delta)
+	super._physics_process(clock_raw_delta)
 
 func _attack_target(target: Node2D) -> void:
 	_deal_hit(target, attack_damage)

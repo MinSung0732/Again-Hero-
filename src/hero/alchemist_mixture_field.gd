@@ -1,4 +1,5 @@
 extends Node2D
+const CLOCK_ALCHEMIST_MIXTURE_FIELD = preload("res://src/systems/battle_clock.gd")
 
 signal field_tick(origin: Vector2, radius: float)
 signal field_finished
@@ -76,6 +77,7 @@ func contains_world_point(world_position: Vector2) -> bool:
 	return active and global_position.distance_squared_to(world_position) <= radius * radius
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_ALCHEMIST_MIXTURE_FIELD.scaled(self, delta)
 	if not active:
 		return
 

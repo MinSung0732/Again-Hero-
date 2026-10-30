@@ -1,4 +1,5 @@
 extends Area2D
+const CLOCK_SAGE_PROJECTILE = preload("res://src/systems/battle_clock.gd")
 
 enum ProjectileMode {
 	BASIC,
@@ -84,6 +85,7 @@ func setup(
 
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_SAGE_PROJECTILE.scaled(self, delta)
 	if not active:
 		return
 	var previous_position := global_position

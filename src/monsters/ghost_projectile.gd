@@ -1,4 +1,5 @@
 extends Area2D
+const CLOCK_GHOST_PROJECTILE = preload("res://src/systems/battle_clock.gd")
 
 const NORMAL_TEXTURE_PATH := (
 	"res://assets/art/monsters/ghost/frames/effect1/Projectile_01.png"
@@ -55,6 +56,7 @@ func setup(
 
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_GHOST_PROJECTILE.scaled(self, delta)
 	if not active:
 		return
 	var step := direction * speed * delta

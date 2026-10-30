@@ -1,4 +1,5 @@
 extends "res://src/monsters/goblin_thrower.gd"
+const CLOCK_MANTICORE = preload("res://src/systems/battle_clock.gd")
 const DATA := preload("res://src/data/manticore_behavior_catalog.gd")
 const FX := preload("res://src/ui/manticore_combat_effects.gd")
 const AFFLICTIONS := preload("res://src/systems/received_afflictions.gd")
@@ -139,6 +140,7 @@ func wave_duration() -> float:
 func flame_count() -> int: return 2 if transcend_level >= 1 else 1
 func flame_cost() -> float: return 25.0 if transcend_level >= 4 else 50.0
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_MANTICORE.scaled(self, delta)
 	if dying or current_hp <= 0: return
 	if is_instance_valid(combat_authority) and (combat_authority.battle_over or combat_authority.external_pause or combat_authority.demon_augment_selection_active): return
 	flame_audio_timer = maxf(flame_audio_timer-delta,0.0)
@@ -203,7 +205,7 @@ func _tick_motion(delta: float) -> void:
 			var radius := wave_range() if wave_remaining > 0.0 else effective_range()
 			if offset.length_squared() > radius*radius:
 				velocity = direction*move_speed*MONSTER_RUNTIME_COMMON.get_external_movement_multiplier(self)
-				move_and_slide()
+				CLOCK_MANTICORE.move_and_slide_scaled(self)
 				_update_visual_motion(direction.x,true)
 			else:
 				velocity = Vector2.ZERO

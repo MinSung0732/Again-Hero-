@@ -3,6 +3,7 @@ extends SceneTree
 const VIEW := preload("res://src/ui/lobby_stamina_view.gd")
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
 const STORE := preload("res://src/systems/stamina_store.gd")
+const CLOCK_FIXTURE := preload("res://src/systems/server_clock.gd")
 var failed := false
 
 class Host extends Control:
@@ -36,6 +37,10 @@ func settle() -> void:
 		await process_frame
 
 func run() -> void:
+	# Layout cases use the synchronized countdown text, not the server-time wait notice.
+	CLOCK_FIXTURE.synced_unix = int(Time.get_unix_time_from_system())
+	CLOCK_FIXTURE.synced_ticks = Time.get_ticks_msec()
+	CLOCK_FIXTURE._synced = true
 	if root.has_node("CloudStore"):
 		root.get_node("CloudStore").stop()
 	for guard_name in ["TutorialFlow", "SceneTransition"]:

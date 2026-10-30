@@ -1,4 +1,5 @@
 extends Node
+const CLOCK_RECEIVED_AFFLICTIONS = preload("res://src/systems/battle_clock.gd")
 const STATUS_RECEIPT = preload("res://src/systems/battle_status_receipt.gd")
 var status_receipt = STATUS_RECEIPT.new()
 var status_result_complete := false
@@ -97,6 +98,7 @@ func _ready() -> void:
 	while is_instance_valid(authority) and not authority.has_method("get_transcendent_aura_modifier"):
 		authority = authority.get_parent()
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_RECEIVED_AFFLICTIONS.scaled(self, delta)
 	if is_instance_valid(authority) and (authority.battle_over or authority.external_pause or authority.demon_augment_selection_active): return
 	if current_hp <= 0 or ("active" in target and not bool(target.active)):
 		clear()

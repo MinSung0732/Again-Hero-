@@ -1,4 +1,5 @@
 extends Node2D
+const CLOCK_SUMMONER_GATEKEEPER_PROJECTILE = preload("res://src/systems/battle_clock.gd")
 var area_attack = preload("res://src/hero/summon_area_attack.gd").new()
 
 const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
@@ -76,6 +77,7 @@ func _fit_survival_sprite(bounds: Rect2, size: float) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_SUMMONER_GATEKEEPER_PROJECTILE.scaled(self, delta)
 	if not active:
 		return
 	area_attack.tick(delta)

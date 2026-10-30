@@ -1,4 +1,5 @@
 extends Area2D
+const CLOCK_GOBLIN_THROWER_PROJECTILE = preload("res://src/systems/battle_clock.gd")
 
 const NORMAL_EFFECT_DIR := (
 	"res://assets/art/monsters/goblinthrower/frames/effect1"
@@ -56,6 +57,7 @@ func setup(
 
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_GOBLIN_THROWER_PROJECTILE.scaled(self, delta)
 	if not active:
 		return
 	var step := direction * speed * delta

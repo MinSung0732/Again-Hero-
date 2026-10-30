@@ -1,4 +1,5 @@
 extends Area2D
+const CLOCK_LIZARD_SPEAR_PROJECTILE = preload("res://src/systems/battle_clock.gd")
 const DATA := preload("res://src/data/lizardman_spearman_behavior_catalog.gd")
 const POOL_KEY := "lizard_spear_projectile"
 var life_revision := 0
@@ -32,6 +33,7 @@ func setup(owner: Node,aim: Vector2,amount: int,range_limit: float,elite: bool) 
 	visual.apply_visual_profile(DATA.PROJECTILE_ELITE if elite else DATA.PROJECTILE_NORMAL)
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_LIZARD_SPEAR_PROJECTILE.scaled(self, delta)
 	if not active: return
 	var step := minf(speed*delta,maxf(max_range-traveled,0.0))
 	global_position += direction*step

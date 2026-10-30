@@ -1,4 +1,5 @@
 extends "res://src/monsters/orc.gd"
+const CLOCK_KRAKEN = preload("res://src/systems/battle_clock.gd")
 
 const BEHAVIOR := preload("res://src/data/kraken_behavior_catalog.gd")
 const TENTACLE := preload("res://src/monsters/kraken_tentacle_fx.gd")
@@ -47,6 +48,7 @@ func get_attack_growth_multiplier() -> float:
 	return 1.0 + growth_stacks * float(BEHAVIOR.ATTACK.growth_per_stack)
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_KRAKEN.scaled(self, delta)
 	velocity = Vector2.ZERO
 	if current_hp <= 0 or dying:
 		return

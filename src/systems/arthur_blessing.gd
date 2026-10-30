@@ -1,4 +1,5 @@
 extends Node
+const CLOCK_ARTHUR_BLESSING = preload("res://src/systems/battle_clock.gd")
 const DATA := preload("res://src/data/arthur_behavior_catalog.gd")
 # Retained per recipient. Expiration removes only this shield, never other buffs.
 var target: Node2D
@@ -46,6 +47,7 @@ func _reflect(amount: int, attacker: WeakRef) -> void:
 		preload("res://src/monsters/monster_runtime_common.gd").damage_monster_from(source,amount,target)
 	else: source.take_damage(amount,target)
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_ARTHUR_BLESSING.scaled(self, delta)
 	if not is_instance_valid(authority) or authority.battle_over:
 		clear()
 		return

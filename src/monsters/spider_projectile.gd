@@ -1,4 +1,5 @@
 extends Area2D
+const CLOCK_SPIDER_PROJECTILE = preload("res://src/systems/battle_clock.gd")
 const COMBAT_DELAY := preload("res://src/systems/combat_delay.gd")
 const STATUS_SCOPE := preload("res://src/systems/status_action_scope.gd")
 
@@ -67,6 +68,7 @@ func setup(
 	_apply_projectile_visual()
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_SPIDER_PROJECTILE.scaled(self, delta)
 	if not active or has_impacted:
 		return
 

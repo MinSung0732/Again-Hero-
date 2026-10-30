@@ -1,4 +1,5 @@
 extends Node2D
+const CLOCK_DEADEYE_RICOCHET_FX = preload("res://src/systems/battle_clock.gd")
 
 const POOL_KEY := "deadeye_ricochet_fx"
 
@@ -18,6 +19,7 @@ func setup(new_direction: Vector2) -> void:
 	queue_redraw()
 
 func _process(delta: float) -> void:
+	delta = CLOCK_DEADEYE_RICOCHET_FX.scaled(self, delta)
 	elapsed += delta
 	if elapsed >= lifetime:
 		_finish()

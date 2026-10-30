@@ -1,4 +1,5 @@
 extends Node
+const CLOCK_ARCHMAGE_ELEMENT_STATUS = preload("res://src/systems/battle_clock.gd")
 const STATUS_RECEIPT = preload("res://src/systems/battle_status_receipt.gd")
 var status_receipt = STATUS_RECEIPT.new()
 var status_result_complete := false
@@ -60,6 +61,7 @@ func _apply_element_freeze(duration: float, receipt = null, revision: int = 0) -
 		receipt.record_application(freeze_remaining,1.0,revision)
 
 func _process(delta: float) -> void:
+	delta = CLOCK_ARCHMAGE_ELEMENT_STATUS.scaled(self, delta)
 	if not is_instance_valid(target) or target.is_queued_for_deletion():
 		queue_free()
 		return

@@ -1,4 +1,5 @@
 extends Node2D
+const CLOCK_ALCHEMY_MATERIAL = preload("res://src/systems/battle_clock.gd")
 
 const PICKUP_PLACEMENT := preload("res://src/systems/pickup_placement.gd")
 
@@ -128,6 +129,7 @@ func launch_from_cauldron(
 
 
 func _process(delta: float) -> void:
+	delta = CLOCK_ALCHEMY_MATERIAL.scaled(self, delta)
 	if not active:
 		return
 

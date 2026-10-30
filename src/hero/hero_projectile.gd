@@ -1,4 +1,5 @@
 extends Area2D
+const CLOCK_HERO_PROJECTILE = preload("res://src/systems/battle_clock.gd")
 
 const DATA := preload("res://src/data/hero_basic_projectile_catalog.gd")
 const BATTLE_SCOPE := preload("res://src/systems/battle_scope.gd")
@@ -74,6 +75,7 @@ func setup(
 	_apply_projectile_visual()
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_HERO_PROJECTILE.scaled(self, delta)
 	if not active:
 		return
 	var previous_position := global_position

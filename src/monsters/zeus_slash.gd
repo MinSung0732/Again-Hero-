@@ -1,4 +1,5 @@
 extends Node2D
+const CLOCK_ZEUS_SLASH = preload("res://src/systems/battle_clock.gd")
 const DATA := preload("res://src/data/zeus_behavior_catalog.gd")
 const FX := preload("res://src/ui/zeus_combat_effects.gd")
 var active := false
@@ -46,6 +47,7 @@ func deactivate_for_pool() -> void:
 	set_physics_process(false)
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_ZEUS_SLASH.scaled(self, delta)
 	if not active:
 		return
 	var battle := get_parent()

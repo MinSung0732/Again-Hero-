@@ -1,4 +1,5 @@
 extends Node2D
+const CLOCK_SUMMONER_WATCHER = preload("res://src/systems/battle_clock.gd")
 var area_attack = preload("res://src/hero/summon_area_attack.gd").new()
 const RECEIVED_STATUS := preload("res://src/data/status_effect_catalog.gd")
 
@@ -100,6 +101,7 @@ func activate(world_position: Vector2, new_owner: Node2D, config: Dictionary) ->
 
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_SUMMONER_WATCHER.scaled(self, delta)
 	if not active:
 		return
 	area_attack.tick(delta)

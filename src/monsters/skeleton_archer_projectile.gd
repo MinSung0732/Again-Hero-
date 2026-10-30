@@ -1,4 +1,5 @@
 extends Area2D
+const CLOCK_SKELETON_ARCHER_PROJECTILE = preload("res://src/systems/battle_clock.gd")
 
 const NORMAL_EFFECT_DIR := "res://assets/art/monsters/skelletonarcher/frames/effect1"
 const ELITE_EFFECT_DIR := "res://assets/art/elitemonster/skelletonarcher/frames/effect1"
@@ -59,6 +60,7 @@ func setup(
 
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_SKELETON_ARCHER_PROJECTILE.scaled(self, delta)
 	if not active or impacting:
 		return
 	var step := direction * speed * delta

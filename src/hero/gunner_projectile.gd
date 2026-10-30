@@ -1,4 +1,5 @@
 extends Area2D
+const CLOCK_GUNNER_PROJECTILE = preload("res://src/systems/battle_clock.gd")
 
 const FRAME_DIR := "res://assets/art/heroes/stage4_gunner/frames/effect"
 const PROJECTILE_FRAME_COUNT := 4
@@ -71,6 +72,7 @@ func setup(
 		visual.play(&"fly")
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_GUNNER_PROJECTILE.scaled(self, delta)
 	if not active:
 		return
 	var previous_position := global_position

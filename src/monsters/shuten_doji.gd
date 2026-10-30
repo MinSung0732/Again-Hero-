@@ -1,4 +1,5 @@
 extends "res://src/monsters/goblin_thrower.gd"
+const CLOCK_SHUTEN_DOJI = preload("res://src/systems/battle_clock.gd")
 const DATA := preload("res://src/data/shuten_doji_behavior_catalog.gd")
 const FX := preload("res://src/ui/shuten_doji_combat_effects.gd")
 const AFFLICTIONS := preload("res://src/systems/received_afflictions.gd")
@@ -112,6 +113,7 @@ func _ready() -> void:
 func get_gauge_regen() -> float:
 	return minf(maxf(float(combat_authority.command_regen_per_second),0),15) if is_instance_valid(combat_authority) else 0.0
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_SHUTEN_DOJI.scaled(self, delta)
 	if dying or current_hp <= 0: return
 	if is_instance_valid(combat_authority) and (combat_authority.battle_over or combat_authority.external_pause or combat_authority.demon_augment_selection_active): return
 	clock += delta
@@ -129,7 +131,7 @@ func _physics_process(delta: float) -> void:
 	elif arrival > 0:
 		arrival = maxf(0,arrival-delta)
 		velocity = Vector2.RIGHT*move_speed*0.12
-		move_and_slide()
+		CLOCK_SHUTEN_DOJI.move_and_slide_scaled(self)
 		_update_visual_motion(1,true)
 	elif is_instance_valid(hero) and hero.current_hp > 0:
 		_tick_motion(delta)
@@ -205,7 +207,7 @@ func _tick_motion(delta: float) -> void:
 	attack_timer = maxf(0,attack_timer-delta)
 	if direction.length_squared() > attack_range*attack_range:
 		velocity = direction.normalized()*move_speed*(1-self_fog_power*0.8)*MONSTER_RUNTIME_COMMON.get_external_movement_multiplier(self)
-		move_and_slide()
+		CLOCK_SHUTEN_DOJI.move_and_slide_scaled(self)
 		_update_visual_motion(direction.x,true)
 	else:
 		velocity = Vector2.ZERO

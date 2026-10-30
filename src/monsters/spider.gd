@@ -1,4 +1,5 @@
 extends CharacterBody2D
+const CLOCK_SPIDER = preload("res://src/systems/battle_clock.gd")
 const STATUS_SCOPE := preload("res://src/systems/status_action_scope.gd")
 
 const COMBAT_STATUS_EFFECT_VISUAL := preload("res://src/ui/combat_status_effect_visual.gd")
@@ -95,6 +96,7 @@ func _refresh_combat_target() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_SPIDER.scaled(self, delta)
 	if _combat_profile == null or not _combat_profile.enabled:
 		_physics_process_monster(delta)
 		return

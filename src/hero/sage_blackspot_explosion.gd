@@ -1,4 +1,5 @@
 extends Node2D
+const CLOCK_SAGE_BLACKSPOT_EXPLOSION = preload("res://src/systems/battle_clock.gd")
 
 const EFFECT_DIR := "res://assets/art/heroes/stage10_sage/frames/effect9"
 const POOL_KEY := "sage_blackspot_explosion"
@@ -63,6 +64,7 @@ func setup(
 
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_SAGE_BLACKSPOT_EXPLOSION.scaled(self, delta)
 	if state == State.INACTIVE:
 		return
 

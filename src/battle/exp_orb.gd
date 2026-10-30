@@ -1,4 +1,5 @@
 extends Node2D
+const CLOCK_EXP_ORB = preload("res://src/systems/battle_clock.gd")
 
 const PICKUP_PLACEMENT := preload("res://src/systems/pickup_placement.gd")
 const BATTLE_SCOPE := preload("res://src/systems/battle_scope.gd")
@@ -106,6 +107,7 @@ func setup(value: int, initial_velocity: Vector2 = Vector2.ZERO, pickup_delay: f
 	if visuals_enabled: queue_redraw()
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_EXP_ORB.scaled(self, delta)
 	if _placement_pending:
 		PICKUP_PLACEMENT.ensure_reachable(self)
 		_placement_pending = false

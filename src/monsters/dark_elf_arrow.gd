@@ -1,4 +1,5 @@
 extends Area2D
+const CLOCK_DARK_ELF_ARROW = preload("res://src/systems/battle_clock.gd")
 const DATA := preload("res://src/data/dark_elf_archer_behavior_catalog.gd")
 const POOL_KEY := "dark_elf_arrow"
 var life_revision := 0
@@ -36,6 +37,7 @@ func setup(owner: Node,aim: Vector2,amount: int,range_limit: float,bypass: bool,
 	visual.apply_visual_profile(DATA.ARROW_VISUAL)
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_DARK_ELF_ARROW.scaled(self, delta)
 	if not active or impacting: return
 	var start := global_position
 	var step := minf(speed*delta,maxf(max_range-traveled,0.0))

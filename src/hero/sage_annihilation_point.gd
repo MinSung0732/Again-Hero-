@@ -1,4 +1,5 @@
 extends Area2D
+const CLOCK_SAGE_ANNIHILATION_POINT = preload("res://src/systems/battle_clock.gd")
 
 const EFFECT_DIR := "res://assets/art/heroes/stage10_sage/frames/effect8"
 const POOL_KEY := "sage_annihilation_point"
@@ -110,6 +111,7 @@ func setup(
 
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_SAGE_ANNIHILATION_POINT.scaled(self, delta)
 	if state == State.INACTIVE or state == State.AUDIO_TAIL:
 		return
 	if _is_combat_simulation_paused():

@@ -1,4 +1,5 @@
 extends Node2D
+const CLOCK_ALCHEMIST_POISON_POOL = preload("res://src/systems/battle_clock.gd")
 
 signal damage_tick(origin: Vector2, radius: float, damage: int)
 
@@ -68,6 +69,7 @@ func activate(
 	set_physics_process(true)
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_ALCHEMIST_POISON_POOL.scaled(self, delta)
 	if not active:
 		return
 	duration_remaining -= delta

@@ -1,4 +1,5 @@
 extends "res://src/monsters/orc.gd"
+const CLOCK_FANATIC = preload("res://src/systems/battle_clock.gd")
 const DATA := preload("res://src/data/fanatic_behavior_catalog.gd")
 const STATUS_SCOPE := preload("res://src/systems/status_action_scope.gd")
 var explosion_damage := DATA.BASE.explosion_damage
@@ -72,6 +73,8 @@ func _tick_ritual(delta: float) -> void:
 		ritual_spawned += 1; budget -= 1
 	if ritual_spawned >= DATA.RITUAL_COUNT: ritual_active = false
 func _physics_process(delta: float) -> void:
+	var clock_raw_delta := delta
+	delta = CLOCK_FANATIC.scaled(self, delta)
 	if fusing:
 		fuse_remaining = maxf(fuse_remaining-delta,0.0)
 		visual.modulate.a = 0.25 if int(fuse_remaining*14.0)%2 == 0 else 1.0
@@ -84,7 +87,7 @@ func _physics_process(delta: float) -> void:
 	if bool(get_meta("silence_active",false)): ritual_active = false
 	if ritual_active: _tick_ritual(delta)
 	_tick_followup(delta)
-	super._physics_process(delta)
+	super._physics_process(clock_raw_delta)
 func _begin_death() -> void: _begin_fuse(DATA.DEATH_DELAY)
 func _begin_death_with_result(receipt = null, revision: int = 0) -> void:
 	if not dying and receipt != null: receipt.record_death_started(revision)

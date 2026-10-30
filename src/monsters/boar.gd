@@ -1,4 +1,5 @@
 extends "res://src/monsters/orc.gd"
+const CLOCK_BOAR = preload("res://src/systems/battle_clock.gd")
 const DATA := preload("res://src/data/boar_behavior_catalog.gd")
 enum Phase { IDLE, WINDUP, DASH }
 var phase := Phase.IDLE
@@ -61,6 +62,8 @@ func _launch() -> void:
 	_visual_call(&"play_attack")
 
 func _physics_process(delta: float) -> void:
+	var clock_raw_delta := delta
+	delta = CLOCK_BOAR.scaled(self, delta)
 	if dying or current_hp <= 0: return
 	frenzy_remaining = maxf(frenzy_remaining-delta,0.0)
 	if not _can_act():
@@ -78,7 +81,7 @@ func _physics_process(delta: float) -> void:
 	if phase == Phase.DASH:
 		_tick_dash(delta)
 		return
-	super._physics_process(delta)
+	super._physics_process(clock_raw_delta)
 
 func _tick_dash(delta: float) -> void:
 	var old_speed := dash_speed

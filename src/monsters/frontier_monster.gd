@@ -1,4 +1,5 @@
 extends "res://src/monsters/orc.gd"
+const CLOCK_FRONTIER_MONSTER = preload("res://src/systems/battle_clock.gd")
 ## All content values live in FrontierMonsterCatalog. Reuses cached navigation,
 ## target refresh, damage receipts, visual LOD, shields and ordinary death.
 const DATA := preload("res://src/data/frontier_monster_catalog.gd")
@@ -121,6 +122,8 @@ func _can_act() -> bool:
 	return not dying and current_hp > 0 and not bool(get_meta("stun_active",false)) and not MONSTER_RUNTIME_COMMON.is_forced_movement_locked(self)
 
 func _physics_process(delta: float) -> void:
+	var clock_raw_delta := delta
+	delta = CLOCK_FRONTIER_MONSTER.scaled(self, delta)
 	if speed_buff_remaining > 0.0:
 		speed_buff_remaining = maxf(speed_buff_remaining-delta,0.0)
 		if speed_buff_remaining <= 0.0: combat_bonus_refresh_timer = 0.0
@@ -137,7 +140,7 @@ func _physics_process(delta: float) -> void:
 	if not _can_act():
 		velocity = Vector2.ZERO
 		return
-	super._physics_process(delta)
+	super._physics_process(clock_raw_delta)
 
 func _get_combat_bonuses() -> Dictionary:
 	var result := super._get_combat_bonuses()

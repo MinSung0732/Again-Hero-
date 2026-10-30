@@ -1,4 +1,5 @@
 extends CharacterBody2D
+const CLOCK_SKELETON_ARCHER = preload("res://src/systems/battle_clock.gd")
 
 const COMBAT_STATUS_EFFECT_VISUAL := preload("res://src/ui/combat_status_effect_visual.gd")
 const DAMAGE_NUMBERS := preload("res://src/ui/damage_number_spawner.gd")
@@ -124,6 +125,7 @@ func _refresh_combat_target() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_SKELETON_ARCHER.scaled(self, delta)
 	if _combat_profile == null or not _combat_profile.enabled:
 		_physics_process_monster(delta)
 		return

@@ -1,4 +1,5 @@
 extends "res://src/monsters/goblin_thrower.gd"
+const CLOCK_YUKI_ONNA = preload("res://src/systems/battle_clock.gd")
 const STATUS_SCOPE := preload("res://src/systems/status_action_scope.gd")
 
 const DATA := preload("res://src/data/yuki_onna_behavior_catalog.gd")
@@ -56,6 +57,8 @@ func configure_elite_passive(_skill: Dictionary) -> void:
 		combat_authority.yuki_runtime.register_elite(self)
 
 func _physics_process(delta: float) -> void:
+	var clock_raw_delta := delta
+	delta = CLOCK_YUKI_ONNA.scaled(self, delta)
 	if dying or current_hp <= 0:
 		return
 	var remaining := 0
@@ -67,7 +70,7 @@ func _physics_process(delta: float) -> void:
 	if remaining != chill_stacks:
 		chill_stacks = remaining
 		_refresh_chill_multipliers()
-	super._physics_process(delta)
+	super._physics_process(clock_raw_delta)
 
 func apply_chill(count: int = 1) -> void:
 	if dying or current_hp <= 0:

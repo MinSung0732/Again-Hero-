@@ -1,4 +1,5 @@
 extends "res://src/monsters/orc.gd"
+const CLOCK_BULGASAL = preload("res://src/systems/battle_clock.gd")
 const STATUS_RECEIPT = preload("res://src/systems/battle_status_receipt.gd")
 var legacy_status_receipt = STATUS_RECEIPT.new()
 var legacy_status_result_complete := false
@@ -142,6 +143,7 @@ func _paused() -> bool:
 	return is_instance_valid(combat_authority) and (combat_authority.battle_over or combat_authority.external_pause or combat_authority.demon_augment_selection_active)
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_BULGASAL.scaled(self, delta)
 	if dying or current_hp <= 0 or _paused():
 		return
 	if is_instance_valid(combat_authority):
@@ -287,7 +289,7 @@ func _move_direction(direction: Vector2, speed: float, _delta: float) -> void:
 	if phase == "burrow":
 		# Clear only pillars reached along this bounded movement sweep before collision.
 		pillars.shatter_segment(global_position,global_position+velocity*_delta,body_radius)
-	move_and_slide()
+	CLOCK_BULGASAL.move_and_slide_scaled(self)
 	_update_visual_motion(direction.x,not velocity.is_zero_approx())
 
 func _try_cast() -> bool:

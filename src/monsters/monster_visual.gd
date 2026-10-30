@@ -1,5 +1,6 @@
 extends AnimatedSprite2D
 class_name MonsterVisual
+const CLOCK_MONSTER_VISUAL = preload("res://src/systems/battle_clock.gd")
 
 signal death_animation_finished
 signal revival_animation_finished
@@ -56,6 +57,7 @@ func _ready() -> void:
 		play(&"idle")
 
 func _process(delta: float) -> void:
+	delta = CLOCK_MONSTER_VISUAL.scaled(self, delta)
 	if _flash_timer <= 0.0:
 		return
 
@@ -107,6 +109,7 @@ func play_locomotion(moving: bool) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_MONSTER_VISUAL.scaled(self, delta)
 	_locomotion_request_seconds += delta
 	if _locomotion_request_seconds < locomotion_transition_seconds:
 		return

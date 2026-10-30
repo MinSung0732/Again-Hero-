@@ -1,4 +1,5 @@
 extends Area2D
+const CLOCK_GOBLIN_THROWER_BOMB = preload("res://src/systems/battle_clock.gd")
 
 const PROJECTILE_DIR := (
 	"res://assets/art/elitemonster/goblinthrower/frames/effect1"
@@ -69,6 +70,7 @@ func setup(
 
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_GOBLIN_THROWER_BOMB.scaled(self, delta)
 	match state:
 		1:
 			_tick_flying(delta)

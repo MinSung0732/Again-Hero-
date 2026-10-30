@@ -1,4 +1,5 @@
 extends CharacterBody2D
+const CLOCK_KOBOLT = preload("res://src/systems/battle_clock.gd")
 
 const COMBAT_STATUS_EFFECT_VISUAL := preload(
 	"res://src/ui/combat_status_effect_visual.gd"
@@ -109,6 +110,7 @@ func _refresh_combat_target() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_KOBOLT.scaled(self, delta)
 	velocity = Vector2.ZERO
 	hero_target_refresh_timer = MONSTER_RUNTIME_COMMON.tick_countdown(
 		hero_target_refresh_timer,

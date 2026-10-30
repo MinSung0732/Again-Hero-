@@ -1,4 +1,5 @@
 extends Node2D
+const CLOCK_ALCHEMIST_VIAL = preload("res://src/systems/battle_clock.gd")
 
 const TELEGRAPH := preload("res://src/ui/circular_attack_telegraph.gd")
 var warning_radius := 0.0
@@ -81,6 +82,7 @@ func launch(
 	set_physics_process(true)
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_ALCHEMIST_VIAL.scaled(self, delta)
 	if phase != 1:
 		return
 	flight_elapsed += delta

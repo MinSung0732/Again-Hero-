@@ -1,4 +1,5 @@
 extends "res://src/monsters/bat.gd"
+const CLOCK_BANSHEE = preload("res://src/systems/battle_clock.gd")
 
 const BANSHEE_FRAME_DIR := "res://assets/art/monsters/Banshee/frames"
 const WINDUP_DURATION := 0.5
@@ -38,6 +39,7 @@ func _apply_normal_visual_profile() -> void:
 	})
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_BANSHEE.scaled(self, delta)
 	if not origin_initialized:
 		spawn_origin = global_position
 		origin_initialized = true

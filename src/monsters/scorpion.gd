@@ -1,4 +1,5 @@
 extends "res://src/monsters/orc.gd"
+const CLOCK_SCORPION = preload("res://src/systems/battle_clock.gd")
 var combo_status_action: RefCounted
 const STATUS_SCOPE := preload("res://src/systems/status_action_scope.gd")
 
@@ -29,8 +30,10 @@ func _ready() -> void:
 	MONSTER_RUNTIME_COMMON.attach_status_effect_visual(self, COMBAT_STATUS_EFFECT_VISUAL, "slow")
 
 func _physics_process(delta: float) -> void:
+	var clock_raw_delta := delta
+	delta = CLOCK_SCORPION.scaled(self, delta)
 	_tick_followup(delta)
-	super._physics_process(delta)
+	super._physics_process(clock_raw_delta)
 
 func _attack_target(target: Node2D) -> void:
 	combo_status_action = STATUS_SCOPE.action_or_new(target)

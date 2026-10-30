@@ -1,4 +1,5 @@
 extends "res://src/monsters/orc.gd"
+const CLOCK_WOLF = preload("res://src/systems/battle_clock.gd")
 var combo_status_action: RefCounted
 const STATUS_SCOPE := preload("res://src/systems/status_action_scope.gd")
 
@@ -39,12 +40,14 @@ func _ready() -> void:
 		combat_authority.wolf_pack_runtime.register(self)
 
 func _physics_process(delta: float) -> void:
+	var clock_raw_delta := delta
+	delta = CLOCK_WOLF.scaled(self, delta)
 	if dying or current_hp <= 0:
 		return
 	howl_buff_timer = maxf(howl_buff_timer - delta, 0.0)
 	if MONSTER_RUNTIME_COMMON.is_forced_movement_locked(self):
 		followup_target = null
-		super._physics_process(delta)
+		super._physics_process(clock_raw_delta)
 		return
 	if howl_timer > 0.0 or pack_cast_timer > 0.0:
 		velocity = Vector2.ZERO
@@ -64,7 +67,7 @@ func _physics_process(delta: float) -> void:
 			visual.play_locomotion(false)
 		return
 	_tick_followup(delta)
-	super._physics_process(delta)
+	super._physics_process(clock_raw_delta)
 
 func can_howl() -> bool:
 	return not dying and current_hp > 0 and howl_timer <= 0.0 and pack_cast_timer <= 0.0 and howl_buff_timer <= float(BEHAVIOR.HOWL.refresh_threshold) and not MONSTER_RUNTIME_COMMON.is_forced_movement_locked(self)

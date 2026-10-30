@@ -1,4 +1,5 @@
 extends CharacterBody2D
+const CLOCK_GOBLIN_THROWER = preload("res://src/systems/battle_clock.gd")
 
 const COMBAT_STATUS_EFFECT_VISUAL := preload(
 	"res://src/ui/combat_status_effect_visual.gd"
@@ -129,6 +130,7 @@ func _refresh_combat_target() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_GOBLIN_THROWER.scaled(self, delta)
 	hero_target_refresh_timer = MONSTER_RUNTIME_COMMON.tick_countdown(
 		hero_target_refresh_timer,
 		delta
@@ -216,7 +218,7 @@ func _physics_process(delta: float) -> void:
 		if distance_sq > far_nav_sq:
 			global_position += velocity * delta
 		else:
-			move_and_slide()
+			CLOCK_GOBLIN_THROWER.move_and_slide_scaled(self)
 		return
 
 	var direction_to_hero := (
@@ -230,7 +232,7 @@ func _physics_process(delta: float) -> void:
 		move_speed * external_multiplier
 	)
 	if velocity.length_squared() > 0.01:
-		move_and_slide()
+		CLOCK_GOBLIN_THROWER.move_and_slide_scaled(self)
 	_update_visual_motion(direction_to_hero.x, false)
 
 	if attack_timer > 0.0:
@@ -298,7 +300,7 @@ func _tick_retreat_and_heal(delta: float) -> bool:
 		* external_multiplier
 	)
 	_update_visual_motion(velocity.x, true)
-	move_and_slide()
+	CLOCK_GOBLIN_THROWER.move_and_slide_scaled(self)
 	return true
 
 

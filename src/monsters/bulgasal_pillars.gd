@@ -1,4 +1,5 @@
 extends Node2D
+const CLOCK_BULGASAL_PILLARS = preload("res://src/systems/battle_clock.gd")
 ## Fixed-capacity decoration pool, outside the monster registry/target queries.
 const DATA := preload("res://src/data/bulgasal_behavior_catalog.gd")
 const FX := preload("res://src/ui/bulgasal_combat_effects.gd")
@@ -113,6 +114,7 @@ func finish_death() -> void:
 	reparent(battle, true)
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_BULGASAL_PILLARS.scaled(self, delta)
 	if is_instance_valid(authority) and (authority.battle_over or authority.external_pause or authority.demon_augment_selection_active):
 		return
 	for index in range(states.size()):

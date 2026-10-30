@@ -1,4 +1,5 @@
 extends Node2D
+const CLOCK_PURIFIER_ORB = preload("res://src/systems/battle_clock.gd")
 
 signal settled(orb: Node2D)
 signal deactivated(orb: Node2D)
@@ -58,6 +59,7 @@ func setup(
 
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_PURIFIER_ORB.scaled(self, delta)
 	if _ending:
 		return
 

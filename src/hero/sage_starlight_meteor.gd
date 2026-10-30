@@ -1,4 +1,5 @@
 extends Area2D
+const CLOCK_SAGE_STARLIGHT_METEOR = preload("res://src/systems/battle_clock.gd")
 
 const EFFECT_DIR := "res://assets/art/heroes/stage10_sage/frames/effect7"
 const POOL_KEY := "sage_starlight_meteor"
@@ -75,6 +76,7 @@ func setup(
 
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_SAGE_STARLIGHT_METEOR.scaled(self, delta)
 	match state:
 		MeteorState.FALLING:
 			_update_fall(delta)

@@ -1,4 +1,5 @@
 extends "res://src/monsters/orc.gd"
+const CLOCK_GUMIHO = preload("res://src/systems/battle_clock.gd")
 const DATA := preload("res://src/data/gumiho_behavior_catalog.gd")
 const SHARED := preload("res://src/systems/gumiho_shared_runtime.gd")
 const RETURN_BOLT := preload("res://src/monsters/GumihoReflectedProjectile.tscn")
@@ -143,6 +144,8 @@ func try_reflect_projectile(projectile: Node2D, amount: int, sender: Node) -> bo
 	bolt.configure(self,target,projectile,amount)
 	return true
 func _physics_process(delta: float) -> void:
+	var clock_raw_delta := delta
+	delta = CLOCK_GUMIHO.scaled(self, delta)
 	if dying or current_hp <= 0: return
 	quiet_time += delta; stealth_remaining = maxf(stealth_remaining-delta,0.0)
 	shield_remaining = maxf(shield_remaining-delta,0.0)
@@ -161,6 +164,6 @@ func _physics_process(delta: float) -> void:
 	if breath_remaining > 0.0:
 		if not _can_act() or bool(get_meta("silence_active",false)): breath_remaining = 0.0
 		else: velocity = Vector2.ZERO; _tick_breath(delta); return
-	super._physics_process(delta)
+	super._physics_process(clock_raw_delta)
 func _draw() -> void:
 	if not dying: MONSTER_RUNTIME_COMMON.draw_status_bars(self,self,status_bar_head_y,DATA.CHARM_STACKS)

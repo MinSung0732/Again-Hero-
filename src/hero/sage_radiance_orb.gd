@@ -1,4 +1,5 @@
 extends Area2D
+const CLOCK_SAGE_RADIANCE_ORB = preload("res://src/systems/battle_clock.gd")
 const COMBAT_DELAY := preload("res://src/systems/combat_delay.gd")
 
 const HERO_TARGET_POLICY := preload("res://src/systems/hero_target_policy.gd")
@@ -81,6 +82,7 @@ func setup(
 
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_SAGE_RADIANCE_ORB.scaled(self, delta)
 	if is_instance_valid(tracked_target) and not HERO_TARGET_POLICY.is_detectable(tracked_target):
 		tracked_target = null
 	match state:

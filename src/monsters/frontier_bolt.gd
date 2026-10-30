@@ -1,4 +1,5 @@
 extends Node2D
+const CLOCK_FRONTIER_BOLT = preload("res://src/systems/battle_clock.gd")
 ## Pooled, aim-at-cast projectile. Swept collision only against the intended life;
 ## no global groups, homing, room-crossing physics or per-frame allocations.
 const HIT := preload("res://src/monsters/frontier_attack.gd")
@@ -60,6 +61,7 @@ func setup(owner: Node2D, target: Node2D, aim: Vector2, amount: int, config: Dic
 	add_to_group("monster_projectiles")
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_FRONTIER_BOLT.scaled(self, delta)
 	if not active: return
 	if visual_frames != null:
 		visual_clock += delta

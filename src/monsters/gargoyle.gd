@@ -1,4 +1,5 @@
 extends "res://src/monsters/orc.gd"
+const CLOCK_GARGOYLE = preload("res://src/systems/battle_clock.gd")
 const DATA := preload("res://src/data/gargoyle_behavior_catalog.gd")
 var status_bar_head_y := -82.0
 var stored_damage := 0.0
@@ -59,6 +60,8 @@ func ranged_damage_multiplier() -> float:
 	return 1.0-DATA.RANGED_REDUCTION-DATA.EXTRA_REDUCTION*progress
 
 func _physics_process(delta: float) -> void:
+	var clock_raw_delta := delta
+	delta = CLOCK_GARGOYLE.scaled(self, delta)
 	if dying or current_hp <= 0: return
 	if petrify_remaining > 0.0:
 		var step := minf(delta,petrify_remaining)
@@ -71,7 +74,7 @@ func _physics_process(delta: float) -> void:
 		velocity = Vector2.ZERO
 		queue_redraw()
 		return
-	super._physics_process(delta)
+	super._physics_process(clock_raw_delta)
 
 func _attack_target(target: Node2D) -> void:
 	var hp_before := int(target.get("current_hp"))

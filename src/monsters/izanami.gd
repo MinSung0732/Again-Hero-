@@ -1,4 +1,5 @@
 extends "res://src/monsters/goblin_thrower.gd"
+const CLOCK_IZANAMI = preload("res://src/systems/battle_clock.gd")
 const AUDIO := preload("res://src/data/izanami_audio_catalog.gd")
 const SFX := preload("res://src/audio/event_sfx_bank.gd")
 var audio_bank: Node
@@ -132,6 +133,8 @@ func get_gauge_regen() -> float:
 	return minf(maxf(float(combat_authority.command_regen_per_second),0.0),15.0) if is_instance_valid(combat_authority) else 0.0
 
 func _physics_process(delta: float) -> void:
+	var clock_raw_delta := delta
+	delta = CLOCK_IZANAMI.scaled(self, delta)
 	if dying or current_hp <= 0:
 		return
 	if is_instance_valid(combat_authority) and (combat_authority.battle_over or combat_authority.external_pause or combat_authority.demon_augment_selection_active):
@@ -161,7 +164,7 @@ func _physics_process(delta: float) -> void:
 	else:
 		if is_instance_valid(hero) and hero.current_hp > 0:
 			_try_cast()
-		super._physics_process(delta)
+		super._physics_process(clock_raw_delta)
 	effect_layer.queue_redraw()
 	torii_layer.queue_redraw()
 	queue_redraw()
@@ -192,7 +195,7 @@ func _tick_retreat_and_heal(delta: float) -> bool:
 	var speed := move_speed*MONSTER_RUNTIME_COMMON.get_external_movement_multiplier(self)
 	velocity = direction*minf(speed,remaining/maxf(delta,0.0001))
 	if velocity.length_squared() > 0.01:
-		move_and_slide()
+		CLOCK_IZANAMI.move_and_slide_scaled(self)
 	_update_visual_motion(facing.x,velocity.length_squared() > 0.01)
 	if global_position.distance_squared_to(hero.global_position) <= attack_range*attack_range and attack_timer <= 0.0:
 		attack_timer = attack_cooldown

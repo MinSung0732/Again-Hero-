@@ -1,4 +1,5 @@
 extends Area2D
+const CLOCK_KOBOLT_PROJECTILE = preload("res://src/systems/battle_clock.gd")
 
 const NORMAL_EFFECT_DIR := "res://assets/art/monsters/kobolt/frames/effect1"
 const ELITE_EFFECT_DIR := "res://assets/art/elitemonster/kobolt/frames/effect1"
@@ -61,6 +62,7 @@ func setup(
 
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_KOBOLT_PROJECTILE.scaled(self, delta)
 	if not active:
 		return
 	var step := direction * speed * delta

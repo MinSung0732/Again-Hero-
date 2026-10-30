@@ -1,4 +1,5 @@
 extends CharacterBody2D
+const CLOCK_BOMB_RAT = preload("res://src/systems/battle_clock.gd")
 
 const COMBAT_STATUS_EFFECT_VISUAL := preload("res://src/ui/combat_status_effect_visual.gd")
 const MONSTER_RUNTIME_COMMON := preload("res://src/monsters/monster_runtime_common.gd")
@@ -115,6 +116,7 @@ func _refresh_combat_target() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_BOMB_RAT.scaled(self, delta)
 	if _combat_profile == null or not _combat_profile.enabled:
 		_physics_process_monster(delta)
 		return

@@ -1,4 +1,5 @@
 extends Node2D
+const CLOCK_GUMIHO_REFLECTED_PROJECTILE = preload("res://src/systems/battle_clock.gd")
 var target_ref: WeakRef
 var source_ref: WeakRef
 var damage := 0
@@ -20,6 +21,7 @@ func configure(source: Node2D, target: Node2D, original: Node2D, amount: int) ->
 			sprite.texture = texture; sprite.scale = child.scale; break
 	queue_redraw()
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_GUMIHO_REFLECTED_PROJECTILE.scaled(self, delta)
 	if not active: return
 	lifetime += delta
 	var target = target_ref.get_ref() if target_ref != null else null

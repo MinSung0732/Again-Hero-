@@ -1,4 +1,5 @@
 extends "res://src/monsters/goblin_thrower.gd"
+const CLOCK_ZEUS = preload("res://src/systems/battle_clock.gd")
 const TELEGRAPH := preload("res://src/ui/circular_attack_telegraph.gd")
 const DATA := preload("res://src/data/zeus_behavior_catalog.gd")
 const ART := preload("res://src/data/zeus_visual_catalog.gd")
@@ -98,6 +99,8 @@ func _ready() -> void:
 		FX.get_pack(kind)
 
 func _physics_process(delta: float) -> void:
+	var clock_raw_delta := delta
+	delta = CLOCK_ZEUS.scaled(self, delta)
 	if dying or current_hp <= 0:
 		return
 	if is_instance_valid(combat_authority) and (combat_authority.battle_over or combat_authority.external_pause or combat_authority.demon_augment_selection_active):
@@ -121,7 +124,7 @@ func _physics_process(delta: float) -> void:
 	if is_instance_valid(hero) and int(hero.current_hp) > 0:
 		_try_cast()
 	if charge_remaining <= 0.0:
-		super._physics_process(delta)
+		super._physics_process(clock_raw_delta)
 	queue_redraw()
 
 func _refresh_combat_target() -> void:
@@ -154,7 +157,7 @@ func _tick_retreat_and_heal(delta: float) -> bool:
 	var speed := move_speed*MONSTER_RUNTIME_COMMON.get_external_movement_multiplier(self)
 	velocity = direction*minf(speed,remaining/maxf(delta,0.0001))
 	if velocity.length_squared() > 0.01:
-		move_and_slide()
+		CLOCK_ZEUS.move_and_slide_scaled(self)
 	# Face the target even while stepping backwards.
 	_update_visual_motion(facing.x,velocity.length_squared() > 0.01)
 	if global_position.distance_squared_to(hero.global_position) <= attack_range*attack_range and attack_timer <= 0.0:

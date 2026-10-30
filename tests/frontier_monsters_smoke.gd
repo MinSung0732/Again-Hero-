@@ -310,8 +310,11 @@ func _test_actual_battle() -> void:
 		battle.hero.invulnerability_timer = 0.0
 		var before: int = battle.hero.current_hp
 		boosted._attack_target(battle.hero)
+		# Bolts follow the battle clock, which reads 0 while externally paused.
+		battle.set_external_pause(false)
 		for bolt in battle.get_children():
 			if bolt.get_script() == preload("res://src/monsters/frontier_bolt.gd") and bolt.active: bolt._physics_process(2.0)
+		battle.set_external_pause(true)
 		check(battle.hero.current_hp < before,id+" actual Hero receives attack")
 		if boosted.behavior.has("slow_duration"): check(battle.hero.slow_timer > 0.0,id+" actual Hero slow")
 		if boosted.behavior.has("poison_ratio"): check(battle.hero.poison_timer > 0.0,id+" actual Hero poison")

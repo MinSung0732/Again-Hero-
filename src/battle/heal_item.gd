@@ -1,4 +1,5 @@
 extends Node2D
+const CLOCK_HEAL_ITEM = preload("res://src/systems/battle_clock.gd")
 
 const PICKUP_PLACEMENT := preload("res://src/systems/pickup_placement.gd")
 const BATTLE_SCOPE := preload("res://src/systems/battle_scope.gd")
@@ -27,6 +28,7 @@ func _ready() -> void:
 	_apply_visual()
 
 func _physics_process(delta: float) -> void:
+	delta = CLOCK_HEAL_ITEM.scaled(self, delta)
 	if _placement_pending:
 		PICKUP_PLACEMENT.ensure_reachable(self)
 		_placement_pending = false

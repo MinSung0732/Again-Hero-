@@ -1,4 +1,5 @@
 extends "res://src/monsters/orc.gd"
+const CLOCK_DARK_ELF_ARCHER = preload("res://src/systems/battle_clock.gd")
 const DATA := preload("res://src/data/dark_elf_archer_behavior_catalog.gd")
 const PROJECTILE := preload("res://src/monsters/DarkElfArrow.tscn")
 var projectile_speed := DATA.BASE.projectile_speed
@@ -124,6 +125,8 @@ func _begin_reposition(target: Node2D) -> void:
 	reposition_active = best.distance_squared_to(global_position) > 16.0
 
 func _physics_process(delta: float) -> void:
+	var clock_raw_delta := delta
+	delta = CLOCK_DARK_ELF_ARCHER.scaled(self, delta)
 	if dying or current_hp <= 0: return
 	quiet_time += delta
 	if quiet_time >= DATA.STEALTH_DELAY and burst_remaining == 0: _enter_stealth()
@@ -146,7 +149,7 @@ func _physics_process(delta: float) -> void:
 	if burst_remaining > 0:
 		attack_timer = maxf(attack_timer-delta,0.0)
 		return
-	super._physics_process(delta)
+	super._physics_process(clock_raw_delta)
 
 func _draw() -> void:
 	if not dying: MONSTER_RUNTIME_COMMON.draw_status_bars(self,self,status_bar_head_y)
