@@ -29,7 +29,7 @@ const CAST_PROFILES := {
 	"ranged_kiter": CUES.cast,
 	"summoner_gatekeeper": {"path":SUMMONER.BASIC,"db":SUMMONER.BASIC_DB,"interval":SUMMONER.BASIC_INTERVAL_MS/1000.0},
 }
-const KINDS := ["hero_hit","monster_hit","heal","cast","summon","transcend","level_up","ultimate","monster_sfx"]
+const KINDS := ["hero_hit","monster_hit","heal","cast","summon","transcend","transcend_death","transcend_sfx","level_up","ultimate","monster_sfx"]
 const EMPTY := []
 static func transcend_index(id: String) -> int:
 	return CINEMATIC.ENTRIES.keys().find(id) + 1
@@ -48,7 +48,8 @@ static func valid_events(events: Variant,cursor: Variant,tick: Variant) -> bool:
 		for index in [3,4,5,6,7,8,9]:
 			if not (row[index] is int or row[index] is float) or not is_finite(float(row[index])) or absf(float(row[index]))>1000000: return false
 		if row[5]<0 or row[5]!=floorf(row[5]): return false
-		if row[2] == "transcend" and transcend_id(int(row[5])).is_empty(): return false
+		if row[2] in ["transcend", "transcend_death"] and transcend_id(int(row[5])).is_empty(): return false
+		if row[2] == "transcend_sfx" and (row[5] < 1 or row[5] > 256): return false
 		if row[2] == "monster_sfx" and MONSTER_SFX.cue_from_index(int(row[5])).is_empty(): return false
 		for index in [6,7,8,9]:
 			if row[index]<0 or row[index]>1: return false

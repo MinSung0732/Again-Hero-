@@ -1,5 +1,7 @@
 extends Node
 ## Authoritative adapter over the shipped Battle/Hero/monster/weapon code.
+const TRANSCENDENCE := preload("res://src/data/transcendence_catalog.gd")
+const FEEDBACK_DATA := preload("res://src/data/online_feedback_catalog.gd")
 const RULES := preload("res://src/online/match_rules.gd")
 const SKILLS := preload("res://src/data/demon_ultimate_catalog.gd")
 const PRESENTATION := preload("res://src/online/presentation_snapshot.gd")
@@ -65,12 +67,16 @@ var roster: Array = RULES.ROSTER.duplicate() # Isolated room fixtures; the serve
 var skill_ids: Array = []
 var transcendence_id := ""
 var transcendent_actor: Node2D
+var transcend_audio_catalog
+var transcend_audio_ids: Array = []
 var map_id := "plaza"
 func set_loadouts(hero_loadout: Dictionary,demon_loadout: Dictionary) -> void:
 	hero_id = String(hero_loadout.hero_id)
 	roster = demon_loadout.team_ids.duplicate()
 	skill_ids = demon_loadout.skill_ids.duplicate()
 	transcendence_id = String(demon_loadout.transcendence_id)
+	transcend_audio_catalog = TRANSCENDENCE.audio_catalog(transcendence_id)
+	transcend_audio_ids = transcend_audio_catalog.CUES.keys() if transcend_audio_catalog != null else []
 func prepare() -> void:
 	var map_data: Dictionary = MAPS.get_map(map_id)
 	if map_data.is_empty(): finish("","invalid_map"); return
@@ -104,6 +110,7 @@ func prepare() -> void:
 	battle.online_visual_entity_exited.connect(presentation.forget_node)
 	battle.online_combat_feedback.connect(_feedback)
 	battle.online_monster_sfx.connect(_monster_sfx)
+	battle.online_transcendent_sfx.connect(_transcendent_sfx)
 	battle.online_cast_feedback.connect(func(cue: String,point: Vector2):
 		if running and not finished and not connection_paused: feedback.publish(cue,point,0,Color.WHITE,tick))
 	battle.demon_ultimate_used.connect(func(_id: String,_name: String,_message: String):
@@ -112,6 +119,9 @@ func prepare() -> void:
 		if running and not finished and not connection_paused and is_instance_valid(actor):
 			transcendent_actor = actor
 			feedback.publish("transcend",actor.global_position,preload("res://src/data/online_feedback_catalog.gd").transcend_index(id),Color(1.0,0.75,0.35),tick))
+	battle.transcendent_died.connect(func(id: String, actor: Node2D):
+		if running and not finished and not connection_paused and id == transcendence_id and is_instance_valid(actor):
+			feedback.publish("transcend_death", actor.global_position, FEEDBACK_DATA.transcend_index(id), Color.WHITE, tick))
 	battle.demon_augment_ready.connect(_demon_offer)
 	battle.online_hero_kill.connect(_on_hero_kill)
 	battle.online_elite_requested.connect(_queue_elite)
@@ -635,3 +645,9 @@ func _monster_sfx(cue: String) -> void:
 	if now < int(monster_sfx_next.get(cue, 0)): return
 	monster_sfx_next[cue] = now + int(float(monster_sfx_cues[cue].interval)*1000.0)
 	feedback.publish("monster_sfx", Vector2.ZERO, monster_sfx_ids.find(cue)+1, Color.WHITE, tick)
+
+func _transcendent_sfx(catalog_key: String, cue_id: String) -> void:
+	if not running or finished or connection_paused or transcend_audio_catalog == null: return
+	if catalog_key != transcend_audio_catalog.resource_path: return
+	var index := transcend_audio_ids.find(cue_id)
+	if index >= 0: feedback.publish("transcend_sfx", Vector2.ZERO, index + 1, Color.WHITE, tick)

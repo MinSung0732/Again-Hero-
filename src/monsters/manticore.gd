@@ -105,7 +105,7 @@ func _ready() -> void:
 	super._ready()
 	audio_bank = SFX_BANK.new()
 	add_child(audio_bank)
-	audio_bank.configure(AUDIO.CUES,combat_authority,true)
+	audio_bank.configure(AUDIO.CUES,combat_authority,true,"res://src/data/manticore_audio_catalog.gd")
 	flight_collision_layer = collision_layer
 	flight_collision_mask = collision_mask
 	visual.frame_changed.connect(_sync_visual_anchor)

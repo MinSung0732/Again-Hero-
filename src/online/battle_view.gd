@@ -67,6 +67,7 @@ func set_match_roster(roster: Array,transcendence_id: String = "") -> void:
 	if is_instance_valid(cinematic): cinematic.free()
 	cinematic = preload("res://src/ui/battle_summon_cinematic.gd").new()
 	cinematic.install_online(self, transcendence_id)
+	if is_instance_valid(feedback): feedback.configure_transcendence(transcendence_id)
 func _load_actor_texture(id: String) -> void:
 	if actor_texture_paths.has(id): return
 	var path := String(MONSTERS.get_monster(id).get("card_icon_path",""))

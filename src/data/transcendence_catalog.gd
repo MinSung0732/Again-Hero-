@@ -1,5 +1,16 @@
 extends RefCounted
 const MONSTERS := preload("res://src/data/monster_catalog.gd")
+const AUDIO_CATALOGS := {
+	"arthur": preload("res://src/data/arthur_audio_catalog.gd"),
+	"zeus": preload("res://src/data/zeus_audio_catalog.gd"),
+	"izanami": preload("res://src/data/izanami_audio_catalog.gd"),
+	"manticore": preload("res://src/data/manticore_audio_catalog.gd"),
+	"shuten_doji": preload("res://src/data/shuten_doji_audio_catalog.gd"),
+	"bulgasal": preload("res://src/data/bulgasal_audio_catalog.gd"),
+}
+static func audio_catalog(id: String):
+	return AUDIO_CATALOGS.get(id)
+
 # Chest-like default: 15 stones, 20 EXP each. Kept separate from ordinary kill EXP.
 const DEATH_DROP_DEFAULT := {
 	"pieces": 15, "total_exp": 300, "speed_min": 220.0, "speed_max": 420.0,

@@ -70,7 +70,7 @@ func _ready() -> void:
 	front_effects.draw.connect(_draw_combat_effects)
 	audio_bank = SFX.new()
 	add_child(audio_bank)
-	audio_bank.configure(AUDIO.CUES,combat_authority,true)
+	audio_bank.configure(AUDIO.CUES,combat_authority,true,"res://src/data/arthur_audio_catalog.gd")
 	for i in range(4): FX.prepare(i)
 func get_gauge_regen() -> float:
 	return minf(maxf(float(combat_authority.command_regen_per_second),0),15) if is_instance_valid(combat_authority) else 0.0

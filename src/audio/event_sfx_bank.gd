@@ -9,10 +9,12 @@ var scaled_clock := false
 var application_paused := false
 var honor_tree_pause := true
 var played_count := 0
+var catalog_key := ""
 
-func configure(data: Dictionary, battle: Node = null, combat_clock: bool = false) -> void:
+func configure(data: Dictionary, battle: Node = null, combat_clock: bool = false, key: String = "") -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	authority = battle
+	catalog_key = key
 	scaled_clock = combat_clock
 	cues = data
 	for id in data:
@@ -36,6 +38,10 @@ func is_blocked() -> bool:
 func play_cue(id: String) -> bool:
 	if not players.has(id) or is_blocked() or float(cooldowns[id]) > 0.0:
 		return false
+	if not catalog_key.is_empty() and is_instance_valid(authority) and authority.has_signal("online_transcendent_sfx") and authority.get("online_match_mode") == true:
+		cooldowns[id] = float(cues[id].get("interval", 0.0))
+		authority.emit_signal("online_transcendent_sfx", catalog_key, id)
+		return true
 	var player: AudioStreamPlayer = players[id]
 	if player.stream == null:
 		return false

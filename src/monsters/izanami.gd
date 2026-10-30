@@ -104,7 +104,7 @@ func _ready() -> void:
 	super._ready()
 	audio_bank = SFX.new()
 	add_child(audio_bank)
-	audio_bank.configure(AUDIO.CUES,combat_authority,true)
+	audio_bank.configure(AUDIO.CUES,combat_authority,true,"res://src/data/izanami_audio_catalog.gd")
 	status_layer.z_as_relative = false
 	status_layer.z_index = 12
 	status_layer.draw.connect(_draw_status)

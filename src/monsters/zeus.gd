@@ -93,7 +93,7 @@ func _ready() -> void:
 	effect_layer.draw.connect(_draw_combat_effects)
 	combat_sfx = SFX_BANK.new()
 	add_child(combat_sfx)
-	combat_sfx.configure(AUDIO.CUES, combat_authority, true)
+	combat_sfx.configure(AUDIO.CUES, combat_authority, true, "res://src/data/zeus_audio_catalog.gd")
 	for kind in DATA.EFFECTS:
 		FX.get_pack(kind)
 

@@ -127,7 +127,7 @@ func _ready() -> void:
 	add_child(gauge_layer)
 	audio_bank = SFX_BANK.new()
 	add_child(audio_bank)
-	audio_bank.configure(AUDIO.CUES,combat_authority,true)
+	audio_bank.configure(AUDIO.CUES,combat_authority,true,"res://src/data/bulgasal_audio_catalog.gd")
 	FX.warm()
 	pillars = PILLARS.new()
 	pillars.actor = self

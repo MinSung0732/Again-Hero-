@@ -4,6 +4,9 @@ const BANK := preload("res://src/audio/event_sfx_bank.gd")
 const POPUPS := preload("res://src/ui/damage_number_spawner.gd")
 const LEVEL_EFFECT := preload("res://src/ui/hero_level_up_effect.gd")
 var bank
+var transcend_bank
+var transcend_id := ""
+var transcend_cue_ids: Array = []
 var level_sprite: AnimatedSprite2D
 var baseline := 0
 var slots: Array = []
@@ -24,13 +27,25 @@ func _ready() -> void:
 	level_sprite.animation_finished.connect(func(): level_sprite.hide())
 	for _index in DATA.CAPACITY: slots.append({"left":0.0,"point":Vector2.ZERO,"kind":"","color":Color.WHITE})
 	set_process(false)
+func configure_transcendence(id: String) -> void:
+	transcend_id = id
+	transcend_cue_ids = []
+	if is_instance_valid(transcend_bank): transcend_bank.queue_free()
+	transcend_bank = null
+	var catalog = preload("res://src/data/transcendence_catalog.gd").audio_catalog(id)
+	if catalog == null: return
+	transcend_cue_ids = catalog.CUES.keys()
+	transcend_bank = BANK.new(); add_child(transcend_bank); transcend_bank.configure(catalog.CUES)
+
 func reset(sequence: int = 0) -> void:
 	baseline = sequence; suspended = true; result_played = false; clear()
 func clear() -> void:
 	for slot in slots: slot.left = 0.0
 	for popup in get_meta(POPUPS.POOL_META,[]):
 		if is_instance_valid(popup): popup.call("_deactivate_for_pool")
-	bank.stop_all(); set_process(false); queue_redraw()
+	bank.stop_all()
+	if is_instance_valid(transcend_bank): transcend_bank.stop_all()
+	set_process(false); queue_redraw()
 	if is_instance_valid(level_sprite): level_sprite.stop(); level_sprite.hide()
 func pause_feedback() -> void:
 	suspended = true; clear()
@@ -44,16 +59,23 @@ func consume(events: Variant,sequence: Variant,tick: Variant) -> bool:
 			if row[0]<=baseline: continue
 			received += 1
 			var age_limit: float = DATA.MAX_AGE_SECONDS
-			if row[2] == "transcend":
+			if row[2] in ["transcend", "transcend_death"]:
 				var id := DATA.transcend_id(int(row[5]))
-				age_limit = float(DATA.CINEMATIC.ENTRIES[id].duration)
-			if (row[2] == "transcend" and tick-row[1]>=age_limit*Engine.physics_ticks_per_second) or (row[2] != "transcend" and tick-row[1]>age_limit*Engine.physics_ticks_per_second):
+				if id != transcend_id: continue
+				age_limit = float(DATA.CINEMATIC.ENTRIES[id].get("death", DATA.CINEMATIC.DEATH_DEFAULT).duration) if row[2] == "transcend_death" else float(DATA.CINEMATIC.ENTRIES[id].duration)
+			if (row[2] in ["transcend", "transcend_death"] and tick-row[1]>=age_limit*Engine.physics_ticks_per_second) or (row[2] not in ["transcend", "transcend_death"] and tick-row[1]>age_limit*Engine.physics_ticks_per_second):
 				stale += 1
 				continue
 			accepted += 1
-			if row[2] == "transcend":
+			if row[2] in ["transcend", "transcend_death"]:
 				var cinematic = get_parent().cinematic
-				if is_instance_valid(cinematic): cinematic.play_online(DATA.transcend_id(int(row[5])), Vector2(row[3],row[4]))
+				if is_instance_valid(cinematic):
+					if row[2] == "transcend": cinematic.play_online(transcend_id, Vector2(row[3],row[4]))
+					else: cinematic.play_death_online(transcend_id, Vector2(row[3],row[4]))
+				continue
+			if row[2] == "transcend_sfx":
+				var index := int(row[5]) - 1
+				if is_instance_valid(transcend_bank) and index >= 0 and index < transcend_cue_ids.size(): transcend_bank.play_cue(String(transcend_cue_ids[index]))
 				continue
 			var cue: String = row[2]
 			if cue == "monster_sfx":

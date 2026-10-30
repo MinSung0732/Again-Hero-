@@ -57,6 +57,8 @@ func install_online(battle_view: Control, monster_id: String) -> void:
 		_cached_view(String(entry.view)); _cached_sound_bank(monster_id)
 		var path := String(entry.get("world_effect", ""))
 		if not path.is_empty(): _cached_world_effect(path)
+		var death_path := String(entry.get("death", CATALOG.DEATH_DEFAULT).get("world_effect", ""))
+		if not death_path.is_empty(): _cached_world_effect(death_path)
 
 func play_online(monster_id: String, point: Vector2) -> void:
 	cancel()
@@ -75,13 +77,32 @@ func play_online(monster_id: String, point: Vector2) -> void:
 	last_tick_usec = Time.get_ticks_usec()
 	_layout(); view.show(); view.set_time(0.0); show(); set_process(true)
 
+func play_death_online(monster_id: String, point: Vector2) -> void:
+	cancel()
+	if not CATALOG.ENTRIES.has(monster_id): return
+	var data: Dictionary = CATALOG.ENTRIES[monster_id]
+	var entry: Dictionary = data.get("death", CATALOG.DEATH_DEFAULT)
+	view = null; death_mode = true
+	sound_bank = _cached_sound_bank(monster_id)
+	audio_timeline = data.get("death_audio_timeline", [])
+	slow_profile = entry.get("slow_motion", {})
+	duration = float(entry.duration); zoom_factor = float(entry.zoom)
+	return_start = float(entry.get("return_start", 2.0))
+	online_focus = point; elapsed = 0.0; returning = false; active = true
+	var path := String(entry.get("world_effect", ""))
+	world_effect = _cached_world_effect(path) if not path.is_empty() else null
+	if is_instance_valid(world_effect): world_effect.set_time(0.0); world_effect.show()
+	next_audio_cue = 0; _advance_audio()
+	last_tick_usec = Time.get_ticks_usec()
+	_layout(); show(); set_process(true)
+
 func _advance_online() -> void:
 	if not is_instance_valid(online_view) or not online_view.is_visible_in_tree() or get_tree().paused:
 		cancel(); return
 	_layout()
 	var approach := 1.0 - pow(1.0 - clampf(elapsed / float(slow_profile.get("approach_end", 0.95)), 0.0, 1.0), 3.0)
-	var zoom_in := smoothstep(0.75, 2.1, elapsed)
-	var zoom_out := smoothstep(3.1, return_start, elapsed)
+	var zoom_in := smoothstep(0.05 if death_mode else 0.75, 0.75 if death_mode else 2.1, elapsed)
+	var zoom_out := smoothstep(1.6 if death_mode else 3.1, return_start, elapsed)
 	var factor := 1.0 + (zoom_factor - 1.0) * zoom_in * (1.0 - zoom_out * 0.45)
 	if elapsed < return_start:
 		online_view.cinematic_focus = online_focus
@@ -99,8 +120,9 @@ func _advance_online() -> void:
 		world_effect.position = projected; world_effect.scale = online_view.map_scale
 		world_effect.set_time(elapsed)
 	shade.set_shader_parameter("focus", projected / size)
-	shade.set_shader_parameter("strength", smoothstep(0.1, 0.85, elapsed) * (1.0 - smoothstep(return_start - 0.2, duration, elapsed)))
-	view.set_time(elapsed); view.modulate.a = 1.0 - smoothstep(4.3, duration, elapsed)
+	shade.set_shader_parameter("strength", smoothstep(0.02 if death_mode else 0.1, 0.35 if death_mode else 0.85, elapsed) * (1.0 - smoothstep(return_start - 0.2, duration, elapsed)))
+	if is_instance_valid(view):
+		view.set_time(elapsed); view.modulate.a = 1.0 - smoothstep(4.3, duration, elapsed)
 	if elapsed >= duration: cancel()
 
 func install(main: Control, preview_ids: Array[String] = []) -> void:
