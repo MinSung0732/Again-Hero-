@@ -35,6 +35,9 @@ var finished := false
 var connection_paused := false
 var room_freeze_left := 0.0
 var freeze_started_msec := 0
+var cinematic_profile: Dictionary = {}
+var cinematic_elapsed := 0.0
+var cinematic_duration := 0.0
 var frozen_move := Vector2.ZERO
 var has_frozen_move := false
 var input_suspended_before_disconnect := false
@@ -187,11 +190,22 @@ func _freeze_cinematic(id: String, death: bool) -> void:
 	if not FEEDBACK_DATA.CINEMATIC.ENTRIES.has(id): return
 	var entry: Dictionary = FEEDBACK_DATA.CINEMATIC.ENTRIES[id]
 	if death: entry = entry.get("death", FEEDBACK_DATA.CINEMATIC.DEATH_DEFAULT)
-	var seconds := float(entry.duration)
+	_start_cinematic(entry)
+func _start_cinematic(entry: Dictionary) -> void:
+	var seconds := float(entry.get("duration", 0.0))
 	if seconds <= 0.0: return
-	if room_freeze_left <= 0.0: freeze_started_msec = Time.get_ticks_msec()
-	room_freeze_left = maxf(room_freeze_left, seconds)
-	battle.set_external_pause(true)
+	if room_freeze_left > 0.0 and battle.exp_magnet_until_msec > 0:
+		battle.exp_magnet_until_msec += Time.get_ticks_msec() - freeze_started_msec
+	room_freeze_left = 0.0
+	has_frozen_move = false
+	cinematic_profile = entry.get("slow_motion", {})
+	cinematic_elapsed = 0.0; cinematic_duration = seconds
+	if cinematic_profile.is_empty():
+		freeze_started_msec = Time.get_ticks_msec(); room_freeze_left = seconds
+		battle.set_clock_scale(1.0); battle.set_external_pause(true)
+	else:
+		battle.set_external_pause(connection_paused or not running)
+		battle.set_clock_scale(FEEDBACK_DATA.CINEMATIC.slow_motion_scale(cinematic_profile, 0.0))
 func _choice(candidates: Array) -> void:
 	_hold("hero",candidates,0)
 	_enforce_hold_limit("hero")
@@ -444,10 +458,15 @@ func step(delta: float) -> void:
 			has_frozen_move = false
 		return
 	if connection_paused: return
+	if cinematic_duration > 0.0 and not cinematic_profile.is_empty():
+		cinematic_elapsed += delta
+		if cinematic_elapsed >= cinematic_duration:
+			cinematic_duration = 0.0; battle.set_clock_scale(1.0)
+		else: battle.set_clock_scale(FEEDBACK_DATA.CINEMATIC.slow_motion_scale(cinematic_profile, cinematic_elapsed))
 	tick += 1; move_age += delta
 	if move_age > RULES.INPUT_TIMEOUT and is_instance_valid(battle.hero): battle.hero.set_player_move_input(Vector2.ZERO)
 	if field_areas.is_empty(): return
-	field_elapsed += delta
+	field_elapsed += delta * battle.clock_scale
 	if field_elapsed >= FIELD_INTERVAL:
 		field_elapsed = fmod(field_elapsed, FIELD_INTERVAL)
 		_update_field_effects()
@@ -645,7 +664,7 @@ func _build_snapshot() -> Dictionary:
 		var skill: Dictionary = SKILLS.get_skill(String(id))
 		demon_ready[id] = battle.demon_ultimate_spawn_queue.is_empty() and battle.demon_ultimate_charge+0.001 >= float(skill.get("mana_cost",SKILLS.CHARGE_MAX)) and float(battle.demon_ultimate_cooldowns.get(id,0.0)) <= 0.001
 	# Bounded snapshot serialization and presentation sort at10Hz, not physics Hz.
-	return {"op":"state","tick":tick,"hero":[hero_last.x,hero_last.y,hp,maximum,level,_hero_bars()],"hero_archetype":String(battle.hero.hero_archetype) if is_instance_valid(battle.hero) else "","bounds":[battle.current_map_size.x,battle.current_map_size.y],"battlefield":battlefield_info,"seconds":battle.run_metrics.elapsed_seconds,"mana":battle.command_power,"max_command":roundi(battle.max_command),"summon_costs":summon_costs,"demon_level":battle.demon_level,"demon_rerolls_left":battle.demon_rerolls_left,"demon_reroll_limit":battle.demon_reroll_max,"demon_exp":battle.demon_exp,"demon_exp_next":battle.demon_exp_to_next_level,"demon_charge":battle.demon_ultimate_charge,"demon_charge_max":SKILLS.CHARGE_MAX,"demon_cooldowns":battle.demon_ultimate_cooldowns,"demon_ready":demon_ready,"transcend_ready":battle.transcendence.ready and not battle.transcendence.used,"transcend_used":battle.transcendence.used,"actors":actors,"exp_orbs":exp_orb_visuals.snapshot(),"shots":shots,"visuals":visuals,"primitives":primitives,"feedback":feedback.snapshot(),"feedback_cursor":feedback.sequence,"winner":winner,"reason":reason}
+	return {"op":"state","tick":tick,"clock_scale":battle.clock_scale if room_freeze_left <= 0.0 else 0.0,"hero":[hero_last.x,hero_last.y,hp,maximum,level,_hero_bars()],"hero_archetype":String(battle.hero.hero_archetype) if is_instance_valid(battle.hero) else "","bounds":[battle.current_map_size.x,battle.current_map_size.y],"battlefield":battlefield_info,"seconds":battle.run_metrics.elapsed_seconds,"mana":battle.command_power,"max_command":roundi(battle.max_command),"summon_costs":summon_costs,"demon_level":battle.demon_level,"demon_rerolls_left":battle.demon_rerolls_left,"demon_reroll_limit":battle.demon_reroll_max,"demon_exp":battle.demon_exp,"demon_exp_next":battle.demon_exp_to_next_level,"demon_charge":battle.demon_ultimate_charge,"demon_charge_max":SKILLS.CHARGE_MAX,"demon_cooldowns":battle.demon_ultimate_cooldowns,"demon_ready":demon_ready,"transcend_ready":battle.transcendence.ready and not battle.transcendence.used,"transcend_used":battle.transcendence.used,"actors":actors,"exp_orbs":exp_orb_visuals.snapshot(),"shots":shots,"visuals":visuals,"primitives":primitives,"feedback":feedback.snapshot(),"feedback_cursor":feedback.sequence,"winner":winner,"reason":reason}
 
 func _hero_bars() -> Array:
 	var hero = battle.hero

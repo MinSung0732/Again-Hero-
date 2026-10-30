@@ -1406,7 +1406,7 @@ func _test_connection(disconnected: bool) -> void:
 		_refresh_connection_test_controls()
 func _process(delta: float) -> void:
 	if client == null: return
-	var cinematic_active: bool = is_instance_valid(view) and is_instance_valid(view.cinematic) and view.cinematic.active
+	var cinematic_active: bool = is_instance_valid(view) and view.server_clock_scale <= 0.0
 	if role == "demon" and cinematic_active != cinematic_controls_active:
 		cinematic_controls_active = cinematic_active
 		summon_mana = -1.0; skill_state_signature = ""

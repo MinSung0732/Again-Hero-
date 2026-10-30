@@ -26,6 +26,7 @@ var display_sort := Callable(self,"_display_before")
 var actor_ids := {}
 var motion_paused := false
 var presentation_speed := 1.0
+var server_clock_scale := 1.0
 var motion_received_us := 0
 var primitives = PRIMITIVES.new()
 var feedback
@@ -99,6 +100,7 @@ func _ready() -> void:
 	resized.connect(queue_redraw)
 	if not pending_textures.is_empty(): set_process(true)
 func update_state(value: Dictionary) -> bool:
+	if not RULES.number(value.get("clock_scale", 1.0), 1.0) or float(value.get("clock_scale", 1.0)) < 0.0: return false
 	if not EXP_ORBS.valid(value.get("exp_orbs",EXP_ORBS.EMPTY)): return false
 	if not PRIMITIVES.valid(value.get("primitives",ART.EMPTY)): return false
 	if value.has("feedback") and not FEEDBACK_DATA.valid_events(value.feedback,value.get("feedback_cursor",null),value.get("tick",null)): return false
@@ -152,6 +154,7 @@ func update_state(value: Dictionary) -> bool:
 		if motion.active or shot_motion.active or visual_motion.active or primitives.motion.active: set_process(true)
 	if state.is_empty() and not hero_role and not camera_view_locked:
 		manual_center = Vector2(value.hero[0],value.hero[1])
+	server_clock_scale = float(value.get("clock_scale", 1.0))
 	state = value; bounds = Vector2(value.bounds[0],value.bounds[1])
 	if status_bars != null: status_bars.sync_state(state)
 	_merge_visuals()
@@ -222,12 +225,15 @@ func _process(delta: float) -> void:
 		queue_redraw()
 	advance_motion(delta)
 	if not motion_paused:
-		var shot_changed := shot_motion.advance(delta*presentation_speed)
-		var primitive_changed: bool = primitives.motion.advance(delta*presentation_speed)
-		var visual_changed := visual_motion.advance(delta*presentation_speed)
+		# Snapshot displacements already include the server clock scale; interpolate
+		# across the real snapshot interval to avoid applying the slowdown twice.
+		var motion_delta := delta * presentation_speed if server_clock_scale > 0.0 else 0.0
+		var shot_changed := shot_motion.advance(motion_delta)
+		var primitive_changed: bool = primitives.motion.advance(motion_delta)
+		var visual_changed := visual_motion.advance(motion_delta)
 		if visual_changed: _sort_display_depth(); queue_redraw()
 		if shot_changed or primitive_changed: queue_redraw()
-	if not motion_paused and exp_orbs.advance(delta*presentation_speed): queue_redraw()
+	if not motion_paused and exp_orbs.advance(delta*presentation_speed if server_clock_scale > 0.0 else 0.0): queue_redraw()
 	var changed := false
 	var finalized := 0
 	var started := Time.get_ticks_usec()
@@ -251,7 +257,7 @@ func _refresh_fallback_textures() -> void:
 		if texture != null: textures[id] = texture
 	hero_texture = art_textures.get(hero_texture_path)
 func advance_motion(delta: float) -> void:
-	if motion_paused or not motion.advance(delta * presentation_speed): return
+	if motion_paused or server_clock_scale <= 0.0 or not motion.advance(delta * presentation_speed): return
 	_sort_display_depth(); queue_redraw()
 func _resolve_owners() -> void:
 	painted_owners.clear()
@@ -259,6 +265,7 @@ func _resolve_owners() -> void:
 		var texture: Texture2D = art_textures.get(command[1])
 		if texture != null and command[2]+command[4] <= texture.get_width() and command[3]+command[5] <= texture.get_height(): painted_owners[int(command[0])] = true
 func clear_state() -> void:
+	server_clock_scale = 1.0
 	if is_instance_valid(cinematic): cinematic.free(); cinematic = null
 	exp_orbs.clear()
 	manual_spawn_warning_timer = 0.0
@@ -359,7 +366,7 @@ func _actor(point: Vector2,texture: Texture2D,color: Color,is_hero: bool,draw_bo
 		if texture != null: draw_texture_rect(texture,Rect2(screen-extent*0.5,extent),false)
 		else: draw_circle(screen,12,color)
 func _gui_input(event: InputEvent) -> void:
-	if is_instance_valid(cinematic) and cinematic.active: return
+	if server_clock_scale <= 0.0: return
 	var point: Vector2
 	var pointer := -2
 	if event is InputEventScreenTouch: pointer = event.index
