@@ -28,6 +28,7 @@ static func clear_cached_frames() -> void:
 	_frames_cache.clear()
 
 
+var art_faces_left := false
 var _visual_ready: bool = false
 var _one_shot_locked: bool = false
 var _death_playing: bool = false
@@ -291,7 +292,8 @@ func set_lod_suspended(suspended: bool) -> void:
 func set_facing_direction(horizontal_direction: float) -> void:
 	if absf(horizontal_direction) < 0.01:
 		return
-	flip_h = horizontal_direction < 0.0
+	# Source art is drawn facing right unless the visual profile marks it otherwise.
+	flip_h = (horizontal_direction < 0.0) != art_faces_left
 
 func _remember_move_phase() -> void:
 	if animation == &"move":
@@ -390,6 +392,7 @@ func apply_visual_profile(profile: Dictionary) -> bool:
 	if profile.is_empty():
 		return false
 	_death_fade_duration = maxf(float(profile.get("death_fade_duration",0.0)),0.0)
+	art_faces_left = bool(profile.get("art_faces_left",false))
 	locomotion_max_fps = maxf(float(profile.get("locomotion_max_fps",8.0)),1.0)
 	locomotion_transition_seconds = maxf(float(profile.get("locomotion_transition_seconds",0.12)),0.0)
 	_saved_move_frame = 0

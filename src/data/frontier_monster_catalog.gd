@@ -1238,6 +1238,7 @@ const DEFINITIONS := {
     },
     "normal_visual": {
       "mode": "frames",
+      "art_faces_left": true,
       "asset_dir": "res://assets/art/monsters/toxic_slime/frames",
       "target_height": 170.141538,
       "animations": {
@@ -1289,6 +1290,7 @@ const DEFINITIONS := {
     },
     "elite_visual": {
       "mode": "frames",
+      "art_faces_left": true,
       "asset_dir": "res://assets/art/elitemonster/toxic_slime/frames",
       "target_height": 151.669029,
       "animations": {

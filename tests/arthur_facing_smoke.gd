@@ -21,7 +21,7 @@ func run() -> void:
 	var orc := FileAccess.get_file_as_string("res://src/monsters/orc.gd")
 	var visual_source := FileAccess.get_file_as_string("res://src/monsters/monster_visual.gd")
 	var visual_script := GDScript.new()
-	visual_script.source_code = "extends Node2D\nvar flip_h := false\nvar _one_shot_locked := false\nvar moving := false\nfunc play_locomotion(value: bool) -> void: moving = value\n"+method(visual_source,"set_facing_direction")
+	visual_script.source_code = "extends Node2D\nvar flip_h := false\nvar art_faces_left := false\nvar _one_shot_locked := false\nvar moving := false\nfunc play_locomotion(value: bool) -> void: moving = value\n"+method(visual_source,"set_facing_direction")
 	check(visual_script.reload()==OK,"actual visual facing method compiles")
 	var actor_script := GDScript.new()
 	actor_script.source_code = "extends Node2D\nvar visual: Node2D\nvar hero: Node2D\nvar visual_moving_state := -1\nvar visual_facing_sign := 0\nfunc _visual_call(name: StringName, args: Array = []) -> void: visual.callv(name,args)\n"+method(orc,"_update_visual_motion")+method(arthur,"_restore_combat_pose")
