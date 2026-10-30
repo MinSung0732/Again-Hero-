@@ -1,5 +1,5 @@
 extends RefCounted
-## Event-driven, read-only encyclopedia. Pages, cards and textures survive navigation.
+## Event-driven, read-only encyclopedia. Pages and cards survive navigation; texture caches are released on hide.
 const DATA := preload("res://src/data/demon_codex_catalog.gd")
 const FRAMES := preload("res://src/ui/commerce_frame_skin.gd")
 const BUTTON := preload("res://src/ui/drag_safe_button.gd")
@@ -74,7 +74,8 @@ func install(owner: RefCounted, parent: Control) -> void:
 	root.visibility_changed.connect(func():
 		if not root.is_visible_in_tree():
 			close_preview()
-			close_detail())
+			close_detail()
+			release_textures())
 	hide()
 
 func _label(parent: Node, text: String, size: int = 28) -> Label:
@@ -643,6 +644,12 @@ func _disconnect_preview_resize() -> void:
 	var viewport := root.get_viewport()
 	if viewport != null and viewport.size_changed.is_connected(_resize_preview):
 		viewport.size_changed.disconnect(_resize_preview)
+
+# Pages/cards stay for fast reentry, but loaded art is dropped while the codex is hidden;
+# textures still shown on reused cards stay alive through their controls.
+func release_textures() -> void:
+	textures.clear()
+	art_textures.clear()
 
 func close_preview() -> void:
 	if preview_root == null: return

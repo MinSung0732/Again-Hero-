@@ -170,6 +170,7 @@ func run() -> void:
 	check(view.preview_image.texture is AtlasTexture,"trimmed display only")
 	parent.hide()
 	check(not view.preview_root.visible and not view.detail_root.visible,"ancestor hide clears both overlays")
+	check(view.textures.is_empty() and view.art_textures.is_empty(),"hidden codex releases texture caches")
 	parent.show()
 	check(COLLECTION.load_state() == before,"collection remains read-only")
 	view.hide()
