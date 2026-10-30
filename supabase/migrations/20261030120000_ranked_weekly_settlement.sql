@@ -1,8 +1,8 @@
 -- Weekly ranking settlement. Thresholds and reward values mirror ranked_badges.json;
 -- update both from that file using tools/sync_ranked_weekly_sql.ps1 before deployment.
 begin;
--- Incomplete: client claim/save recovery and UI are not implemented.
-do $$ begin raise exception 'weekly settlement migration is incomplete'; end $$;
+-- Keep blocked until bounded listing and durable recovery are reconciled.
+do $$ begin raise exception 'mailbox recovery requires a safe pagination and retention design'; end $$;
 create table private.ranked_reward_tiers (
  tier_id text primary key, reset_mmr integer not null, demon_token integer not null, hero_token integer not null
 );
@@ -42,11 +42,11 @@ create table public.ranked_season_results (
  primary key(user_id, week_start)
 );
 create table public.mailbox (
- id bigint generated always as identity primary key,
+ id uuid primary key default gen_random_uuid(),
  user_id uuid not null references auth.users(id) on delete cascade,
  kind text not null, title text not null, body text not null,
  attachments jsonb not null default '{}'::jsonb,
- created_at timestamptz not null default now(), expires_at timestamptz, claimed_at timestamptz
+ created_at timestamptz not null default now(), claim_state text not null default 'unclaimed' check (claim_state in ('unclaimed','granted')), granted_at timestamptz
 );
 create index mailbox_user_created on public.mailbox(user_id, created_at desc);
 create table private.ranked_settlement_runs (week_start date primary key, settled_at timestamptz not null default now());
@@ -57,16 +57,17 @@ create policy mailbox_select on public.mailbox for select to authenticated using
 revoke all on public.ranked_season_results, public.mailbox from public, anon, authenticated;
 grant select on public.ranked_season_results, public.mailbox to authenticated;
 
-create function public.list_my_mail() returns setof public.mailbox
+create function public.list_my_mail() returns jsonb
 language sql stable security definer set search_path='' as $$
- select * from public.mailbox where user_id=auth.uid() and (expires_at is null or expires_at > now()) order by created_at desc, id desc
+ select jsonb_build_object('mail', coalesce(jsonb_agg(to_jsonb(m) order by m.created_at desc, m.id desc), '[]'::jsonb))
+ from (select * from public.mailbox where user_id=auth.uid() order by created_at desc, id desc limit 200) m
 $$;
-create function public.claim_mail(p_id bigint) returns jsonb
+create function public.grant_mail(p_id uuid) returns jsonb
 language plpgsql security definer set search_path='' as $$
 declare item public.mailbox;
 begin
  if auth.uid() is null then raise exception 'authentication required' using errcode='42501'; end if;
- update public.mailbox set claimed_at=now() where id=p_id and user_id=auth.uid() and claimed_at is null and (expires_at is null or expires_at>now()) returning * into item;
+ update public.mailbox set claim_state='granted', granted_at=coalesce(granted_at,now()) where id=p_id and user_id=auth.uid() returning * into item;
  if not found then return null; end if;
  return jsonb_build_object('id',item.id,'attachments',item.attachments);
 end $$;
@@ -77,8 +78,8 @@ begin
  update public.ranked_season_results set seen=true where user_id=auth.uid() and week_start=p_week_start;
  return found;
 end $$;
-revoke all on function public.list_my_mail(), public.claim_mail(bigint), public.mark_ranked_season_seen(date) from public, anon;
-grant execute on function public.list_my_mail(), public.claim_mail(bigint), public.mark_ranked_season_seen(date) to authenticated;
+revoke all on function public.list_my_mail(), public.grant_mail(uuid), public.mark_ranked_season_seen(date) from public, anon;
+grant execute on function public.list_my_mail(), public.grant_mail(uuid), public.mark_ranked_season_seen(date) to authenticated;
 
 create function private.settle_ranked_week() returns void
 language plpgsql security definer set search_path='' as $$

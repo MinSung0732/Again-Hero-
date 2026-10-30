@@ -142,6 +142,29 @@ static func get_gold() -> int:
 	ACCOUNT_SCOPE.load_config(config, SAVE_PATH)
 	return maxi(int(config.get_value("meta", "gold", 0)), 0)
 
+static func get_token(currency: String) -> int:
+	var definitions: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://src/data/token_currencies.json"))
+	if not definitions is Dictionary or not definitions.has(currency): return 0
+	var config := ConfigFile.new()
+	ACCOUNT_SCOPE.load_config(config, SAVE_PATH)
+	return maxi(int(config.get_value("meta", currency, 0)), 0)
+
+static func add_token(currency: String, amount: int) -> bool:
+	var definitions: Variant = JSON.parse_string(FileAccess.get_file_as_string("res://src/data/token_currencies.json"))
+	if not definitions is Dictionary or not definitions.has(currency): return false
+	var config := ConfigFile.new()
+	var error := ACCOUNT_SCOPE.load_config(config, SAVE_PATH)
+	if error != OK and error != ERR_FILE_NOT_FOUND: return false
+	var balance := maxi(int(config.get_value("meta", currency, 0)), 0)
+	if amount < -balance: return false
+	config.set_value("meta", currency, balance + amount)
+	return ACCOUNT_SCOPE.save_configs({SAVE_PATH.get_file(): config}) == OK
+
+static func get_demon_token() -> int: return get_token("demon_token")
+static func get_hero_token() -> int: return get_token("hero_token")
+static func add_demon_token(amount: int) -> bool: return add_token("demon_token", amount)
+static func add_hero_token(amount: int) -> bool: return add_token("hero_token", amount)
+
 static func is_stage_cleared(stage_id: String) -> bool:
 	var config := ConfigFile.new()
 	if ACCOUNT_SCOPE.load_config(config, SAVE_PATH) != OK:

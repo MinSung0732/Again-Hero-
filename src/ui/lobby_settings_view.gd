@@ -17,6 +17,7 @@ var other_menu: VBoxContainer
 var other_menu_buttons := {}
 var settings_root: VBoxContainer
 var profile_view: RefCounted
+var mailbox_view: RefCounted
 var hero_codex_view: RefCounted
 var demon_codex_view: RefCounted
 var other_navigation: HBoxContainer
@@ -91,6 +92,8 @@ func install(target: Control) -> void:
 	_build_other_menu(box)
 	profile_view = preload("res://src/ui/lobby_profile_view.gd").new()
 	profile_view.install(self, box)
+	mailbox_view = preload("res://src/ui/lobby_mailbox_view.gd").new()
+	mailbox_view.install(self, box)
 	hero_codex_view = preload("res://src/ui/lobby_hero_codex_view.gd").new()
 	hero_codex_view.install(self,box)
 	demon_codex_view = preload("res://src/ui/lobby_demon_codex_view.gd").new()
@@ -287,12 +290,16 @@ func show_demon_codex() -> void:
 func show_profile() -> void:
 	_show_other_view("profile")
 
+func show_mailbox() -> void:
+	_show_other_view("mailbox")
+
 func _open_settings() -> void:
 	show_page(selected)
 
 func show_menu() -> void:
 	if other_back_button != null: other_back_button.custom_minimum_size.y = POLICY.DEFAULT_BACK_HEIGHT
 	_hide_other_views()
+	if mailbox_view != null: mailbox_view.refresh()
 	for id in other_menu_buttons:
 		other_menu_buttons[id].visible = _menu_visible(POLICY.OTHER_ACTIONS.get(id, {}))
 	if other_menu == null: return
@@ -682,7 +689,9 @@ func _disconnect_cloud_status() -> void:
 	if gateway.login_unavailable.is_connected(_on_cloud_status): gateway.login_unavailable.disconnect(_on_cloud_status)
 
 func _on_cloud_status(_message: String) -> void:
-	if is_instance_valid(lobby) and lobby.is_inside_tree(): _sync_account()
+	if is_instance_valid(lobby) and lobby.is_inside_tree():
+		_sync_account()
+		if mailbox_view != null and lobby.get_node("/root/CloudStore").can_write(): mailbox_view.refresh.call_deferred()
 
 func set_profile_avatar(texture: Texture2D) -> void:
 	# Display-only preview hook. Profile view owns saved representative selection.

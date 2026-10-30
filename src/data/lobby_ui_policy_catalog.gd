@@ -3,11 +3,12 @@ extends RefCounted
 const DEFAULT_SETTINGS_TAB := "game"
 const NOTICE_PATH := "user://notification_settings.cfg"
 const GAMEPLAY_SECTION := "gameplay"
-const OTHER_ENTRIES := [["profile", "프로필"], ["demon_book", "마왕도감"], ["hero_book", "용사도감"], ["rank_history", "랭킹기록"], ["practice", "연습전투"], ["settings", "설정"]]
+const OTHER_ENTRIES := [["profile", "프로필"], ["mailbox", "우편함"], ["demon_book", "마왕도감"], ["hero_book", "용사도감"], ["rank_history", "랭킹기록"], ["practice", "연습전투"], ["settings", "설정"]]
 const MENU_ARROW := "  ›"
 const COMING_SOON := "\n준비 중"
 const OTHER_ACTIONS := {
 	"profile": {"method": "show_profile"},
+	"mailbox": {"method": "show_mailbox"},
 	"demon_book": {"method": "show_demon_codex"},
 	"hero_book": {"method": "show_hero_codex"},
 	"practice": {"method": "_enter_practice_battle", "target": "lobby", "visible_if": "is_practice_allowed", "text": "연습전투  ›\n무한 체력 도망 더미 · 등록한 초월 기술 확인"},
@@ -20,6 +21,7 @@ const TAB_HOSTS := {
 }
 const OTHER_VIEWS := {
 	"profile": {"property": "profile_view", "back_height": 88.0},
+	"mailbox": {"property": "mailbox_view", "back_height": 88.0},
 	"hero_book": {"property": "hero_codex_view", "back_height": 88.0},
 	"demon_book": {"property": "demon_codex_view", "back_height": 56.0},
 }
