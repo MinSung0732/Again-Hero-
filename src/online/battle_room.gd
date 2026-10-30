@@ -20,6 +20,9 @@ var field_damage_fraction := 0.0
 var field_heal_fraction := 0.0
 var last_hero_level := 1
 const PRIMITIVES := preload("res://src/online/primitive_mirror.gd")
+var monster_sfx_next := {}
+var monster_sfx_cues: Dictionary = preload("res://src/data/monster_sfx_catalog.gd").audio_cues()
+var monster_sfx_ids: Array = monster_sfx_cues.keys()
 var feedback = preload("res://src/online/feedback_buffer.gd").new()
 signal completed(winner: String,reason: String)
 var battle
@@ -99,6 +102,7 @@ func prepare() -> void:
 	battlefield_info = {"stage":battle.current_stage_id,"bounds":[battle.current_map_size.x,battle.current_map_size.y],"map":map_id,"theme":map_data.theme}
 	battle.online_visual_entity_exited.connect(presentation.forget_node)
 	battle.online_combat_feedback.connect(_feedback)
+	battle.online_monster_sfx.connect(_monster_sfx)
 	battle.online_cast_feedback.connect(func(cue: String,point: Vector2):
 		if running and not finished and not connection_paused: feedback.publish(cue,point,0,Color.WHITE,tick))
 	battle.demon_ultimate_used.connect(func(_id: String,_name: String,_message: String):
@@ -612,3 +616,10 @@ func _monster_bars(actor: Node2D) -> Array:
 
 func _visual_order(a: Array,b: Array) -> bool:
 	return PRESENTATION.visual_order(a,b)
+
+func _monster_sfx(cue: String) -> void:
+	if not running or finished or connection_paused or not monster_sfx_cues.has(cue): return
+	var now := Time.get_ticks_msec()
+	if now < int(monster_sfx_next.get(cue, 0)): return
+	monster_sfx_next[cue] = now + int(float(monster_sfx_cues[cue].interval)*1000.0)
+	feedback.publish("monster_sfx", Vector2.ZERO, monster_sfx_ids.find(cue)+1, Color.WHITE, tick)

@@ -47,7 +47,9 @@ func consume(events: Variant,sequence: Variant,tick: Variant) -> bool:
 				continue
 			accepted += 1
 			var cue: String = row[2]
-			if cue == "hero_hit":
+			if cue == "monster_sfx":
+				cue = DATA.MONSTER_SFX.cue_from_index(int(row[5]))
+			elif cue == "hero_hit":
 				cue = DATA.hit_cue(String(get_parent().state.get("hero_archetype", "")))
 			elif cue == "cast":
 				cue = DATA.cast_cue(String(get_parent().state.get("hero_archetype", "")))
@@ -65,7 +67,7 @@ func consume(events: Variant,sequence: Variant,tick: Variant) -> bool:
 				else: pool_dropped += 1
 				set_process(true)
 				continue
-			if row[2] in ["cast", "ultimate"]: continue
+			if row[2] in ["cast", "ultimate", "monster_sfx"]: continue
 			var slot: Dictionary = slots[cursor]; cursor = (cursor+1)%DATA.CAPACITY
 			slot.left = DATA.LIFETIME; slot.point = Vector2(row[3],row[4]); slot.kind = row[2]; slot.color = Color(row[6],row[7],row[8],row[9])
 			set_process(true)

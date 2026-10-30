@@ -43,6 +43,8 @@ signal command_changed(current_value: float, max_value: float)
 signal summon_result(monster_type: String, success: bool, message: String)
 signal online_combat_feedback(target: Node2D,amount: int,color: Color,healing: bool,critical: bool)
 signal online_cast_feedback(cue: String,point: Vector2)
+signal online_monster_sfx(cue: String)
+const MONSTER_SFX := preload("res://src/data/monster_sfx_catalog.gd")
 signal online_visual_entity_exited(instance_id: int)
 var online_visual_projectiles := {}
 signal transcendent_summoned(monster_id: String, actor: Node2D)
@@ -1061,6 +1063,8 @@ func _start_battle() -> void:
 		int(hero.get("current_hp")),
 		int(hero.get("max_hp"))
 	)
+	if hero.has_signal("accepted_damage_hit"):
+		hero.connect("accepted_damage_hit", Callable(self, "_on_monster_hit_hero"))
 	hero.connect("health_changed", Callable(self, "_on_hero_health_changed"))
 	hero.connect("status_action_applied", Callable(self, "_on_enemy_status_applied"))
 	hero.connect("combat_damage_received", Callable(self, "_on_hero_combat_damage_received"))
@@ -3172,7 +3176,29 @@ func _transcendence_metric_count(metric: String) -> int:
 		"real_tanks_summoned": return raw_real_tank_summons
 	return raw_allied_summons
 
+func _on_monster_hit_hero(source: Node) -> void:
+	if not is_instance_valid(source): return
+	var value: Variant = source.get("monster_type")
+	if value == null:
+		var reference: Variant = source.get_meta("combat_source", null)
+		if reference is WeakRef: source = reference.get_ref()
+		if not is_instance_valid(source): return
+		value = source.get("monster_type")
+	if value == null: return
+	var id := String(value)
+	if id.is_empty(): return
+	_play_monster_sfx(MONSTER_SFX.cue_for(id, "attack", MONSTER_CATALOG.get_attack_type(id)))
+
+func _play_monster_sfx(cue: String) -> void:
+	if cue.is_empty(): return
+	if online_match_mode: online_monster_sfx.emit(cue)
+	else: GameAudio.play_battle(cue, self)
+
 func _on_monster_died(monster: Node) -> void:
+	if not battle_over and is_instance_valid(monster):
+		var cue := MONSTER_SFX.cue_for(String(monster.get("monster_type")), "death", "")
+		if not cue.is_empty() and (String(monster.get_meta("stage_event_type", "")) in ["elite", "giant"] or String(monster.get_meta("visual_variant", "")) == "elite"): cue += ":elite"
+		_play_monster_sfx(cue)
 	if hero_player_mode and is_instance_valid(monster) and bool(monster.get_meta("hero_final_boss",false)):
 		_finish_hero_boss_victory.call_deferred()
 	if hero_player_mode and not battle_over and is_instance_valid(monster) and String(monster.get_meta("stage_event_type","")) in ["elite","giant"]:

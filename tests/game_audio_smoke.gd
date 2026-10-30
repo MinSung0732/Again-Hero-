@@ -30,8 +30,12 @@ func run() -> void:
 	audio.enter_frontend(owner, "lobby")
 	check(audio.music.get_playback_position() >= position, "title-to-lobby keeps playback position")
 	for bank in [audio.ui_bank, audio.battle_bank]:
-		for player in bank.players.values():
-			check(player.bus == &"SFX" and player.stream is AudioStreamWAV and player.stream.get_length() >= 0.19 and player.stream.loop_mode == AudioStreamWAV.LOOP_DISABLED, "real short one-shot WAV on SFX")
+		for id in bank.players:
+			var player: AudioStreamPlayer = bank.players[id]
+			if String(id).begins_with("monster:"):
+				check(player.bus == &"SFX" and player.stream is AudioStreamMP3 and not player.stream.loop, "monster MP3 one-shot on SFX")
+			else:
+				check(player.bus == &"SFX" and player.stream is AudioStreamWAV and player.stream.get_length() >= 0.19 and player.stream.loop_mode == AudioStreamWAV.LOOP_DISABLED, "real short one-shot WAV on SFX")
 	var button := Button.new()
 	owner.add_child(button)
 	var count: int = audio.ui_bank.played_count

@@ -39,7 +39,8 @@ func play_cue(id: String) -> bool:
 	var player: AudioStreamPlayer = players[id]
 	if player.stream == null:
 		return false
-	player.pitch_scale = float(cues[id].get("pitch", 1.0)) * (maxf(Engine.time_scale, 0.01) if scaled_clock else 1.0)
+	player.set_meta("base_pitch", float(cues[id].get("pitch", 1.0)) * randf_range(1.0-float(cues[id].get("pitch_jitter", 0.0)), 1.0+float(cues[id].get("pitch_jitter", 0.0))))
+	player.pitch_scale = float(player.get_meta("base_pitch")) * (maxf(Engine.time_scale, 0.01) if scaled_clock else 1.0)
 	player.stream_paused = false
 	player.play()
 	cooldowns[id] = float(cues[id].get("interval", 0.0))
@@ -63,7 +64,7 @@ func _process(delta: float) -> void:
 		if not blocked:
 			cooldowns[id] = maxf(float(cooldowns[id])-delta, 0.0)
 			if scaled_clock:
-				player.pitch_scale = float(cues[id].get("pitch", 1.0))*maxf(Engine.time_scale, 0.01)
+				player.pitch_scale = float(player.get_meta("base_pitch", cues[id].get("pitch", 1.0)))*maxf(Engine.time_scale, 0.01)
 
 func _notification(what: int) -> void:
 	if what == NOTIFICATION_APPLICATION_PAUSED:

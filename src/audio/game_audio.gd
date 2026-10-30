@@ -25,7 +25,9 @@ func _ready() -> void:
 	ui_bank.configure(DATA.ui_cues())
 	battle_bank = BANK.new()
 	add_child(battle_bank)
-	battle_bank.configure(DATA.BATTLE_CUES, null, true)
+	var battle_cues: Dictionary = DATA.BATTLE_CUES.duplicate()
+	battle_cues.merge(preload("res://src/data/monster_sfx_catalog.gd").audio_cues())
+	battle_bank.configure(battle_cues, null, true)
 	music = AudioStreamPlayer.new()
 	music.bus = &"BGM"
 	add_child(music)
