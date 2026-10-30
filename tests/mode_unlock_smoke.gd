@@ -100,19 +100,22 @@ func run() -> void:
 		await process_frame
 		await process_frame
 		check(UNLOCKS.announcement_seen(key, "stage_2"), "global seen " + key)
-	PROGRESS.complete_stage("stage_10", 10, "", 0, 0)
+	# Rank opens at the catalog stage (stage 4 since 10-31) cleared in both modes on easy.
+	var rank_stage := String(load("res://src/data/mode_unlock_catalog.gd").RULES.rank.required_stage)
+	var rank_number := int(rank_stage.trim_prefix("stage_"))
+	PROGRESS.complete_stage(rank_stage, rank_number, "stage_%d" % (rank_number + 1), rank_number + 1, 0)
 	expected_gold = PROGRESS.get_gold()
 	lobby._refresh_stage_card()
 	await process_frame
-	check(view.ranked_button.disabled, "demon stage10 alone cannot open rank without hero easy10")
+	check(view.ranked_button.disabled, "demon rank stage alone cannot open rank without the hero easy clear")
 	var hero_progress := ConfigFile.new()
 	SCOPE.load_config(hero_progress,"user://team_loadout.cfg")
-	hero_progress.set_value("hero_progress","stage_10_easy_wins",1)
+	hero_progress.set_value("hero_progress","%s_easy_wins" % rank_stage,1)
 	SCOPE.save_config(hero_progress,"user://team_loadout.cfg")
 	lobby._refresh_stage_card()
 	await process_frame
 	await create_timer(1.2).timeout
-	check(not view.ranked_button.disabled,"both easy10 clears open rank")
+	check(not view.ranked_button.disabled,"both easy rank-stage clears open rank")
 	if is_instance_valid(view.unlock_feedback): view.unlock_feedback.close()
 	await process_frame
 	await process_frame
@@ -126,7 +129,7 @@ func run() -> void:
 	check(view.request_data().page == "ranked" and view.request_data().perspective == "hero", "ranked request carries the chosen role")
 	view.toggle_ranked()
 	await view.choose_perspective("demon")
-	UNLOCKS.mark_announced("hard", "stage_10")
+	UNLOCKS.mark_announced("hard", rank_stage)
 	check(PROGRESS.get_gold() == expected_gold, "unlock feedback never changes rewards")
 	# Actual tutorial buttons keep the same callbacks, only presentation changes.
 	var flow := root.get_node("TutorialFlow")

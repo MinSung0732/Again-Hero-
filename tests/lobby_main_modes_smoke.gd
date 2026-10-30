@@ -33,14 +33,15 @@ func run() -> void:
 	var cfg := ConfigFile.new()
 	cfg.set_value("player_profile", "value", {"nickname": "달빛마왕", "gender": "female"})
 	# This fixture tests already-unlocked preview navigation, not gating.
-	for id in ["stage_1", "stage_10"]:
+	var rank_stage := String(load("res://src/data/mode_unlock_catalog.gd").RULES.rank.required_stage)
+	for id in ["stage_1", rank_stage, "stage_10"]:
 		cfg.set_value("cleared", id, true)
 	for key in ["hard:stage_1", "hero", "rank"]:
 		cfg.set_value("mode_unlock_seen", key, true)
 	SCOPE.save_config(cfg, "user://stage_progress.cfg")
-	# Since 10-14 (667ff0e8) ranked also requires the hero-mode Stage 10 easy clear.
+	# Ranked also requires the hero-mode easy clear of the catalog stage (stage 4 since 10-31).
 	var hero_cfg := ConfigFile.new()
-	hero_cfg.set_value("hero_progress", "stage_10_easy_wins", 1)
+	hero_cfg.set_value("hero_progress", "%s_easy_wins" % rank_stage, 1)
 	SCOPE.save_config(hero_cfg, "user://team_loadout.cfg")
 	root.get_node("AudioSettings").config_path = folder.path_join("audio.cfg")
 	await root.get_node("PresentationWarmup").prepare_scene("res://src/lobby/Lobby.tscn")
