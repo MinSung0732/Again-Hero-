@@ -90,13 +90,21 @@ func run() -> void:
 	hero._update_hard_stage3(float(HARD.STAGE_3.guard_seconds) + 0.01)
 	check(hero.hard_stage3_guard_timer == 0.0 and hero.hard_stage3_recovery_timer > 0.0, "natural finish starts recovery")
 	check(hero.hard_stage3_break_timer == 0.0, "natural finish not broken")
+	check(is_equal_approx(hero.hard_stage3_recast_timer, float(HARD.STAGE_3.guard_recast_seconds)), "natural finish starts 7s recast timer")
 	hero._update_hard_stage3(float(HARD.STAGE_3.recovery_seconds) + 0.01)
 	check(hero.hard_stage3_recovery_timer == 0.0, "natural recovery expires")
-
-	# Re-arm a new isolated hard stance to test the alternative rear-hit finish.
-	hero.configure_hard_stage3(1.10)
+	check(hero.hard_stage3_guard_timer == 0.0 and hero.hard_stage3_recast_timer > 0.0, "no early repeat while cooling down")
+	hero.target = null
+	hero._update_hard_stage3(float(HARD.STAGE_3.guard_recast_seconds) + 0.01)
+	check(hero.hard_stage3_guard_timer == 0.0 and hero.hard_stage3_recast_timer == 0.0, "recast waits for a valid enemy")
 	hero.target = front
-	check(hero.activate_hard_stage3(), "fresh stance after fixture reset")
+	front.current_hp = 0
+	hero._update_hard_stage3(0.02)
+	check(hero.hard_stage3_guard_timer == 0.0, "recast ignores defeated enemy")
+	front.current_hp = 1000
+	hero._update_hard_stage3(0.02)
+	check(hero.hard_stage3_guard_timer > 0.0 and hero.hard_stage3_rear_hits == 0, "guard repeats on contact")
+	check(int(observed["count"]) == 1 and hero.hard_stage3_awakened, "repeat never replays cutscene")
 	hero.fighter_guard_active = true
 	hero.shield_hp = 2000.0
 	hero.shield_max_hp = 2000.0
@@ -111,12 +119,19 @@ func run() -> void:
 	hero.invulnerability_timer = 0.0
 	check(hero.take_damage(20, rear), "third rear hit accepted")
 	check(hero.hard_stage3_guard_timer == 0.0 and hero.hard_stage3_break_timer > 0.0, "three rear hits collapse stance")
+	check(is_equal_approx(hero.hard_stage3_recast_timer, float(HARD.STAGE_3.break_recast_seconds)), "rear break starts longer recast")
 	check(hero.damage_taken_increase_ratio >= 0.20 and hero.hard_stage3_recovery_timer == 0.0, "break vulnerability +20% for 2s")
 	check(hero.fighter_guard_active and hero.shield_hp > 0.0 and hero.fighter_guard_stored_damage > 10.0, "original guard/shield/storage survive break")
 	check(is_equal_approx(hero._get_effective_move_multiplier(), 1.0), "hard movement penalty removed on break")
 	hero._update_hard_stage3(float(HARD.STAGE_3.break_seconds) + 0.01)
-	check(hero.hard_stage3_break_timer == 0.0, "break timer ends")
-	check(not hero.activate_hard_stage3(), "awakening can only happen once per configured run")
+	check(hero.hard_stage3_break_timer == 0.0 and hero.hard_stage3_recast_timer > 0.0, "break timer ends before recast")
+	check(hero.hard_stage3_guard_timer == 0.0, "break cannot restart stance early")
+	hero.target = rear
+	hero._update_hard_stage3(float(HARD.STAGE_3.break_recast_seconds) + 0.01)
+	check(hero.hard_stage3_guard_timer > 0.0 and hero.hard_stage3_rear_hits == 0, "guard repeats after broken cooldown")
+	check(hero.hard_stage3_facing_direction.x < -0.9, "new cycle faces current enemy")
+	check(int(observed["count"]) == 1, "no extra cutscene after broken cooldown")
+	check(not hero.activate_hard_stage3(), "HP-triggered awakening cannot fire twice")
 
 	var first := PROGRESS.complete_hard_stage("stage_3")
 	check(bool(first.get("success", false)) and int(first.reward) == 500 and int(first.gold_reward) == 1000 and int(first.demon_token_reward) == 30, "stage3 first reward")

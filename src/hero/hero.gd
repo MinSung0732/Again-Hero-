@@ -881,6 +881,7 @@ var hard_stage2_assassination_seen := false
 var hard_stage3_enabled := false
 var hard_stage3_awakened := false
 var hard_stage3_guard_timer := 0.0
+var hard_stage3_recast_timer := 0.0
 var hard_stage3_recovery_timer := 0.0
 var hard_stage3_break_timer := 0.0
 var hard_stage3_rear_hits := 0
@@ -1023,6 +1024,7 @@ func configure_profile(profile: Dictionary) -> void:
 	hard_stage3_enabled = false
 	hard_stage3_awakened = false
 	hard_stage3_guard_timer = 0.0
+	hard_stage3_recast_timer = 0.0
 	hard_stage3_recovery_timer = 0.0
 	hard_stage3_break_timer = 0.0
 	hard_stage3_rear_hits = 0
@@ -4739,6 +4741,7 @@ func configure_hard_stage3(regeneration_multiplier: float) -> void:
 	hard_stage3_enabled = true
 	hard_stage3_awakened = false
 	hard_stage3_guard_timer = 0.0
+	hard_stage3_recast_timer = 0.0
 	hard_stage3_recovery_timer = 0.0
 	hard_stage3_break_timer = 0.0
 	hard_stage3_rear_hits = 0
@@ -4749,32 +4752,65 @@ func configure_hard_stage3(regeneration_multiplier: float) -> void:
 func activate_hard_stage3() -> bool:
 	if not hard_stage3_enabled or hard_stage3_awakened or is_dying or current_hp <= 0:
 		return false
+	# The HP threshold unlocks this mode and plays its cutscene only once.
 	hard_stage3_awakened = true
+	_start_hard_stage3_guard()
+	return true
+
+
+func _start_hard_stage3_guard() -> void:
 	hard_stage3_guard_timer = float(HARD_CAMPAIGN.STAGE_3.guard_seconds)
+	hard_stage3_recast_timer = 0.0
 	hard_stage3_recovery_timer = 0.0
 	hard_stage3_break_timer = 0.0
 	hard_stage3_rear_hits = 0
+	# Each stance can be baited in a new direction; facing stays fixed for 4s.
 	hard_stage3_facing_direction = (
 		(target.global_position - global_position).normalized()
 		if is_instance_valid(target) and target.global_position.distance_squared_to(global_position) > 0.001
 		else (Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT)
 	)
 	queue_redraw()
-	return true
+
+
+func _hard_stage3_has_repeat_target() -> bool:
+	if not is_instance_valid(target) or target.is_queued_for_deletion():
+		return false
+	if not HERO_TARGET_POLICY.is_detectable(target) or not target.is_in_group("monsters"):
+		return false
+	var target_hp = target.get("current_hp")
+	if target_hp != null and int(target_hp) <= 0:
+		return false
+	var radius := float(HARD_CAMPAIGN.STAGE_3.repeat_target_radius)
+	return global_position.distance_squared_to(target.global_position) <= radius * radius
 
 
 func _update_hard_stage3(delta: float) -> void:
 	if not hard_stage3_awakened or delta <= 0.0 or current_hp <= 0 or is_dying:
 		return
-	if hard_stage3_guard_timer <= 0.0 and hard_stage3_recovery_timer <= 0.0 and hard_stage3_break_timer <= 0.0:
-		return
-	hard_stage3_recovery_timer = maxf(hard_stage3_recovery_timer - delta, 0.0)
-	hard_stage3_break_timer = maxf(hard_stage3_break_timer - delta, 0.0)
 	if hard_stage3_guard_timer > 0.0:
 		hard_stage3_guard_timer = maxf(hard_stage3_guard_timer - delta, 0.0)
 		if hard_stage3_guard_timer <= 0.0:
 			hard_stage3_recovery_timer = float(HARD_CAMPAIGN.STAGE_3.recovery_seconds)
-	queue_redraw()
+			hard_stage3_recast_timer = float(HARD_CAMPAIGN.STAGE_3.guard_recast_seconds)
+		queue_redraw()
+		return
+	var visible_weakness := hard_stage3_recovery_timer > 0.0 or hard_stage3_break_timer > 0.0
+	hard_stage3_recovery_timer = maxf(hard_stage3_recovery_timer - delta, 0.0)
+	hard_stage3_break_timer = maxf(hard_stage3_break_timer - delta, 0.0)
+	hard_stage3_recast_timer = maxf(hard_stage3_recast_timer - delta, 0.0)
+	if (
+		hard_stage3_recast_timer <= 0.0
+		and hard_stage3_recovery_timer <= 0.0
+		and hard_stage3_break_timer <= 0.0
+		and not channeling
+		and silence_timer <= 0.0
+		and stun_timer <= 0.0
+		and _hard_stage3_has_repeat_target()
+	):
+		_start_hard_stage3_guard()
+	elif visible_weakness:
+		queue_redraw()
 
 
 func _hard_stage3_register_rear_hit() -> void:
@@ -4784,10 +4820,11 @@ func _hard_stage3_register_rear_hit() -> void:
 	if hard_stage3_rear_hits < int(HARD_CAMPAIGN.STAGE_3.rear_hit_threshold):
 		queue_redraw()
 		return
-	# Only the hard-only stance collapses; original guard shield/augments survive.
+	# Collapsing only the hard stance preserves the original guard shield/augments.
 	hard_stage3_guard_timer = 0.0
 	hard_stage3_recovery_timer = 0.0
 	hard_stage3_break_timer = float(HARD_CAMPAIGN.STAGE_3.break_seconds)
+	hard_stage3_recast_timer = float(HARD_CAMPAIGN.STAGE_3.break_recast_seconds)
 	apply_damage_taken_increase(
 		hard_stage3_break_timer,
 		float(HARD_CAMPAIGN.STAGE_3.break_damage_taken_increase)
