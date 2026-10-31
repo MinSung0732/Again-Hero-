@@ -130,6 +130,10 @@ func install(host, research_bonus: int = 0, starting_research: Dictionary = {}) 
 	for index in range(PROJECTILE_LIMIT):
 		projectiles.append({"active":false,"handle":Vector3i.ZERO,"position":Vector2.ZERO,"damage":0,"rank":1,"color":Color.WHITE,"age":0.0,"delay":0.0,"data":{},"melee":false,"reach":0.0,"traveled":0.0,"frames":EMPTY_ART,"direction":Vector2.RIGHT,"flight":"homing","phase":0,"victims":{},"start":Vector2.ZERO,"strikes":0,"pierces":1,"bounces":0,"serial":0,"gen":0})
 	available_weapons = DATA.weapon_pool(String(hero.hero_id))
+	# Guarantee the starting loadout before the optional art and actor warmups.
+	# Their preparation can fail without leaving the player completely unarmed.
+	if not ensure_starting_weapon():
+		push_error("Hero starter not granted during install: "+String(hero.hero_id))
 	var effect_directories := {}
 	for id in available_weapons:
 		effect_directories[String(DATA.WEAPONS[id].get("effect_dir",""))] = true
@@ -147,9 +151,20 @@ func install(host, research_bonus: int = 0, starting_research: Dictionary = {}) 
 		effects.append({"left":0.0,"duration":0.0,"a":Vector2.ZERO,"b":Vector2.ZERO,"radius":0.0,"pattern":"","color":Color.WHITE,"orbit_count":4,"orbit_speed":3.0,"orbit_ratio":0.7,"gen":0,"orbit_gens":orbit_gens})
 	for index in range(8): fields.append({"left":0.0,"tick":0.0,"origin":Vector2.ZERO,"radius":0.0,"damage":0,"interval":0.5,"follow":false,"data":{},"rank":1})
 	for index in 24: pulses.append({"active":false,"left":0.0,"origin":Vector2.ZERO,"direction":Vector2.RIGHT,"radius":0.0,"damage":0,"rank":1,"data":{}})
-	add(String(DATA.STARTERS.get(hero.hero_id,"ranged_rookie_arcane_bolt")))
 	if hero.has_method("_draw_combat_status_overlay"):
 		identity = IDENTITY.new(); identity.install(hero,self)
+
+func ensure_starting_weapon() -> bool:
+	# Called once by install and defensively at the HeroMode scene boundary.
+	# Never reset an acquired weapon, upgrades, or a loaded inventory.
+	if not weapon_ids.is_empty(): return true
+	if hero == null: return false
+	var hero_id := String(hero.hero_id)
+	var starter := String(DATA.STARTERS.get(hero_id,"ranged_rookie_arcane_bolt"))
+	if starter not in available_weapons or not DATA.is_weapon(starter):
+		push_error("Hero starter not found in allowed weapon pool: "+hero_id+" -> "+starter)
+		return false
+	return add(starter)
 
 func add(id: String) -> bool:
 	if DATA.is_weapon(id):

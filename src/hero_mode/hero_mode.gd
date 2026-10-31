@@ -188,6 +188,7 @@ func _create_battle() -> void:
 	pad.input_surface = view
 	viewport.add_child(battle)
 	battle.set_external_pause(true)
+	_ensure_battle_starting_weapon()
 	_install_battle_settings()
 	hero_voice = preload("res://src/audio/hero_voice_player.gd").new()
 	add_child(hero_voice)
@@ -206,6 +207,15 @@ func _create_battle() -> void:
 	pad.movement_changed.connect(func(value: Vector2):
 		if is_instance_valid(battle) and is_instance_valid(battle.hero): battle.hero.set_player_move_input(value))
 	_refresh_hud()
+func _ensure_battle_starting_weapon() -> void:
+	if not is_instance_valid(battle) or not is_instance_valid(battle.hero): return
+	var weapons = battle.hero.player_weapons
+	if weapons == null:
+		push_error("Hero mode weapon runtime was not created: "+player_hero_id)
+		return
+	if not weapons.ensure_starting_weapon():
+		push_error("Hero mode has no starting weapon: "+player_hero_id)
+
 func _build_ui() -> void:
 	var background := ColorRect.new(); background.color = HUD.BACKGROUND_COLOR
 	background.name = "HeroBackground"
