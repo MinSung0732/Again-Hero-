@@ -5195,10 +5195,18 @@ func _enter_hero_stage(stage_id: String) -> void:
 	if not is_inside_tree(): return
 	if not SceneTransition.change_scene(scene,"용사 도전 준비 중...",{"stage_id":stage_id,"hero_id":selected_hero,"hero_entry":_stamina_entry,"difficulty":selected_difficulty}):
 		_refund_failed_stamina_entry()
+static func build_demon_battle_entry_options(stage_id: String, difficulty: String) -> Dictionary:
+	return {"stage_id": stage_id, "difficulty": difficulty}
+
+
 func _begin_threaded_scene_change(path: String) -> void:
 	if _scene_load_pending or path.is_empty():
 		return
 
+	# Always carry both values: the hard release gate requires a stage ID.
+	var stage_id := String(stage_ids[selected_stage_index]) if not stage_ids.is_empty() else ""
+	var difficulty := String(main_modes_view.difficulty) if main_modes_view != null else "easy"
+	var options := build_demon_battle_entry_options(stage_id, difficulty)
 	var transition := get_node_or_null("/root/SceneTransition")
 	if (
 		is_instance_valid(transition)
@@ -5207,23 +5215,18 @@ func _begin_threaded_scene_change(path: String) -> void:
 			"change_scene",
 			path,
 			"던전 불러오는 중...",
-			{"difficulty":main_modes_view.difficulty if main_modes_view != null else "easy"}
+			options
 		))
 	):
 		enter_stage_button.disabled = true
 		enter_stage_button.text = "던전 준비 중..."
 		return
 
-	var error := ResourceLoader.load_threaded_request(path, "PackedScene")
-	if error != OK:
-		if get_tree().change_scene_to_file(path) != OK:
-			_refund_failed_stamina_entry()
-		return
-
-	_scene_load_path = path
-	_scene_load_pending = true
-	enter_stage_button.disabled = true
-	enter_stage_button.text = "던전 준비 중..."
+	# Never silently fall back to a direct scene load: that loses difficulty
+	# entry options and previously converted a hard selection into easy.
+	_refund_failed_stamina_entry()
+	if stamina_view != null:
+		stamina_view.show_entry_notice("던전 입장 실패 · 선택한 난이도와 스테이지 해금 상태를 확인해 주세요.")
 
 func _rebuild_research_list() -> void:
 	for child in research_list.get_children():

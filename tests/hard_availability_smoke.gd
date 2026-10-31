@@ -4,6 +4,7 @@ const STORE := preload("res://src/systems/hero_mode_store.gd")
 const SCOPE := preload("res://src/systems/account_save_scope.gd")
 const UNLOCKS := preload("res://src/systems/mode_unlock_store.gd")
 const UI := preload("res://src/ui/lobby_main_modes_view.gd")
+const LOBBY := preload("res://src/lobby/lobby.gd")
 var checks := 0
 var failures := 0
 func check(ok: bool,label: String) -> void:
@@ -27,6 +28,15 @@ func run() -> void:
 	progress.set_value("meta","gold",777)
 	check(SCOPE.save_config(progress,"user://stage_progress.cfg") == OK,"fixture progress saved")
 	check(DATA.scene_entry_available("res://src/main/Main.tscn", {"difficulty":"hard", "stage_id":"stage_1"}), "earned demon stage1 route allowed")
+	var demon_entry := LOBBY.build_demon_battle_entry_options("stage_1", "hard")
+	check(String(demon_entry.get("difficulty", "")) == "hard" and String(demon_entry.get("stage_id", "")) == "stage_1", "lobby carries stage and hard difficulty")
+	check(DATA.scene_entry_available("res://src/main/Main.tscn", demon_entry), "real lobby hard payload passes release gate")
+	check(not DATA.scene_entry_available("res://src/main/Main.tscn", {"difficulty":"hard"}), "missing stage cannot pass hard gate")
+	var lobby_source := FileAccess.get_file_as_string("res://src/lobby/lobby.gd")
+	var entry_code := lobby_source.substr(lobby_source.find("func _begin_threaded_scene_change("))
+	entry_code = entry_code.substr(0, entry_code.find("\nfunc _rebuild_research_list"))
+	check(entry_code.contains("build_demon_battle_entry_options(stage_id, difficulty)"), "lobby transition uses full entry payload")
+	check(not entry_code.contains("change_scene_to_file(") and not entry_code.contains("load_threaded_request("), "rejected entry cannot fall back to easy")
 	var config := ConfigFile.new()
 	config.set_value("hero_loadout","battle_stage","stage_1")
 	config.set_value("hero_loadout","difficulty","hard")
