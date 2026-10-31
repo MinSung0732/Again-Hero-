@@ -496,6 +496,23 @@ func apply_visual_profile(profile: Dictionary) -> bool:
 	return true
 
 
+# A prebuilt SpriteFrames object uses the exact same key as live visual
+# profiles. Only publish complete animations; a failed prewarm falls back to
+# the original synchronous build at first use.
+func has_cached_profile(profile: Dictionary) -> bool:
+	var animations = profile.get("animations",{})
+	if typeof(animations) != TYPE_DICTIONARY: return false
+	return _frames_cache.has(_get_profile_cache_key(String(profile.get("mode","")),profile,animations))
+
+func cache_prebuilt_profile(profile: Dictionary, prepared: SpriteFrames) -> bool:
+	if String(profile.get("mode","")) != "frames" or prepared == null: return false
+	if not prepared.has_animation(&"idle") or prepared.get_frame_count(&"idle") <= 0: return false
+	var animations = profile.get("animations",{})
+	if typeof(animations) != TYPE_DICTIONARY: return false
+	var key := _get_profile_cache_key("frames",profile,animations)
+	if not _frames_cache.has(key): _frames_cache[key] = prepared
+	return true
+
 func _get_profile_cache_key(
 	mode: String,
 	profile: Dictionary,

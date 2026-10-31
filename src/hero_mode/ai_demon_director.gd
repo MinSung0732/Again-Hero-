@@ -4,6 +4,8 @@ const AUGMENTS := preload("res://src/data/hero_augment_catalog.gd")
 const MAP_ASSAULT := preload("res://src/data/hero_map_assault_catalog.gd")
 const FRONTIER_MONSTERS := preload("res://src/data/frontier_monster_catalog.gd")
 const MONSTER_VISUAL := preload("res://src/monsters/monster_visual.gd")
+const GUMIHO_VISUAL := preload("res://src/data/gumiho_behavior_catalog.gd")
+const BOSS_VISUAL_PREWARM := preload("res://src/hero_mode/hero_boss_visual_prewarm.gd")
 # Keep late recruit scenes ready without loading a whole wave on its unlock frame.
 const RECRUIT_PREWARM_LEAD := 20.0
 const RECRUIT_PREWARM_INTERVAL := 0.5
@@ -14,6 +16,7 @@ var prewarm_index := 0
 var prewarm_next_at := 0.0
 var thread_index := 0
 var thread_next_at := 0.0
+var boss_visual_prewarm
 var spawn_sequence := 0
 var encounters
 var battle
@@ -42,6 +45,11 @@ func install(host) -> void:
 	thread_index = 0
 	thread_next_at = 0.0
 	stage_number = int(battle.current_stage_data.get("number",1))
+	boss_visual_prewarm = null
+	# Stage-specific boss choice is deterministic. Prepare no unneeded fox art.
+	if DATA.boss_for(stage_number,battle.campaign_difficulty) == "gumiho":
+		boss_visual_prewarm = BOSS_VISUAL_PREWARM.new()
+		boss_visual_prewarm.configure(GUMIHO_VISUAL.FOX_VISUAL,DATA.DURATION)
 	population_limit = DATA.monster_limit(stage_number)
 	supply_scale = DATA.pacing_value("supply",stage_number,battle.campaign_difficulty)
 	pressure = DATA.stage_pressure(stage_number)*(1.2 if battle.campaign_difficulty == "hard" else 1.0)
@@ -151,12 +159,14 @@ func tick(delta: float) -> void:
 	if battle.battle_over or battle.external_pause or not is_instance_valid(battle.hero): return
 	if _select_ai_reward() or battle.is_combat_simulation_paused(): return
 	encounters.tick(delta)
+	var elapsed: float = battle.run_metrics.elapsed_seconds
+	if boss_visual_prewarm != null and not boss_visual_prewarm.finished:
+		boss_visual_prewarm.tick(elapsed,_profiling_enabled())
 	if encounters.finale: plan = encounters.notice; return
 	observation_remaining -= delta
 	if observation_remaining <= 0.0:
 		observation_remaining = DATA.OBSERVE_INTERVAL
 		_observe()
-	var elapsed: float = battle.run_metrics.elapsed_seconds
 	_request_pending_recruits(elapsed)
 	_prewarm_pending_recruits(elapsed)
 	if next_reinforcement < reinforcement_times.size() and elapsed >= reinforcement_times[next_reinforcement]:
