@@ -30,6 +30,10 @@ var buttons := {}
 var pages := {}
 var selected := POLICY.DEFAULT_SETTINGS_TAB
 var game_checks := {}
+var hero_visual_section: VBoxContainer
+var hero_effect_slider: HSlider
+var hero_effect_value: Label
+var hero_attack_range_check: CheckBox
 var notice_checks := {}
 var account_identity: Label
 var cloud_status: Label
@@ -427,6 +431,50 @@ func _build_game() -> void:
 	for key in game_checks:
 		game_checks[key].toggled.connect(_save_game.bind(key))
 	_info(page, "게임 옵션은 자동 저장되며 다음 전투에도 적용됩니다.")
+	_build_hero_visual_game_options(page)
+
+func _build_hero_visual_game_options(page: VBoxContainer) -> void:
+	# The shared lobby has a Hero-only section without changing Demon options.
+	hero_visual_section = VBoxContainer.new()
+	hero_visual_section.name = "HeroCombatVisualOptions"
+	hero_visual_section.add_theme_constant_override("separation", 14)
+	page.add_child(hero_visual_section)
+	_header(hero_visual_section, "용사 전투 표시", "✦")
+
+	hero_effect_slider = HSlider.new()
+	hero_effect_slider.name = "HeroEffectTransparency"
+	hero_effect_slider.min_value = 0.0
+	hero_effect_slider.max_value = 100.0
+	hero_effect_slider.step = 1.0
+	hero_visual_section.add_child(hero_effect_slider)
+	hero_effect_value = Label.new()
+	hero_effect_value.name = "HeroEffectTransparencyValue"
+	hero_visual_section.add_child(hero_effect_value)
+	_volume(hero_visual_section, "자신 이펙트 투명도",
+		"0%는 선명하게, 100%는 자신의 공격 이펙트를 숨깁니다.",
+		hero_effect_slider, hero_effect_value)
+	hero_effect_slider.value_changed.connect(_save_hero_effect_transparency)
+
+	hero_attack_range_check = _toggle(hero_visual_section, "공격 범위 표시",
+		"실제 공격 범위 안내선을 켜거나 끕니다. 공격 판정은 그대로 유지됩니다.")
+	hero_attack_range_check.name = "HeroAttackRangeVisible"
+	hero_attack_range_check.toggled.connect(_save_hero_attack_range_visible)
+	_info(hero_visual_section, "용사 모드 인게임 설정과 동일한 값으로 자동 저장됩니다.")
+
+func _save_hero_visual_option(key: String, value) -> void:
+	var config := ConfigFile.new()
+	config.load(lobby.gameplay_settings_path)
+	config.set_value(POLICY.GAMEPLAY_SECTION, key, value)
+	if config.save(lobby.gameplay_settings_path) != OK:
+		_sync_game()
+
+func _save_hero_effect_transparency(value: float) -> void:
+	var percent := clampi(roundi(value), 0, 100)
+	hero_effect_value.text = "%d%%" % percent
+	_save_hero_visual_option("hero_effect_transparency", percent)
+
+func _save_hero_attack_range_visible(enabled: bool) -> void:
+	_save_hero_visual_option("hero_attack_range_visible", enabled)
 
 func _save_game(value: bool, key: String) -> void:
 	if bool(POLICY.game_option(key).get("force_in_hero", false)) and lobby._is_hero_lobby_mode(): _sync_game(); return
@@ -444,6 +492,16 @@ func _sync_game() -> void:
 		game_checks[option.key].disabled = hero_mode
 		game_checks[option.key].set_pressed_no_signal(hero_mode or bool(config.get_value(POLICY.GAMEPLAY_SECTION, option.key, option["default"])))
 		game_checks[option.key].resized.emit()
+	# Read the saved values on every tab visit: the in-game menu may have
+	# changed them since this lobby was first created.
+	if is_instance_valid(hero_visual_section):
+		hero_visual_section.visible = lobby._is_hero_lobby_mode()
+		var transparency := clampi(int(config.get_value(POLICY.GAMEPLAY_SECTION, "hero_effect_transparency", 0)), 0, 100)
+		hero_effect_slider.set_value_no_signal(float(transparency))
+		hero_effect_value.text = "%d%%" % transparency
+		hero_attack_range_check.set_pressed_no_signal(
+			bool(config.get_value(POLICY.GAMEPLAY_SECTION, "hero_attack_range_visible", true)))
+		hero_attack_range_check.resized.emit()
 
 func _build_sound() -> void:
 	var page: VBoxContainer = pages.sound
