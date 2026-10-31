@@ -68,6 +68,19 @@ func run() -> void:
 			arena.current_stage_data.number = stage; arena.campaign_difficulty = difficulty
 			arena.hero = Hero.new(); arena.add_child(arena.hero); arena.hero.position = Vector2(1200,1200)
 			var director := DIRECTOR.new(); director.install(arena)
+			check(not director.prewarm_entries.is_empty(),"allowed late monsters scheduled for prewarm")
+			if stage == 1 and difficulty == "easy":
+				var original_roster: Array = director.roster.duplicate()
+				var first_at := float(director.prewarm_entries[0].at)-DIRECTOR.RECRUIT_PREWARM_LEAD
+				director._prewarm_pending_recruits(first_at-0.01)
+				check(director.prewarm_index == 0,"no early preload before lead time")
+				director._prewarm_pending_recruits(first_at)
+				check(director.prewarm_index == 1 and director.roster == original_roster,"one scene warms without early spawn unlock")
+				director._prewarm_pending_recruits(first_at+0.1)
+				check(director.prewarm_index == 1,"preload interval prevents burst")
+				director._prewarm_pending_recruits(first_at+DIRECTOR.RECRUIT_PREWARM_INTERVAL)
+				check(director.prewarm_index == 2 and director.roster == original_roster,"next scene warms on later tick")
+				DATA.MONSTERS.release_warm(arena.get_instance_id())
 			for tick in range(401):
 				arena.run_metrics.elapsed_seconds = float(tick)*0.1
 				if tick >= 340: arena.population = 44 # Ordinary cap full after a telegraphed wave.

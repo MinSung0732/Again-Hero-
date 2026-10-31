@@ -2,6 +2,12 @@ extends RefCounted
 const DATA := preload("res://src/data/hero_mode_catalog.gd")
 const AUGMENTS := preload("res://src/data/hero_augment_catalog.gd")
 const MAP_ASSAULT := preload("res://src/data/hero_map_assault_catalog.gd")
+# Keep late recruit scenes ready without loading a whole wave on its unlock frame.
+const RECRUIT_PREWARM_LEAD := 20.0
+const RECRUIT_PREWARM_INTERVAL := 0.5
+var prewarm_entries: Array[Dictionary] = []
+var prewarm_index := 0
+var prewarm_next_at := 0.0
 var spawn_sequence := 0
 var encounters
 var battle
@@ -24,6 +30,9 @@ func install(host) -> void:
 	battle = host
 	reinforcement_times.clear()
 	next_reinforcement = 0
+	prewarm_entries.clear()
+	prewarm_index = 0
+	prewarm_next_at = 0.0
 	stage_number = int(battle.current_stage_data.get("number",1))
 	population_limit = DATA.monster_limit(stage_number)
 	supply_scale = DATA.pacing_value("supply",stage_number,battle.campaign_difficulty)
@@ -35,12 +44,35 @@ func install(host) -> void:
 		if data.has("hero_survival_after") and DATA.monster_allowed(id,stage_number,battle.campaign_difficulty):
 			var at := float(data.hero_survival_after)
 			if at not in reinforcement_times: reinforcement_times.append(at)
+			if id not in roster: prewarm_entries.append({"id":String(id),"at":at})
 	reinforcement_times.sort()
+	prewarm_entries.sort_custom(func(a: Dictionary, b: Dictionary) -> bool:
+		return float(a.at) < float(b.at) if not is_equal_approx(float(a.at),float(b.at)) else String(a.id) < String(b.id)
+	)
 	encounters = preload("res://src/hero_mode/hero_encounter_runtime.gd").new(); battle.add_child(encounters); encounters.install(battle)
-	var warm_started := Time.get_ticks_usec() if battle.combat_profile.enabled else 0
+	var warm_started := Time.get_ticks_usec() if _profiling_enabled() else 0
 	battle.set_allowed_monster_ids(roster)
 	if warm_started > 0:
 		print("[HeroPerf] initial_roster_warm_ms=%.2f roster=%d" % [float(Time.get_ticks_usec()-warm_started)/1000.0,roster.size()])
+func _profiling_enabled() -> bool:
+	var profile = battle.get("combat_profile")
+	return profile != null and bool(profile.get("enabled"))
+
+# Only PackedScene resources are prepared early. Spawn eligibility and roster unlock
+# still change exclusively on the original authored reinforcement checkpoint.
+func _prewarm_pending_recruits(elapsed: float) -> void:
+	if prewarm_index >= prewarm_entries.size() or elapsed < prewarm_next_at: return
+	var entry: Dictionary = prewarm_entries[prewarm_index]
+	if elapsed < float(entry.at)-RECRUIT_PREWARM_LEAD: return
+	prewarm_index += 1
+	prewarm_next_at = elapsed+RECRUIT_PREWARM_INTERVAL
+	var started := Time.get_ticks_usec() if _profiling_enabled() else 0
+	DATA.MONSTERS.warm_scenes([String(entry.id)],battle.get_instance_id())
+	if started > 0:
+		print("[HeroPerf] prewarm_scene_ms=%.2f elapsed=%.1f unlock=%.1f id=%s" % [
+			float(Time.get_ticks_usec()-started)/1000.0,elapsed,float(entry.at),String(entry.id)
+		])
+
 func _observe() -> void:
 	preferred.clear()
 	plan = "탐색 공세 · 여러 역할로 압박"
@@ -72,6 +104,7 @@ func tick(delta: float) -> void:
 		observation_remaining = DATA.OBSERVE_INTERVAL
 		_observe()
 	var elapsed: float = battle.run_metrics.elapsed_seconds
+	_prewarm_pending_recruits(elapsed)
 	if next_reinforcement < reinforcement_times.size() and elapsed >= reinforcement_times[next_reinforcement]:
 		while next_reinforcement < reinforcement_times.size() and elapsed >= reinforcement_times[next_reinforcement]:
 			next_reinforcement += 1
@@ -81,7 +114,7 @@ func tick(delta: float) -> void:
 				roster.append(id)
 				roster_changed = true
 		if roster_changed:
-			var warm_started := Time.get_ticks_usec() if battle.combat_profile.enabled else 0
+			var warm_started := Time.get_ticks_usec() if _profiling_enabled() else 0
 			battle.set_allowed_monster_ids(roster)
 			if warm_started > 0:
 				print("[HeroPerf] reinforcement_warm_ms=%.2f elapsed=%.1f roster=%d" % [
