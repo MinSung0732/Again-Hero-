@@ -169,7 +169,8 @@ func _load_texture(path: String) -> Texture2D:
 func _draw() -> void:
 	if active and bool(get_meta("survival_geometry",false)):
 		draw_rect(Rect2(-$CollisionShape2D.shape.size*0.5,$CollisionShape2D.shape.size),Color(0.35,0.75,1,0.15),true)
-		draw_rect(Rect2(-$CollisionShape2D.shape.size*0.5,$CollisionShape2D.shape.size),Color(0.65,0.85,1,0.8),false,2)
+		if bool(get_meta("hero_attack_range_visible",true)):
+			draw_rect(Rect2(-$CollisionShape2D.shape.size*0.5,$CollisionShape2D.shape.size),Color(0.65,0.85,1,0.8),false,2)
 	if visual.visible:
 		return
 

@@ -185,6 +185,7 @@ func _apply_damage() -> void:
 
 
 func _draw() -> void:
+	if not bool(get_meta("hero_attack_range_visible",true)): return
 	if state != MeteorState.FALLING and not (bool(get_meta("survival_geometry",false)) and state == MeteorState.EXPLODING):
 		return
 	var progress := clampf(fall_elapsed / fall_duration, 0.0, 1.0)

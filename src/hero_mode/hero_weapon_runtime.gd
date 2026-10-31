@@ -72,10 +72,22 @@ var base_slow_resistance := 0.0
 var shield_left := 0.0
 var owned_shield := 0.0
 var awakening_flash := 0.0
+# Hero-only presentation controls. Neither value changes hit detection.
+var effect_opacity := 1.0
+var attack_range_visible := true
 var reroll_limit := MODE.AUGMENT_REROLLS
 var rerolls_used := 0
 
 const RESTORE_CARD := {"id":"survival_restore","name":"완성된 빌드 · 회복","description":"모든 선택이 최대 레벨입니다. 최대 HP의 15%를 회복합니다."}
+func set_visual_settings(transparency_percent: float, show_ranges: bool) -> void:
+	effect_opacity = 1.0-clampf(transparency_percent,0.0,100.0)*0.01
+	attack_range_visible = show_ranges
+	if native_skills != null: native_skills.set_visual_settings(effect_opacity,show_ranges)
+	if is_instance_valid(hero): hero.queue_redraw()
+
+func _fx_color(color: Color) -> Color:
+	return Color(color,color.a*effect_opacity)
+
 func rerolls_remaining() -> int:
 	return maxi(0,reroll_limit-rerolls_used)
 
@@ -789,9 +801,9 @@ func _effect(a: Vector2,b: Vector2,radius: float,pattern: String,color: Color,da
 	effect.left = effect.duration; hero.queue_redraw()
 
 func draw() -> void:
-	if awakening_flash>0.0:
-		var progress:float=1.0-awakening_flash/1.6
-		hero.draw_arc(Vector2.ZERO,45.0+progress*260,0,TAU,48,Color(1.0,.8,.3,(1.0-progress)*.8),5.0)
+	if awakening_flash > 0.0:
+		var progress: float = 1.0-awakening_flash/1.6
+		hero.draw_arc(Vector2.ZERO,45.0+progress*260,0,TAU,48,_fx_color(Color(1.0,.8,.3,(1.0-progress)*.8)),5.0)
 	if evolution != null: evolution.draw()
 	if delivery != null: delivery.draw()
 	for field in fields:
@@ -804,11 +816,11 @@ func draw() -> void:
 			var visual_radius := float(shot.get("visual_radius",28.0))
 			if not frames.is_empty():
 				hero.draw_set_transform(position,Vector2(shot.direction).angle())
-				hero.draw_texture_rect(_loop_frame(frames,float(shot.age)),Rect2(Vector2.ONE*-visual_radius,Vector2.ONE*visual_radius*2.0),false)
+				hero.draw_texture_rect(_loop_frame(frames,float(shot.age)),Rect2(Vector2.ONE*-visual_radius,Vector2.ONE*visual_radius*2.0),false,Color(1,1,1,effect_opacity))
 				hero.draw_set_transform(Vector2.ZERO)
 			else:
-				hero.draw_circle(position,visual_radius,shot.color)
-				hero.draw_circle(position,7.0,Color.WHITE)
+				hero.draw_circle(position,visual_radius,_fx_color(shot.color))
+				hero.draw_circle(position,7.0,_fx_color(Color.WHITE))
 	for effect in effects:
 		if float(effect.left) <= 0.0: continue
 		var ratio: float = float(effect.left)/float(effect.duration)
@@ -822,46 +834,48 @@ func draw() -> void:
 			"beam","slash","capsule":
 				hero.draw_set_transform(a,(b-a).angle())
 				if frames.is_empty():
-					hero.draw_colored_polygon(effect.shape,Color(color,ratio*GEOMETRY.SHAPE_FILL_ALPHA))
-					hero.draw_polyline(effect.shape,color,GEOMETRY.OUTLINE_WIDTH)
+					hero.draw_colored_polygon(effect.shape,_fx_color(Color(color,ratio*GEOMETRY.SHAPE_FILL_ALPHA)))
+					if attack_range_visible: hero.draw_polyline(effect.shape,color,GEOMETRY.OUTLINE_WIDTH)
 				else:
-					hero.draw_polyline(effect.shape,Color(color,ratio*GEOMETRY.ART_GUIDE_ALPHA),GEOMETRY.ART_GUIDE_WIDTH)
+					if attack_range_visible: hero.draw_polyline(effect.shape,Color(color,ratio*GEOMETRY.ART_GUIDE_ALPHA),GEOMETRY.ART_GUIDE_WIDTH)
 					var texture: Texture2D = frames[mini(int((1-ratio)*frames.size()),frames.size()-1)]
 					var length := a.distance_to(b)
 					var rect := GEOMETRY.effect_texture_rect(String(effect.pattern),length,radius)
-					hero.draw_texture_rect(texture,rect,false,Color(1,1,1,ratio*GEOMETRY.BEAM_TEXTURE_ALPHA))
+					hero.draw_texture_rect(texture,rect,false,Color(1,1,1,ratio*GEOMETRY.BEAM_TEXTURE_ALPHA*effect_opacity))
 				hero.draw_set_transform(Vector2.ZERO)
 			"combo":
 				if not frames.is_empty():
 					hero.draw_set_transform(b,(b-a).angle())
-					hero.draw_texture_rect(_frame(frames,1.0-ratio),Rect2(Vector2.ONE*-radius,Vector2.ONE*radius*2),false,Color(1,1,1,ratio))
+					hero.draw_texture_rect(_frame(frames,1.0-ratio),Rect2(Vector2.ONE*-radius,Vector2.ONE*radius*2),false,Color(1,1,1,ratio*effect_opacity))
 					hero.draw_set_transform(Vector2.ZERO)
-				else: hero.draw_line(a,b,color,GEOMETRY.OUTLINE_WIDTH)
+				else: hero.draw_line(a,b,_fx_color(color),GEOMETRY.OUTLINE_WIDTH)
 			"chain":
-				hero.draw_line(a,b,Color(color,ratio*GEOMETRY.CHAIN_LINE_ALPHA),GEOMETRY.OUTLINE_WIDTH)
+				hero.draw_line(a,b,_fx_color(Color(color,ratio*GEOMETRY.CHAIN_LINE_ALPHA)),GEOMETRY.OUTLINE_WIDTH)
 				if not frames.is_empty():
 					hero.draw_set_transform(a,(b-a).angle())
-					hero.draw_texture_rect(_frame(frames,1.0-ratio),Rect2(Vector2(0,-GEOMETRY.CHAIN_DRAW_WIDTH*0.5),Vector2(a.distance_to(b),GEOMETRY.CHAIN_DRAW_WIDTH)),false,Color(1,1,1,ratio))
+					hero.draw_texture_rect(_frame(frames,1.0-ratio),Rect2(Vector2(0,-GEOMETRY.CHAIN_DRAW_WIDTH*0.5),Vector2(a.distance_to(b),GEOMETRY.CHAIN_DRAW_WIDTH)),false,Color(1,1,1,ratio*effect_opacity))
 					hero.draw_set_transform(Vector2.ZERO)
-				else: hero.draw_line(a,b,color,GEOMETRY.CHAIN_FALLBACK_WIDTH)
+				else: hero.draw_line(a,b,_fx_color(color),GEOMETRY.CHAIN_FALLBACK_WIDTH)
 			"bolt":
-				hero.draw_line(a,b,Color(color,ratio*GEOMETRY.BOLT_LINE_ALPHA),GEOMETRY.OUTLINE_WIDTH)
-				hero.draw_circle(a.lerp(b,1.0-ratio),GEOMETRY.BOLT_RADIUS,color)
+				hero.draw_line(a,b,_fx_color(Color(color,ratio*GEOMETRY.BOLT_LINE_ALPHA)),GEOMETRY.OUTLINE_WIDTH)
+				hero.draw_circle(a.lerp(b,1.0-ratio),GEOMETRY.BOLT_RADIUS,_fx_color(color))
 			"orbit":
 				var inner := GEOMETRY.orbit_inner(radius,float(effect.orbit_ratio),float(effect.get("area_scale",1.0)))
 				var outer := GEOMETRY.orbit_outer(radius,float(effect.orbit_ratio),float(effect.get("area_scale",1.0)))
 				if frames.is_empty():
-					hero.draw_arc(a,(inner+outer)*0.5,0,TAU,48,Color(color,ratio*GEOMETRY.ORBIT_FILL_ALPHA),outer-inner)
-					hero.draw_arc(a,inner,0,TAU,48,color,GEOMETRY.OUTLINE_WIDTH); hero.draw_arc(a,outer,0,TAU,48,color,GEOMETRY.OUTLINE_WIDTH)
+					hero.draw_arc(a,(inner+outer)*0.5,0,TAU,48,_fx_color(Color(color,ratio*GEOMETRY.ORBIT_FILL_ALPHA)),outer-inner)
+					if attack_range_visible:
+						hero.draw_arc(a,inner,0,TAU,48,color,GEOMETRY.OUTLINE_WIDTH)
+						hero.draw_arc(a,outer,0,TAU,48,color,GEOMETRY.OUTLINE_WIDTH)
 				for index in int(effect.orbit_count):
 					var angle := visual_clock*float(effect.orbit_speed)+index*TAU/float(effect.orbit_count)
 					var position := a+Vector2.from_angle(angle)*(inner+outer)*0.5
 					var extent := GEOMETRY.orbit_texture_extent(inner,outer)
 					if not frames.is_empty():
 						hero.draw_set_transform(position,angle+PI*0.5)
-						hero.draw_texture_rect(_loop_frame(frames,visual_clock),Rect2(Vector2.ONE*-extent,Vector2.ONE*extent*2),false,Color(1,1,1,ratio))
+						hero.draw_texture_rect(_loop_frame(frames,visual_clock),Rect2(Vector2.ONE*-extent,Vector2.ONE*extent*2),false,Color(1,1,1,ratio*effect_opacity))
 						hero.draw_set_transform(Vector2.ZERO)
-					else: hero.draw_circle(position,extent,color)
+					else: hero.draw_circle(position,extent,_fx_color(color))
 			_:
 				_draw_area(a,radius,Color(color,ratio),frames,1.0-ratio)
 
@@ -884,11 +898,13 @@ func _draw_area(center: Vector2, radius: float, color: Color, frames: Array, pro
 	if not frames.is_empty():
 		var texture: Texture2D = frames[mini(int(progress*frames.size()),frames.size()-1)]
 		var diameter := GEOMETRY.area_texture_extent(radius)
-		hero.draw_texture_rect(texture,Rect2(center-Vector2.ONE*diameter*0.5,Vector2.ONE*diameter),false,Color(1,1,1,color.a*GEOMETRY.AREA_TEXTURE_ALPHA))
-		hero.draw_arc(center,radius,0.0,TAU,48,Color(color,color.a*GEOMETRY.ART_GUIDE_ALPHA),GEOMETRY.ART_GUIDE_WIDTH)
+		hero.draw_texture_rect(texture,Rect2(center-Vector2.ONE*diameter*0.5,Vector2.ONE*diameter),false,Color(1,1,1,color.a*GEOMETRY.AREA_TEXTURE_ALPHA*effect_opacity))
+		if attack_range_visible:
+			hero.draw_arc(center,radius,0.0,TAU,48,Color(color,color.a*GEOMETRY.ART_GUIDE_ALPHA),GEOMETRY.ART_GUIDE_WIDTH)
 		return
-	hero.draw_circle(center,radius,Color(color,color.a*GEOMETRY.AREA_FILL_ALPHA))
-	hero.draw_arc(center,radius,0.0,TAU,48,color,GEOMETRY.OUTLINE_WIDTH)
+	hero.draw_circle(center,radius,_fx_color(Color(color,color.a*GEOMETRY.AREA_FILL_ALPHA)))
+	if attack_range_visible:
+		hero.draw_arc(center,radius,0.0,TAU,48,color,GEOMETRY.OUTLINE_WIDTH)
 
 func shield_amount(amount: float) -> float:
 	return amount*(1.0+float(research.get("shield",0)))

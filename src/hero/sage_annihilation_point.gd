@@ -405,16 +405,17 @@ func _update_attraction_wisps() -> void:
 func _draw() -> void:
 	if state == State.INACTIVE or state == State.AUDIO_TAIL:
 		return
-	draw_arc(
-		Vector2.ZERO,
-		effect_radius,
-		0.0,
-		TAU,
-		64,
-		Color(0.75, 0.64, 1.0, 0.72),
-		1.5,
-		true
-	)
+	if bool(get_meta("hero_attack_range_visible",true)):
+		draw_arc(
+			Vector2.ZERO,
+			effect_radius,
+			0.0,
+			TAU,
+			64,
+			Color(0.75, 0.64, 1.0, 0.72),
+			1.5,
+			true
+		)
 	if state == State.ACTIVE:
 		var pulse := 0.5 + sin(active_elapsed * 4.0) * 0.08
 		for ring_index in range(3):

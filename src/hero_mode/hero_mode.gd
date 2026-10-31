@@ -16,6 +16,7 @@ const DIRECTOR := preload("res://src/hero_mode/ai_demon_director.gd")
 const SETTINGS := preload("res://src/ui/BattleSettings.tscn")
 const CAMERA_VIEW := preload("res://src/ui/battle_camera_view.gd")
 const PAD_SETTINGS := preload("res://src/ui/hero_pad_settings.gd")
+const VISUAL_SETTINGS := preload("res://src/ui/hero_combat_visual_settings.gd")
 const HUD := preload("res://src/ui/hero_survival_hud.gd")
 const REEL := preload("res://src/ui/hero_chest_reel.gd")
 const LOADING := preload("res://src/ui/startup_loading_view.gd")
@@ -47,6 +48,9 @@ var battle_frame: Control
 var battle_frame_enabled := true
 var pad_mode := MOVE_PAD.MODE_FIXED
 var pad_mode_selector: OptionButton
+var combat_visual_controls: Dictionary = {}
+var effect_transparency_percent := 0
+var attack_range_visible := true
 var gameplay_settings_path := "user://gameplay_settings.cfg"
 var battle
 var director
@@ -654,18 +658,26 @@ func _install_battle_settings() -> void:
 	camera.set_pressed_no_signal(true); camera.disabled = true
 	camera.tooltip_text = "용사 모드에서는 시야 고정이 필수입니다."
 	tabs.get_node("Gameplay/CameraGuide").text = "용사 모드에서는 항상 용사를 추적합니다. 시야 고정을 해제할 수 없습니다."
-	tabs.get_node("Gameplay/BattleFrame").toggled.connect(_set_battle_frame)
-	pad_mode_selector = PAD_SETTINGS.install(tabs.get_node("Gameplay"),_set_pad_mode)
+	var gameplay: VBoxContainer = tabs.get_node("Gameplay")
+	var battle_frame_toggle: CheckBox = gameplay.get_node("BattleFrame")
+	battle_frame_toggle.toggled.connect(_set_battle_frame)
+	pad_mode_selector = PAD_SETTINGS.install(gameplay,_set_pad_mode)
+	combat_visual_controls = VISUAL_SETTINGS.install(
+		gameplay,tabs.get_node("Sound/BGMRow/Slider"),battle_frame_toggle,
+		_set_effect_transparency,_set_attack_range_visible
+	)
 	for pair in [["BGMRow",true],["SFXRow",false]]:
 		tabs.get_node("Sound/"+String(pair[0])+"/Slider").value_changed.connect(_set_audio_level.bind(bool(pair[1])))
 	tabs.get_node("Sound/BGMMute").toggled.connect(_set_audio_mute.bind(true))
 	tabs.get_node("Sound/SFXMute").toggled.connect(_set_audio_mute.bind(false))
 	var config := ConfigFile.new(); config.load(gameplay_settings_path)
 	battle_frame_enabled = bool(config.get_value("gameplay","battle_frame_enabled",true))
+	effect_transparency_percent = clampi(int(config.get_value("gameplay","hero_effect_transparency",0)),0,100)
+	attack_range_visible = bool(config.get_value("gameplay","hero_attack_range_visible",true))
 	pad_mode = String(config.get_value("gameplay","hero_pad_mode",MOVE_PAD.MODE_FIXED))
 	if pad_mode not in MOVE_PAD.MODES: pad_mode = MOVE_PAD.MODE_FIXED
 	pad.set_mode(pad_mode)
-	_apply_battle_frame(); _sync_settings()
+	_apply_battle_frame(); _apply_combat_visual_settings(); _sync_settings()
 func _open_settings() -> void:
 	if not paused: _pause()
 	if not paused: return
@@ -677,8 +689,11 @@ func _sync_settings() -> void:
 		tabs.get_node("Sound/"+String(pair[0])+"/Value").text = str(pair[1])
 	tabs.get_node("Sound/BGMMute").set_pressed_no_signal(AudioSettings.bgm_muted)
 	tabs.get_node("Sound/SFXMute").set_pressed_no_signal(AudioSettings.sfx_muted)
-	tabs.get_node("Gameplay/CameraLock").set_pressed_no_signal(true)
-	tabs.get_node("Gameplay/BattleFrame").set_pressed_no_signal(battle_frame_enabled)
+	(combat_visual_controls.camera as CheckBox).set_pressed_no_signal(true)
+	(combat_visual_controls.battle_frame as CheckBox).set_pressed_no_signal(battle_frame_enabled)
+	(combat_visual_controls.transparency_slider as HSlider).set_value_no_signal(effect_transparency_percent)
+	(combat_visual_controls.transparency_value as Label).text = "%d%%" % effect_transparency_percent
+	(combat_visual_controls.range_checkbox as CheckBox).set_pressed_no_signal(attack_range_visible)
 	pad_mode_selector.select(MOVE_PAD.MODES.find(pad_mode))
 func _set_pad_mode(index: int) -> void:
 	if index < 0 or index >= MOVE_PAD.MODES.size(): return
@@ -697,6 +712,28 @@ func _set_audio_mute(value: bool,bgm: bool) -> void:
 	if bgm:
 		AudioSettings.set_bgm_muted(value); $HeroBGMManager.set_user_bgm_muted(value)
 	else: AudioSettings.set_sfx_muted(value)
+func _apply_combat_visual_settings() -> void:
+	if is_instance_valid(battle) and is_instance_valid(battle.hero) and battle.hero.player_weapons != null:
+		battle.hero.player_weapons.set_visual_settings(effect_transparency_percent,attack_range_visible)
+
+func _set_effect_transparency(value: float) -> void:
+	var percent := clampi(roundi(value),0,100)
+	if percent == effect_transparency_percent: return
+	var config := ConfigFile.new(); config.load(gameplay_settings_path)
+	config.set_value("gameplay","hero_effect_transparency",percent)
+	if config.save(gameplay_settings_path) != OK: _sync_settings(); return
+	effect_transparency_percent = percent
+	(combat_visual_controls.transparency_value as Label).text = "%d%%" % percent
+	_apply_combat_visual_settings()
+
+func _set_attack_range_visible(enabled: bool) -> void:
+	if enabled == attack_range_visible: return
+	var config := ConfigFile.new(); config.load(gameplay_settings_path)
+	config.set_value("gameplay","hero_attack_range_visible",enabled)
+	if config.save(gameplay_settings_path) != OK: _sync_settings(); return
+	attack_range_visible = enabled
+	_apply_combat_visual_settings()
+
 func _set_battle_frame(enabled: bool) -> void:
 	var config := ConfigFile.new(); config.load(gameplay_settings_path)
 	config.set_value("gameplay","battle_frame_enabled",enabled)

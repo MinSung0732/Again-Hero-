@@ -206,7 +206,8 @@ func visit_visuals(visitor: Callable) -> void:
 		else: visitor.call(slot,Vector2(slot.origin),float(slot.radius),color,false)
 func _draw_visual(slot: Dictionary,point: Vector2,radius: float,color: Color,warning: bool) -> void:
 	if warning:
-		host.hero.draw_arc(host.hero.to_local(point),radius,0,TAU,24 if slot.mode in ["lob","lob_burst"] else 32,Color(GEOMETRY.WARNING_COLOR,color.a),GEOMETRY.WARNING_WIDTH)
+		if host.attack_range_visible:
+			host.hero.draw_arc(host.hero.to_local(point),radius,0,TAU,24 if slot.mode in ["lob","lob_burst"] else 32,Color(GEOMETRY.WARNING_COLOR,color.a),GEOMETRY.WARNING_WIDTH)
 	else: _draw(slot,point,radius)
 func _draw(slot: Dictionary,point: Vector2,radius: float) -> void:
 	host._draw_area(host.hero.to_local(point),radius,slot.color,slot.frames,host._loop_progress(slot.frames,clock))

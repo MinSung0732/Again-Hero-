@@ -282,6 +282,7 @@ func visit_visuals(visitor: Callable) -> void:
 func _draw_visual(kind: String,point: Vector2,edge: Vector2,radius: float,color: Color,frames: Array,progress: float) -> void:
 	match kind:
 		"area": host._draw_area(host.hero.to_local(point),radius,color,frames,progress)
-		"ring": host.hero.draw_arc(host.hero.to_local(point),radius,0,progress,32,color,3.0)
-		"arc": host.hero.draw_arc(host.hero.to_local(point),radius,0,progress,16,color,3.0)
-		"line": host.hero.draw_line(host.hero.to_local(point),host.hero.to_local(edge),color,2.0)
+		"ring":
+			if host.attack_range_visible: host.hero.draw_arc(host.hero.to_local(point),radius,0,progress,32,color,3.0)
+		"arc": host.hero.draw_arc(host.hero.to_local(point),radius,0,progress,16,host._fx_color(color),3.0)
+		"line": host.hero.draw_line(host.hero.to_local(point),host.hero.to_local(edge),host._fx_color(color),2.0)

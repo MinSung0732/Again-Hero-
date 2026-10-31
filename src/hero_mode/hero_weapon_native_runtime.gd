@@ -14,6 +14,22 @@ var last_cast_succeeded := false
 var authority
 var summon_configs: Dictionary = {}
 var actors_by_pattern: Dictionary = {}
+var visual_opacity := 1.0
+var attack_range_visible := true
+
+func set_visual_settings(opacity: float, show_ranges: bool) -> void:
+	visual_opacity = clampf(opacity,0.0,1.0)
+	attack_range_visible = show_ranges
+	for pattern in actors_by_pattern:
+		for actor in actors_by_pattern[pattern]:
+			if not is_instance_valid(actor): continue
+			_apply_actor_visual_settings(actor)
+
+func _apply_actor_visual_settings(actor: CanvasItem) -> void:
+	actor.modulate.a = visual_opacity
+	actor.set_meta("hero_attack_range_visible",attack_range_visible)
+	actor.queue_redraw()
+
 const SUMMON_LIVE_FIELDS := ["attack_range","attack_cooldown","move_speed","sense_range","hits_per_attack","hit_interval","second_hit_bonus_ratio","high_hp_damage_bonus","elite_move_speed_bonus","projectile_speed","consecutive_damage_bonus_per_step","focus_damage_bonus","focus_attack_speed_bonus"]
 const SUMMON_AREA_FIELDS := ["summon_area_radius","summon_area_ratio","summon_area_targets","summon_area_mode"]
 
@@ -71,6 +87,7 @@ func install(host) -> void:
 			var actor = hero._acquire_projectile(spec[0],spec[1])
 			if not is_instance_valid(actor): continue
 			actor.set_meta("survival_geometry",true); actor.set_meta("survival_visual_bounds",bounds)
+			_apply_actor_visual_settings(actor)
 			actors.append(actor)
 		actors_by_pattern[pattern] = actors
 		for actor in actors:
@@ -142,6 +159,7 @@ func cast(data: Dictionary, origin: Vector2, direction: Vector2, target: Node2D,
 			"ice_pillar": actor.setup(damage,float(data.field_duration),(float(data.native_radius)+rank*float(data.native_radius_per_level))*radius_scale,float(data.slow_multiplier),float(data.collision_radius),hero)
 			"meteor": actor.setup(damage,(float(data.native_radius)+rank*float(data.native_radius_per_level))*radius_scale,float(data.fall_duration),float(data.visual_scale)*radius_scale,float(data.fall_height),float(data.fall_side_offset),float(data.explosion_fps),hero)
 			"singularity": actor.setup(hero,float(data.field_duration),(float(data.native_radius)+rank*float(data.native_radius_per_level))*radius_scale,maxi(1,roundi(damage*float(data.field_power))),float(data.pull_interval),float(data.pull_step),float(data.field_interval),float(data.execute_ratio),float(data.visual_scale)*radius_scale,float(data.create_fps),float(data.active_fps),float(data.disappear_fps))
+		_apply_actor_visual_settings(actor)
 	if authority.is_combat_simulation_paused() and not (authority.has_method("uses_hero_subtree_pause") and authority.uses_hero_subtree_pause()): set_paused(true)
 	return true
 func set_paused(paused: bool) -> void:
