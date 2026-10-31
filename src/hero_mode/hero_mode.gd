@@ -159,6 +159,12 @@ func _begin_prepared_entry() -> void:
 		loading_view.set_progress(1.0)
 		local_loading.queue_free()
 	if not is_inside_tree() or not presentation_ready or not is_instance_valid(battle): return
+	# A presentation warmup must never allow gameplay to open without a starter.
+	if not _ensure_battle_starting_weapon():
+		var refunded := STAMINA.refund_failed_entry(entry)
+		_show_blocked("기본 무기를 준비하지 못했습니다. 로비에서 다시 입장하세요." if refunded else "기본 무기 준비 실패 · 스테미너 반환 기록도 확인해 주세요.")
+		return
+	_refresh_hud()
 	hero_voice.play_entry()
 	entry_ready = true
 	entry_started_ms = Time.get_ticks_msec(); entry_started_unix = Time.get_unix_time_from_system()
@@ -207,14 +213,18 @@ func _create_battle() -> void:
 	pad.movement_changed.connect(func(value: Vector2):
 		if is_instance_valid(battle) and is_instance_valid(battle.hero): battle.hero.set_player_move_input(value))
 	_refresh_hud()
-func _ensure_battle_starting_weapon() -> void:
-	if not is_instance_valid(battle) or not is_instance_valid(battle.hero): return
+func _ensure_battle_starting_weapon() -> bool:
+	if not is_instance_valid(battle) or not is_instance_valid(battle.hero):
+		push_error("Hero mode battle hero missing for starter: "+player_hero_id)
+		return false
 	var weapons = battle.hero.player_weapons
 	if weapons == null:
 		push_error("Hero mode weapon runtime was not created: "+player_hero_id)
-		return
+		return false
 	if not weapons.ensure_starting_weapon():
 		push_error("Hero mode has no starting weapon: "+player_hero_id)
+		return false
+	return true
 
 func _build_ui() -> void:
 	var background := ColorRect.new(); background.color = HUD.BACKGROUND_COLOR
