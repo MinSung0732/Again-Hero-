@@ -316,7 +316,14 @@ func _report_performance() -> void:
 	var sections := {}
 	for name in ["battle_process","hero_physics","weapon_tick","monster_base_physics","monster_move_and_slide","monster_separation","grid_rebuild","spatial_query"]:
 		var scope: Dictionary = measured.get(name,{})
-		sections[name] = {"p95_us":scope.get("p95_us",0),"max_us":scope.get("max_us",0),"calls":scope.get("calls",0)}
+		sections[name] = {
+			"calls":scope.get("calls",0),
+			"call_p95_us":scope.get("p95_us",0),
+			"call_max_us":scope.get("max_us",0),
+			"frame_mean_us":scope.get("frame_mean_us",0),
+			"frame_p95_us":scope.get("frame_p95_us",0),
+			"frame_max_us":scope.get("frame_max_us",0)
+		}
 	print("[HeroPerf] summary "+JSON.stringify({
 		"stage":stage,"hero":player_hero_id,"slow_frames":performance_slow_frames,
 		"peak_frame_ms":performance_max_frame_ms,"recent_p95_frame_ms":p95,"scopes":sections
