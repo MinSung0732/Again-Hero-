@@ -5,9 +5,13 @@ const MAP_ASSAULT := preload("res://src/data/hero_map_assault_catalog.gd")
 # Keep late recruit scenes ready without loading a whole wave on its unlock frame.
 const RECRUIT_PREWARM_LEAD := 20.0
 const RECRUIT_PREWARM_INTERVAL := 0.5
+const RECRUIT_THREAD_LEAD := 30.0
+const RECRUIT_THREAD_INTERVAL := 0.5
 var prewarm_entries: Array[Dictionary] = []
 var prewarm_index := 0
 var prewarm_next_at := 0.0
+var thread_index := 0
+var thread_next_at := 0.0
 var spawn_sequence := 0
 var encounters
 var battle
@@ -33,6 +37,8 @@ func install(host) -> void:
 	prewarm_entries.clear()
 	prewarm_index = 0
 	prewarm_next_at = 0.0
+	thread_index = 0
+	thread_next_at = 0.0
 	stage_number = int(battle.current_stage_data.get("number",1))
 	population_limit = DATA.monster_limit(stage_number)
 	supply_scale = DATA.pacing_value("supply",stage_number,battle.campaign_difficulty)
@@ -58,12 +64,41 @@ func _profiling_enabled() -> bool:
 	var profile = battle.get("combat_profile")
 	return profile != null and bool(profile.get("enabled"))
 
+# Start scene loading in a worker thread before the regular warmup window.
+# Never retrieve an unfinished threaded resource on the main thread.
+func _request_pending_recruits(elapsed: float) -> void:
+	if thread_index >= prewarm_entries.size() or elapsed < thread_next_at: return
+	var entry: Dictionary = prewarm_entries[thread_index]
+	if elapsed < float(entry.at)-RECRUIT_THREAD_LEAD: return
+	thread_index += 1
+	thread_next_at = elapsed+RECRUIT_THREAD_INTERVAL
+	var monster_id := String(entry.id)
+	if DATA.MONSTERS.scene_cache.has(monster_id): return
+	var path := String(DATA.MONSTERS.MONSTERS[monster_id].get("scene_path",""))
+	if path.is_empty(): return
+	var started := Time.get_ticks_usec() if _profiling_enabled() else 0
+	if ResourceLoader.load_threaded_request(path,"PackedScene",false) == OK:
+		entry["thread_path"] = path
+	if started > 0:
+		print("[HeroPerf] thread_request_ms=%.2f elapsed=%.1f id=%s" % [
+			float(Time.get_ticks_usec()-started)/1000.0,elapsed,monster_id
+		])
+
 # Only PackedScene resources are prepared early. Spawn eligibility and roster unlock
 # still change exclusively on the original authored reinforcement checkpoint.
 func _prewarm_pending_recruits(elapsed: float) -> void:
 	if prewarm_index >= prewarm_entries.size() or elapsed < prewarm_next_at: return
 	var entry: Dictionary = prewarm_entries[prewarm_index]
 	if elapsed < float(entry.at)-RECRUIT_PREWARM_LEAD: return
+	var thread_path := String(entry.get("thread_path",""))
+	if not thread_path.is_empty():
+		var status := ResourceLoader.load_threaded_get_status(thread_path)
+		if status == ResourceLoader.THREAD_LOAD_IN_PROGRESS and elapsed < float(entry.at):
+			return # A late worker may finish on the next tick; avoid a blocking get.
+		if status == ResourceLoader.THREAD_LOAD_LOADED:
+			# Retain the loaded resource until the normal scene cache pins it.
+			var threaded_scene := ResourceLoader.load_threaded_get(thread_path) as PackedScene
+			if threaded_scene == null: push_warning("Hero recruit threaded scene missing: "+thread_path)
 	prewarm_index += 1
 	prewarm_next_at = elapsed+RECRUIT_PREWARM_INTERVAL
 	var started := Time.get_ticks_usec() if _profiling_enabled() else 0
@@ -104,6 +139,7 @@ func tick(delta: float) -> void:
 		observation_remaining = DATA.OBSERVE_INTERVAL
 		_observe()
 	var elapsed: float = battle.run_metrics.elapsed_seconds
+	_request_pending_recruits(elapsed)
 	_prewarm_pending_recruits(elapsed)
 	if next_reinforcement < reinforcement_times.size() and elapsed >= reinforcement_times[next_reinforcement]:
 		while next_reinforcement < reinforcement_times.size() and elapsed >= reinforcement_times[next_reinforcement]:

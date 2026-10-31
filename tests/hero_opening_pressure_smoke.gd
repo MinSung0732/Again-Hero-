@@ -69,9 +69,12 @@ func run() -> void:
 			arena.hero = Hero.new(); arena.add_child(arena.hero); arena.hero.position = Vector2(1200,1200)
 			var director := DIRECTOR.new(); director.install(arena)
 			check(not director.prewarm_entries.is_empty(),"allowed late monsters scheduled for prewarm")
+			check(DIRECTOR.RECRUIT_THREAD_LEAD > DIRECTOR.RECRUIT_PREWARM_LEAD,"worker starts before main-thread warm window")
 			if stage == 1 and difficulty == "easy":
 				var original_roster: Array = director.roster.duplicate()
 				var first_at := float(director.prewarm_entries[0].at)-DIRECTOR.RECRUIT_PREWARM_LEAD
+				director._request_pending_recruits(first_at-(DIRECTOR.RECRUIT_THREAD_LEAD-DIRECTOR.RECRUIT_PREWARM_LEAD)-0.01)
+				check(director.thread_index == 0 and director.roster == original_roster,"thread loader does not start before lead")
 				director._prewarm_pending_recruits(first_at-0.01)
 				check(director.prewarm_index == 0,"no early preload before lead time")
 				director._prewarm_pending_recruits(first_at)
