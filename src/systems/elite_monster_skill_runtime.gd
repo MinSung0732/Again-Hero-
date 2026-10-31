@@ -449,7 +449,8 @@ func _tick_goblin_commander(
 	if not is_instance_valid(monster):
 		return
 
-	var line := skill.get("_line_fx") as Line2D
+	var line_value = skill.get("_line_fx")
+	var line: Line2D = line_value if is_instance_valid(line_value) and line_value is Line2D else null
 	if is_instance_valid(line):
 		line.global_position = monster.global_position
 
@@ -481,7 +482,7 @@ func _tick_goblin_commander(
 	var shield_ratio := maxf(float(skill.get("shield_max_hp_ratio", 0.10)), 0.0)
 
 	for raw_monster in _monster_scratch:
-		var target := raw_monster as Node2D
+		var target: Node2D = raw_monster if is_instance_valid(raw_monster) and raw_monster is Node2D else null
 		if (
 			not is_instance_valid(target)
 			or target.is_queued_for_deletion()
@@ -512,7 +513,8 @@ func _tick_goblin_commander(
 
 
 func _finish_goblin_commander(skill: Dictionary) -> void:
-	var line := skill.get("_line_fx") as Line2D
+	var line_value = skill.get("_line_fx")
+	var line: Line2D = line_value if is_instance_valid(line_value) and line_value is Line2D else null
 	if (
 		is_instance_valid(line)
 		and is_instance_valid(battle)
@@ -615,7 +617,8 @@ func _tick_slime_arcs(delta: float) -> void:
 			_slime_arcs.remove_at(index)
 			continue
 		var arc: Dictionary = raw_arc
-		var monster := arc.get("monster") as Node2D
+		var monster_value = arc.get("monster")
+		var monster: Node2D = monster_value if is_instance_valid(monster_value) and monster_value is Node2D else null
 		if not is_instance_valid(monster) or monster.is_queued_for_deletion():
 			_slime_arcs.remove_at(index)
 			continue
@@ -1179,8 +1182,9 @@ func _tick_skeleton_archer_rain_arrows(delta: float) -> void:
 			_skeleton_archer_rain_arrows.remove_at(index)
 			continue
 		var arrow: Dictionary = raw_arrow
-		var sprite := arrow.get("sprite") as Sprite2D
-		if not is_instance_valid(sprite):
+		var sprite_value = arrow.get("sprite")
+		var sprite: Sprite2D = sprite_value if is_instance_valid(sprite_value) and sprite_value is Sprite2D else null
+		if not is_instance_valid(sprite) or sprite.is_queued_for_deletion():
 			_skeleton_archer_rain_arrows.remove_at(index)
 			continue
 		var duration := maxf(float(arrow.get("duration", 0.22)), 0.01)
