@@ -27,6 +27,14 @@ func run() -> void:
 		tap.pressed = true
 		presenter._on_panel_input(tap)
 		check(presenter.banner.modulate.a == 1.0 and presenter.cards[2].modulate.a == 1.0, "skip animation")
+
+	var hard_rewards := "어려움 최초 연구 포인트 +500\n어려움 최초 골드 +1000\n어려움 최초 마왕 토큰 +30\n어려움 전체 마왕 토큰 +100"
+	presenter.show_result(true, "어려움 클리어", "", hard_rewards, "")
+	await process_frame
+	check(presenter.cards.size() >= 4, "hard reward cards created")
+	for index in [2, 3]:
+		var token_icon := presenter.cards[index].find_child("Icon", true, false) as TextureRect
+		check(token_icon != null and token_icon.texture != null and presenter.PNG_SOURCE.path(token_icon.texture).ends_with("/demon_token.png"), "hard first/all-clear demon token icon %d" % index)
 	check(main.restart_button.pressed.is_connected(main._on_restart_pressed) and main.stage_select_result_button.pressed.is_connected(main._on_result_formation_pressed) and main.next_stage_button.pressed.is_connected(main._on_next_stage_pressed), "button signals")
 	for dimensions in [Vector2i(1080, 1920), Vector2i(1080, 2400)]:
 		root.size = dimensions
