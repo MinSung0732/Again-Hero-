@@ -1,3 +1,8 @@
+## 2026-10-31 · 기본무기 전체 미지급 실제 원인 수정
+- 디버거 확인: hero_weapon_evolution_runtime.gd:286에서 GEOMETRY 미선언 Parse Error가 발생해, hero_weapon_runtime.gd의 EVOLUTION.new()가 실패했다.
+- 공통 hero_weapon_geometry.gd preload 선언을 추가해 진화/무기 런타임 스크립트 컴파일 경로를 복원했다. 공격/범위/투명도 수치는 변경하지 않는다.
+- 기존 hero_visual_settings_smoke에 진화·무기 런타임 컴파일 가능 여부 검사 추가. 변경 diff 및 선언·상수 정적 확인; Godot/Android 실행은 미검증.
+
 ## 2026-10-31 · 용사 무기 런타임 미생성 복구
 - 인게임에서 용사 무기 슬롯 6개가 모두 빈 상태이며 시작 방어에 걸리는 실제 보고를 반영했다.
 - Battle의 Hero 생성 후 무기 런타임이 없거나 설치 전 상태면 HeroMode 입장 경계에서 새 런타임을 설치하고 기본무기를 다시 확인한다.
