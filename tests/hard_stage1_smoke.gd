@@ -4,6 +4,7 @@ const SCOPE := preload("res://src/systems/account_save_scope.gd")
 const PROGRESS := preload("res://src/systems/stage_progress.gd")
 const HARD := preload("res://src/data/hard_campaign_catalog.gd")
 const GATE := preload("res://src/data/mode_unlock_catalog.gd")
+const MAIN := preload("res://src/main/main.gd")
 
 var checks := 0
 var failures := 0
@@ -28,6 +29,11 @@ func run() -> void:
 	check(GATE.difficulty_available("hard", "stage_1", "demon"), "stage1 hard available")
 	check(not GATE.difficulty_available("hard", "stage_2", "demon"), "stage2 hard remains locked")
 	check(not GATE.difficulty_available("hard", "stage_1", "hero"), "hero hard remains locked")
+	check(MAIN.should_skip_entry_dialogue("hard", false, "stage_1", "stage_1"), "hard first entry skips story dialogue")
+	check(MAIN.should_skip_entry_dialogue("hard", false, "stage_2", "stage_1"), "hard skip independent of retry flag")
+	check(not MAIN.should_skip_entry_dialogue("easy", false, "stage_1", "stage_1"), "easy first entry retains dialogue")
+	check(MAIN.should_skip_entry_dialogue("easy", true, "stage_1", "stage_1"), "easy same-stage retry skips dialogue")
+	check(not MAIN.should_skip_entry_dialogue("easy", true, "stage_2", "stage_1"), "easy other-stage retry retains dialogue")
 	var battle := load("res://src/battle/Battle.tscn").instantiate()
 	root.add_child(battle)
 	var initial_hp: int = battle.hero.max_hp

@@ -274,9 +274,11 @@ func _ready() -> void:
 	# to gameplay so combat AI, cooldowns and the run timer cannot advance early.
 	var entry_options := SceneTransition.consume_entry_options()
 	battle.configure_campaign_difficulty(String(entry_options.get("difficulty","easy")))
-	_skip_entry_dialogue = (
-		bool(entry_options.get("skip_stage_dialogue", false))
-		and String(entry_options.get("stage_id", "")) == String(battle.current_stage_id)
+	_skip_entry_dialogue = should_skip_entry_dialogue(
+		battle.campaign_difficulty,
+		bool(entry_options.get("skip_stage_dialogue", false)),
+		String(entry_options.get("stage_id", "")),
+		String(battle.current_stage_id)
 	)
 	battle.set_external_pause(true)
 	_battle_stamina_entry = {} if battle.practice_mode else STAMINA.claim_battle_entry(String(battle.current_stage_id))
@@ -434,6 +436,15 @@ func _ready() -> void:
 
 var _presentation_ready := false
 var _skip_entry_dialogue := false
+
+# Hard runs start after the existing hero reveal, without repeating easy's dialogue.
+static func should_skip_entry_dialogue(
+	difficulty: String,
+	requested_skip: bool,
+	requested_stage_id: String,
+	active_stage_id: String
+) -> bool:
+	return difficulty == "hard" or (requested_skip and requested_stage_id == active_stage_id)
 
 
 func prepare_presentation() -> void:
