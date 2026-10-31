@@ -5,6 +5,7 @@ const CONTROLS := preload("res://src/ui/hero_combat_visual_settings.gd")
 const WEAPON := preload("res://src/hero_mode/hero_weapon_runtime.gd")
 const NATIVE := preload("res://src/hero_mode/hero_weapon_native_runtime.gd")
 const GEOMETRY := preload("res://src/hero_mode/hero_weapon_geometry.gd")
+const EVOLUTION := preload("res://src/hero_mode/hero_weapon_evolution_runtime.gd")
 var checks := 0
 var failures := 0
 
@@ -18,6 +19,7 @@ func check(ok: bool, label: String) -> void:
 		push_error("HERO_VISUAL_SETTINGS: "+label)
 
 func run() -> void:
+	check(EVOLUTION.can_instantiate() and WEAPON.can_instantiate(), "evolution range guide dependencies compile with starter weapon runtime")
 	var settings := SETTINGS.instantiate()
 	root.add_child(settings)
 	var tabs: TabContainer = settings.get_node("Panel/Margin/VBox/SettingsTabs")
