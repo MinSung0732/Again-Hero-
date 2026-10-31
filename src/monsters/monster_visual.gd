@@ -431,6 +431,9 @@ func apply_visual_profile(profile: Dictionary) -> bool:
 	if cached is SpriteFrames:
 		built = cached
 	else:
+		# A cached PackedScene is not enough: the first visual profile may still
+		# synchronously load dozens of frame textures on its first live spawn.
+		var build_started_us := Time.get_ticks_usec()
 		built = SpriteFrames.new()
 		if built.has_animation(&"default"):
 			built.remove_animation(&"default")
@@ -450,6 +453,20 @@ func apply_visual_profile(profile: Dictionary) -> bool:
 		if built.get_frame_count(&"idle") <= 0:
 			return false
 		_frames_cache[cache_key] = built
+		var build_ms := float(Time.get_ticks_usec()-build_started_us)/1000.0
+		if build_ms >= 5.0:
+			var battle := CLOCK_MONSTER_VISUAL.battle_for(self)
+			if battle != null:
+				var combat_profile = battle.get("combat_profile")
+				if combat_profile != null and bool(combat_profile.get("enabled")):
+					var owner := get_parent()
+					var monster_id := String(owner.get("monster_type")) if owner != null else ""
+					var variant := String(owner.get_meta("visual_variant","normal")) if owner != null else ""
+					var metrics = battle.get("run_metrics")
+					var elapsed := float(metrics.get("elapsed_seconds")) if metrics != null else 0.0
+					print("[HeroPerf] visual_first_build_ms=%.2f elapsed=%.1f monster=%s variant=%s" % [
+						build_ms,elapsed,monster_id,variant
+					])
 
 	if not built.has_animation(&"idle"):
 		return false
