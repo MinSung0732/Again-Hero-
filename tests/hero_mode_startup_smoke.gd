@@ -57,6 +57,12 @@ func run() -> void:
 	if equipped != null and not equipped.weapon_ids.is_empty():
 		check(String(equipped.weapon_ids[0]) == "ranged_rookie_arcane_bolt" and int(equipped.levels.get("ranged_rookie_arcane_bolt",0)) == 1, "apprentice starter receives level one")
 		check(equipped.ensure_starting_weapon() and equipped.weapon_ids.size() == 1, "rechecking starter does not duplicate inventory")
+	# Simulate the exact failure: Battle created the Hero but its weapon runtime is missing.
+	scene.battle.hero.player_weapons = null
+	check(scene._ensure_battle_starting_weapon(), "HeroMode recovers a missing weapon runtime")
+	equipped = scene.battle.hero.player_weapons
+	check(equipped != null and equipped.weapon_ids == ["ranged_rookie_arcane_bolt"] and int(equipped.levels.get("ranged_rookie_arcane_bolt",0)) == 1, "recovered runtime owns its level-one starter")
+	check(scene._ensure_battle_starting_weapon() and equipped.weapon_ids.size() == 1, "recovery is idempotent")
 	check(scene.get_node("HeroHUD") != null and scene.weapon_buttons.size() == 6, "top HUD weapon slots")
 	check(scene.battle.current_stage_id == "stage_10" and String(scene.battle.current_hero_profile.id) == "ranged_rookie", "apprentice plays high-stage map without changing character")
 	var saved := ConfigFile.new(); SCOPE.load_config(saved,"user://stage_progress.cfg")
