@@ -218,11 +218,25 @@ func _ensure_battle_starting_weapon() -> bool:
 		push_error("Hero mode battle hero missing for starter: "+player_hero_id)
 		return false
 	var weapons = battle.hero.player_weapons
+	# Battle should install this immediately after creating Hero. Recover a missing
+	# or interrupted runtime at the HeroMode boundary before allowing player input.
+	if weapons == null or (weapons.weapon_ids.is_empty() and weapons.available_weapons.is_empty()):
+		var runtime_script := load("res://src/hero_mode/hero_weapon_runtime.gd") as Script
+		if runtime_script == null or not runtime_script.can_instantiate():
+			push_error("Hero weapon runtime script failed to load: "+player_hero_id)
+			return false
+		weapons = runtime_script.new()
+		battle.hero.player_weapons = weapons
+		weapons.install(battle.hero,STORE.augment_reroll_bonus(),
+			battle.current_hero_profile.get("hero_research_bonuses",{}))
 	if weapons == null:
-		push_error("Hero mode weapon runtime was not created: "+player_hero_id)
+		push_error("Hero mode weapon runtime could not be initialized: "+player_hero_id)
 		return false
 	if not weapons.ensure_starting_weapon():
-		push_error("Hero mode has no starting weapon: "+player_hero_id)
+		push_error("Hero mode has no starting weapon: "+player_hero_id+
+			" (actual hero="+String(battle.hero.hero_id)+
+			", pool="+str(weapons.available_weapons.size())+
+			", existing="+str(weapons.weapon_ids.size())+")")
 		return false
 	return true
 
