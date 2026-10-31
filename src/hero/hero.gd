@@ -3364,6 +3364,7 @@ func _update_facing_from_horizontal(horizontal_speed: float, delta: float) -> vo
 
 	hero_sprite.flip_h = desired_sign < 0
 	_apply_stage7_sprite_anchor()
+	_apply_stage8_sprite_anchor()
 	_apply_stage9_sprite_anchor()
 	facing_candidate_sign = 0
 	facing_candidate_timer = 0.0
@@ -3374,6 +3375,7 @@ func _face_attack_direction(horizontal_direction: float) -> void:
 
 	hero_sprite.flip_h = horizontal_direction < 0.0
 	_apply_stage7_sprite_anchor()
+	_apply_stage8_sprite_anchor()
 	_apply_stage9_sprite_anchor()
 	facing_candidate_sign = 0
 	facing_candidate_timer = 0.0
