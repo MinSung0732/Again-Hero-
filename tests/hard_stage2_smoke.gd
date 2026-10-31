@@ -35,12 +35,23 @@ func run() -> void:
 	root.add_child(battle)
 	var hero = battle.hero
 	check(battle.current_stage_id == "stage_2" and hero.hero_id == "swift_hunter", "stage2 rogue selected")
+	# Regression: Stage 2 easy used to stall completely after hard archetype edits.
+	# Rogue's own physics tick must advance both the passive gauge and AI timers.
+	var easy_charge := hero.ultimate_charge
+	hero.attack_timer = 1.0
+	hero._physics_process_rogue(0.2)
+	check(hero.ultimate_charge > easy_charge, "easy rogue passive gauge advances")
+	check(hero.attack_timer < 1.0, "easy rogue AI attack timer advances")
+	check(not hero.hard_stage2_enabled and hero.hard_stage2_weakness_timer == 0.0, "easy rogue has no hard-only locks")
 	var starting_hp: int = hero.max_hp
 	var starting_damage: int = hero.attack_damage
 	var starting_move_speed: float = hero.move_speed
 	var starting_attack_interval: float = hero.attack_cooldown
 	battle.configure_campaign_difficulty("hard")
 	check(battle.campaign_difficulty == "hard" and hero.hard_stage2_enabled, "hard rogue configured")
+	var hard_charge := hero.ultimate_charge
+	hero._physics_process_rogue(0.2)
+	check(hero.ultimate_charge > hard_charge, "hard rogue passive gauge advances")
 	check(hero.max_hp == roundi(starting_hp * 1.88), "stage2 hp x1.88")
 	check(hero.attack_damage == roundi(starting_damage * 1.88), "stage2 attack x1.88")
 	check(is_equal_approx(hero.move_speed, starting_move_speed * 1.10), "stage2 move x1.10")
@@ -77,6 +88,7 @@ func run() -> void:
 	hero._end_rogue_assassination()
 	check(not hero.rogue_assassination_active and hero.hard_stage2_weakness_timer > 0.0, "assassination end starts weakness")
 	check(hero.damage_taken_increase_ratio >= float(HARD.STAGE_2.weakness_damage_taken_increase), "weakness adds incoming damage")
+	check(is_equal_approx(hero._get_effective_move_multiplier(), float(HARD.STAGE_2.weakness_move_speed_multiplier)), "weakness slows rogue movement")
 	check(not hero._rogue_can_start_assassination() and not hero._rogue_should_use_slash(), "dash and slash locked during weakness")
 	hero._start_rogue_assassination()
 	check(not hero.rogue_assassination_active, "weakness rejects direct ability trigger")

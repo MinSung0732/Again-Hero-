@@ -877,6 +877,7 @@ var hard_stage2_enabled := false
 var hard_stage2_awakened := false
 var hard_stage2_weakness_timer := 0.0
 var hard_stage2_marked_target: Node2D = null
+var hard_stage2_assassination_seen := false
 var hard_regeneration_multiplier := 1.0
 var retarget_timer: float = 0.0
 var hit_flash_timer: float = 0.0
@@ -1011,6 +1012,7 @@ func configure_profile(profile: Dictionary) -> void:
 	hard_stage2_awakened = false
 	hard_stage2_weakness_timer = 0.0
 	hard_stage2_marked_target = null
+	hard_stage2_assassination_seen = false
 	hard_regeneration_multiplier = 1.0
 	current_exp = 0
 	status_resistances.clear()
@@ -2825,7 +2827,12 @@ func _rogue_can_start_assassination() -> bool:
 	return _rogue_archetype()._rogue_can_start_assassination()
 
 func _start_rogue_assassination() -> void:
+	if hard_stage2_weakness_timer > 0.0:
+		return
 	_rogue_archetype()._start_rogue_assassination()
+	if hard_stage2_awakened and rogue_assassination_active:
+		rogue_assassination_hits_left += int(HARD_CAMPAIGN.STAGE_2.extra_assassination_hits)
+		hard_stage2_assassination_seen = true
 
 func _update_rogue_assassination(delta: float) -> void:
 	_rogue_archetype()._update_rogue_assassination(delta)
@@ -2834,7 +2841,11 @@ func _find_rogue_assassination_target() -> Node2D:
 	return _rogue_archetype()._find_rogue_assassination_target()
 
 func _end_rogue_assassination() -> void:
+	var was_active := rogue_assassination_active
 	_rogue_archetype()._end_rogue_assassination()
+	if was_active and hard_stage2_awakened:
+		hard_stage2_assassination_seen = false
+		begin_hard_stage2_weakness()
 
 func _play_rogue_effect(
 	effect_sprite: AnimatedSprite2D,
@@ -4646,6 +4657,7 @@ func configure_hard_stage2(regeneration_multiplier: float) -> void:
 	hard_stage2_awakened = false
 	hard_stage2_weakness_timer = 0.0
 	hard_stage2_marked_target = null
+	hard_stage2_assassination_seen = false
 	hard_regeneration_multiplier = maxf(regeneration_multiplier, 1.0)
 
 
@@ -4653,6 +4665,8 @@ func activate_hard_stage2() -> bool:
 	if not hard_stage2_enabled or hard_stage2_awakened or is_dying or current_hp <= 0:
 		return false
 	hard_stage2_awakened = true
+	# Each new assassination gets +2 hard hits without changing
+	# the rogue's original augment-stack value.
 	queue_redraw()
 	return true
 
@@ -4662,6 +4676,10 @@ func begin_hard_stage2_weakness() -> void:
 		return
 	hard_stage2_marked_target = null
 	hard_stage2_weakness_timer = float(HARD_CAMPAIGN.STAGE_2.weakness_seconds)
+	# Existing rogue skills check silence_timer for eligibility. This
+	# hard-only temporary lock leaves their original AI logic untouched.
+	silence_timer = maxf(silence_timer, hard_stage2_weakness_timer)
+	set_meta("silence_active", silence_timer > 0.0)
 	apply_damage_taken_increase(
 		hard_stage2_weakness_timer,
 		float(HARD_CAMPAIGN.STAGE_2.weakness_damage_taken_increase)
@@ -4675,11 +4693,29 @@ func _update_hard_stage2(delta: float) -> void:
 	if hard_stage2_weakness_timer > 0.0:
 		hard_stage2_weakness_timer = maxf(hard_stage2_weakness_timer - delta, 0.0)
 		queue_redraw()
-	if hard_stage2_marked_target != null:
-		if not is_instance_valid(hard_stage2_marked_target) or not rogue_assassination_active:
-			hard_stage2_marked_target = null
-		else:
+	if rogue_assassination_active:
+		if not hard_stage2_assassination_seen:
+			hard_stage2_assassination_seen = true
+			if hard_stage2_awakened:
+				rogue_assassination_hits_left += int(HARD_CAMPAIGN.STAGE_2.extra_assassination_hits)
+		# Mark the likely landing target on the final hit, without modifying
+		# the common rogue archetype used by the easy difficulty.
+		if hard_stage2_awakened and rogue_assassination_hits_left == 1:
+			if not is_instance_valid(hard_stage2_marked_target):
+				hard_stage2_marked_target = _find_rogue_assassination_target()
+				if is_instance_valid(hard_stage2_marked_target):
+					rogue_assassination_timer = maxf(
+						rogue_assassination_timer,
+						float(HARD_CAMPAIGN.STAGE_2.final_strike_warning_seconds)
+					)
 			queue_redraw()
+		else:
+			hard_stage2_marked_target = null
+	elif hard_stage2_assassination_seen:
+		hard_stage2_assassination_seen = false
+		begin_hard_stage2_weakness()
+	elif hard_stage2_marked_target != null:
+		hard_stage2_marked_target = null
 
 
 func _fire_projectile(current_target: Node2D) -> void:
@@ -5492,10 +5528,14 @@ func heal_direct(amount: int) -> int:
 
 
 func _get_common_attack_interval(base_interval: float) -> float:
-	return maxf(
-		base_interval / (1.0 + maxf(common_attack_speed_bonus, 0.0)),
-		0.06
-	)
+	var interval := base_interval
+	# Rogue basic combo has its own hit_intervals instead of attack_cooldown.
+	# Scale those only in demon Stage 2 hard, leaving easy and other skills intact.
+	if hard_stage2_enabled and hero_archetype == "rogue_combo":
+		var combo_intervals = rogue_combo_config.get("hit_intervals", [])
+		if combo_intervals is Array and not combo_intervals.is_empty():
+			interval /= float(HARD_CAMPAIGN.HERO_STATS.attack_speed_multiplier)
+	return maxf(interval / (1.0 + maxf(common_attack_speed_bonus, 0.0)), 0.06)
 
 
 func get_runtime_info_stats() -> Dictionary:
@@ -8326,6 +8366,8 @@ func _tick_fear_state(delta: float) -> bool:
 func _get_effective_move_multiplier() -> float:
 	var multiplier := move_multiplier * float(get_meta("yuki_slow_multiplier",1.0))
 	multiplier *= float(get_meta("field_move_multiplier",1.0))
+	if hard_stage2_weakness_timer > 0.0:
+		multiplier *= float(HARD_CAMPAIGN.STAGE_2.weakness_move_speed_multiplier)
 	if player_controlled:
 		multiplier = maxf(multiplier, PLAYER_CONTROL_POLICY.DATA.SLOW_SPEED_FLOOR)
 		if player_root_timer > 0.0: multiplier = minf(multiplier, player_root_multiplier)
