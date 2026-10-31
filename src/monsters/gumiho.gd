@@ -104,9 +104,14 @@ func try_cast_elite_skill(skill: Dictionary) -> bool:
 	if id == "elite_gumiho_transform":
 		if fox_remaining > 0.0: return false
 		fox_remaining = DATA.FOX_DURATION; quiet_time = 0.0; _set_fox(true); return true
-	if not is_instance_valid(hero) or int(hero.get("current_hp")) <= 0: return false
+	if not is_instance_valid(hero): return false
+	var target_hp = hero.get("current_hp")
+	if target_hp == null or int(target_hp) <= 0: return false
 	if id == "elite_gumiho_fear":
-		if bool(hero.get_meta("fear_active",false)) or float(hero.get("fear_immunity_timer")) > 0.0 or not hero.has_method("apply_fear"): return false
+		# Summons can be selected as combat targets but do not expose Hero fear fields.
+		if not hero.has_method("apply_fear"): return false
+		var immunity = hero.get("fear_immunity_timer")
+		if bool(hero.get_meta("fear_active",false)) or (immunity != null and float(immunity) > 0.0): return false
 		var previous = hero.get_meta("incoming_fear_immunity") if hero.has_meta("incoming_fear_immunity") else null
 		hero.set_meta("incoming_fear_immunity",DATA.FEAR_IMMUNITY)
 		hero.call("apply_fear",self,DATA.FEAR_DURATION,DATA.FEAR_SPEED)
