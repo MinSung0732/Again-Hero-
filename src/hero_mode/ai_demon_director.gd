@@ -91,13 +91,14 @@ func _prewarm_pending_recruits(elapsed: float) -> void:
 	var entry: Dictionary = prewarm_entries[prewarm_index]
 	if elapsed < float(entry.at)-RECRUIT_PREWARM_LEAD: return
 	var thread_path := String(entry.get("thread_path",""))
+	var threaded_scene: PackedScene # Keep a strong ref through warm_scenes().
 	if not thread_path.is_empty():
 		var status := ResourceLoader.load_threaded_get_status(thread_path)
 		if status == ResourceLoader.THREAD_LOAD_IN_PROGRESS and elapsed < float(entry.at):
 			return # A late worker may finish on the next tick; avoid a blocking get.
 		if status == ResourceLoader.THREAD_LOAD_LOADED:
 			# Retain the loaded resource until the normal scene cache pins it.
-			var threaded_scene := ResourceLoader.load_threaded_get(thread_path) as PackedScene
+			threaded_scene = ResourceLoader.load_threaded_get(thread_path) as PackedScene
 			if threaded_scene == null: push_warning("Hero recruit threaded scene missing: "+thread_path)
 	prewarm_index += 1
 	prewarm_next_at = elapsed+RECRUIT_PREWARM_INTERVAL
