@@ -37,7 +37,10 @@ func install(host) -> void:
 			if at not in reinforcement_times: reinforcement_times.append(at)
 	reinforcement_times.sort()
 	encounters = preload("res://src/hero_mode/hero_encounter_runtime.gd").new(); battle.add_child(encounters); encounters.install(battle)
+	var warm_started := Time.get_ticks_usec() if battle.combat_profile.enabled else 0
 	battle.set_allowed_monster_ids(roster)
+	if warm_started > 0:
+		print("[HeroPerf] initial_roster_warm_ms=%.2f roster=%d" % [float(Time.get_ticks_usec()-warm_started)/1000.0,roster.size()])
 func _observe() -> void:
 	preferred.clear()
 	plan = "탐색 공세 · 여러 역할로 압박"
@@ -72,9 +75,18 @@ func tick(delta: float) -> void:
 	if next_reinforcement < reinforcement_times.size() and elapsed >= reinforcement_times[next_reinforcement]:
 		while next_reinforcement < reinforcement_times.size() and elapsed >= reinforcement_times[next_reinforcement]:
 			next_reinforcement += 1
+		var roster_changed := false
 		for id in DATA.late_recruits(stage_number,battle.campaign_difficulty,elapsed):
-			if id not in roster: roster.append(id)
-		battle.set_allowed_monster_ids(roster)
+			if id not in roster:
+				roster.append(id)
+				roster_changed = true
+		if roster_changed:
+			var warm_started := Time.get_ticks_usec() if battle.combat_profile.enabled else 0
+			battle.set_allowed_monster_ids(roster)
+			if warm_started > 0:
+				print("[HeroPerf] reinforcement_warm_ms=%.2f elapsed=%.1f roster=%d" % [
+					float(Time.get_ticks_usec()-warm_started)/1000.0,elapsed,roster.size()
+				])
 	var phase: Dictionary = DATA.phase_at(elapsed)
 	battle.command_regen_per_second = float(phase.regen)*pressure*supply_scale
 	special_retry = maxf(0.0,special_retry-delta)

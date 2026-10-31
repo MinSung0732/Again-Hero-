@@ -27,6 +27,18 @@ var inventory_dim: ColorRect
 var overlay_default_style: StyleBox
 signal presentation_prepared
 signal entry_started
+# Stage-1 opt-in performance diagnostics. No sampling work in normal play.
+const PERF_SAMPLE_LIMIT := 256
+const PERF_SLOW_FRAME_MS := 50.0
+const PERF_LOG_COOLDOWN_MS := 2000
+@export var performance_capture_enabled := false
+var performance_frame_samples := PackedFloat32Array()
+var performance_frame_count := 0
+var performance_slow_frames := 0
+var performance_max_frame_ms := 0.0
+var performance_last_log_ms := -PERF_LOG_COOLDOWN_MS
+var performance_log_count := 0
+var performance_reported := false
 var presentation_ready := false
 var presentation_preparing := false
 var entry_ready := false
@@ -164,6 +176,9 @@ func _create_battle() -> void:
 	viewport.handle_input_locally = false
 	view.add_child(viewport)
 	battle = BATTLE_SCENE.instantiate()
+	if performance_capture_enabled:
+		performance_frame_samples.resize(PERF_SAMPLE_LIMIT)
+		battle.combat_profiling_enabled = true
 	battle.campaign_difficulty = run_difficulty
 	battle.hero_player_mode = true; battle.hero_player_stage = stage; battle.hero_player_hero_id = player_hero_id
 	pad.input_surface = view
@@ -260,6 +275,8 @@ func _show_blocked(message: String) -> void:
 	_clear_overlay(); _label(overlay_rows,message,30); _button("로비로",_leave)
 func _process(delta: float) -> void:
 	if not is_instance_valid(battle): return
+	if performance_capture_enabled and entry_ready and not (paused or choosing or rolling or battle.battle_over):
+		_capture_performance_frame(delta)
 	if STORE.owner() != initial_owner:
 		account_invalid = true
 		battle.set_external_pause(true); pad.enabled = false; pad.reset(); _show_blocked("계정이 변경되었습니다. 로비로 돌아가세요.")
@@ -272,6 +289,43 @@ func _process(delta: float) -> void:
 		director.tick(delta)
 	hud_remaining -= delta
 	if hud_remaining <= 0.0: hud_remaining = 0.25; _refresh_hud()
+
+func _capture_performance_frame(delta: float) -> void:
+	var frame_ms := delta*1000.0
+	performance_frame_samples[performance_frame_count%PERF_SAMPLE_LIMIT] = frame_ms
+	performance_frame_count += 1
+	if frame_ms < PERF_SLOW_FRAME_MS: return
+	performance_slow_frames += 1
+	performance_max_frame_ms = maxf(performance_max_frame_ms,frame_ms)
+	var now := Time.get_ticks_msec()
+	if performance_log_count >= 12 or now-performance_last_log_ms < PERF_LOG_COOLDOWN_MS: return
+	performance_log_count += 1
+	performance_last_log_ms = now
+	print("[HeroPerf] slow_frame_ms=%.1f elapsed=%.1f active_monsters=%d cached_scenes=%d" % [
+		frame_ms,float(battle.run_metrics.elapsed_seconds),battle.active_monsters.size(),DATA.MONSTERS.scene_cache.size()
+	])
+
+func _report_performance() -> void:
+	if not performance_capture_enabled or performance_reported or not is_instance_valid(battle): return
+	performance_reported = true
+	var samples := performance_frame_samples.slice(0,mini(PERF_SAMPLE_LIMIT,performance_frame_count))
+	samples.sort()
+	var p95 := float(samples[clampi(ceili(samples.size()*0.95)-1,0,samples.size()-1)]) if not samples.is_empty() else 0.0
+	var report: Dictionary = battle.combat_profile.report()
+	var measured: Dictionary = report.get("scopes",{})
+	var sections := {}
+	for name in ["battle_process","hero_physics","weapon_tick","monster_base_physics","monster_move_and_slide","monster_separation","grid_rebuild","spatial_query"]:
+		var scope: Dictionary = measured.get(name,{})
+		sections[name] = {"p95_us":scope.get("p95_us",0),"max_us":scope.get("max_us",0),"calls":scope.get("calls",0)}
+	print("[HeroPerf] summary "+JSON.stringify({
+		"stage":stage,"hero":player_hero_id,"slow_frames":performance_slow_frames,
+		"peak_frame_ms":performance_max_frame_ms,"recent_p95_frame_ms":p95,"scopes":sections
+	}))
+	battle.combat_profile.stop()
+
+func _exit_tree() -> void:
+	_report_performance()
+
 func _refresh_hud() -> void:
 	if not is_instance_valid(battle) or not is_instance_valid(battle.hero): return
 	var hero = battle.hero
@@ -399,6 +453,7 @@ func _earned_exp() -> int:
 		total += int(hero._required_exp_for_level(level))
 	return total
 func _on_finished(message: String,won: bool) -> void:
+	_report_performance()
 	if roulette_tween != null: roulette_tween.kill()
 	rolling = false; pending_chests = 0; paused = false
 	$HeroBGMManager.stop_bgm()
