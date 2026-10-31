@@ -1,18 +1,21 @@
 extends RefCounted
-const AREA_FILL_ALPHA := 0.10
-const EFFECT_ALPHA := 0.8
-const SHAPE_FILL_ALPHA := 0.13
-const ORBIT_FILL_ALPHA := 0.14
+# Default 0% transparency means full-strength art, not an additional .75/.85 tint.
+const AREA_FILL_ALPHA := 0.26
+const EFFECT_ALPHA := 1.0
+const SHAPE_FILL_ALPHA := 0.34
+const ORBIT_FILL_ALPHA := 0.30
 const OUTLINE_WIDTH := 3.0
-const CHAIN_LINE_ALPHA := 0.25
+const CHAIN_LINE_ALPHA := 0.62
 const CHAIN_FALLBACK_WIDTH := 5.0
-const BOLT_LINE_ALPHA := 0.3
+const BOLT_LINE_ALPHA := 0.70
 const BOLT_RADIUS := 12.0
 const CHAIN_DRAW_WIDTH := 32.0
-const AREA_TEXTURE_ALPHA := 0.75
-const BEAM_TEXTURE_ALPHA := 0.85
+const AREA_TEXTURE_ALPHA := 1.0
+const BEAM_TEXTURE_ALPHA := 1.0
+const RANGE_GUIDE_ALPHA := 0.96
+const RANGE_GUIDE_WIDTH := 3.0
 const ORBIT_TEXTURE_MAX_EXTENT := 18.0
-## Weapons with authored art show the art as the hit area: no fill, only a faint edge guide.
+## Authored art stays opaque; the optional hit-area outline is independent of it.
 ## Effect frames use about this share of their square, so the art is scaled until its
 ## visible content matches the real hit circle instead of the old inscribed sqrt(2) square.
 const AREA_ART_COVERAGE := 0.68

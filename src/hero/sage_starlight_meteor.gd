@@ -195,8 +195,8 @@ func _draw() -> void:
 		0.0,
 		TAU,
 		48,
-		Color(0.90, 0.80, 1.0, lerpf(0.38, 0.86, progress)),
-		1.5,
+		Color(0.90, 0.80, 1.0, lerpf(0.72, 0.96, progress)),
+		3.0,
 		true
 	)
 

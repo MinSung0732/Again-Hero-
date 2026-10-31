@@ -26,7 +26,13 @@ func set_visual_settings(opacity: float, show_ranges: bool) -> void:
 			_apply_actor_visual_settings(actor)
 
 func _apply_actor_visual_settings(actor: CanvasItem) -> void:
-	actor.modulate.a = visual_opacity
+	# The parent draws hit-range guides. Fading its modulate would hide guides too.
+	actor.modulate.a = 1.0
+	var sprite: CanvasItem = actor.get_node_or_null("Visual") as CanvasItem
+	if is_instance_valid(sprite): sprite.modulate.a = visual_opacity
+	var particles: CanvasItem = actor.get_node_or_null("AttractionLayer") as CanvasItem
+	if is_instance_valid(particles): particles.modulate.a = visual_opacity
+	actor.set_meta("hero_effect_opacity",visual_opacity)
 	actor.set_meta("hero_attack_range_visible",attack_range_visible)
 	actor.queue_redraw()
 

@@ -88,6 +88,10 @@ func set_visual_settings(transparency_percent: float, show_ranges: bool) -> void
 func _fx_color(color: Color) -> Color:
 	return Color(color,color.a*effect_opacity)
 
+# Hit-area guides are independent of the effect alpha, including at 100% transparency.
+func _range_guide_color(color: Color) -> Color:
+	return Color(color,GEOMETRY.RANGE_GUIDE_ALPHA)
+
 func rerolls_remaining() -> int:
 	return maxi(0,reroll_limit-rerolls_used)
 
@@ -835,13 +839,14 @@ func draw() -> void:
 				hero.draw_set_transform(a,(b-a).angle())
 				if frames.is_empty():
 					hero.draw_colored_polygon(effect.shape,_fx_color(Color(color,ratio*GEOMETRY.SHAPE_FILL_ALPHA)))
-					if attack_range_visible: hero.draw_polyline(effect.shape,color,GEOMETRY.OUTLINE_WIDTH)
 				else:
-					if attack_range_visible: hero.draw_polyline(effect.shape,Color(color,ratio*GEOMETRY.ART_GUIDE_ALPHA),GEOMETRY.ART_GUIDE_WIDTH)
 					var texture: Texture2D = frames[mini(int((1-ratio)*frames.size()),frames.size()-1)]
 					var length := a.distance_to(b)
 					var rect := GEOMETRY.effect_texture_rect(String(effect.pattern),length,radius)
-					hero.draw_texture_rect(texture,rect,false,Color(1,1,1,ratio*GEOMETRY.BEAM_TEXTURE_ALPHA*effect_opacity))
+					hero.draw_texture_rect(texture,rect,false,Color(1,1,1,ratio*effect_opacity))
+				# Render the actual hit geometry on top of the art, not under it.
+				if attack_range_visible:
+					hero.draw_polyline(effect.shape,_range_guide_color(effect.color),GEOMETRY.RANGE_GUIDE_WIDTH)
 				hero.draw_set_transform(Vector2.ZERO)
 			"combo":
 				if not frames.is_empty():
@@ -864,9 +869,6 @@ func draw() -> void:
 				var outer := GEOMETRY.orbit_outer(radius,float(effect.orbit_ratio),float(effect.get("area_scale",1.0)))
 				if frames.is_empty():
 					hero.draw_arc(a,(inner+outer)*0.5,0,TAU,48,_fx_color(Color(color,ratio*GEOMETRY.ORBIT_FILL_ALPHA)),outer-inner)
-					if attack_range_visible:
-						hero.draw_arc(a,inner,0,TAU,48,color,GEOMETRY.OUTLINE_WIDTH)
-						hero.draw_arc(a,outer,0,TAU,48,color,GEOMETRY.OUTLINE_WIDTH)
 				for index in int(effect.orbit_count):
 					var angle := visual_clock*float(effect.orbit_speed)+index*TAU/float(effect.orbit_count)
 					var position := a+Vector2.from_angle(angle)*(inner+outer)*0.5
@@ -876,6 +878,9 @@ func draw() -> void:
 						hero.draw_texture_rect(_loop_frame(frames,visual_clock),Rect2(Vector2.ONE*-extent,Vector2.ONE*extent*2),false,Color(1,1,1,ratio*effect_opacity))
 						hero.draw_set_transform(Vector2.ZERO)
 					else: hero.draw_circle(position,extent,_fx_color(color))
+				if attack_range_visible:
+					hero.draw_arc(a,inner,0,TAU,48,_range_guide_color(effect.color),GEOMETRY.RANGE_GUIDE_WIDTH)
+					hero.draw_arc(a,outer,0,TAU,48,_range_guide_color(effect.color),GEOMETRY.RANGE_GUIDE_WIDTH)
 			_:
 				_draw_area(a,radius,Color(color,ratio),frames,1.0-ratio)
 
@@ -898,13 +903,13 @@ func _draw_area(center: Vector2, radius: float, color: Color, frames: Array, pro
 	if not frames.is_empty():
 		var texture: Texture2D = frames[mini(int(progress*frames.size()),frames.size()-1)]
 		var diameter := GEOMETRY.area_texture_extent(radius)
-		hero.draw_texture_rect(texture,Rect2(center-Vector2.ONE*diameter*0.5,Vector2.ONE*diameter),false,Color(1,1,1,color.a*GEOMETRY.AREA_TEXTURE_ALPHA*effect_opacity))
+		hero.draw_texture_rect(texture,Rect2(center-Vector2.ONE*diameter*0.5,Vector2.ONE*diameter),false,Color(1,1,1,color.a*effect_opacity))
 		if attack_range_visible:
-			hero.draw_arc(center,radius,0.0,TAU,48,Color(color,color.a*GEOMETRY.ART_GUIDE_ALPHA),GEOMETRY.ART_GUIDE_WIDTH)
+			hero.draw_arc(center,radius,0.0,TAU,48,_range_guide_color(color),GEOMETRY.RANGE_GUIDE_WIDTH)
 		return
 	hero.draw_circle(center,radius,_fx_color(Color(color,color.a*GEOMETRY.AREA_FILL_ALPHA)))
 	if attack_range_visible:
-		hero.draw_arc(center,radius,0.0,TAU,48,color,GEOMETRY.OUTLINE_WIDTH)
+		hero.draw_arc(center,radius,0.0,TAU,48,_range_guide_color(color),GEOMETRY.RANGE_GUIDE_WIDTH)
 
 func shield_amount(amount: float) -> float:
 	return amount*(1.0+float(research.get("shield",0)))

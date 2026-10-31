@@ -302,9 +302,9 @@ func _draw() -> void:
 	if not active:
 		return
 	if bool(get_meta("survival_geometry",false)):
-		draw_circle(Vector2.ZERO,effect_radius,Color(0.35,0.75,1.0,0.08))
+		draw_circle(Vector2.ZERO,effect_radius,Color(0.35,0.75,1.0,0.20*float(get_meta("hero_effect_opacity",1.0))))
 		if bool(get_meta("hero_attack_range_visible",true)):
-			draw_arc(Vector2.ZERO,collision_radius,0,TAU,32,Color(0.85,0.95,1,0.85),2.0)
+			draw_arc(Vector2.ZERO,collision_radius,0,TAU,32,Color(0.85,0.95,1,0.96),3.0)
 	if bool(get_meta("hero_attack_range_visible",true)):
 		draw_arc(
 			Vector2.ZERO,
@@ -312,8 +312,8 @@ func _draw() -> void:
 			0.0,
 			TAU,
 			64,
-			Color(0.45, 0.82, 1.0, 0.72),
-			1.5,
+			Color(0.45, 0.82, 1.0, 0.96),
+			3.0,
 			true
 		)
 

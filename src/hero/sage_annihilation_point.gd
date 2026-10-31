@@ -412,8 +412,8 @@ func _draw() -> void:
 			0.0,
 			TAU,
 			64,
-			Color(0.75, 0.64, 1.0, 0.72),
-			1.5,
+			Color(0.75, 0.64, 1.0, 0.96),
+			3.0,
 			true
 		)
 	if state == State.ACTIVE:
@@ -426,7 +426,7 @@ func _draw() -> void:
 				active_elapsed * (0.7 + float(ring_index) * 0.13),
 				active_elapsed * (0.7 + float(ring_index) * 0.13) + PI * pulse,
 				32,
-				Color(0.66, 0.52, 1.0, 0.18),
+				Color(0.66, 0.52, 1.0, 0.18*float(get_meta("hero_effect_opacity",1.0))),
 				1.0,
 				true
 			)

@@ -4,6 +4,7 @@ const SETTINGS := preload("res://src/ui/BattleSettings.tscn")
 const CONTROLS := preload("res://src/ui/hero_combat_visual_settings.gd")
 const WEAPON := preload("res://src/hero_mode/hero_weapon_runtime.gd")
 const NATIVE := preload("res://src/hero_mode/hero_weapon_native_runtime.gd")
+const GEOMETRY := preload("res://src/hero_mode/hero_weapon_geometry.gd")
 var checks := 0
 var failures := 0
 
@@ -46,16 +47,29 @@ func run() -> void:
 	weapons.native_skills = native
 	var actor := Area2D.new()
 	hero.add_child(actor)
+	var visual := Sprite2D.new()
+	visual.name = "Visual"
+	actor.add_child(visual)
+	var attraction := Node2D.new()
+	attraction.name = "AttractionLayer"
+	actor.add_child(attraction)
 	native.actors_by_pattern["meteor"] = [actor]
 	weapons.set_visual_settings(25.0,false)
 	check(is_equal_approx(weapons.effect_opacity,0.75),"25 percent transparency means 75 percent opacity")
 	check(not weapons.attack_range_visible,"attack range guides disabled")
 	check(is_equal_approx(weapons._fx_color(Color(1,1,1,0.4)).a,0.3),"source color alpha remains proportional")
-	check(is_equal_approx(actor.modulate.a,0.75) and not actor.get_meta("hero_attack_range_visible",true),"native effects inherit both preferences")
+	check(is_equal_approx(visual.modulate.a,0.75) and is_equal_approx(attraction.modulate.a,0.75),"native art and particles receive the transparency")
+	check(is_equal_approx(actor.modulate.a,1.0) and not actor.get_meta("hero_attack_range_visible",true),"native parent stays opaque for independent guides")
 	weapons.set_visual_settings(100.0,true)
-	check(is_zero_approx(actor.modulate.a) and weapons.attack_range_visible,"100 percent hides effects without hiding guides")
+	check(is_zero_approx(visual.modulate.a) and is_zero_approx(attraction.modulate.a),"100 percent hides only native effect art")
+	check(is_equal_approx(actor.modulate.a,1.0) and actor.get_meta("hero_attack_range_visible",false),"native range parent remains visible at 100 percent")
+	check(is_equal_approx(weapons._range_guide_color(Color(0.2,0.8,1.0,0.01)).a,GEOMETRY.RANGE_GUIDE_ALPHA),"guides ignore effect opacity and authored alpha")
+	check(is_zero_approx(weapons._fx_color(Color(1,1,1,1)).a),"100 percent hides regular weapon effects")
 	weapons.set_visual_settings(-20.0,true)
-	check(is_equal_approx(weapons.effect_opacity,1.0) and is_equal_approx(actor.modulate.a,1.0),"transparency clamps to visible")
+	check(is_equal_approx(weapons.effect_opacity,1.0) and is_equal_approx(visual.modulate.a,1.0),"transparency clamps to original full brightness")
+	check(is_equal_approx(GEOMETRY.AREA_TEXTURE_ALPHA,1.0) and is_equal_approx(GEOMETRY.BEAM_TEXTURE_ALPHA,1.0),"zero transparency has no extra texture dimming")
+	check(is_equal_approx(weapons._fx_color(Color(1,1,1,1)).a,1.0),"regular visual fully opaque at zero transparency")
+	check(is_equal_approx(weapons._range_guide_color(Color.WHITE).a,GEOMETRY.RANGE_GUIDE_ALPHA),"range guides do not depend on effect alpha")
 	settings.queue_free()
 	hero.queue_free()
 	await process_frame
