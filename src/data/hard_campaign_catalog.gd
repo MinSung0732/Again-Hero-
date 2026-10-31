@@ -2,7 +2,7 @@ extends RefCounted
 class_name HardCampaignCatalog
 
 # Release hard mode one demon stage at a time; hero-perspective hard is separate.
-const RELEASED_DEMON_STAGES := ["stage_1"]
+const RELEASED_DEMON_STAGES := ["stage_1", "stage_2"]
 
 const HERO_STATS := {
 	"hp_multiplier": 1.88,
@@ -24,6 +24,9 @@ const ALL_CLEAR := {"gold": 3000, "demon_token": 100}
 const STAGE_1 := {
 	"hero_id": "ranged_rookie",
 	"awakening_hp_ratio": 0.50,
+	"awakening_method": "activate_hard_stage1",
+	"awakening_skill_id": "hard_stage1_overload",
+	"awakening_name": "마력 과부하",
 	"cutscene_texture_path": "res://assets/art/heroes/stage1_mage/cutscene/stage1_hero_cutscene.png",
 	"cutscene_hold_seconds": 1.05,
 	"min_projectiles": 3,
@@ -32,6 +35,31 @@ const STAGE_1 := {
 	"weakness_seconds": 2.00,
 	"weakness_damage_taken_increase": 0.20,
 }
+
+const STAGE_2 := {
+	"hero_id": "swift_hunter",
+	"awakening_hp_ratio": 0.50,
+	"awakening_method": "activate_hard_stage2",
+	"awakening_skill_id": "hard_stage2_shadow_hunt",
+	"awakening_name": "그림자 사냥",
+	"cutscene_texture_path": "res://assets/art/heroes/stage2_rogue/cutscene/stage2_hero_cutscene.png",
+	"cutscene_hold_seconds": 1.05,
+	"extra_assassination_hits": 2,
+	"final_strike_warning_seconds": 0.45,
+	"weakness_seconds": 1.80,
+	"weakness_damage_taken_increase": 0.20,
+	"weakness_move_speed_multiplier": 0.55,
+	"final_strike_mark_radius": 62.0,
+}
+
+static func awakening_for(stage_id: String) -> Dictionary:
+	match stage_id:
+		"stage_1":
+			return STAGE_1
+		"stage_2":
+			return STAGE_2
+	return {}
+
 
 static func demon_stage_available(stage_id: String) -> bool:
 	return stage_id in RELEASED_DEMON_STAGES

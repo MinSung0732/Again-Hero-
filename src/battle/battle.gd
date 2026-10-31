@@ -3058,18 +3058,21 @@ func _get_monster_name(monster_type: String) -> String:
 func _on_hero_health_changed(current_hp: int, max_hp_value: int) -> void:
 	run_metrics.record_hero_hp(current_hp, max_hp_value)
 	stats_changed.emit(current_hp, max_hp_value, monsters_alive)
-	if (
-		campaign_difficulty == "hard"
-		and current_stage_id == "stage_1"
-		and not battle_over
-		and current_hp > 0
-		and max_hp_value > 0
-		and float(current_hp) / float(max_hp_value) <= float(HARD.STAGE_1.awakening_hp_ratio)
-		and is_instance_valid(hero)
-		and hero.has_method("activate_hard_stage1")
-		and bool(hero.call("activate_hard_stage1"))
-	):
-		conditional_skill_unlocked.emit("hard_stage1_overload", "마력 과부하", HARD.STAGE_1.duplicate(true))
+	if campaign_difficulty != "hard" or battle_over or current_hp <= 0 or max_hp_value <= 0:
+		return
+	var awakening := HARD.awakening_for(current_stage_id)
+	if awakening.is_empty() or not is_instance_valid(hero):
+		return
+	var threshold := float(awakening.get("awakening_hp_ratio", 0.0))
+	if threshold <= 0.0 or float(current_hp) / float(max_hp_value) > threshold:
+		return
+	var activation := String(awakening.get("awakening_method", ""))
+	if not activation.is_empty() and hero.has_method(activation) and bool(hero.call(activation)):
+		conditional_skill_unlocked.emit(
+			String(awakening.get("awakening_skill_id", "")),
+			String(awakening.get("awakening_name", "")),
+			awakening.duplicate(true)
+		)
 
 func _on_hero_combat_damage_received(hp_damage: int) -> void:
 	if hp_damage <= 0:
@@ -6403,7 +6406,11 @@ func configure_campaign_difficulty(difficulty: String) -> void:
 		hero.base_attack_damage_for_level_growth *= float(HARD.HERO_STATS.damage_multiplier)
 		hero.move_speed *= float(HARD.HERO_STATS.move_speed_multiplier)
 		hero.attack_cooldown = maxf(hero.attack_cooldown / float(HARD.HERO_STATS.attack_speed_multiplier), 0.06)
-		hero.call("configure_hard_stage1", float(HARD.HERO_STATS.regeneration_multiplier))
+		match current_stage_id:
+			"stage_1":
+				hero.call("configure_hard_stage1", float(HARD.HERO_STATS.regeneration_multiplier))
+			"stage_2":
+				hero.call("configure_hard_stage2", float(HARD.HERO_STATS.regeneration_multiplier))
 		hero.health_changed.emit(hero.current_hp, hero.max_hp)
 		run_metrics.reset(run_time_limit_seconds, hero.current_hp, hero.max_hp)
 

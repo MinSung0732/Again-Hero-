@@ -93,6 +93,8 @@ func _physics_process_rogue(delta: float) -> void:
 
 	var distance := hero.global_position.distance_to(hero.target.global_position)
 	var speed_scale := 1.0
+	if hero.hard_stage2_weakness_timer > 0.0:
+		speed_scale *= float(hero.HARD_CAMPAIGN.STAGE_2.weakness_move_speed_multiplier)
 	if hero.rogue_slash_active:
 		speed_scale = clampf(
 			float(
@@ -103,7 +105,7 @@ func _physics_process_rogue(delta: float) -> void:
 			),
 			0.1,
 			1.0
-		)
+		) * speed_scale
 
 	var move_direction := hero._choose_melee_spacing_direction(
 		hero.target,
@@ -341,7 +343,8 @@ func _rogue_combo_attack(current_target: Node2D) -> void:
 		[0.24, 0.26, 0.28, 0.30]
 	)
 	var interval := hero.attack_cooldown
-	if typeof(hit_intervals) == TYPE_ARRAY and not hit_intervals.is_empty():
+	var has_profile_intervals := typeof(hit_intervals) == TYPE_ARRAY and not hit_intervals.is_empty()
+	if has_profile_intervals:
 		var interval_index := mini(
 			hero.rogue_combo_index,
 			hit_intervals.size() - 1
@@ -361,6 +364,10 @@ func _rogue_combo_attack(current_target: Node2D) -> void:
 		)
 		interval *= hero.rogue_combo_recovery_multiplier
 
+	# Rogue profile hit intervals/finisher do not use attack_cooldown.
+	# Apply hard basic attack speed there, without double-scaling the fallback.
+	if hero.hard_stage2_enabled and (has_profile_intervals or is_finisher):
+		interval /= float(hero.HARD_CAMPAIGN.HERO_STATS.attack_speed_multiplier)
 	interval = hero._get_common_attack_interval(interval)
 	hero.attack_timer = maxf(interval, 0.08)
 	hero.rogue_combo_index = (hero.rogue_combo_index + 1) % combo_length
@@ -479,7 +486,7 @@ func _rogue_apply_knockback(
 
 
 func _rogue_should_use_slash() -> bool:
-	if hero.silence_timer > 0.0:
+	if hero.silence_timer > 0.0 or hero.hard_stage2_weakness_timer > 0.0:
 		return false
 	if hero.rogue_slash_config.is_empty():
 		return false
@@ -507,7 +514,7 @@ func _rogue_should_use_slash() -> bool:
 
 
 func _start_rogue_slash() -> void:
-	if hero.silence_timer > 0.0:
+	if hero.silence_timer > 0.0 or hero.hard_stage2_weakness_timer > 0.0:
 		return
 	hero.rogue_combo_index = 0
 	hero.rogue_slash_active = true
@@ -624,7 +631,7 @@ func _apply_rogue_slash_tick() -> void:
 
 
 func _rogue_can_start_assassination() -> bool:
-	if hero.silence_timer > 0.0:
+	if hero.silence_timer > 0.0 or hero.hard_stage2_weakness_timer > 0.0:
 		return false
 	if hero.ultimate_config.is_empty():
 		return false
@@ -642,13 +649,15 @@ func _rogue_can_start_assassination() -> bool:
 
 
 func _start_rogue_assassination() -> void:
-	if hero.silence_timer > 0.0:
+	if hero.silence_timer > 0.0 or hero.hard_stage2_weakness_timer > 0.0:
 		return
+	hero.hard_stage2_marked_target = null
 	hero.rogue_combo_index = 0
 	hero.rogue_assassination_active = true
 	hero.rogue_assassination_hits_left = maxi(
 		int(hero.ultimate_config.get("hit_count", 5))
-		+ hero.rogue_assassination_hit_bonus,
+		+ hero.rogue_assassination_hit_bonus
+		+ (int(hero.HARD_CAMPAIGN.STAGE_2.extra_assassination_hits) if hero.hard_stage2_awakened else 0),
 		1
 	)
 	hero.rogue_assassination_cast_timer = maxf(
@@ -688,7 +697,22 @@ func _update_rogue_assassination(delta: float) -> void:
 	if hero.rogue_assassination_timer > 0.0:
 		return
 
-	var current_target := _find_rogue_assassination_target()
+	var current_target: Node2D = null
+	if hero.hard_stage2_awakened and hero.rogue_assassination_hits_left == 1:
+		# The announced final target is locked: killing or outrunning it
+		# counters the finishing strike instead of silently retargeting.
+		var announced := hero.hard_stage2_marked_target
+		var max_distance := maxf(float(hero.ultimate_config.get("target_radius", 520.0)), 1.0)
+		if (
+			not is_instance_valid(announced)
+			or not hero.HERO_TARGET_POLICY.is_detectable(announced)
+			or hero.global_position.distance_squared_to(announced.global_position) > max_distance * max_distance
+		):
+			_end_rogue_assassination()
+			return
+		current_target = announced
+	else:
+		current_target = _find_rogue_assassination_target()
 	if current_target == null:
 		_end_rogue_assassination()
 		return
@@ -862,6 +886,15 @@ func _update_rogue_assassination(delta: float) -> void:
 		float(hero.ultimate_config.get("hit_interval", 0.18)),
 		0.08
 	)
+	if hero.hard_stage2_awakened and hero.rogue_assassination_hits_left == 1:
+		# Telegraph the next (last) teleport before locking the target.
+		hero.hard_stage2_marked_target = _find_rogue_assassination_target()
+		if is_instance_valid(hero.hard_stage2_marked_target):
+			hero.rogue_assassination_timer = maxf(
+				hero.rogue_assassination_timer,
+				float(hero.HARD_CAMPAIGN.STAGE_2.final_strike_warning_seconds)
+			)
+			hero.queue_redraw()
 
 
 func _find_rogue_assassination_target() -> Node2D:
@@ -914,12 +947,16 @@ func _find_rogue_assassination_target() -> Node2D:
 
 
 func _end_rogue_assassination() -> void:
+	var was_active := hero.rogue_assassination_active
+	hero.hard_stage2_marked_target = null
 	hero.rogue_assassination_active = false
 	hero.rogue_assassination_hits_left = 0
 	hero.rogue_assassination_timer = 0.0
 	hero.rogue_assassination_cast_timer = 0.0
 	hero.modulate.a = 1.0
 	hero.channel_effect.visible = false
+	if was_active:
+		hero.begin_hard_stage2_weakness()
 	hero.queue_redraw()
 
 

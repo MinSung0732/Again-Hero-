@@ -873,6 +873,10 @@ var hard_stage1_attack_count := 0
 var hard_stage1_windup_timer := 0.0
 var hard_stage1_weakness_timer := 0.0
 var hard_stage1_piercer_direction := Vector2.RIGHT
+var hard_stage2_enabled := false
+var hard_stage2_awakened := false
+var hard_stage2_weakness_timer := 0.0
+var hard_stage2_marked_target: Node2D = null
 var hard_regeneration_multiplier := 1.0
 var retarget_timer: float = 0.0
 var hit_flash_timer: float = 0.0
@@ -1003,6 +1007,10 @@ func configure_profile(profile: Dictionary) -> void:
 	hard_stage1_attack_count = 0
 	hard_stage1_windup_timer = 0.0
 	hard_stage1_weakness_timer = 0.0
+	hard_stage2_enabled = false
+	hard_stage2_awakened = false
+	hard_stage2_weakness_timer = 0.0
+	hard_stage2_marked_target = null
 	hard_regeneration_multiplier = 1.0
 	current_exp = 0
 	status_resistances.clear()
@@ -1860,6 +1868,7 @@ func _physics_process(delta: float) -> void:
 func _physics_process_hero(delta: float) -> void:
 	player_moved_this_frame = false
 	_update_hard_stage1(delta)
+	_update_hard_stage2(delta)
 	if player_controlled:
 		player_control_policy.tick(delta)
 		player_root_timer = maxf(player_root_timer-delta,0.0)
@@ -4628,6 +4637,49 @@ func _update_hard_stage1(delta: float) -> void:
 		float(HARD_CAMPAIGN.STAGE_1.weakness_damage_taken_increase)
 	)
 	queue_redraw()
+
+
+func configure_hard_stage2(regeneration_multiplier: float) -> void:
+	if player_controlled or hero_id != String(HARD_CAMPAIGN.STAGE_2.hero_id):
+		return
+	hard_stage2_enabled = true
+	hard_stage2_awakened = false
+	hard_stage2_weakness_timer = 0.0
+	hard_stage2_marked_target = null
+	hard_regeneration_multiplier = maxf(regeneration_multiplier, 1.0)
+
+
+func activate_hard_stage2() -> bool:
+	if not hard_stage2_enabled or hard_stage2_awakened or is_dying or current_hp <= 0:
+		return false
+	hard_stage2_awakened = true
+	queue_redraw()
+	return true
+
+
+func begin_hard_stage2_weakness() -> void:
+	if not hard_stage2_awakened or current_hp <= 0 or is_dying:
+		return
+	hard_stage2_marked_target = null
+	hard_stage2_weakness_timer = float(HARD_CAMPAIGN.STAGE_2.weakness_seconds)
+	apply_damage_taken_increase(
+		hard_stage2_weakness_timer,
+		float(HARD_CAMPAIGN.STAGE_2.weakness_damage_taken_increase)
+	)
+	queue_redraw()
+
+
+func _update_hard_stage2(delta: float) -> void:
+	if not hard_stage2_enabled or delta <= 0.0 or is_dying or current_hp <= 0:
+		return
+	if hard_stage2_weakness_timer > 0.0:
+		hard_stage2_weakness_timer = maxf(hard_stage2_weakness_timer - delta, 0.0)
+		queue_redraw()
+	if hard_stage2_marked_target != null:
+		if not is_instance_valid(hard_stage2_marked_target) or not rogue_assassination_active:
+			hard_stage2_marked_target = null
+		else:
+			queue_redraw()
 
 
 func _fire_projectile(current_target: Node2D) -> void:
@@ -8949,6 +9001,18 @@ func _begin_death_sequence() -> void:
 	queue_free()
 
 func _draw() -> void:
+	if hard_stage2_awakened and not is_dying and is_instance_valid(hard_stage2_marked_target) and rogue_assassination_active:
+		var target_position := hard_stage2_marked_target.global_position
+		var landing_direction := global_position.direction_to(target_position)
+		if landing_direction.length_squared() <= 0.0:
+			landing_direction = Vector2.RIGHT
+		var landing_distance := maxf(float(ultimate_config.get("behind_offset", 54.0)), 0.0)
+		var mark_position := to_local(target_position + landing_direction * landing_distance)
+		var mark_radius := float(HARD_CAMPAIGN.STAGE_2.final_strike_mark_radius)
+		draw_arc(mark_position, mark_radius, 0.0, TAU, 40, Color(0.85, 0.30, 1.0, 0.84), 5.0)
+		draw_circle(mark_position, 11.0, Color(0.85, 0.30, 1.0, 0.48))
+	if hard_stage2_awakened and hard_stage2_weakness_timer > 0.0 and not is_dying:
+		draw_arc(Vector2.ZERO, 70.0, 0.0, TAU, 48, Color(0.85, 0.45, 1.0, 0.92), 5.0)
 	if hard_stage1_awakened and hard_stage1_windup_timer > 0.0:
 		var piercer_range := maxf(float(ultimate_config.get("projectile_range", 900.0)), 1.0)
 		var warning_end := hard_stage1_piercer_direction * piercer_range
