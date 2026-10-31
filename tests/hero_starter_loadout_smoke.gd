@@ -30,6 +30,12 @@ func run() -> void:
 		check(runtime.weapon_ids.size() == 1 and runtime.weapon_ids[0] == starter,hero_id+" has exactly its starter")
 		check(int(runtime.levels.get(starter,0)) == 1 and int(hero.build_counts.get(starter,0)) == 1,hero_id+" starter has rank one")
 		check(runtime.ensure_starting_weapon() and runtime.weapon_ids.size() == 1 and int(runtime.levels.get(starter,0)) == 1,hero_id+" repeated guard is idempotent")
+		# Visual settings may hide VFX/range guides, never the owned starter.
+		for transparency in [0.0,25.0,100.0]:
+			for guides in [true,false]:
+				runtime.set_visual_settings(transparency,guides)
+				check(runtime.weapon_ids.size() == 1 and runtime.weapon_ids[0] == starter and int(runtime.levels.get(starter,0)) == 1,hero_id+" starter survives visual setting change")
+				check(is_equal_approx(runtime.effect_opacity,1.0-transparency*0.01) and runtime.attack_range_visible == guides,hero_id+" visual preferences are independent")
 		hero.free()
 	print("HERO_STARTER checks=%d failures=%d" % [checks,failures])
 	quit(1 if failures else 0)
