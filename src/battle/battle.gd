@@ -6411,6 +6411,8 @@ func configure_campaign_difficulty(difficulty: String) -> void:
 				hero.call("configure_hard_stage1", float(HARD.HERO_STATS.regeneration_multiplier))
 			"stage_2":
 				hero.call("configure_hard_stage2", float(HARD.HERO_STATS.regeneration_multiplier))
+			"stage_3":
+				hero.call("configure_hard_stage3", float(HARD.HERO_STATS.regeneration_multiplier))
 		hero.health_changed.emit(hero.current_hp, hero.max_hp)
 		run_metrics.reset(run_time_limit_seconds, hero.current_hp, hero.max_hp)
 

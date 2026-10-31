@@ -28,7 +28,7 @@ func run() -> void:
 	check(SCOPE.save_config(cfg, PROGRESS.SAVE_PATH) == OK, "easy stage1 fixture saved")
 	check(GATE.difficulty_available("hard", "stage_1", "demon"), "stage1 hard available")
 	check(GATE.difficulty_available("hard", "stage_2", "demon"), "stage2 hard released")
-	check(not GATE.difficulty_available("hard", "stage_3", "demon"), "stage3 hard remains locked")
+	check(GATE.difficulty_available("hard", "stage_3", "demon"), "stage3 hard released")
 	check(not GATE.difficulty_available("hard", "stage_1", "hero"), "hero hard remains locked")
 	check(MAIN.should_skip_entry_dialogue("hard", false, "stage_1", "stage_1"), "hard first entry skips story dialogue")
 	check(MAIN.should_skip_entry_dialogue("hard", false, "stage_2", "stage_1"), "hard skip independent of retry flag")

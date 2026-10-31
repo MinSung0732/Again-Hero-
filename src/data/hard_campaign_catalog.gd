@@ -2,7 +2,7 @@ extends RefCounted
 class_name HardCampaignCatalog
 
 # Release hard mode one demon stage at a time; hero-perspective hard is separate.
-const RELEASED_DEMON_STAGES := ["stage_1", "stage_2"]
+const RELEASED_DEMON_STAGES := ["stage_1", "stage_2", "stage_3"]
 
 const HERO_STATS := {
 	"hp_multiplier": 1.88,
@@ -52,12 +52,34 @@ const STAGE_2 := {
 	"final_strike_mark_radius": 62.0,
 }
 
+const STAGE_3 := {
+	"hero_id": "sword_shield_hero",
+	"awakening_hp_ratio": 0.50,
+	"awakening_method": "activate_hard_stage3",
+	"awakening_skill_id": "hard_stage3_unyielding_guardian",
+	"awakening_name": "불굴의 수호자",
+	"cutscene_texture_path": "res://assets/art/heroes/stage3_fighter/cutscene/stage3_hero_cutscene.png",
+	"cutscene_hold_seconds": 1.05,
+	"guard_seconds": 4.0,
+	"front_damage_reduction": 0.50,
+	"counter_damage_ratio": 0.25,
+	"counter_range": 185.0,
+	"guard_move_multiplier": 0.70,
+	"rear_hit_threshold": 3,
+	"rear_dot_threshold": -0.35,
+	"recovery_seconds": 1.50,
+	"break_seconds": 2.0,
+	"break_damage_taken_increase": 0.20,
+}
+
 static func awakening_for(stage_id: String) -> Dictionary:
 	match stage_id:
 		"stage_1":
 			return STAGE_1
 		"stage_2":
 			return STAGE_2
+		"stage_3":
+			return STAGE_3
 	return {}
 
 

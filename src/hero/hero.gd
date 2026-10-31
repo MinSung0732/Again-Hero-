@@ -878,6 +878,13 @@ var hard_stage2_awakened := false
 var hard_stage2_weakness_timer := 0.0
 var hard_stage2_marked_target: Node2D = null
 var hard_stage2_assassination_seen := false
+var hard_stage3_enabled := false
+var hard_stage3_awakened := false
+var hard_stage3_guard_timer := 0.0
+var hard_stage3_recovery_timer := 0.0
+var hard_stage3_break_timer := 0.0
+var hard_stage3_rear_hits := 0
+var hard_stage3_facing_direction := Vector2.RIGHT
 var hard_regeneration_multiplier := 1.0
 var retarget_timer: float = 0.0
 var hit_flash_timer: float = 0.0
@@ -1013,6 +1020,13 @@ func configure_profile(profile: Dictionary) -> void:
 	hard_stage2_weakness_timer = 0.0
 	hard_stage2_marked_target = null
 	hard_stage2_assassination_seen = false
+	hard_stage3_enabled = false
+	hard_stage3_awakened = false
+	hard_stage3_guard_timer = 0.0
+	hard_stage3_recovery_timer = 0.0
+	hard_stage3_break_timer = 0.0
+	hard_stage3_rear_hits = 0
+	hard_stage3_facing_direction = Vector2.RIGHT
 	hard_regeneration_multiplier = 1.0
 	current_exp = 0
 	status_resistances.clear()
@@ -1871,6 +1885,7 @@ func _physics_process_hero(delta: float) -> void:
 	player_moved_this_frame = false
 	_update_hard_stage1(delta)
 	_update_hard_stage2(delta)
+	_update_hard_stage3(delta)
 	if player_controlled:
 		player_control_policy.tick(delta)
 		player_root_timer = maxf(player_root_timer-delta,0.0)
@@ -4716,6 +4731,81 @@ func _update_hard_stage2(delta: float) -> void:
 		begin_hard_stage2_weakness()
 	elif hard_stage2_marked_target != null:
 		hard_stage2_marked_target = null
+
+
+func configure_hard_stage3(regeneration_multiplier: float) -> void:
+	if player_controlled or hero_id != String(HARD_CAMPAIGN.STAGE_3.hero_id):
+		return
+	hard_stage3_enabled = true
+	hard_stage3_awakened = false
+	hard_stage3_guard_timer = 0.0
+	hard_stage3_recovery_timer = 0.0
+	hard_stage3_break_timer = 0.0
+	hard_stage3_rear_hits = 0
+	hard_stage3_facing_direction = Vector2.RIGHT
+	hard_regeneration_multiplier = maxf(regeneration_multiplier, 1.0)
+
+
+func activate_hard_stage3() -> bool:
+	if not hard_stage3_enabled or hard_stage3_awakened or is_dying or current_hp <= 0:
+		return false
+	hard_stage3_awakened = true
+	hard_stage3_guard_timer = float(HARD_CAMPAIGN.STAGE_3.guard_seconds)
+	hard_stage3_recovery_timer = 0.0
+	hard_stage3_break_timer = 0.0
+	hard_stage3_rear_hits = 0
+	hard_stage3_facing_direction = (
+		(target.global_position - global_position).normalized()
+		if is_instance_valid(target) and target.global_position.distance_squared_to(global_position) > 0.001
+		else (Vector2.LEFT if hero_sprite.flip_h else Vector2.RIGHT)
+	)
+	queue_redraw()
+	return true
+
+
+func _update_hard_stage3(delta: float) -> void:
+	if not hard_stage3_awakened or delta <= 0.0 or current_hp <= 0 or is_dying:
+		return
+	if hard_stage3_guard_timer <= 0.0 and hard_stage3_recovery_timer <= 0.0 and hard_stage3_break_timer <= 0.0:
+		return
+	hard_stage3_recovery_timer = maxf(hard_stage3_recovery_timer - delta, 0.0)
+	hard_stage3_break_timer = maxf(hard_stage3_break_timer - delta, 0.0)
+	if hard_stage3_guard_timer > 0.0:
+		hard_stage3_guard_timer = maxf(hard_stage3_guard_timer - delta, 0.0)
+		if hard_stage3_guard_timer <= 0.0:
+			hard_stage3_recovery_timer = float(HARD_CAMPAIGN.STAGE_3.recovery_seconds)
+	queue_redraw()
+
+
+func _hard_stage3_register_rear_hit() -> void:
+	if hard_stage3_guard_timer <= 0.0:
+		return
+	hard_stage3_rear_hits += 1
+	if hard_stage3_rear_hits < int(HARD_CAMPAIGN.STAGE_3.rear_hit_threshold):
+		queue_redraw()
+		return
+	# Only the hard-only stance collapses; original guard shield/augments survive.
+	hard_stage3_guard_timer = 0.0
+	hard_stage3_recovery_timer = 0.0
+	hard_stage3_break_timer = float(HARD_CAMPAIGN.STAGE_3.break_seconds)
+	apply_damage_taken_increase(
+		hard_stage3_break_timer,
+		float(HARD_CAMPAIGN.STAGE_3.break_damage_taken_increase)
+	)
+	queue_redraw()
+
+
+func _hard_stage3_counterattack(raw_damage: float, source: Node) -> void:
+	var monster: Node2D = source as Node2D
+	if not is_instance_valid(monster) or not monster.is_in_group("monsters"):
+		monster = target if is_instance_valid(target) and target.is_in_group("monsters") else null
+	if not is_instance_valid(monster) or not monster.has_method("take_damage"):
+		return
+	var max_range := float(HARD_CAMPAIGN.STAGE_3.counter_range)
+	if global_position.distance_squared_to(monster.global_position) > max_range * max_range:
+		return
+	var counter_damage := maxi(1, roundi(raw_damage * float(HARD_CAMPAIGN.STAGE_3.counter_damage_ratio)))
+	preload("res://src/systems/monster_hit_context.gd").hit(monster, counter_damage, "melee", self)
 
 
 func _fire_projectile(current_target: Node2D) -> void:
@@ -8368,6 +8458,8 @@ func _get_effective_move_multiplier() -> float:
 	multiplier *= float(get_meta("field_move_multiplier",1.0))
 	if hard_stage2_weakness_timer > 0.0:
 		multiplier *= float(HARD_CAMPAIGN.STAGE_2.weakness_move_speed_multiplier)
+	if hard_stage3_guard_timer > 0.0:
+		multiplier *= float(HARD_CAMPAIGN.STAGE_3.guard_move_multiplier)
 	if player_controlled:
 		multiplier = maxf(multiplier, PLAYER_CONTROL_POLICY.DATA.SLOW_SPEED_FLOOR)
 		if player_root_timer > 0.0: multiplier = minf(multiplier, player_root_multiplier)
@@ -8772,6 +8864,19 @@ func _take_damage_internal(
 		raw_damage *= player_weapons.damage_multiplier
 	var remaining_damage := raw_damage
 	var absorbed_damage := 0
+	var stage3_front_hit := false
+	var stage3_rear_hit := false
+	# Facing is locked at awakening, so flanking remains readable and fair.
+	# Status/DoT ticks and hits rejected by invulnerability cannot break posture.
+	if hard_stage3_guard_timer > 0.0 and grant_invulnerability and not damage_already_mitigated:
+		var attacker := source as Node2D
+		if is_instance_valid(attacker) and attacker.global_position.distance_squared_to(global_position) > 0.001:
+			var approach := attacker.global_position - global_position
+			var facing_dot := approach.normalized().dot(hard_stage3_facing_direction)
+			stage3_rear_hit = facing_dot <= float(HARD_CAMPAIGN.STAGE_3.rear_dot_threshold)
+			stage3_front_hit = facing_dot >= 0.0
+			if stage3_front_hit:
+				remaining_damage *= 1.0 - float(HARD_CAMPAIGN.STAGE_3.front_damage_reduction)
 
 	if not damage_already_mitigated and hero_archetype == "sword_shield" and fighter_guard_active:
 		fighter_guard_stored_damage += raw_damage
@@ -8811,6 +8916,10 @@ func _take_damage_internal(
 	var total_hit := absorbed_damage + applied_damage
 	if total_hit <= 0:
 		return false
+	if stage3_rear_hit:
+		_hard_stage3_register_rear_hit()
+	elif stage3_front_hit:
+		_hard_stage3_counterattack(raw_damage, source)
 
 	accepted_damage_hit.emit(source)
 	DAMAGE_NUMBERS.show(self, total_hit)
@@ -9043,6 +9152,16 @@ func _begin_death_sequence() -> void:
 	queue_free()
 
 func _draw() -> void:
+	if hard_stage3_guard_timer > 0.0 and not is_dying:
+		var front_angle := hard_stage3_facing_direction.angle()
+		draw_arc(Vector2.ZERO, 84.0, front_angle - PI * 0.5, front_angle + PI * 0.5, 24, Color(0.40, 0.85, 1.0, 0.90), 5.0)
+		var rear_edge := acos(float(HARD_CAMPAIGN.STAGE_3.rear_dot_threshold))
+		draw_arc(Vector2.ZERO, 84.0, front_angle + rear_edge, front_angle + TAU - rear_edge, 16, Color(1.0, 0.32, 0.21, 0.85), 5.0)
+		draw_line(Vector2.ZERO, hard_stage3_facing_direction * 90.0, Color(0.50, 0.9, 1.0, 0.80), 3.0)
+	if hard_stage3_recovery_timer > 0.0 and not is_dying:
+		draw_arc(Vector2.ZERO, 78.0, 0.0, TAU, 36, Color(1.0, 0.76, 0.28, 0.82), 5.0)
+	if hard_stage3_break_timer > 0.0 and not is_dying:
+		draw_arc(Vector2.ZERO, 78.0, 0.0, TAU, 36, Color(1.0, 0.24, 0.24, 0.94), 6.0)
 	if hard_stage2_awakened and not is_dying and is_instance_valid(hard_stage2_marked_target) and rogue_assassination_active:
 		var target_position := hard_stage2_marked_target.global_position
 		var landing_direction := global_position.direction_to(target_position)

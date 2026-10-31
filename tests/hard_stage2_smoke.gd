@@ -29,7 +29,7 @@ func run() -> void:
 	cfg.set_value("progress", "highest_unlocked_stage", 3)
 	check(SCOPE.save_config(cfg, PROGRESS.SAVE_PATH) == OK, "stage2 easy-clear fixture saved")
 	check(GATE.scene_entry_available("res://src/main/Main.tscn", {"difficulty": "hard", "stage_id": "stage_2"}), "hard stage2 entry allowed")
-	check(not GATE.difficulty_available("hard", "stage_3", "demon"), "stage3 hard locked")
+	check(GATE.difficulty_available("hard", "stage_3", "demon"), "stage3 hard released")
 
 	var battle := load("res://src/battle/Battle.tscn").instantiate()
 	root.add_child(battle)
