@@ -1,6 +1,7 @@
 extends RefCounted
 ## Bounded MAX actions: 24 moving/trap/counter/zone slots, 64 generation-safe marks.
 const TARGETS := preload("res://src/systems/hero_target_policy.gd")
+const GEOMETRY := preload("res://src/hero_mode/hero_weapon_geometry.gd")
 const LIMIT := 24
 const MARK_LIMIT := 64
 const EMPTY_VISUAL_FRAMES := []
