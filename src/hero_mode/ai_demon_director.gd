@@ -2,6 +2,8 @@ extends RefCounted
 const DATA := preload("res://src/data/hero_mode_catalog.gd")
 const AUGMENTS := preload("res://src/data/hero_augment_catalog.gd")
 const MAP_ASSAULT := preload("res://src/data/hero_map_assault_catalog.gd")
+const FRONTIER_MONSTERS := preload("res://src/data/frontier_monster_catalog.gd")
+const MONSTER_VISUAL := preload("res://src/monsters/monster_visual.gd")
 # Keep late recruit scenes ready without loading a whole wave on its unlock frame.
 const RECRUIT_PREWARM_LEAD := 20.0
 const RECRUIT_PREWARM_INTERVAL := 0.5
@@ -86,6 +88,20 @@ func _request_pending_recruits(elapsed: float) -> void:
 
 # Only PackedScene resources are prepared early. Spawn eligibility and roster unlock
 # still change exclusively on the original authored reinforcement checkpoint.
+func _warm_recruit_normal_visual(monster_id: String, elapsed: float) -> void:
+	# PackedScene loading does not create the per-species SpriteFrames cache.
+	# Prepare only the observed normal variant to bound mobile memory growth.
+	if not FRONTIER_MONSTERS.DEFINITIONS.has(monster_id): return
+	var visual_data: Dictionary = FRONTIER_MONSTERS.DEFINITIONS[monster_id]
+	var started := Time.get_ticks_usec() if _profiling_enabled() else 0
+	var visual = MONSTER_VISUAL.new()
+	var ready: bool = visual.apply_visual_profile(visual_data.normal_visual)
+	visual.free()
+	if started > 0:
+		print("[HeroPerf] visual_prewarm_ms=%.2f elapsed=%.1f monster=%s success=%s" % [
+			float(Time.get_ticks_usec()-started)/1000.0,elapsed,monster_id,str(ready)
+		])
+
 func _prewarm_pending_recruits(elapsed: float) -> void:
 	if prewarm_index >= prewarm_entries.size() or elapsed < prewarm_next_at: return
 	var entry: Dictionary = prewarm_entries[prewarm_index]
@@ -108,6 +124,7 @@ func _prewarm_pending_recruits(elapsed: float) -> void:
 		print("[HeroPerf] prewarm_scene_ms=%.2f elapsed=%.1f unlock=%.1f id=%s" % [
 			float(Time.get_ticks_usec()-started)/1000.0,elapsed,float(entry.at),String(entry.id)
 		])
+	_warm_recruit_normal_visual(String(entry.id),elapsed)
 
 func _observe() -> void:
 	preferred.clear()
