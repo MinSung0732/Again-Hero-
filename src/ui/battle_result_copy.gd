@@ -29,7 +29,7 @@ static func format_message(message: String) -> Dictionary:
 			details.append(line.replace(" · ", "\n").replace("Run 연구", "전투 연구"))
 		elif line.begins_with("군단 해금") or line.begins_with("군단 보상"):
 			rewards.append(line)
-		elif line.begins_with("최초 클리어 골드 +") or line.begins_with("쉬움 전체 클리어 골드 +"):
+		elif line.begins_with("최초 클리어 골드 +") or line.begins_with("쉬움 전체 클리어 골드 +") or line.begins_with("어려움 최초 ") or line.begins_with("어려움 전체 "):
 			rewards.append(line)
 			details.append(line)
 		elif line.begins_with("최초 클리어 보상"):

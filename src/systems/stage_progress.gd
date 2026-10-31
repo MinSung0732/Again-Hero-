@@ -8,6 +8,7 @@ const STAGE_CATALOG := preload("res://src/data/stage_catalog.gd")
 const EXPERIENCE := preload("res://src/data/campaign_experience_catalog.gd")
 const COLLECTION := preload("res://src/systems/monster_collection_store.gd")
 const MONSTERS := preload("res://src/data/monster_catalog.gd")
+const HARD := preload("res://src/data/hard_campaign_catalog.gd")
 const TESTER_UNLOCK_ALL_STAGES := false
 
 const SAVE_PATH := "user://stage_progress.cfg"
@@ -542,13 +543,47 @@ static func is_campaign_reward_claimed(stage_id: String) -> bool:
 	return bool(config.get_value("milestone_reward_claimed","campaign_"+stage_id,false))
 
 static func complete_hard_stage(stage_id: String) -> Dictionary:
-	if not is_stage_cleared(stage_id): return {"success":false,"reward":0}
+	var denied := {"success": false, "reward": 0, "gold_reward": 0, "demon_token_reward": 0, "hard_all_clear_gold": 0, "hard_all_clear_token": 0}
+	if not STAGE_CATALOG.STAGES.has(stage_id) or not is_stage_cleared(stage_id):
+		return denied
 	var config := ConfigFile.new()
-	if ACCOUNT_SCOPE.load_config(config,SAVE_PATH) != OK: return {"success":false,"reward":0}
-	var first := not bool(config.get_value("hard_cleared",stage_id,false))
+	if ACCOUNT_SCOPE.load_config(config, SAVE_PATH) != OK:
+		return denied
+	var first := not bool(config.get_value("hard_cleared", stage_id, false))
 	_record_hero_clear(config, stage_id, true)
-	config.set_value("hard_cleared",stage_id,true)
-	var points := 30 if first else 0
-	config.set_value("meta","research_points",int(config.get_value("meta","research_points",0))+points)
-	var error := ACCOUNT_SCOPE.save_config(config,SAVE_PATH)
-	return {"success":error == OK,"reward":points if error == OK else 0,"gold_reward":0,"hero_unlocked":false}
+	config.set_value("hard_cleared", stage_id, true)
+	var points := int(HARD.FIRST_CLEAR.research) if first else 0
+	var gold := int(HARD.FIRST_CLEAR.gold) if first else 0
+	var tokens := int(HARD.FIRST_CLEAR.demon_token) if first else 0
+	var all_gold := 0
+	var all_tokens := 0
+	if first:
+		if not add_token_in_config(config, "demon_token", tokens):
+			return denied
+		config.set_value("meta", "research_points", int(config.get_value("meta", "research_points", 0)) + points)
+		config.set_value("meta", "gold", int(config.get_value("meta", "gold", 0)) + gold)
+	if not bool(config.get_value("milestone_reward_claimed", "hard_all_clear", false)):
+		var all_cleared := not STAGE_CATALOG.ORDER.is_empty()
+		for required_stage in STAGE_CATALOG.ORDER:
+			if not bool(config.get_value("hard_cleared", required_stage, false)):
+				all_cleared = false
+				break
+		if all_cleared:
+			all_gold = int(HARD.ALL_CLEAR.gold)
+			all_tokens = int(HARD.ALL_CLEAR.demon_token)
+			if not add_token_in_config(config, "demon_token", all_tokens):
+				return denied
+			config.set_value("meta", "gold", int(config.get_value("meta", "gold", 0)) + all_gold)
+			config.set_value("milestone_reward_claimed", "hard_all_clear", true)
+	var saved := ACCOUNT_SCOPE.save_config(config, SAVE_PATH) == OK
+	if not saved:
+		return denied
+	return {
+		"success": true,
+		"reward": points,
+		"gold_reward": gold,
+		"demon_token_reward": tokens,
+		"hard_all_clear_gold": all_gold,
+		"hard_all_clear_token": all_tokens,
+		"hero_unlocked": false,
+	}

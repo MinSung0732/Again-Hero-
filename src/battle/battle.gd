@@ -95,6 +95,7 @@ const HEAL_ITEM_SCENE := preload("res://src/battle/HealItem.tscn")
 const TREASURE_CHEST_SCENE := preload("res://src/battle/TreasureChest.tscn")
 const MAGNET_ITEM_SCENE := preload("res://src/battle/MagnetItem.tscn")
 const STAGE_CATALOG := preload("res://src/data/stage_catalog.gd")
+const HARD := preload("res://src/data/hard_campaign_catalog.gd")
 const HERO_PROFILES := preload("res://src/data/hero_profiles.gd")
 const HERO_AI_PROFILES := preload("res://src/data/hero_ai_profiles.gd")
 const STAGE_PROGRESS := preload("res://src/systems/stage_progress.gd")
@@ -3057,6 +3058,18 @@ func _get_monster_name(monster_type: String) -> String:
 func _on_hero_health_changed(current_hp: int, max_hp_value: int) -> void:
 	run_metrics.record_hero_hp(current_hp, max_hp_value)
 	stats_changed.emit(current_hp, max_hp_value, monsters_alive)
+	if (
+		campaign_difficulty == "hard"
+		and current_stage_id == "stage_1"
+		and not battle_over
+		and current_hp > 0
+		and max_hp_value > 0
+		and float(current_hp) / float(max_hp_value) <= float(HARD.STAGE_1.awakening_hp_ratio)
+		and is_instance_valid(hero)
+		and hero.has_method("activate_hard_stage1")
+		and bool(hero.call("activate_hard_stage1"))
+	):
+		conditional_skill_unlocked.emit("hard_stage1_overload", "마력 과부하", HARD.STAGE_1.duplicate(true))
 
 func _on_hero_combat_damage_received(hp_damage: int) -> void:
 	if hp_damage <= 0:
@@ -5648,12 +5661,21 @@ func _on_hero_died() -> void:
 	if campaign_difficulty == "hard": result_text += "\n어려움 클리어 완료" if bool(clear_result.get("success",false)) else "\n어려움 클리어 저장 실패"
 	var granted_reward: int = int(clear_result.get("reward", 0))
 	if granted_reward > 0:
-		result_text += "\n최초 클리어 보상 · 연구 포인트 +%d" % granted_reward
+		result_text += ("\n어려움 최초 연구 포인트 +%d" if campaign_difficulty == "hard" else "\n최초 클리어 보상 · 연구 포인트 +%d") % granted_reward
 	if not bool(clear_result.get("success", false)):
 		result_text += "\n클리어 보상 저장 실패"
 	var first_gold := int(clear_result.get("gold_reward", 0))
 	if first_gold > 0:
-		result_text += "\n최초 클리어 골드 +%d" % first_gold
+		result_text += ("\n어려움 최초 골드 +%d" if campaign_difficulty == "hard" else "\n최초 클리어 골드 +%d") % first_gold
+	var demon_tokens := int(clear_result.get("demon_token_reward", 0))
+	if demon_tokens > 0:
+		result_text += "\n어려움 최초 마왕 토큰 +%d" % demon_tokens
+	var hard_all_gold := int(clear_result.get("hard_all_clear_gold", 0))
+	if hard_all_gold > 0:
+		result_text += "\n어려움 전체 골드 +%d" % hard_all_gold
+	var hard_all_tokens := int(clear_result.get("hard_all_clear_token", 0))
+	if hard_all_tokens > 0:
+		result_text += "\n어려움 전체 마왕 토큰 +%d" % hard_all_tokens
 	var all_clear_gold := int(clear_result.get("easy_all_clear_gold", 0))
 	if all_clear_gold > 0:
 		result_text += "\n쉬움 전체 클리어 골드 +%d" % all_clear_gold
@@ -5689,7 +5711,7 @@ func finish_abandoned_run() -> bool:
 	if hero_player_mode:
 		_finish_battle("용사 도전 중단",false)
 		return true
-	var reward_text := _grant_run_research_reward(false)
+	var reward_text := _grant_run_research_reward(false, true)
 	if _run_reward_save_failed:
 		return false # Stay in the current run so a failed save can be retried.
 	if reward_text.is_empty() and not practice_mode and not tutorial_mode:
@@ -5697,7 +5719,7 @@ func finish_abandoned_run() -> bool:
 	_finish_battle("전투 중단 · 기여 보상 정산"+reward_text, false)
 	return true
 
-func _grant_run_research_reward(apply_clear_multiplier: bool) -> String:
+func _grant_run_research_reward(apply_clear_multiplier: bool, abandoned: bool = false) -> String:
 	if online_match_mode: return ""
 	_run_reward_save_failed = false
 	if _run_reward_granted:
@@ -5722,7 +5744,11 @@ func _grant_run_research_reward(apply_clear_multiplier: bool) -> String:
 			float(current_stage_data.get("run_reward_multiplier", 1.0)),
 			0.0
 		)
-	var requested := maxi(int(round(float(base_total) * stage_multiplier)), 0)
+	var difficulty_multiplier := 1.0
+	if campaign_difficulty == "hard" and HARD.demon_stage_available(current_stage_id):
+		var outcome := "victory" if apply_clear_multiplier else ("abandon" if abandoned else "defeat")
+		difficulty_multiplier = HARD.run_reward_multiplier(outcome)
+	var requested := maxi(int(round(float(base_total) * stage_multiplier * difficulty_multiplier)), 0)
 	if requested <= 0:
 		return ""
 
@@ -5737,12 +5763,13 @@ func _grant_run_research_reward(apply_clear_multiplier: bool) -> String:
 
 	if apply_clear_multiplier:
 		return (
-			"\nRun 연구 +%d · 산정 %d × Stage %.2f\nRun 골드 +%d · 전투 연구 보상의 60%%%s"
-			% [granted, base_total, stage_multiplier, int(grant_result.get("gold_granted", 0)), _format_run_reward_detail(breakdown)]
+			"\nRun 연구 +%d · 산정 %d × Stage %.2f × 난이도 %.2f\nRun 골드 +%d · 전투 연구 보상의 60%%%s"
+			% [granted, base_total, stage_multiplier, difficulty_multiplier, int(grant_result.get("gold_granted", 0)), _format_run_reward_detail(breakdown)]
 		)
-	return "\nRun 연구 +%d · 전투 기여 %.0f%% 정산\nRun 골드 +%d · 전투 연구 보상의 60%%%s" % [
+	return "\nRun 연구 +%d · 전투 기여 %.0f%% · 난이도 %.2f\nRun 골드 +%d · 전투 연구 보상의 60%%%s" % [
 		granted,
 		float(breakdown.get("partial_ratio", 0.35))*100.0,
+		difficulty_multiplier,
 		int(grant_result.get("gold_granted", 0)),
 		_format_run_reward_detail(breakdown),
 	]
@@ -6364,14 +6391,21 @@ func fill_active_enemy_summons(result: Array) -> void:
 
 
 func configure_campaign_difficulty(difficulty: String) -> void:
-	if difficulty != "hard" or campaign_difficulty == "hard" or hero_player_mode or practice_mode or tutorial_mode: return
-	if not STAGE_PROGRESS.is_stage_cleared(current_stage_id): return
+	if difficulty != "hard" or campaign_difficulty == "hard" or hero_player_mode or practice_mode or tutorial_mode:
+		return
+	if not HARD.demon_stage_available(current_stage_id) or not STAGE_PROGRESS.is_stage_cleared(current_stage_id):
+		return
 	campaign_difficulty = "hard"
 	if is_instance_valid(hero):
-		hero.max_hp = roundi(hero.max_hp*1.6); hero.current_hp = hero.max_hp
-		hero.attack_damage = roundi(hero.attack_damage*1.35); hero.move_speed *= 1.08
-		hero.health_changed.emit(hero.current_hp,hero.max_hp)
-		run_metrics.reset(run_time_limit_seconds,hero.current_hp,hero.max_hp)
+		hero.max_hp = maxi(roundi(float(hero.max_hp) * float(HARD.HERO_STATS.hp_multiplier)), 1)
+		hero.current_hp = hero.max_hp
+		hero.attack_damage = maxi(roundi(float(hero.attack_damage) * float(HARD.HERO_STATS.damage_multiplier)), 1)
+		hero.base_attack_damage_for_level_growth *= float(HARD.HERO_STATS.damage_multiplier)
+		hero.move_speed *= float(HARD.HERO_STATS.move_speed_multiplier)
+		hero.attack_cooldown = maxf(hero.attack_cooldown / float(HARD.HERO_STATS.attack_speed_multiplier), 0.06)
+		hero.call("configure_hard_stage1", float(HARD.HERO_STATS.regeneration_multiplier))
+		hero.health_changed.emit(hero.current_hp, hero.max_hp)
+		run_metrics.reset(run_time_limit_seconds, hero.current_hp, hero.max_hp)
 
 func _is_reserved_hero_boss_request(_id: String,modifiers: Dictionary) -> bool:
 	return hero_player_mode and not online_match_mode and _hero_boss_spawn_pending and not hero_final_boss_spawned and not battle_over and run_metrics.elapsed_seconds >= HERO_SURVIVAL.DURATION and bool(modifiers.get("hero_final_boss_spawn",false))

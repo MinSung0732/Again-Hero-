@@ -6,6 +6,7 @@ signal ranked_profile_changed
 const PROFILE := preload("res://src/systems/player_profile.gd")
 const UNLOCKS := preload("res://src/systems/mode_unlock_store.gd")
 const UNLOCK_DATA := preload("res://src/data/mode_unlock_catalog.gd")
+const HARD := preload("res://src/data/hard_campaign_catalog.gd")
 const UNLOCK_FEEDBACK := preload("res://src/ui/mode_unlock_feedback.gd")
 const HERO_STORE := preload("res://src/systems/hero_mode_store.gd")
 const CHARACTERS := preload("res://src/data/hero_character_catalog.gd")
@@ -164,7 +165,7 @@ func button(parent: Control, text: String, action: Callable) -> Button:
 	return result
 
 func choose_difficulty(value: String) -> void:
-	if switching_perspective or not UNLOCK_DATA.difficulty_available(value) or (value == "hard" and not UNLOCKS.unlocked("hard", current_stage(),perspective)):
+	if switching_perspective or not UNLOCK_DATA.difficulty_available(value, current_stage(), perspective) or (value == "hard" and not UNLOCKS.unlocked("hard", current_stage(),perspective)):
 		refresh()
 		return
 	if lobby._stage_transition_running:
@@ -355,7 +356,7 @@ func blocks_entry() -> bool:
 	if ranked and guest_rank_blocked():
 		show_guest_rank_notice()
 		return true
-	if not ranked and not UNLOCK_DATA.difficulty_available(difficulty):
+	if not ranked and not UNLOCK_DATA.difficulty_available(difficulty, current_stage() if lobby != null else "", perspective):
 		notice.title = "준비 중"
 		notice.dialog_text = UNLOCK_DATA.HARD_NOTICE
 		notice.popup_centered(Vector2i(640,180))
@@ -389,7 +390,7 @@ func refresh() -> void:
 	if perspective == "hero":
 		HERO_STORE.select_battle_stage(current_stage())
 		difficulty = HERO_STORE.difficulty()
-	if not UNLOCK_DATA.difficulty_available(difficulty) or not UNLOCKS.unlocked("hard", current_stage(),perspective):
+	if not UNLOCK_DATA.difficulty_available(difficulty, current_stage(), perspective) or (difficulty == "hard" and not UNLOCKS.unlocked("hard", current_stage(), perspective)):
 		difficulty = "easy"
 	if lobby.hero_lobby_view != null: lobby.hero_lobby_view.set_active(perspective == "hero")
 	for item in [[demon_button, perspective == "demon", "demon"], [hero_button, perspective == "hero", "hero"], [ranked_button, ranked, "rank"], [easy_button, difficulty == "easy", "easy"], [hard_button, difficulty == "hard", "hard"]]:
@@ -401,8 +402,8 @@ func refresh() -> void:
 		item[0].tooltip_text = String(UNLOCK_DATA.RULES[item[1]].condition) if locked else ""
 		if locked:
 			item[0].icon = icons.lock
-	hard_button.text = "어려움" if UNLOCK_DATA.HARD_AVAILABLE else "어려움 · 준비 중"
-	if not UNLOCK_DATA.HARD_AVAILABLE:
+	hard_button.text = "어려움" if UNLOCK_DATA.difficulty_available("hard", current_stage(), perspective) else "어려움 · 준비 중"
+	if not UNLOCK_DATA.difficulty_available("hard", current_stage(), perspective):
 		hard_button.disabled = true
 		hard_button.tooltip_text = UNLOCK_DATA.HARD_NOTICE+"\n"+String(UNLOCK_DATA.RULES.hard.condition)
 	schedule_unlock()
@@ -439,8 +440,8 @@ func refresh() -> void:
 			lobby.enter_stage_button.text = "어려움 도전"
 			lobby.stage_description_label.text = "강화 용사 · 쉬움 클리어 후 도전"
 			lobby.stage_status_label.text = "어려움\n강화 용사"
-			lobby.stage_reward_label.text = "최초 어려움\n연구 30"
-			lobby.stage_repeat_reward_label.text = "반복 도전\n추가 지급 없음"
+			lobby.stage_reward_label.text = "최초 어려움\n연구 %d · 골드 %d\n마왕 토큰 %d" % [int(HARD.FIRST_CLEAR.research), int(HARD.FIRST_CLEAR.gold), int(HARD.FIRST_CLEAR.demon_token)]
+			lobby.stage_repeat_reward_label.text = "전투 보상\n승리 ×%.2f · 패배 ×%.2f" % [HARD.run_reward_multiplier("victory"), HARD.run_reward_multiplier("defeat")]
 		return
 	lobby.stage_selector_button.text = "연결 테스트 · v1"
 	lobby.stage_selector_button.disabled = true
@@ -501,8 +502,8 @@ func show_pending_unlock() -> void:
 		var description := String(UNLOCK_DATA.RULES[key].condition).replace("후 개방", "완료")
 		if key == "hard":
 			description = "%s 쉬움 Stage %d 클리어 완료" % ["용사" if perspective == "hero" else "마왕",int(stage_id.trim_prefix("stage_"))]
-			if not UNLOCK_DATA.HARD_AVAILABLE: description += "\n전용 패턴 준비 중 · 입장은 추후 개방됩니다."
-		unlock_feedback.present(String(UNLOCK_DATA.RULES[key].name), description,key != "hard" or UNLOCK_DATA.HARD_AVAILABLE)
+			if not UNLOCK_DATA.difficulty_available("hard", stage_id, perspective): description += "\n전용 패턴 준비 중 · 입장은 추후 개방됩니다."
+		unlock_feedback.present(String(UNLOCK_DATA.RULES[key].name), description,key != "hard" or UNLOCK_DATA.difficulty_available("hard", stage_id, perspective))
 		return
 
 func _apply_selected_hero_portrait() -> void:

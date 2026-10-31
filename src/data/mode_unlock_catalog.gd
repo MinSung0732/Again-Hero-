@@ -1,15 +1,22 @@
 extends RefCounted
+const HARD := preload("res://src/data/hard_campaign_catalog.gd")
+const PROGRESS := preload("res://src/systems/stage_progress.gd")
 
 # Unlock progress is permanent; release availability is a separate product gate.
-const HARD_AVAILABLE := false
-const HARD_NOTICE := "어려움 난이도는 전용 패턴 준비 중입니다. 쉬움 난이도를 이용해 주세요."
+const HARD_AVAILABLE := true # At least one demon stage is live; availability is stage-specific.
+const HARD_NOTICE := "어려움 난이도는 마왕 Stage 1부터 순차 개방합니다. 선택한 모드·스테이지는 준비 중입니다."
 
-static func difficulty_available(value: String) -> bool:
-	return value == "easy" or (value == "hard" and HARD_AVAILABLE)
+static func difficulty_available(value: String, stage_id: String = "", perspective: String = "demon") -> bool:
+	return value == "easy" or (value == "hard" and perspective == "demon" and HARD.demon_stage_available(stage_id))
 
 static func scene_entry_available(path: String, options: Dictionary) -> bool:
-	if path not in ["res://src/main/Main.tscn","res://src/hero_mode/HeroMode.tscn"]: return true
-	return difficulty_available(String(options.get("difficulty","easy")))
+	if path == "res://src/main/Main.tscn":
+		var difficulty := String(options.get("difficulty", "easy"))
+		var stage_id := String(options.get("stage_id", ""))
+		return difficulty_available(difficulty, stage_id, "demon") and (difficulty != "hard" or PROGRESS.is_stage_cleared(stage_id))
+	if path == "res://src/hero_mode/HeroMode.tscn":
+		return difficulty_available(String(options.get("difficulty", "easy")), String(options.get("stage_id", "")), "hero")
+	return true
 
 const ORDER := ["hard", "hero", "rank"]
 const RULES := {

@@ -866,6 +866,14 @@ var build_counts: Dictionary = {}
 
 var target: Node2D
 var attack_timer: float = 0.0
+# Demon campaign hard-only states; never persist in hero-mode profiles.
+var hard_stage1_enabled := false
+var hard_stage1_awakened := false
+var hard_stage1_attack_count := 0
+var hard_stage1_windup_timer := 0.0
+var hard_stage1_weakness_timer := 0.0
+var hard_stage1_piercer_direction := Vector2.RIGHT
+var hard_regeneration_multiplier := 1.0
 var retarget_timer: float = 0.0
 var hit_flash_timer: float = 0.0
 var level_flash_timer: float = 0.0
@@ -990,6 +998,12 @@ func configure_profile(profile: Dictionary) -> void:
 	# so retries can never inherit augments that bypass resource conditions.
 	build_counts.clear()
 	conditional_skill_unlocks.clear()
+	hard_stage1_enabled = false
+	hard_stage1_awakened = false
+	hard_stage1_attack_count = 0
+	hard_stage1_windup_timer = 0.0
+	hard_stage1_weakness_timer = 0.0
+	hard_regeneration_multiplier = 1.0
 	current_exp = 0
 	status_resistances.clear()
 	offensive_memory_events.clear()
@@ -1835,6 +1849,7 @@ func _attach_status_effect_visual(effect_type: String) -> void:
 
 
 const BATTLE_CLOCK := preload("res://src/systems/battle_clock.gd")
+const HARD_CAMPAIGN := preload("res://src/data/hard_campaign_catalog.gd")
 
 func _physics_process(delta: float) -> void:
 	delta = BATTLE_CLOCK.scaled(self, delta)
@@ -1844,6 +1859,7 @@ func _physics_process(delta: float) -> void:
 
 func _physics_process_hero(delta: float) -> void:
 	player_moved_this_frame = false
+	_update_hard_stage1(delta)
 	if player_controlled:
 		player_control_policy.tick(delta)
 		player_root_timer = maxf(player_root_timer-delta,0.0)
@@ -4570,8 +4586,52 @@ func _play_purifier_basic_audio() -> void:
 	_purifier_archetype()._play_purifier_basic_audio()
 
 
+func configure_hard_stage1(regeneration_multiplier: float) -> void:
+	if player_controlled or hero_id != String(HARD_CAMPAIGN.STAGE_1.hero_id):
+		return
+	hard_stage1_enabled = true
+	hard_stage1_awakened = false
+	hard_stage1_attack_count = 0
+	hard_stage1_windup_timer = 0.0
+	hard_stage1_weakness_timer = 0.0
+	hard_regeneration_multiplier = maxf(regeneration_multiplier, 1.0)
+
+
+func activate_hard_stage1() -> bool:
+	if not hard_stage1_enabled or hard_stage1_awakened or is_dying or current_hp <= 0:
+		return false
+	hard_stage1_awakened = true
+	queue_redraw()
+	return true
+
+
+func _update_hard_stage1(delta: float) -> void:
+	if not hard_stage1_enabled or delta <= 0.0 or current_hp <= 0 or is_dying:
+		return
+	if hard_stage1_weakness_timer > 0.0:
+		hard_stage1_weakness_timer = maxf(hard_stage1_weakness_timer - delta, 0.0)
+		queue_redraw()
+	if hard_stage1_windup_timer <= 0.0:
+		return
+	hard_stage1_windup_timer = maxf(hard_stage1_windup_timer - delta, 0.0)
+	queue_redraw()
+	if hard_stage1_windup_timer > 0.0:
+		return
+	# Keep the warning until the hero can actually finish the cast.
+	if silence_timer > 0.0 or channeling or stun_timer > 0.0:
+		hard_stage1_windup_timer = 0.05
+		return
+	_use_piercing_projectile_ultimate(hard_stage1_piercer_direction)
+	hard_stage1_weakness_timer = float(HARD_CAMPAIGN.STAGE_1.weakness_seconds)
+	apply_damage_taken_increase(
+		hard_stage1_weakness_timer,
+		float(HARD_CAMPAIGN.STAGE_1.weakness_damage_taken_increase)
+	)
+	queue_redraw()
+
+
 func _fire_projectile(current_target: Node2D) -> void:
-	if channeling:
+	if channeling or (hard_stage1_awakened and (hard_stage1_windup_timer > 0.0 or hard_stage1_weakness_timer > 0.0)):
 		return
 	if not is_instance_valid(current_target):
 		return
@@ -4591,6 +4651,8 @@ func _fire_projectile(current_target: Node2D) -> void:
 	_play_ordered_hero_audio(&"basic")
 
 	var projectile_count := 1 + clampi(projectile_count_bonus, 0, 4)
+	if hard_stage1_awakened:
+		projectile_count = maxi(projectile_count, int(HARD_CAMPAIGN.STAGE_1.min_projectiles))
 	var volley := PROJECTILE_VOLLEY.new() if projectile_count > 1 else null
 	var spread_step := deg_to_rad(12.0)
 	var center_index := float(projectile_count - 1) * 0.5
@@ -4619,6 +4681,16 @@ func _fire_projectile(current_target: Node2D) -> void:
 	_add_ultimate_charge(
 		float(ultimate_config.get("charge_on_attack", 0.0))
 	)
+	if hard_stage1_awakened:
+		hard_stage1_attack_count += 1
+		if hard_stage1_attack_count >= int(HARD_CAMPAIGN.STAGE_1.piercer_every_attacks):
+			hard_stage1_attack_count = 0
+			hard_stage1_piercer_direction = _find_best_piercing_direction()
+			if hard_stage1_piercer_direction.length_squared() <= 0.0:
+				hard_stage1_piercer_direction = shot_direction.normalized()
+			hard_stage1_windup_timer = float(HARD_CAMPAIGN.STAGE_1.piercer_windup_seconds)
+			attack_timer = maxf(attack_timer, hard_stage1_windup_timer)
+			queue_redraw()
 
 func _get_sage_augment_stacks(augment_id: String) -> int:
 	return _sage_archetype()._get_sage_augment_stacks(augment_id)
@@ -6012,7 +6084,7 @@ func _try_use_charged_skill() -> void:
 		return
 	if ultimate_config.is_empty() or is_dying or current_hp <= 0:
 		return
-	if channeling:
+	if channeling or (hard_stage1_awakened and (hard_stage1_windup_timer > 0.0 or hard_stage1_weakness_timer > 0.0)):
 		return
 
 	var charge_max := maxf(
@@ -6064,8 +6136,8 @@ func _use_ultimate() -> void:
 	ultimate_used.emit(ultimate_id, ultimate_name)
 	queue_redraw()
 
-func _use_piercing_projectile_ultimate() -> void:
-	var shot_direction := _find_best_piercing_direction()
+func _use_piercing_projectile_ultimate(direction_override: Vector2 = Vector2.ZERO) -> void:
+	var shot_direction := direction_override.normalized() if direction_override.length_squared() > 0.0 else _find_best_piercing_direction()
 	if shot_direction.length_squared() <= 0.0:
 		if hero_sprite.visible and hero_sprite.flip_h:
 			shot_direction = Vector2.LEFT
@@ -8877,6 +8949,13 @@ func _begin_death_sequence() -> void:
 	queue_free()
 
 func _draw() -> void:
+	if hard_stage1_awakened and hard_stage1_windup_timer > 0.0:
+		var piercer_range := maxf(float(ultimate_config.get("projectile_range", 900.0)), 1.0)
+		var warning_end := hard_stage1_piercer_direction * piercer_range
+		draw_line(Vector2.ZERO, warning_end, Color(1.0, 0.20, 0.12, 0.22), 144.0)
+		draw_line(Vector2.ZERO, warning_end, Color(1.0, 0.65, 0.28, 0.83), 3.0)
+	if hard_stage1_awakened and hard_stage1_weakness_timer > 0.0:
+		draw_arc(Vector2.ZERO, 65.0, 0.0, TAU, 48, Color(0.45, 0.85, 1.0, 0.70), 5.0)
 	if player_controlled and player_weapons != null: player_weapons.draw()
 	if is_instance_valid(status_overlay):
 		status_overlay.queue_redraw()
